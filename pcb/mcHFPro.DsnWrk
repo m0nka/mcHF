@@ -1,0 +1,6 @@
+[ProjectGroup]
+Version=1.0
+[Project1]
+ProjectPath=mchf\ui\mcHFPro_ui.PrjPcb
+[Project2]
+ProjectPath=mchf\rf\mcHFPro_rf.PrjPcb
