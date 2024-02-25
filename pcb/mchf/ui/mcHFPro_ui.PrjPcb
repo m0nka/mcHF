@@ -89,23 +89,6 @@ GenerateClassCluster=0
 DocumentUniqueId=NXJSRGZD
 
 [Document4]
-DocumentPath=schematics\ui_audio.SchDoc
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=1
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=ILSPAOSY
-
-[Document5]
 DocumentPath=schematics\ui_codec.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -122,7 +105,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=PSJBEWDO
 
-[Document6]
+[Document5]
 DocumentPath=schematics\ui_conn.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -139,7 +122,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=DEWTRXWB
 
-[Document7]
+[Document6]
 DocumentPath=schematics\ui_cpu.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -156,7 +139,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=ARMSPUOA
 
-[Document8]
+[Document7]
 DocumentPath=schematics\ui_cpu_power.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -173,7 +156,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=CMUVXKPQ
 
-[Document9]
+[Document8]
 DocumentPath=schematics\ui_debug.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -190,7 +173,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=AWYGGBHC
 
-[Document10]
+[Document9]
 DocumentPath=schematics\ui_front.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -207,7 +190,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=MYPCVHBS
 
-[Document11]
+[Document10]
 DocumentPath=schematics\ui_lcd.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -224,7 +207,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=MJFRHHBN
 
-[Document12]
+[Document11]
 DocumentPath=schematics\ui_lo.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -241,7 +224,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=CCXYAQTA
 
-[Document13]
+[Document12]
 DocumentPath=schematics\ui_lora.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -258,7 +241,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=TWSHULTY
 
-[Document14]
+[Document13]
 DocumentPath=schematics\ui_main.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -275,7 +258,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=QWSOVPTE
 
-[Document15]
+[Document14]
 DocumentPath=schematics\ui_sdram.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -292,7 +275,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=SJJYINQH
 
-[Document16]
+[Document15]
 DocumentPath=schematics\ui_qspi.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
