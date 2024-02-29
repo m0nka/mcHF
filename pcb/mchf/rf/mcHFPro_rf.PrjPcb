@@ -225,40 +225,6 @@ GenerateClassCluster=0
 DocumentUniqueId=QMHWAEIT
 
 [Document12]
-DocumentPath=schematics\rf_swrmet.SchDoc
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=1
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=URCJSNHA
-
-[Document13]
-DocumentPath=schematics\rf_trsw.SchDoc
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=1
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=OPNFWUXW
-
-[Document14]
 DocumentPath=schematics\rf_tx_pa.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -275,7 +241,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=MLIHPUBJ
 
-[Document15]
+[Document13]
 DocumentPath=schematics\rf_bms.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -292,7 +258,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=MAOKCAMH
 
-[Document16]
+[Document14]
 DocumentPath=schematics\Libs\__rf.SchLib
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -309,7 +275,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=KWGLWWMG
 
-[Document17]
+[Document15]
 DocumentPath=pcb\Libs\__rf.lib
 AnnotationEnabled=1
 AnnotateStartValue=1
