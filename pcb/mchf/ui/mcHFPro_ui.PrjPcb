@@ -55,40 +55,6 @@ GenerateClassCluster=0
 DocumentUniqueId=QIGJUKQQ
 
 [Document2]
-DocumentPath=pcb\Libs\__ui.PcbLib
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=1
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=BNBFQAWT
-
-[Document3]
-DocumentPath=schematics\Libs\__ui.SchLib
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=1
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=NXJSRGZD
-
-[Document4]
 DocumentPath=schematics\ui_codec.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -105,7 +71,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=PSJBEWDO
 
-[Document5]
+[Document3]
 DocumentPath=schematics\ui_conn.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -122,7 +88,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=DEWTRXWB
 
-[Document6]
+[Document4]
 DocumentPath=schematics\ui_cpu.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -139,7 +105,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=ARMSPUOA
 
-[Document7]
+[Document5]
 DocumentPath=schematics\ui_cpu_power.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -156,7 +122,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=CMUVXKPQ
 
-[Document8]
+[Document6]
 DocumentPath=schematics\ui_debug.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -173,7 +139,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=AWYGGBHC
 
-[Document9]
+[Document7]
 DocumentPath=schematics\ui_front.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -190,7 +156,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=MYPCVHBS
 
-[Document10]
+[Document8]
 DocumentPath=schematics\ui_lcd.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -207,7 +173,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=MJFRHHBN
 
-[Document11]
+[Document9]
 DocumentPath=schematics\ui_lo.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -224,7 +190,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=CCXYAQTA
 
-[Document12]
+[Document10]
 DocumentPath=schematics\ui_lora.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -241,7 +207,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=TWSHULTY
 
-[Document13]
+[Document11]
 DocumentPath=schematics\ui_main.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -258,7 +224,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=QWSOVPTE
 
-[Document14]
+[Document12]
 DocumentPath=schematics\ui_sdram.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -275,7 +241,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=SJJYINQH
 
-[Document15]
+[Document13]
 DocumentPath=schematics\ui_qspi.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -292,8 +258,42 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=SSBUHQAQ
 
+[Document14]
+DocumentPath=..\libs\pcb\__ui.PcbLib
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=-1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=1
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=
+
+[Document15]
+DocumentPath=..\libs\pcb\__rf.lib
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=-1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=1
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=
+
 [Document16]
-DocumentPath=schematics\Libs\1373866.SchLib
+DocumentPath=..\libs\pcb\1373826.PcbLib
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -310,7 +310,7 @@ GenerateClassCluster=0
 DocumentUniqueId=
 
 [Document17]
-DocumentPath=pcb\Libs\1373866.PcbLib
+DocumentPath=..\libs\pcb\1373866.PcbLib
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -327,7 +327,7 @@ GenerateClassCluster=0
 DocumentUniqueId=
 
 [Document18]
-DocumentPath=pcb\Libs\1373826.PcbLib
+DocumentPath=..\libs\pcb\2193200001.PcbLib
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -344,7 +344,7 @@ GenerateClassCluster=0
 DocumentUniqueId=
 
 [Document19]
-DocumentPath=schematics\Libs\1373826.SchLib
+DocumentPath=..\libs\sch\__rf.SchLib
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -361,7 +361,7 @@ GenerateClassCluster=0
 DocumentUniqueId=
 
 [Document20]
-DocumentPath=schematics\Libs\219320-0001.SchLib
+DocumentPath=..\libs\sch\__ui.SchLib
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -378,7 +378,41 @@ GenerateClassCluster=0
 DocumentUniqueId=
 
 [Document21]
-DocumentPath=pcb\Libs\2193200001.PcbLib
+DocumentPath=..\libs\sch\219320-0001.SchLib
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=-1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=1
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=
+
+[Document22]
+DocumentPath=..\libs\sch\1373826.SchLib
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=-1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=1
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=
+
+[Document23]
+DocumentPath=..\libs\sch\1373866.SchLib
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
