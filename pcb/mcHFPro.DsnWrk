@@ -1,8 +1,8 @@
 [ProjectGroup]
 Version=1.0
-[Project0]
-ProjectPath=mchf\ui\mcHFPro_ui.PrjPcb
 [Project1]
 ProjectPath=mchf\mix\mchf_pro_mix.PrjPCB
 [Project2]
 ProjectPath=mchf\rf\mcHFPro_rf.PrjPcb
+[Project3]
+ProjectPath=mchf\ui\mcHFPro_ui.PrjPcb
