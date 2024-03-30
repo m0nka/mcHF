@@ -1,4 +1,5 @@
 Record=TopLevelDocument|FileName=ui_main.SchDoc
+Record=SheetSymbol|SourceDocument=ui_main.SchDoc|Designator=BT Audio Module|SchDesignator=BT Audio Module|FileName=ui_bt_audio.SchDoc|SymbolType=Normal|RawFileName=ui_bt_audio.SchDoc|DesignItemId= |SourceLibraryName= |ObjectKind=Sheet Symbol|RevisionGUID= |ItemGUID= |VaultGUID= 
 Record=SheetSymbol|SourceDocument=ui_main.SchDoc|Designator=Codec|SchDesignator=Codec|FileName=ui_codec.SchDoc|SymbolType=Normal|RawFileName=ui_codec.SchDoc|DesignItemId= |SourceLibraryName= |ObjectKind=Sheet Symbol|RevisionGUID= |ItemGUID= |VaultGUID= 
 Record=SheetSymbol|SourceDocument=ui_main.SchDoc|Designator=CPU|SchDesignator=CPU|FileName=ui_cpu.SchDoc|SymbolType=Normal|RawFileName=ui_cpu.SchDoc|DesignItemId= |SourceLibraryName= |ObjectKind=Sheet Symbol|RevisionGUID= |ItemGUID= |VaultGUID= 
 Record=SheetSymbol|SourceDocument=ui_main.SchDoc|Designator=CPU power and clocks|SchDesignator=CPU power and clocks|FileName=ui_cpu_power.SchDoc|SymbolType=Normal|RawFileName=ui_cpu_power.SchDoc|DesignItemId= |SourceLibraryName= |ObjectKind=Sheet Symbol|RevisionGUID= |ItemGUID= |VaultGUID= 
