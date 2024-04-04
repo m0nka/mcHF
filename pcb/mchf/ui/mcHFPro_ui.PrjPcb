@@ -324,7 +324,7 @@ ClassGenCCAutoRoomEnabled=1
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
-DocumentUniqueId=
+DocumentUniqueId=DJGYJSPN
 
 [Document18]
 DocumentPath=..\libs\pcb\1373826.PcbLib
@@ -392,7 +392,7 @@ ClassGenCCAutoRoomEnabled=1
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
-DocumentUniqueId=
+DocumentUniqueId=KWGLWWMG
 
 [Document22]
 DocumentPath=..\libs\sch\__ui.SchLib
