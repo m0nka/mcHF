@@ -6,3 +6,5 @@ ProjectPath=mchf\mix\mchf_pro_mix.PrjPCB
 ProjectPath=mchf\rf\mcHFPro_rf.PrjPcb
 [Project3]
 ProjectPath=mchf\ui\mcHFPro_ui.PrjPcb
+[Project4]
+ProjectPath=mchf\trsv\mchf_pro_trsv.PrjPCB
