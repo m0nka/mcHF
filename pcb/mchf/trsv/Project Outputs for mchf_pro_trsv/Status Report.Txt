@@ -1,0 +1,12 @@
+Output: NC Drill Files
+Type  : NC Drill
+From  : Project [mchf_pro_trsv.PrjPCB]
+   Generated File[mchf_pro_trsv.TXT]
+   Generated File[mchf_pro_trsv.LDP]
+   Generated File[mchf_pro_trsv.DRR]
+
+
+Files Generated   : 3
+Documents Printed : 0
+
+Finished Output Generation At 12:33:44 On 19/05/2024

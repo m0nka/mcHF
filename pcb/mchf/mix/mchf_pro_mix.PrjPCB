@@ -292,6 +292,82 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=AKUUMFVD
 
+[GeneratedDocument1]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.DRR
+DItemRevisionGUID=
+
+[GeneratedDocument2]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.EXTREP
+DItemRevisionGUID=
+
+[GeneratedDocument3]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.GBL
+DItemRevisionGUID=
+
+[GeneratedDocument4]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.GBO
+DItemRevisionGUID=
+
+[GeneratedDocument5]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.GBP
+DItemRevisionGUID=
+
+[GeneratedDocument6]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.GBS
+DItemRevisionGUID=
+
+[GeneratedDocument7]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.GD1
+DItemRevisionGUID=
+
+[GeneratedDocument8]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.GG1
+DItemRevisionGUID=
+
+[GeneratedDocument9]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.GKO
+DItemRevisionGUID=
+
+[GeneratedDocument10]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.GPB
+DItemRevisionGUID=
+
+[GeneratedDocument11]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.GPT
+DItemRevisionGUID=
+
+[GeneratedDocument12]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.GTL
+DItemRevisionGUID=
+
+[GeneratedDocument13]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.GTO
+DItemRevisionGUID=
+
+[GeneratedDocument14]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.GTP
+DItemRevisionGUID=
+
+[GeneratedDocument15]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.GTS
+DItemRevisionGUID=
+
+[GeneratedDocument16]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.LDP
+DItemRevisionGUID=
+
+[GeneratedDocument17]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.REP
+DItemRevisionGUID=
+
+[GeneratedDocument18]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.RUL
+DItemRevisionGUID=
+
+[GeneratedDocument19]
+DocumentPath=Project Outputs for mchf_pro_mix\mchf_pro_mix.TXT
+DItemRevisionGUID=
+
 [Configuration1]
 Name=Sources
 ParameterCount=0

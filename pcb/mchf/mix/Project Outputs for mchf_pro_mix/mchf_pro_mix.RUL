@@ -1,0 +1,20 @@
+DRC Rules Export File for PCB: C:\Projects\wip\mcHF\pcb\mchf\mix\pcb\mchf_pro_mix.PcbDoc
+RuleKind=Width|RuleName=Schematic Width Constraint_16|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_15|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_14|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_13|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_12|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_11|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_10|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_6|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Width_VDD|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Width_D1_1|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Width_LCD_BL_K|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Width_LCD_BL_A|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Width_BLVDD|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Width_BLGND|Scope=Board|Minimum=12.00
+RuleKind=ShortCircuit|RuleName=ShortCircuit|Scope=Board|Allowed=0
+RuleKind=SolderMaskExpansion|RuleName=SolderMaskExpansion|Scope=Board|Minimum=6.00
+RuleKind=SolderMaskExpansion|RuleName=SolderMaskExpansion_1|Scope=Board|Minimum=-15.00
+RuleKind=Width|RuleName=Width|Scope=Board|Minimum=6.00
+RuleKind=Clearance|RuleName=Clearance|Scope=Board|Minimum=6.00
