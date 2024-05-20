@@ -1,0 +1,39 @@
+DRC Rules Export File for PCB: C:\Projects\wip\mcHF\pcb\mchf\ui\pcb\mchf_pro_ui.PcbDoc
+RuleKind=Width|RuleName=Schematic Width Constraint_31|Scope=Board|Minimum=30.00
+RuleKind=Width|RuleName=Schematic Width Constraint_30|Scope=Board|Minimum=30.00
+RuleKind=Width|RuleName=Schematic Width Constraint_29|Scope=Board|Minimum=30.00
+RuleKind=Width|RuleName=Schematic Width Constraint_28|Scope=Board|Minimum=30.00
+RuleKind=Width|RuleName=Schematic Width Constraint_27|Scope=Board|Minimum=20.00
+RuleKind=Width|RuleName=Schematic Width Constraint_26|Scope=Board|Minimum=20.00
+RuleKind=Width|RuleName=Schematic Width Constraint_25|Scope=Board|Minimum=20.00
+RuleKind=Width|RuleName=Schematic Width Constraint_24|Scope=Board|Minimum=15.00
+RuleKind=Width|RuleName=Schematic Width Constraint_23|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_22|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_21|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_20|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_19|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_18|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_17|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_16|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_15|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_14|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_13|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_12|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_11|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_10|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_9|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_8|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_7|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_6|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_5|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_4|Scope=Board|Minimum=12.00
+RuleKind=Width|RuleName=Schematic Width Constraint_3|Scope=Board|Minimum=10.00
+RuleKind=Width|RuleName=Schematic Width Constraint_2|Scope=Board|Minimum=10.00
+RuleKind=Width|RuleName=Schematic Width Constraint_1|Scope=Board|Minimum=10.00
+RuleKind=Width|RuleName=Schematic Width Constraint|Scope=Board|Minimum=10.00
+RuleKind=ShortCircuit|RuleName=ShortCircuit|Scope=Board|Allowed=0
+RuleKind=SolderMaskExpansion|RuleName=SolderMaskExpansion|Scope=Board|Minimum=4.00
+RuleKind=SolderMaskExpansion|RuleName=SolderMaskExpansion_1|Scope=Board|Minimum=-15.00
+RuleKind=Width|RuleName=Width|Scope=Board|Minimum=6.00
+RuleKind=Clearance|RuleName=Clearance|Scope=Board|Minimum=6.00
+RuleKind=Clearance|RuleName=Clearance_2|Scope=Board|Minimum=5.00

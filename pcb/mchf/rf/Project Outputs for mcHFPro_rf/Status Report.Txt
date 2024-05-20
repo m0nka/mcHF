@@ -1,0 +1,12 @@
+Output: NC Drill Files
+Type  : NC Drill
+From  : Project [mcHFPro_rf.PrjPcb]
+   Generated File[mchf_pro_rf.TXT]
+   Generated File[mchf_pro_rf.LDP]
+   Generated File[mchf_pro_rf.DRR]
+
+
+Files Generated   : 3
+Documents Printed : 0
+
+Finished Output Generation At 12:47:00 On 19/05/2024
