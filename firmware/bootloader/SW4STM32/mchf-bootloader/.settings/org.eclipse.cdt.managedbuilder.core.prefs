@@ -1,0 +1,11 @@
+eclipse.preferences.version=1
+environment/buildEnvironmentInclude/fr.ac6.managedbuild.config.gnu.cross.exe.debug.2050293020/CPATH/delimiter=;
+environment/buildEnvironmentInclude/fr.ac6.managedbuild.config.gnu.cross.exe.debug.2050293020/CPATH/operation=remove
+environment/buildEnvironmentInclude/fr.ac6.managedbuild.config.gnu.cross.exe.debug.2050293020/C_INCLUDE_PATH/delimiter=;
+environment/buildEnvironmentInclude/fr.ac6.managedbuild.config.gnu.cross.exe.debug.2050293020/C_INCLUDE_PATH/operation=remove
+environment/buildEnvironmentInclude/fr.ac6.managedbuild.config.gnu.cross.exe.debug.2050293020/append=true
+environment/buildEnvironmentInclude/fr.ac6.managedbuild.config.gnu.cross.exe.debug.2050293020/appendContributed=true
+environment/buildEnvironmentLibrary/fr.ac6.managedbuild.config.gnu.cross.exe.debug.2050293020/LIBRARY_PATH/delimiter=;
+environment/buildEnvironmentLibrary/fr.ac6.managedbuild.config.gnu.cross.exe.debug.2050293020/LIBRARY_PATH/operation=remove
+environment/buildEnvironmentLibrary/fr.ac6.managedbuild.config.gnu.cross.exe.debug.2050293020/append=true
+environment/buildEnvironmentLibrary/fr.ac6.managedbuild.config.gnu.cross.exe.debug.2050293020/appendContributed=true
