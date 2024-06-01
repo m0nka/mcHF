@@ -38,6 +38,8 @@
 #include <math.h>
 #include <limits.h>
 
+#define USE_PWR_LDO_SUPPLY
+
 //
 // ToDo: Overclocking causes LCD driver to HardFault!
 //

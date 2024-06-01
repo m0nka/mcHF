@@ -1565,18 +1565,35 @@ int main(void)
     SystemClock_Config();
 
 	// Init hw
-    critical_hw_init_and_run_fw();
+//!    critical_hw_init_and_run_fw();
 
     //EXTI15_10_IRQHandler_Config();
 
     // Proc init
-    bsp_config();
+//!    bsp_config();
 
     // Actual bootloader sequencing
-    boot_process();
+//!    boot_process();
+
+
+    GPIO_InitTypeDef  GPIO_InitStruct;
+
+
+
+    	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+    	GPIO_InitStruct.Pull  = GPIO_PULLDOWN;
+    	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+    	// PF6 is LED - ack boot up, in firmware should be ambient sensor, not GPIO!
+    	GPIO_InitStruct.Pin   = POWER_LED;
+    	HAL_GPIO_Init(POWER_LED_PORT, &GPIO_InitStruct);
+
+    //HAL_GPIO_WritePin(POWER_LED_PORT, POWER_LED, 1);
+
 
     while(1)
     {
-    	HAL_Delay(100);
+    	HAL_Delay(300);
+    	HAL_GPIO_TogglePin(POWER_LED_PORT, POWER_LED);
     }
 }
