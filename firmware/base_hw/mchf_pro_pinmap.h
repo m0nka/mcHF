@@ -65,8 +65,8 @@
 //#define LCD_TE_GPIO_CLK_DISABLE()        __HAL_RCC_GPIOJ_CLK_DISABLE()
 
 /* Back-light control pin */
-#define LCD_BL_CTRL_PIN                  GPIO_PIN_9
-#define LCD_BL_CTRL_GPIO_PORT            GPIOA
+#define LCD_BL_CTRL_PIN                  GPIO_PIN_1
+#define LCD_BL_CTRL_GPIO_PORT            GPIOB
 //#define LCD_BL_CTRL_GPIO_CLK_ENABLE()    __HAL_RCC_GPIOJ_CLK_ENABLE()
 //#define LCD_BL_CTRL_GPIO_CLK_DISABLE()   __HAL_RCC_GPIOJ_CLK_DISABLE()
 //

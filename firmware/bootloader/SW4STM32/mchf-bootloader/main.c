@@ -1565,17 +1565,17 @@ int main(void)
     SystemClock_Config();
 
 	// Init hw
-//!    critical_hw_init_and_run_fw();
+    critical_hw_init_and_run_fw();
 
     //EXTI15_10_IRQHandler_Config();
 
     // Proc init
-//!    bsp_config();
+    bsp_config();
 
     // Actual bootloader sequencing
-//!    boot_process();
+    boot_process();
 
-
+/*
     GPIO_InitTypeDef  GPIO_InitStruct;
 
 
@@ -1590,7 +1590,9 @@ int main(void)
 
     //HAL_GPIO_WritePin(POWER_LED_PORT, POWER_LED, 1);
 
-
+    	hw_lcd_gpio_init();
+    	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+*/
     while(1)
     {
     	HAL_Delay(300);
