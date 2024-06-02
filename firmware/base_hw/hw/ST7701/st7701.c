@@ -292,6 +292,9 @@ int ST7701S_Init(unsigned long ColorCoding)
 	buff[1] = DSI_CMD2_BK0_INVSEL_B1;
 	mipi_write_long(0xC2, buff, 2);
 
+	// Rotate LCD 180deg for v 0.8.4
+	mipi_write_short(0xC7, 0x04);
+
 	mipi_write_short(0xCC, 0x10);
 	mipi_write_long(0xC3, &lcd_reg_data03[0], sizeof(lcd_reg_data03));
 	mipi_write_long(0xB0, &lcd_reg_data04[0], sizeof(lcd_reg_data04));
@@ -342,6 +345,9 @@ int ST7701S_Init(unsigned long ColorCoding)
 		mipi_write_short(0x3A, 0x50);
 	else
 		mipi_write_short(0x3A, 0x70);
+
+	// Rotate LCD 180deg for v 0.8.4
+	mipi_write_short(0x36, 0x10);
 
     mipi_write_short(OTM8009A_CMD_DISPON, 0);
 

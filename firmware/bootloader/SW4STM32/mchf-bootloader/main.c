@@ -1520,6 +1520,7 @@ void boot_process(void)
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	// Stall, and power off eventually
+	#if 0
 	ulong pc = 0;
 	while(1)
 	{
@@ -1536,6 +1537,7 @@ void boot_process(void)
 			power_off_x(0);
 		}
 	}
+	#endif
 }
 
 int main(void)
@@ -1575,24 +1577,6 @@ int main(void)
     // Actual bootloader sequencing
     boot_process();
 
-/*
-    GPIO_InitTypeDef  GPIO_InitStruct;
-
-
-
-    	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
-    	GPIO_InitStruct.Pull  = GPIO_PULLDOWN;
-    	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-
-    	// PF6 is LED - ack boot up, in firmware should be ambient sensor, not GPIO!
-    	GPIO_InitStruct.Pin   = POWER_LED;
-    	HAL_GPIO_Init(POWER_LED_PORT, &GPIO_InitStruct);
-
-    //HAL_GPIO_WritePin(POWER_LED_PORT, POWER_LED, 1);
-
-    	hw_lcd_gpio_init();
-    	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
-*/
     while(1)
     {
     	HAL_Delay(300);
