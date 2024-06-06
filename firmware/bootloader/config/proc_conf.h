@@ -18,6 +18,6 @@
 // Firmware execution context
 
 // Processor communication: 	STM32 <-> ESP32
-#define CONTEXT_IPC_PROC
+//#define CONTEXT_IPC_PROC
 
 #endif

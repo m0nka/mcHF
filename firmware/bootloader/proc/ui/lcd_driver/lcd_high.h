@@ -168,6 +168,7 @@ void     lcd_low_FillRect(uint32_t Xpos, uint32_t Ypos, uint32_t Width, uint32_t
 void     lcd_low_DrawLine(uint32_t Xpos1, uint32_t Ypos1, uint32_t Xpos2, uint32_t Ypos2, uint32_t Color);
 void     lcd_low_DrawRect(uint32_t Xpos, uint32_t Ypos, uint32_t Width, uint32_t Height, uint32_t Color);
 void     lcd_low_DrawCircle(uint32_t Xpos, uint32_t Ypos, uint32_t Radius, uint32_t Color);
+void     lcd_low_DrawCircleG(uint32_t Xpos, uint32_t Ypos, uint32_t Radius, uint32_t Color);
 void     lcd_low_DrawPolygon(pPoint Points, uint32_t PointCount, uint32_t Color);
 void     lcd_low_DrawEllipse(int Xpos, int Ypos, int XRadius, int YRadius, uint32_t Color);
 void     lcd_low_FillCircle(uint32_t Xpos, uint32_t Ypos, uint32_t Radius, uint32_t Color);

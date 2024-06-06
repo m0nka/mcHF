@@ -689,6 +689,82 @@ void lcd_low_DrawCircle(uint32_t Xpos, uint32_t Ypos, uint32_t Radius, uint32_t 
   }
 }
 
+void lcd_low_DrawCircleG(uint32_t Xpos, uint32_t Ypos, uint32_t Radius, uint32_t c)
+{
+  int32_t   decision;  /* Decision Variable */
+  uint32_t  current_x; /* Current X Value */
+  uint32_t  current_y; /* Current Y Value */
+  uint32_t Color = c;
+
+  decision = 3 - (Radius << 1);
+  current_x = 0;
+  current_y = Radius;
+
+  while (current_x <= current_y)
+  {
+	  Color -= 0x050505;
+
+    if((Ypos - current_y) < DrawProp->GuiYsize)
+    {
+      if((Xpos + current_x) < DrawProp->GuiXsize)
+      {
+        lcd_low_SetPixel((Xpos + current_x), (Ypos - current_y), Color);
+      }
+      if((Xpos - current_x) < DrawProp->GuiXsize)
+      {
+        lcd_low_SetPixel((Xpos - current_x), (Ypos - current_y), Color);
+      }
+    }
+
+    if((Ypos - current_x) < DrawProp->GuiYsize)
+    {
+      if((Xpos + current_y) < DrawProp->GuiXsize)
+      {
+        lcd_low_SetPixel((Xpos + current_y), (Ypos - current_x), Color);
+      }
+      if((Xpos - current_y) < DrawProp->GuiXsize)
+      {
+        lcd_low_SetPixel((Xpos - current_y), (Ypos - current_x), Color);
+      }
+    }
+
+    if((Ypos + current_y) < DrawProp->GuiYsize)
+    {
+      if((Xpos + current_x) < DrawProp->GuiXsize)
+      {
+        lcd_low_SetPixel((Xpos + current_x), (Ypos + current_y), Color);
+      }
+      if((Xpos - current_x) < DrawProp->GuiXsize)
+      {
+        lcd_low_SetPixel((Xpos - current_x), (Ypos + current_y), Color);
+      }
+    }
+
+    if((Ypos + current_x) < DrawProp->GuiYsize)
+    {
+      if((Xpos + current_y) < DrawProp->GuiXsize)
+      {
+        lcd_low_SetPixel((Xpos + current_y), (Ypos + current_x), Color);
+      }
+      if((Xpos - current_y) < DrawProp->GuiXsize)
+      {
+        lcd_low_SetPixel((Xpos - current_y), (Ypos + current_x), Color);
+      }
+    }
+
+    if (decision < 0)
+    {
+      decision += (current_x << 2) + 6;
+    }
+    else
+    {
+      decision += ((current_x - current_y) << 2) + 10;
+      current_y--;
+    }
+    current_x++;
+  }
+}
+
 /**
   * @brief  Draws an poly-line (between many points) in currently active layer.
   * @param  Points      Pointer to the points array

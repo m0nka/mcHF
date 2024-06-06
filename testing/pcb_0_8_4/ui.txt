@@ -4,3 +4,4 @@
 - S22/S24 footprint completely wrong
 - speaker conn top overlay under connector
 - paddles conn top overlay under connector
+- add Vcc to USB-C connector(for programmer feedback)

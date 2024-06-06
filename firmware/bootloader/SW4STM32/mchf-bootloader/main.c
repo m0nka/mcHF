@@ -736,6 +736,64 @@ static void power_off_x(uchar reset_reason)
 }
 #endif
 
+static void draw_atlas_circle(ushort c2x,ushort c2y, uchar dir)
+{
+	short factorX = -12;
+	short factorY = -12;
+
+	if(dir)
+	{
+		//factorX = 14;
+		factorY = 12;
+	}
+
+	lcd_low_DrawCircle(c2x + factorX, 	c2y + factorY, 		17, 0x403079B0);
+	lcd_low_DrawCircle(c2x + factorX, 	c2y + factorY, 		18, 0x403079B0);
+	lcd_low_FillCircle(c2x + factorX/2, c2y + factorY/2, 	16, lcd_low_COLOR_BLACK);
+	lcd_low_DrawCircle(c2x + factorX/2, c2y + factorY/2, 	17, 0x803b0bc0);
+	lcd_low_DrawCircle(c2x + factorX/2, c2y + factorY/2, 	18, 0x803b0bc0);
+	lcd_low_FillCircle(c2x, 			c2y, 				16, lcd_low_COLOR_BLACK);
+	lcd_low_DrawCircle(c2x, 			c2y, 				17, 0xff3c8bc7);
+	lcd_low_DrawCircle(c2x, 			c2y, 				18, 0xff3c8bc7);
+	lcd_low_FillCircle(c2x, 			c2y, 			 	 9, 0xffffce23);
+}
+
+static void draw_atlas_ui(void)
+{
+	uchar i, j, k;
+	ulong col;
+
+	// Draw a gradient line
+	for(j = 0, k = 0; j < 6; j++)
+	{
+		col = lcd_low_COLOR_DARKGRAY;
+		for(i = 0; i < 6; i++)
+		{
+			if(i)
+				lcd_low_FillRect(460, k + 45 + j*72 + + i*12, 4, 2, col);
+			else
+				lcd_low_FillRect(460, k + 45 + j*72 + + i*12, 6, 4, col);
+			col += 0x101010;
+		}
+
+		if(j == 2) k = 20;
+	}
+
+	// Mid point vertical blue line
+	lcd_low_DrawHLine(450, 265, 20, 0xff3b6a97);
+	lcd_low_DrawHLine(450, 266, 20, 0xff3b6a97);
+	lcd_low_DrawHLine(450, 267, 20, 0xff3b6a97);
+
+	// Side circles
+	draw_atlas_circle(430,450, 0);
+	draw_atlas_circle(430, 60, 1);
+
+	// Top text
+	lcd_low_SetFont(&Font24);
+	lcd_low_SetTextColor(lcd_low_COLOR_WHITE);
+	lcd_low_DisplayStringAt(50, 160, (uint8_t *)"BOOTLOADER", LEFT_MODE);
+}
+
 void bare_lcd_init(void)
 {
 	if(BSP_LCD_Init(0, LCD_ORIENTATION_PORTRAIT) != BSP_ERROR_NONE)
@@ -753,17 +811,17 @@ void bare_lcd_init(void)
 	HAL_LTDC_ProgramLineEvent(&hltdc, 0);
 	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET); 			// backlight on
 
-	// High level driver init
 	lcd_low_Clear(lcd_low_COLOR_BLACK);
-	lcd_low_SetFont(&Font16);
+
+	draw_atlas_ui();
 
 	// Right side info bar
-	lcd_low_DrawRect(1, 345, 479, 134, lcd_low_COLOR_WHITE);							// rect outline
+	//lcd_low_DrawRect(1, 345, 479, 134, lcd_low_COLOR_WHITE);							// rect outline
 	//
-	lcd_low_SetBackColor(lcd_low_COLOR_WHITE);
-	lcd_low_SetTextColor(lcd_low_COLOR_BLACK);
-	lcd_low_DisplayStringAt(LINE(0) + 1, 335, (uint8_t *)"boot version", LEFT_MODE);	// label
-	lcd_low_DisplayStringAt(LINE(2) + 1, 335, (uint8_t *)"coop version", LEFT_MODE);	// label
+	//lcd_low_SetBackColor(lcd_low_COLOR_WHITE);
+	//lcd_low_SetTextColor(lcd_low_COLOR_BLACK);
+	//lcd_low_DisplayStringAt(LINE(0) + 1, 335, (uint8_t *)"boot version", LEFT_MODE);	// label
+	//lcd_low_DisplayStringAt(LINE(2) + 1, 335, (uint8_t *)"coop version", LEFT_MODE);	// label
 }
 
 #if 0
@@ -1363,7 +1421,7 @@ void gpio_clocks_on(void)
 void boot_process(void)
 {
 	char 	buff[200];
-	int 	line = 0;
+	int 	line = 10;
 
 	// Init LCD
     bare_lcd_init();
@@ -1376,22 +1434,22 @@ void boot_process(void)
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	sprintf(buff, "%s", DEVICE_STRING);
-	lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)buff, LEFT_MODE);
+//!	lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)buff, LEFT_MODE);
 	line += 2;
 	sprintf(buff, "%d.%d.%d.%d", MCHF_L_VER_MAJOR, MCHF_L_VER_MINOR, MCHF_L_VER_RELEASE, MCHF_L_VER_BUILD);
-	lcd_low_DisplayStringAt(LINE(1) + 1, 350, (uint8_t *)buff, LEFT_MODE);	// label
+//|!	lcd_low_DisplayStringAt(LINE(1) + 1, 350, (uint8_t *)buff, LEFT_MODE);	// label
 
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	// Test for general boot error (clocks, lcd, etc)
-	lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing BOOT err...", LEFT_MODE);
+//!	lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing BOOT err...", LEFT_MODE);
 
 	if(gen_boot_reason_err == 0)
-		lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing BOOT err...PASS", LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing BOOT err...PASS", LEFT_MODE);
 	else
 	{
 		sprintf(buff, "Update Firmware....FAIL(%d)", gen_boot_reason_err);
-		lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)buff, LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)buff, LEFT_MODE);
 	}
 	line++;
 
@@ -1431,52 +1489,52 @@ void boot_process(void)
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	// SDRAM test
-	lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing SDRAM......", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SDRAM......", LEFT_MODE);
 
 	if(sdram_test() != 0)
 	{
-		lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing SDRAM......FAIL.", LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SDRAM......FAIL.", LEFT_MODE);
 	}
 	else
 	{
-		lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing SDRAM......PASS", LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SDRAM......PASS", LEFT_MODE);
 	}
 	line++;
 
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	// SD Card test
-	lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing SD Card....", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SD Card....", LEFT_MODE);
 
 	if(test_sd_card() == 0)
 	{
-		lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing SD Card....PASS", LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SD Card....PASS", LEFT_MODE);
 		line++;
 
 		if(reset_reason == RESET_UPDATE_FW)
 		{
-			lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Update Firmware....", LEFT_MODE);
+			lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Update Firmware....", LEFT_MODE);
 
 			uchar res = update_radio();
 			if(res == 0)
-				lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Update Firmware....PASS", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Update Firmware....PASS", LEFT_MODE);
 			else
 			{
 				sprintf(buff, "Update Firmware....FAIL(%d)", res);
-				lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)buff, LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)buff, LEFT_MODE);
 			}
 			line++;
 		}
 
 		#if 1
-		lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Upload DSP Core....", LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Upload DSP Core....", LEFT_MODE);
 		uchar d_res = load_default_dsp_core(1);
 		if(d_res == 0)
-			lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Upload DSP Core....PASS", LEFT_MODE);
+			lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Upload DSP Core....PASS", LEFT_MODE);
 		else
 		{
 			sprintf(buff, "Upload DSP Core....FAIL(%d)", d_res);
-			lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)buff, LEFT_MODE);
+			lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)buff, LEFT_MODE);
 		}
 		line++;
 		#endif
@@ -1486,18 +1544,18 @@ void boot_process(void)
 	}
 	else
 	{
-		lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing SD Card....FAIL", LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SD Card....FAIL", LEFT_MODE);
 		line++;
 	}
 
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	// Firmware test
-	lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing Firmware...", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing Firmware...", LEFT_MODE);
 
 	if(is_firmware_valid() == 0)
 	{
-		lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing Firmware...PASS", LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing Firmware...PASS", LEFT_MODE);
 		line++;
 
 		HAL_Delay(8000);
@@ -1506,7 +1564,7 @@ void boot_process(void)
 		jump_to_fw(RADIO_FIRM_ADDR);
 	}
 
-	lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing Firmware...FAIL", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing Firmware...FAIL", LEFT_MODE);
 	line++;
 
 	// Test - chip blank programming
