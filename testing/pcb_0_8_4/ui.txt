@@ -5,3 +5,4 @@
 - speaker conn top overlay under connector
 - paddles conn top overlay under connector
 - add Vcc to USB-C connector(for programmer feedback)
+- move LCD connectors to the left

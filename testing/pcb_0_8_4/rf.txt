@@ -1,6 +1,7 @@
 - heatsink mount holes wrong
 - batt holder footprint wrong
 - usb footprint wrong
+- usb conn sticking out too much
 - fan conn top overlay under connector
 - encoder poss might be wrong
 - fan position holes wrong spacing
