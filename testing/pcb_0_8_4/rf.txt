@@ -7,3 +7,6 @@
 - fan position holes wrong spacing
 - heatsink bolts need mask and spacing around
 - final mosfets needs to come closer to heatsink
+- U6 footprint is rotated
+- C77 needs 10uF and bigger footprint
+- C29 to 100nF

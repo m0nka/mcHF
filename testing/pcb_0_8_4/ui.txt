@@ -7,3 +7,8 @@
 - add Vcc to USB-C connector(for programmer feedback)
 - move LCD connectors to the left
 - C29, move close to TS1
+- TS1 pinout is wrong!!!
+- sd card not grounded
+- CP43E too far away from CPU
+- C35 probably wrong voltage/footprint
+- CC20E, CC25, C6 and C7 touch PA transformer on RF board
