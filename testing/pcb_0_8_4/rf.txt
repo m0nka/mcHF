@@ -10,3 +10,9 @@
 - U6 footprint is rotated
 - C77 needs 10uF and bigger footprint
 - C29 to 100nF
+- U4 maybe touching components on the MIX board
+- encoder needs caps(1nF) to GND
+- add LEDs on power rails
+- put solder mask rectangluars for each LPF(both sides)
+- U7 and U8 need large heat pads on top layer only
+- C97 text, move
