@@ -162,8 +162,8 @@
 #define SD_DET_PORT              		GPIOC
 
 // SD Card power
-#define SD_PWR_CNTR                   	GPIO_PIN_13
-#define SD_PWR_CNTR_PORT              	GPIOB
+#define SD_PWR_CNTR                   	GPIO_PIN_10
+#define SD_PWR_CNTR_PORT              	GPIOG
 
 // SD Card SDIO interface
 #define SDMMC1_D0                   	GPIO_PIN_8
@@ -231,8 +231,8 @@
 #endif
 
 // Regulator control (5V and 8V)
-#define VCC_5V_ON						GPIO_PIN_10
-#define VCC_5V_ON_PORT            		GPIOG
+#define VCC_5V_ON						GPIO_PIN_13
+#define VCC_5V_ON_PORT            		GPIOB
 
 // Power hold (high level keeps 3V regulator on)
 #define POWER_HOLD						GPIO_PIN_13

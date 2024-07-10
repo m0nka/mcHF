@@ -14,3 +14,5 @@
 - CC20E, CC25, C6 and C7 touch PA transformer on RF board
 - add LED on 3.3V power rail
 - change R40 to 560k and R41 to 100k
+- change R37 to 0 Ohm
+- hook USB programming pins to regulator inhibit(to allow programming when off)

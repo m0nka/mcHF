@@ -19,3 +19,4 @@
 - USB footprint mirrored
 - CFG1,2 and 3 need to be NC
 - C29 needs discharge resistor
+- L28 needs to be bigger inductor

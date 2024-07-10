@@ -1173,7 +1173,7 @@ static void critical_hw_init_and_run_fw(void)
 	}
 
 	// Balancer need explicit disable on reset
-	#ifdef REV_8_2
+	#ifdef REV_8_2___
 	// BAL1 is PG6, BAL2 is PG3, BAL3 is PG2
 	GPIO_InitStruct.Pin   = BAL1_ON|BAL2_ON|BAL3_ON;
 	HAL_GPIO_Init(BAL13_PORT, &GPIO_InitStruct);
@@ -1190,11 +1190,11 @@ static void critical_hw_init_and_run_fw(void)
 	#ifdef REV_8_2
 	GPIO_InitStruct.Pin   = VCC_5V_ON;
 	HAL_GPIO_Init(VCC_5V_ON_PORT, &GPIO_InitStruct);
-	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, 0);
+	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, 1);
 	#endif
 
 	// Disable charger
-	#ifdef REV_8_2
+	#ifdef REV_8_2___
 	GPIO_InitStruct.Pin   = CHGR_ON;
 	HAL_GPIO_Init(CHGR_ON_PORT, &GPIO_InitStruct);
 	//
