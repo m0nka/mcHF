@@ -17,7 +17,7 @@
 // -----------------------------------------------------------------------------
 // Version and device id
 //
-#define	DEVICE_STRING				"mcHF Pro Bootloader"
+#define	DEVICE_STRING				"mcHF Bootloader"
 #define	AUTHOR_STRING				"Krassi Atanassov,M0NKA 2013-2024"
 //
 #define	MCHF_L_VER_MAJOR			0

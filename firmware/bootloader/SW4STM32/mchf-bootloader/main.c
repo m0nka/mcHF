@@ -555,7 +555,7 @@ static void bsp_config(void)
 {
 	// Use sharing, as DSP core might be running after reset
 	printf_init(1);
-	printf("-->%s v:%d.%d.%d.%d,%s\r\n", DEVICE_STRING, MCHF_L_VER_MAJOR, MCHF_L_VER_MINOR, MCHF_L_VER_RELEASE, MCHF_L_VER_BUILD, AUTHOR_STRING);
+	printf("%s v: %d.%d  \r\n", DEVICE_STRING, MCHF_L_VER_RELEASE, MCHF_L_VER_BUILD);
 
 	// Initialise the screen
 	hw_lcd_gpio_init();
@@ -1140,16 +1140,16 @@ static void critical_hw_init_and_run_fw(void)
 	HAL_GPIO_Init(POWER_LED_PORT, &GPIO_InitStruct);
 
 	// Hold power
-	#ifdef REV_8_2
+	//#if 0
 	//if(HAL_GPIO_ReadPin(POWER_BUTTON_PORT, POWER_BUTTON) == GPIO_PIN_SET)	// is it user event ?
 	//{
 		HAL_GPIO_WritePin(POWER_LED_PORT,POWER_LED, 1);		// led on
 		HAL_GPIO_WritePin(POWER_HOLD_PORT,POWER_HOLD, 1);	// hold power, high
 	//}
-	#else
-	HAL_GPIO_WritePin(POWER_LED_PORT,POWER_LED, 1);			// led on
-	HAL_GPIO_WritePin(GPIOG,GPIO_PIN_11, 0);				// hold power, low
-	#endif
+	//#else
+	//HAL_GPIO_WritePin(POWER_LED_PORT,POWER_LED, 1);			// led on
+	//(GPIOG,GPIO_PIN_11, 0);				// hold power, low
+	//#endif
 
 	// Change DSP code
 	if(reset_reason == RESET_DSP_RELOAD)
@@ -1173,7 +1173,7 @@ static void critical_hw_init_and_run_fw(void)
 	}
 
 	// Balancer need explicit disable on reset
-	#ifdef REV_8_2___
+	#if 0
 	// BAL1 is PG6, BAL2 is PG3, BAL3 is PG2
 	GPIO_InitStruct.Pin   = BAL1_ON|BAL2_ON|BAL3_ON;
 	HAL_GPIO_Init(BAL13_PORT, &GPIO_InitStruct);
@@ -1187,14 +1187,12 @@ static void critical_hw_init_and_run_fw(void)
 
 	// 5V control via logic high
 	//  - using isolation MOSFET to prevent idle leak battery->regulator inhibit->CPU gpio
-	#ifdef REV_8_2
 	GPIO_InitStruct.Pin   = VCC_5V_ON;
 	HAL_GPIO_Init(VCC_5V_ON_PORT, &GPIO_InitStruct);
 	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, 1);
-	#endif
 
 	// Disable charger
-	#ifdef REV_8_2___
+	#if 0
 	GPIO_InitStruct.Pin   = CHGR_ON;
 	HAL_GPIO_Init(CHGR_ON_PORT, &GPIO_InitStruct);
 	//
