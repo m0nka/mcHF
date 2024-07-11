@@ -462,7 +462,11 @@
 // PH3			FMC_SDNE0
 // PH4			LO_SCL_I2C2
 // PH5			LO_SDA_I2C2
+
 // PH6			TOUCH_INT
+#define TS_INT_PIN                        GPIO_PIN_6
+#define TS_INT_GPIO_PORT                  GPIOH
+
 // PH7			DSI_RESET
 #define LCD_RESET_PIN                    GPIO_PIN_7
 #define LCD_RESET_PULL                   GPIO_NOPULL
