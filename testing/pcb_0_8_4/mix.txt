@@ -1,0 +1,2 @@
+- J2MIX footprint needs extended pads for easier hand soldering
+- mark Q2 as DNI on the schematics

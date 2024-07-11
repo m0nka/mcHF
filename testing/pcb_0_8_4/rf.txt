@@ -1,0 +1,22 @@
+- heatsink mount holes wrong
+- batt holder footprint wrong
+- usb footprint wrong
+- usb conn sticking out too much
+- fan conn top overlay under connector
+- encoder poss might be wrong
+- fan position holes wrong spacing
+- heatsink bolts need mask and spacing around
+- final mosfets needs to come closer to heatsink
+- U6 footprint is rotated
+- C77 needs 10uF ceramic
+- C29 to 100nF
+- U4 maybe touching components on the MIX board
+- encoder needs caps(1nF) to GND
+- add LEDs on power rails
+- put solder mask rectangluars for each LPF(both sides)
+- U7 and U8 need large heat pads on top layer only
+- C97 text, move
+- USB footprint mirrored
+- CFG1,2 and 3 need to be NC
+- C29 needs discharge resistor
+- L28 needs to be bigger inductor
