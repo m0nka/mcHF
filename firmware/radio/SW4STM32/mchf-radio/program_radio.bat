@@ -12,7 +12,7 @@
 :: Main Board
 @SET MAIN_BOARD=-DISCO
 :: Hex filename
-@SET HEX_FILE="Debug_CM7/mchf-radio_CM7.elf"
+@SET HEX_FILE="Debug_CM7/mchf-radio_CM7.bin"
 @IF NOT EXIST "%HEX_FILE%" @ECHO %HEX_FILE% Does not exist !! && GOTO goError
 
 :: Board ID
@@ -37,7 +37,7 @@ TITLE STM32CubeProgrammer Utility for %CHIP_NAME%%MAIN_BOARD%
 @ECHO Programming %HEX_FILE% on board id %BOARD_ID%
 @ECHO =============================================
 @ECHO.
-STM32_Programmer_CLI.exe -c port=SWD index=%BOARD_ID% reset=HWrst -d %HEX_FILE% -HardRst --start 0x08000000
+STM32_Programmer_CLI.exe -c port=SWD index=%BOARD_ID% reset=HWrst -d %HEX_FILE% 0x08020000 -HardRst --start 0x08000000
 @IF NOT ERRORLEVEL 0 (
   @GOTO goError
 )

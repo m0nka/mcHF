@@ -318,13 +318,13 @@ static void power_cntr_init(void)
 	HAL_GPIO_Init(VCC_5V_ON_PORT, &gpio_init_structure);
 
 	// 5V ON on start
-	#ifndef REV_8_2
+	#if 0
 	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, GPIO_PIN_RESET);
 	#else
 	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, GPIO_PIN_SET);
 	#endif
 
-	#ifndef REV_8_2
+	#if 0
 	// 8V on is PG9
 	gpio_init_structure.Pin   = GPIO_PIN_9;
 	HAL_GPIO_Init(GPIOG, &gpio_init_structure);
@@ -540,7 +540,7 @@ uint8_t BSP_Config(void)
 	#endif
 
 	// Disable charger
-	#ifdef REV_8_2
+	#if 0
 	GPIO_InitStruct.Pin   = CHGR_ON;
 	HAL_GPIO_Init(CHGR_ON_PORT, &GPIO_InitStruct);
 	//
