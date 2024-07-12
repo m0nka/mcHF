@@ -552,7 +552,7 @@ uint8_t BSP_Config(void)
 	#endif
 
 	printf_init(1);
-	printf("-->%s v:%d.%d.%d.%d,%s\r\n", DEVICE_STRING, MCHF_R_VER_MAJOR, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE, MCHF_R_VER_BUILD, AUTHOR_STRING);
+	printf("-->%s v: %d.%d\r\n", DEVICE_STRING, MCHF_R_VER_RELEASE, MCHF_R_VER_BUILD);
 
 	power_cntr_init();
 	//--bal_control_init();	- moved to bms proc hw init

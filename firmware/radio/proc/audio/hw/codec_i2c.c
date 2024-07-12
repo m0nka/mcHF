@@ -680,6 +680,7 @@ static void I2C1_MspInit(I2C_HandleTypeDef *phi2c)
   /*** Configure the GPIOs ***/
   /* Enable SCL GPIO clock */
   BUS_I2C1_SCL_GPIO_CLK_ENABLE();
+
   /* Enable SDA GPIO clock */
   BUS_I2C1_SDA_GPIO_CLK_ENABLE();
 

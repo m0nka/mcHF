@@ -15,6 +15,7 @@
 #define __CODEC_I2C_H
 
 #include "stm32h747i_discovery_conf.h"
+#include "mchf_pro_pinmap.h"
 
 #if (USE_HAL_I2C_REGISTER_CALLBACKS == 1)
 typedef struct
@@ -25,24 +26,24 @@ typedef struct
 #endif /* (USE_HAL_I2C_REGISTER_CALLBACKS == 1) */
 
 #ifdef BOARD_MCHF_PRO
-#define BUS_I2C1                               I2C1
-#define BUS_I2C1_CLK_ENABLE()                  __HAL_RCC_I2C1_CLK_ENABLE()
-#define BUS_I2C1_CLK_DISABLE()                 __HAL_RCC_I2C1_CLK_DISABLE()
+#define BUS_I2C1                               I2C4
+#define BUS_I2C1_CLK_ENABLE()                  __HAL_RCC_I2C4_CLK_ENABLE()
+#define BUS_I2C1_CLK_DISABLE()                 __HAL_RCC_I2C4_CLK_DISABLE()
 #define BUS_I2C1_SCL_GPIO_CLK_ENABLE()         __HAL_RCC_GPIOB_CLK_ENABLE()
 #define BUS_I2C1_SCL_GPIO_CLK_DISABLE()        __HAL_RCC_GPIOB_CLK_DISABLE()
 #define BUS_I2C1_SDA_GPIO_CLK_ENABLE()         __HAL_RCC_GPIOB_CLK_ENABLE()
 #define BUS_I2C1_SDA_GPIO_CLK_DISABLE()        __HAL_RCC_GPIOB_CLK_DISABLE()
 
-#define BUS_I2C1_FORCE_RESET()                 __HAL_RCC_I2C1_FORCE_RESET()
-#define BUS_I2C1_RELEASE_RESET()               __HAL_RCC_I2C1_RELEASE_RESET()
+#define BUS_I2C1_FORCE_RESET()                 __HAL_RCC_I2C4_FORCE_RESET()
+#define BUS_I2C1_RELEASE_RESET()               __HAL_RCC_I2C4_RELEASE_RESET()
 
-/* Definition for I2C4 Pins */
-#define BUS_I2C1_SCL_PIN                       GPIO_PIN_8
-#define BUS_I2C1_SDA_PIN                       GPIO_PIN_9
-#define BUS_I2C1_SCL_GPIO_PORT                 GPIOB
-#define BUS_I2C1_SDA_GPIO_PORT                 GPIOB
-#define BUS_I2C1_SCL_AF                        GPIO_AF4_I2C1
-#define BUS_I2C1_SDA_AF                        GPIO_AF4_I2C1
+/* Definition for I2C1 Pins */
+#define BUS_I2C1_SCL_PIN                       CODEC_SCL_I2C4_PIN
+#define BUS_I2C1_SDA_PIN                       CODEC_SDA_I2C4_PIN
+#define BUS_I2C1_SCL_GPIO_PORT                 CODEC_SCL_I2C4_PORT
+#define BUS_I2C1_SDA_GPIO_PORT                 CODEC_SDA_I2C4_PORT
+#define BUS_I2C1_SCL_AF                        CODEC_SCL_I2C4_AF
+#define BUS_I2C1_SDA_AF                        CODEC_SDA_I2C4_AF
 #endif
 
 #ifndef BUS_I2C1_FREQUENCY

@@ -54,10 +54,10 @@ void HAL_DAC_MspInit(DAC_HandleTypeDef *hdac)
 
   /*##-2- Configure peripheral GPIO ##########################################*/
   /* DAC Channel1 GPIO pin configuration */
-  GPIO_InitStruct.Pin  = GPIO_PIN_4|GPIO_PIN_5;
+  GPIO_InitStruct.Pin  = DAC1_OUT1|DAC1_OUT2;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(DAC1_OUTX_PORT, &GPIO_InitStruct);
 }
 
 //#define ENABLE_TX_PA

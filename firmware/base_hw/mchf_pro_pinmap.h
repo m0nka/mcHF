@@ -263,8 +263,14 @@
 // PA1			ENC1_I
 // PA2			LORA_POWER
 // PA3			RFM_DIO2
+
 // PA4			DAC1_OUT1
+#define DAC1_OUT1		GPIO_PIN_4
+#define DAC1_OUTX_PORT	GPIOA
+
 // PA5			DAC1_OUT2
+#define DAC1_OUT2		GPIO_PIN_5
+
 // PA6			RFM_MISO_SPI1
 // PA7			RFM_MOSI_SPI1
 // PA8			CLK_42M
@@ -294,8 +300,17 @@
 // PB5			KEYPAD_X5
 // PB6			TOUCH_SCK_I2C1
 // PB7			TOUCH_SDA_I2C1
+
 // PB8			CODEC_SCL_I2C4
+#define CODEC_SCL_I2C4_PIN               GPIO_PIN_8
+#define CODEC_SCL_I2C4_PORT              GPIOB
+#define CODEC_SCL_I2C4_AF                GPIO_AF6_I2C4
+
 // PB9			CODEC_SDA_I2C4
+#define CODEC_SDA_I2C4_PIN               GPIO_PIN_9
+#define CODEC_SDA_I2C4_PORT              GPIOB
+#define CODEC_SDA_I2C4_AF                GPIO_AF6_I2C4
+
 // PB10			ATT_LE
 // PB11			DSI_TE
 // PB12			PTT
@@ -425,7 +440,13 @@
 // PG0			FMC_A10
 // PG1			FMC_A11
 // PG2			DIT_IRQ
+#define PADDLE_DIT_PIO			GPIOG
+#define PADDLE_DIT				LL_GPIO_PIN_2
+
 // PG3			DAH_IRQ
+#define PADDLE_DAH_PIO 			GPIOG
+#define PADDLE_DAH				LL_GPIO_PIN_3
+
 // PG4			FMC_BA0
 // PG5			FMC_BA1
 

@@ -52,7 +52,7 @@
 // -----------------------------------------------------------------------------------------------
 // Core to core communication: 	M7 <-> M4
 //
-//#define CONTEXT_ICC
+#define CONTEXT_ICC
 //
 // -----------------------------------------------------------------------------------------------
 // Processor communication: 	STM32 <-> ESP32
@@ -75,7 +75,7 @@
 // -----------------------------------------------------------------------------------------------
 // Codec I2C control(M7, while SAI streaming in DSP core)
 //
-//#define CONTEXT_AUDIO
+#define CONTEXT_AUDIO
 //
 // -----------------------------------------------------------------------------------------------
 // Battery Management System
@@ -96,7 +96,7 @@
 // Transmitter HW control/monitor
 //
 //
-//#define CONTEXT_TRX
+#define CONTEXT_TRX
 //
 #else
 //

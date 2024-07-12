@@ -496,23 +496,6 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=MPRJBCLL
 
-[Document28]
-DocumentPath=..\..\..\..\..\..\Users\princess\Desktop\reg.PcbLib
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=-1
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=1
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=GSAJIBTI
-
 [GeneratedDocument1]
 DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.DRR
 DItemRevisionGUID=
