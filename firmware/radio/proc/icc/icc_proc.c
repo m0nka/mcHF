@@ -310,6 +310,7 @@ static uchar icc_proc_init_rpc(void)
 	if(OPENAMP_Wait_EndPointready(&rp_endpoint) != 0)
 	{
 		OPENAMP_DeInit();
+		printf("endpoint not ready \r\n");
 		return 2;
 	}
 
@@ -317,6 +318,7 @@ static uchar icc_proc_init_rpc(void)
 	if(service_created == 0)
 	{
 		OPENAMP_DeInit();
+		printf("service not created \r\n");
 		return 3;
 	}
 
@@ -324,6 +326,7 @@ static uchar icc_proc_init_rpc(void)
 	if(icc_proc_cmd_xchange(ICC_START_ICC_INIT, NULL, 0))
 	{
 		OPENAMP_DeInit();
+		printf("dummy call failed \r\n");
 		return 4;
 	}
 
@@ -347,6 +350,9 @@ static ulong icc_proc_wake_second_core(void)
 	//int32_t timeout = 0xFFFF;
 	//int 	i;
 
+
+	return 0;
+
 	#if 0
 	ulong  chk;
 	uchar  *dsp_header = (uchar *)0x081D0000;
@@ -366,7 +372,7 @@ static ulong icc_proc_wake_second_core(void)
 
 
 	// Test, for development
-	memcpy((void *)D2_AXISRAM_BASE, (void *)0x081D0000, 0x30000);
+	//memcpy((void *)D2_AXISRAM_BASE, (void *)0x081D0000, 0x30000);
 
 
 
@@ -449,7 +455,7 @@ static int icc_proc_prepare_for_comms(void)
 	res = icc_proc_init_rpc();
 	if(res)
 	{
-		printf("unable to init RPC(%d)!\r\n", res);
+		//printf("unable to init RPC(%d)!\r\n", res);
 		return 2;
 	}
 

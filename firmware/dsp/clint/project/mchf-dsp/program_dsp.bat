@@ -37,7 +37,7 @@ TITLE STM32CubeProgrammer Utility for %CHIP_NAME%%MAIN_BOARD%
 @ECHO Programming %BIN_FILE% on board id %BOARD_ID%
 @ECHO =============================================
 @ECHO.
-STM32_Programmer_CLI.exe -c port=SWD index=%BOARD_ID% reset=HWrst -w %BIN_FILE% 0x081D00000 -HardRst --start 0x08000000
+STM32_Programmer_CLI.exe -c port=SWD index=%BOARD_ID% reset=HWrst -w %BIN_FILE% 0x08100000 -HardRst --start 0x08000000
 @IF NOT ERRORLEVEL 0 (
   @GOTO goError
 )

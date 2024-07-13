@@ -24,7 +24,7 @@ _Min_Stack_Size = 0x2000; 		/* required amount of stack */
 /* Specify the memory areas */
 MEMORY
 {
-RAM_EXEC (rx)   		: ORIGIN = 0x10000000, LENGTH = 152K	
+RAM_EXEC (rx)   		: ORIGIN = 0x08100000, LENGTH = 152K	
 RAM (xrw)				: ORIGIN = 0x10026000, LENGTH = 104K 			
 OPEN_AMP_RSC_TAB (xrw)	: ORIGIN = 0x38000000, LENGTH = 1K
 OPEN_AMP_SHMEM (xrw)	: ORIGIN = 0x38000400, LENGTH = 63K

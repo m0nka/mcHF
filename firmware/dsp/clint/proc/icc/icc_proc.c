@@ -310,6 +310,7 @@ void icc_proc_hw_init(void)
 	}
 #endif
 
+	printf("icc init done\r\n");
 	icc_init_done = 1;
 }
 

@@ -186,7 +186,7 @@ static void core_hw_init(void)
 	   CriticalError(8);
 }
 
-#if 0
+#if 1
 //*----------------------------------------------------------------------------
 //* Function Name       : go_to_sleep
 //* Object              :
@@ -303,7 +303,7 @@ int main(void)
 
     // Sleep until MCU notification (now in .s file)
     //go_to_sleep();
-    //go_to_sleep_a();
+    go_to_sleep_a();
 
     // Init debug print in shared mode
     printf_init(1);

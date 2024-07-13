@@ -555,6 +555,7 @@ static void bsp_config(void)
 {
 	// Use sharing, as DSP core might be running after reset
 	printf_init(1);
+	printf("\r\n");
 	printf("%s v: %d.%d  \r\n", DEVICE_STRING, MCHF_L_VER_RELEASE, MCHF_L_VER_BUILD);
 
 	// Initialise the screen
@@ -960,6 +961,7 @@ static int test_sd_card(void)
 	return 0;
 }
 
+#if 0
 static uchar load_default_dsp_core(uchar is_default)
 {
 	FRESULT 	res  = 0;
@@ -1095,6 +1097,7 @@ dsp_upd_clean_up:
 	f_close(&MyFile);
 	return res;
 }
+#endif
 
 #if 0
 HAL_StatusTypeDef HAL_CRCEx_Polynomial_Set(CRC_HandleTypeDef *hcrc, uint32_t Pol, uint32_t PolyLength)
@@ -1140,18 +1143,11 @@ static void critical_hw_init_and_run_fw(void)
 	HAL_GPIO_Init(POWER_LED_PORT, &GPIO_InitStruct);
 
 	// Hold power
-	//#if 0
-	//if(HAL_GPIO_ReadPin(POWER_BUTTON_PORT, POWER_BUTTON) == GPIO_PIN_SET)	// is it user event ?
-	//{
-		HAL_GPIO_WritePin(POWER_LED_PORT,POWER_LED, 1);		// led on
-		HAL_GPIO_WritePin(POWER_HOLD_PORT,POWER_HOLD, 1);	// hold power, high
-	//}
-	//#else
-	//HAL_GPIO_WritePin(POWER_LED_PORT,POWER_LED, 1);			// led on
-	//(GPIOG,GPIO_PIN_11, 0);				// hold power, low
-	//#endif
+	HAL_GPIO_WritePin(POWER_LED_PORT,POWER_LED, 1);		// led on
+	HAL_GPIO_WritePin(POWER_HOLD_PORT,POWER_HOLD, 1);	// hold power, high
 
 	// Change DSP code
+	#if 0
 	if(reset_reason == RESET_DSP_RELOAD)
 	{
 		printf("dsp reload request from radio...\r\n");
@@ -1171,18 +1167,6 @@ static void critical_hw_init_and_run_fw(void)
 			}
 		}
 	}
-
-	// Balancer need explicit disable on reset
-	#if 0
-	// BAL1 is PG6, BAL2 is PG3, BAL3 is PG2
-	GPIO_InitStruct.Pin   = BAL1_ON|BAL2_ON|BAL3_ON;
-	HAL_GPIO_Init(BAL13_PORT, &GPIO_InitStruct);
-	// BAL4 is PD7
-	GPIO_InitStruct.Pin   = BAL4_ON;
-	HAL_GPIO_Init(BAL4_PORT, &GPIO_InitStruct);
-	// Force OFF
-	HAL_GPIO_WritePin(BAL13_PORT, BAL1_ON|BAL2_ON|BAL3_ON, 	GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(BAL4_PORT,  BAL4_ON, 					GPIO_PIN_RESET);
 	#endif
 
 	// 5V control via logic high
@@ -1524,7 +1508,7 @@ void boot_process(void)
 			line++;
 		}
 
-		#if 1
+		#if 0
 		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Upload DSP Core....", LEFT_MODE);
 		uchar d_res = load_default_dsp_core(1);
 		if(d_res == 0)
