@@ -75,7 +75,7 @@
 // -----------------------------------------------------------------------------------------------
 // Codec I2C control(M7, while SAI streaming in DSP core)
 //
-//#define CONTEXT_AUDIO
+#define CONTEXT_AUDIO
 //
 // -----------------------------------------------------------------------------------------------
 // Battery Management System

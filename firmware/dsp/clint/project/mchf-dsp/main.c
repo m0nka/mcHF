@@ -357,12 +357,32 @@ int main(void)
 	//__HAL_ART_CONFIG_BASE_ADDRESS(D2_AXISRAM_BASE);
 
     // Sleep until MCU notification (now in .s file)
-    //go_to_sleep();
-    go_to_sleep_a();
+    //go_to_sleep_a();
 
     // HAL init
 	//core_hw_init();
-//!	HAL_Init();
+	//HAL_Init();
+
+	  /*HW semaphore Clock enable*/
+	  __HAL_RCC_HSEM_CLK_ENABLE();
+	  /*HW semaphore Notification enable*/
+	  HAL_HSEM_ActivateNotification(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
+
+	  /* When system initialization is finished, Cortex-M7 will release Cortex-M4  by means of
+	  HSEM notification */
+	  HAL_PWREx_ClearPendingEvent();
+	  HAL_PWREx_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFE, PWR_D2_DOMAIN);
+
+	  /* Initialize HAL : systick*/
+	  if (HAL_Init() != HAL_OK)
+	  {
+	    //Error_Handler(34);
+	  }
+
+	  /*Clear Flags generated during the wakeup notification */
+	  HSEM_COMMON->ICR |= ((uint32_t)__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
+	  HAL_NVIC_ClearPendingIRQ(HSEM2_IRQn);
+
 
     // Init debug print in shared mode
     printf_init(1);
@@ -372,18 +392,18 @@ int main(void)
 //!	set_cw_irq();
 
 	// ICC driver init
-//!	icc_proc_hw_init();
-
+	icc_proc_hw_init();
+/*
 	for(;;)
 	{
 		//HAL_Delay(5000);
 		loc_delay(50000);
 		printf("here\r\n");
 	}
-
-//main_loop:
-	//icc_proc_task(NULL);
-	//audio_driver_thread();
-	//ui_driver_thread();
-	//goto main_loop;
+*/
+main_loop:
+	icc_proc_task(NULL);
+	audio_driver_thread();
+	ui_driver_thread();
+	goto main_loop;
 }

@@ -1,33 +1,53 @@
-/************************************************************************************
-**                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2021                     **
-**                                                                                 **
-**---------------------------------------------------------------------------------**
-**                                                                                 **
-**  File name:                                                                     **
-**  Description:                                                                   **
-**  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
-************************************************************************************/
+/*
+*****************************************************************************
+**
+
+**  File        : LinkerScript.ld
+**
+**  Abstract    : Linker script for STM32H745XIHx Device with
+**                1024KByte FLASH, 288KByte RAM
+**
+**                Set heap size, stack size and stack location according
+**                to application requirements.
+**
+**                Set memory bank area and size if external memory is used.
+**
+**  Target      : STMicroelectronics STM32
+**
+**
+**  Distribution: The file is distributed as is, without any warranty
+**                of any kind.
+**
+*****************************************************************************
+** @attention
+**
+** Copyright (c) 2019 STMicroelectronics.
+** All rights reserved.
+**
+** This software component is licensed by ST under BSD 3-Clause license,
+** the "License"; You may not use this file except in compliance with the
+** License. You may obtain a copy of the License at:
+**                        opensource.org/licenses/BSD-3-Clause
+**
+****************************************************************************
+*/
 
 /* Entry Point */
 ENTRY(Reset_Handler)
 
 /* Highest address of the user mode stack */
-_estack = 0x10048000;     		/* end of RAM */
+_estack = 0x10048000;    /* end of RAM */
 /* Generate a link error if heap and stack don't fit into RAM */
-_Min_Heap_Size = 0x2000;      	/* required amount of heap  */
-_Min_Stack_Size = 0x2000; 		/* required amount of stack */
+_Min_Heap_Size = 0xA000;      /* required amount of heap  */
+_Min_Stack_Size = 0x4000; /* required amount of stack */
 
 /* Specify the memory areas */
 MEMORY
 {
-FLASH (xr)   			: ORIGIN = 0x08100000, LENGTH = 1024K	
-RAM (xrw)				: ORIGIN = 0x10000000, LENGTH = 288K 			
-OPEN_AMP_RSC_TAB (rw)	: ORIGIN = 0x38000000, LENGTH = 1K
-OPEN_AMP_SHMEM (rw)		: ORIGIN = 0x38000400, LENGTH = 63K
+FLASH (rx)      		: ORIGIN = 0x08100000, LENGTH = 1024K
+RAM (xrw)      			: ORIGIN = 0x10000000, LENGTH = 288K
+OPEN_AMP_RSC_TAB (xrw)	: ORIGIN = 0x38000000, LENGTH = 1K
+OPEN_AMP_SHMEM (xrw)	: ORIGIN = 0x38000400, LENGTH = 63K
 }
 
  __OPENAMP_region_start__  = ORIGIN(OPEN_AMP_SHMEM);
@@ -158,4 +178,5 @@ SECTIONS
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
 }
+
 

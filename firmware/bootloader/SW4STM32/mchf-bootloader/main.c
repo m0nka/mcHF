@@ -1585,6 +1585,16 @@ int main(void)
 	// Disable FMC Bank1 to avoid speculative/cache accesses
 	FMC_Bank1_R->BTCR[0] &= ~FMC_BCRx_MBKEN;
 
+	int32_t timeout;
+
+	  /* Wait until CPU2 boots and enters in stop mode or timeout*/
+	  timeout = 0xFFFF;
+	  while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
+	  if ( timeout < 0 )
+	  {
+	    //Error_Handler();
+	  }
+
 	// Remap M4 core boot address (overwrites fuses)
 	//----HAL_SYSCFG_CM4BootAddConfig(SYSCFG_BOOT_ADDR0, D2_AXISRAM_BASE);
 

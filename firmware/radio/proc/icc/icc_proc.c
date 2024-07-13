@@ -849,7 +849,7 @@ curr_core = !curr_core;
 		printf("timeouyt\r\n");
 #endif
 
-	memcpy((void *)D2_AXISRAM_BASE, (void *)0x081D0000, 0x30000);
+	//memcpy((void *)D2_AXISRAM_BASE, (void *)0x081D0000, 0x30000);
 	return 0;
 }
 
