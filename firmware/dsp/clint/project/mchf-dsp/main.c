@@ -33,6 +33,46 @@ __IO TransceiverState ts;
 
 extern __IO PaddleState				ps;
 
+void _close(void)
+{
+
+}
+
+void _fstat(void)
+{
+
+}
+
+void _getpid(void)
+{
+
+}
+
+void _isatty(void)
+{
+
+}
+
+void _kill(void)
+{
+
+}
+
+void _lseek(void)
+{
+
+}
+
+void _read(void)
+{
+
+}
+
+void _write(void)
+{
+
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : CriticalError
 //* Object              : should never be here, really
@@ -149,6 +189,7 @@ void DebugMon_Handler(void)
 //*----------------------------------------------------------------------------
 void SysTick_Handler(void)
 {
+#if 0
 	static ulong skip = 0;
 
 	skip++;
@@ -157,6 +198,7 @@ void SysTick_Handler(void)
 		BSP_LED_Toggle(LED_BLUE);
 		skip  = 0;
 	}
+#endif
 
 	HAL_IncTick();
 }
@@ -237,7 +279,7 @@ void go_to_sleep_a(void)
 }
 #endif
 
-#if 1
+#if 0
 void EXTI15_10_IRQHandler(void)
 {
 	if (__HAL_GPIO_EXTID2_GET_IT(GPIO_PIN_12) != 0x00U)
@@ -289,6 +331,19 @@ void set_cw_irq(void)
 	HAL_NVIC_EnableIRQ	((IRQn_Type)(EXTI15_10_IRQn));
 }
 
+void loc_delay(ulong ms)
+{
+	ulong i,j;
+
+	for(i = 0; i < ms; i++)
+	{
+		for(j = 0; j < 5000; j++)
+		{
+			//
+		}
+	}
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : main
 //* Object              :
@@ -305,22 +360,30 @@ int main(void)
     //go_to_sleep();
     go_to_sleep_a();
 
+    // HAL init
+	//core_hw_init();
+//!	HAL_Init();
+
     // Init debug print in shared mode
     printf_init(1);
-
-    // HAL init
-	core_hw_init();
 
 	printf("-->%s v: %d.%d\r\n", DEVICE_STRING, MCHF_D_VER_RELEASE, MCHF_D_VER_BUILD);
 
 //!	set_cw_irq();
 
 	// ICC driver init
-	icc_proc_hw_init();
+//!	icc_proc_hw_init();
 
-main_loop:
-	icc_proc_task(NULL);
-	audio_driver_thread();
-	ui_driver_thread();
-	goto main_loop;
+	for(;;)
+	{
+		//HAL_Delay(5000);
+		loc_delay(50000);
+		printf("here\r\n");
+	}
+
+//main_loop:
+	//icc_proc_task(NULL);
+	//audio_driver_thread();
+	//ui_driver_thread();
+	//goto main_loop;
 }

@@ -23,8 +23,8 @@
 
 .global  g_pfnVectors
 .global  Default_Handler
-.global  sleep_always
-.global  allow_reload
+//.global  sleep_always
+//.global  allow_reload
 
 /* start address for the initialization values of the .data section. 
 defined in linker script */
@@ -286,84 +286,84 @@ g_pfnVectors:
 // 4. Domain D2 goes to STOP mode (Cortex-M4 in deep-sleep)
 // 5. Clear Flags generated during the wakeup notification
 // 6. NVIC Clear pending IRQ for HSEM2_IRQn
-  .type  sleep_always, %function
+//  .type  sleep_always, %function
 
-sleep_always:
+//sleep_always:
 
-			LDR   	SP, reg0
-            LDR     R3, reg1
-            LDR.W   R2, [R3,#0xE0]
-            ORR.W   R2, R2, #0x2000000
-            STR.W   R2, [R3,#0xE0]
-            LDR.W   R3, [R3,#0xE0]
-            SUB     SP, SP, #8
-            AND.W   R3, R3, #0x2000000
-            STR     R3, [SP,#4]
-            LDR     R3, [SP,#4]
-            LDR     R3, reg2
-            LDR     R2, [R3]
-            ORR.W   R2, R2, #1
-            STR     R2, [R3]
-            SEV
-            WFE
-            LDR     R2, reg3
-            LDR     R1, [R2]
-            BIC.W   R1, R1, #1
-            STR     R1, [R2]
-            LDR     R1, [R2,#0x10]
-            BIC.W   R1, R1, #2
-            STR     R1, [R2,#0x10]
-            LDR     R2, reg4
-            LDR     R1, [R2,#0x10]
-            ORR.W   R1, R1, #4
-            STR     R1, [R2,#0x10]
-            DSB.W   SY
-            ISB.W   SY
-            WFE						// Sleep
-            LDR     R1, [R2,#0x10]
-            BIC.W   R1, R1, #4
-            STR     R1, [R2,#0x10]
-            LDR     R2, [R3,#4]
-            ORR.W   R2, R2, #1
-            STR     R2, [R3,#4]
-            LDR     R3, reg5
-            MOV.W   R2, #0x40000000
-            STR.W   R2, [R3,#0x18C]
-            ADD     SP, SP, #8
-            BL		Reset_Handler
-            NOP
+//			LDR   	SP, reg0
+//            LDR     R3, reg1
+//            LDR.W   R2, [R3,#0xE0]
+//            ORR.W   R2, R2, #0x2000000
+//            STR.W   R2, [R3,#0xE0]
+//            LDR.W   R3, [R3,#0xE0]
+//            SUB     SP, SP, #8
+//            AND.W   R3, R3, #0x2000000
+//            STR     R3, [SP,#4]
+//            LDR     R3, [SP,#4]
+//            LDR     R3, reg2
+//            LDR     R2, [R3]
+//            ORR.W   R2, R2, #1
+//            STR     R2, [R3]
+//            SEV
+//            WFE
+//            LDR     R2, reg3
+//            LDR     R1, [R2]
+//            BIC.W   R1, R1, #1
+//            STR     R1, [R2]
+//            LDR     R1, [R2,#0x10]
+//            BIC.W   R1, R1, #2
+//            STR     R1, [R2,#0x10]
+//            LDR     R2, reg4
+//            LDR     R1, [R2,#0x10]
+//            ORR.W   R1, R1, #4
+//            STR     R1, [R2,#0x10]
+//            DSB.W   SY
+//            ISB.W   SY
+//            WFE						// Sleep
+//            LDR     R1, [R2,#0x10]
+//            BIC.W   R1, R1, #4
+//            STR     R1, [R2,#0x10]
+//            LDR     R2, [R3,#4]
+//            ORR.W   R2, R2, #1
+//            STR     R2, [R3,#4]
+//            LDR     R3, reg5
+//            MOV.W   R2, #0x40000000
+//            STR.W   R2, [R3,#0x18C]
+//            ADD     SP, SP, #8
+//            BL		Reset_Handler
+//            NOP
 
-reg0:		.word	0x10040000
-reg1:		.word  	0x58024400
-reg2:		.word  	0x58026510
-reg3:		.word  	0x58024800
-reg4:		.word  	0xE000ED00
-reg5:		.word  	0xE000E100
-			.word	0x44444444
-			.word	0x55555555
+//reg0:		.word	0x10040000
+//reg1:		.word  	0x58024400
+//reg2:		.word  	0x58026510
+//reg3:		.word  	0x58024800
+//reg4:		.word  	0xE000ED00
+//reg5:		.word  	0xE000E100
+//			.word	0x44444444
+//			.word	0x55555555
 
 // ----------------------------------
 //  Core reload method
 //
-  .type  allow_reload, %function
+//  .type  allow_reload, %function
 
-allow_reload:
+//allow_reload:
 			// HSEM_ID_0
-            LDR     R2, hsem_reg
-wait_high:
+//            LDR     R2, hsem_reg
+//wait_high:
 			// Did the M7 core ask us to exit endless loop ?
-            LDR     R3, [R2]
+//            LDR     R3, [R2]
 
             // No, well, wait here and drain battery ;(
-            CMP     R3, #0
-            BLT     wait_high
-            B		skip_hsem_reg
+//            CMP     R3, #0
+//            BLT     wait_high
+//            B		skip_hsem_reg
 
-hsem_reg:	.word   0x58026400
+//hsem_reg:	.word   0x58026400
 
-skip_hsem_reg:
+//skip_hsem_reg:
 
-			BL		Reset_Handler
+//			BL		Reset_Handler
 
 /*******************************************************************************
 *

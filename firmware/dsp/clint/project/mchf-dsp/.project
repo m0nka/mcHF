@@ -26,11 +26,6 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>README.md</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/README.md</locationURI>
-		</link>
-		<link>
 			<name>base_hw/print_f.c</name>
 			<type>1</type>
 			<locationURI>PARENT-4-PROJECT_LOC/base_hw/print_f.c</locationURI>

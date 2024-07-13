@@ -347,11 +347,8 @@ static uchar icc_proc_init_rpc(void)
 //*----------------------------------------------------------------------------
 static ulong icc_proc_wake_second_core(void)
 {
-	//int32_t timeout = 0xFFFF;
-	//int 	i;
-
-
-	return 0;
+	int32_t timeout = 0xFFFF;
+	int 	i;
 
 	#if 0
 	ulong  chk;
@@ -364,7 +361,7 @@ static ulong icc_proc_wake_second_core(void)
 	}
 	printf("dsp core checksum: %d\r\n", chk);
 	#endif
-
+#if 0
 	// Read DSP ID
 	ulong dsp_id = READ_REG(BKP_REG_DSP_ID);
 
@@ -401,7 +398,7 @@ static ulong icc_proc_wake_second_core(void)
 			printf("unknown dsp core: %d\r\n", dsp_id);
 			return 1;
 	}
-
+#endif
 	// Remap M4 core boot address (overwrites fuses)
 	//HAL_SYSCFG_CM4BootAddConfig(SYSCFG_BOOT_ADDR0, D2_AXISRAM_BASE);
 	// Remap M4 core boot address (overwrites fuses)
@@ -416,7 +413,7 @@ static ulong icc_proc_wake_second_core(void)
 	//SET_BIT(RCC->GCR, RCC_BOOT_C2) ;
 	//printf("RCC_BOOT_C2:%d\r\n", READ_BIT(RCC->GCR, RCC_BOOT_C2));
 
-#if 0
+#if 1
 	HAL_HSEM_FastTake(HSEM_ID_0);
 
 	// Release HSEM in order to notify the CPU2(CM4)

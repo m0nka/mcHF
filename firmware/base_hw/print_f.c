@@ -33,21 +33,13 @@
 //--#define USE_ITM_SWO
 
 #ifdef RADIO
-//
-// Use HW semaphore for core sharing
-#define USE_CORE_SHARING
-//
 // Use SW semaphore for task sharing
 #define USE_TASK_SHARING
 //
 #endif
 
-//#ifdef DSP_CORE
-//
 // Use HW semaphore for core sharing
 #define USE_CORE_SHARING
-//
-//#endif
 
 // Maximum string size allowed (in bytes)
 #define MAX_STRING_SIZE         300

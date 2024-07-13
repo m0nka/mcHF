@@ -43,7 +43,7 @@
 //
 // ToDo: Overclocking causes LCD driver to HardFault!
 //
-#define M7_CLOCK			400			//480
+#define M7_CLOCK			480			//480
 //#define	USE_LSE                     // xtal/caps no good on proto?
 
 #define RADIO_FIRM_ADDR		0x08020000

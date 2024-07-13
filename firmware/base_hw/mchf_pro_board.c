@@ -490,7 +490,7 @@ void MPU_Config(void)
 	MPU_InitStruct.Number           = MPU_REGION_NUMBER4;
 	MPU_InitStruct.TypeExtField     = MPU_TEX_LEVEL0;
 	MPU_InitStruct.SubRegionDisable = 0x00;
-	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_ENABLE;
+	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
 	// Setup SRAM3, D2 domain, HW peripherals DMA buffers

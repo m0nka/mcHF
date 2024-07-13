@@ -814,7 +814,7 @@ void bare_lcd_init(void)
 
 	lcd_low_Clear(lcd_low_COLOR_BLACK);
 
-	draw_atlas_ui();
+	//draw_atlas_ui();
 
 	// Right side info bar
 	//lcd_low_DrawRect(1, 345, 479, 134, lcd_low_COLOR_WHITE);							// rect outline
@@ -1540,7 +1540,7 @@ void boot_process(void)
 		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing Firmware...PASS", LEFT_MODE);
 		line++;
 
-		HAL_Delay(8000);
+		HAL_Delay(1000);
 
 		// Jump
 		jump_to_fw(RADIO_FIRM_ADDR);

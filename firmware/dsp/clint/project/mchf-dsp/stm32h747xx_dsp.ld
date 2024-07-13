@@ -16,7 +16,7 @@
 ENTRY(Reset_Handler)
 
 /* Highest address of the user mode stack */
-_estack = 0x10040000;     		/* end of RAM */
+_estack = 0x10048000;     		/* end of RAM */
 /* Generate a link error if heap and stack don't fit into RAM */
 _Min_Heap_Size = 0x2000;      	/* required amount of heap  */
 _Min_Stack_Size = 0x2000; 		/* required amount of stack */
@@ -24,10 +24,10 @@ _Min_Stack_Size = 0x2000; 		/* required amount of stack */
 /* Specify the memory areas */
 MEMORY
 {
-RAM_EXEC (rx)   		: ORIGIN = 0x08100000, LENGTH = 152K	
-RAM (xrw)				: ORIGIN = 0x10026000, LENGTH = 104K 			
-OPEN_AMP_RSC_TAB (xrw)	: ORIGIN = 0x38000000, LENGTH = 1K
-OPEN_AMP_SHMEM (xrw)	: ORIGIN = 0x38000400, LENGTH = 63K
+FLASH (xr)   			: ORIGIN = 0x08100000, LENGTH = 1024K	
+RAM (xrw)				: ORIGIN = 0x10000000, LENGTH = 288K 			
+OPEN_AMP_RSC_TAB (rw)	: ORIGIN = 0x38000000, LENGTH = 1K
+OPEN_AMP_SHMEM (rw)		: ORIGIN = 0x38000400, LENGTH = 63K
 }
 
  __OPENAMP_region_start__  = ORIGIN(OPEN_AMP_SHMEM);
@@ -42,7 +42,7 @@ SECTIONS
     . = ALIGN(4);
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(4);
-  } >RAM_EXEC
+  } >FLASH
 
   /* The program code and other data goes into FLASH */
   .text :
@@ -59,7 +59,7 @@ SECTIONS
 
     . = ALIGN(4);
     _etext = .;        /* define a global symbols at end of code */
-  } >RAM_EXEC
+  } >FLASH
 
   /* Constant data goes into FLASH */
   .rodata :
@@ -68,35 +68,35 @@ SECTIONS
     *(.rodata)         /* .rodata sections (constants, strings, etc.) */
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
     . = ALIGN(4);
-  } >RAM_EXEC
+  } >FLASH
 
-  .ARM.extab   : { *(.ARM.extab* .gnu.linkonce.armextab.*) } >RAM_EXEC
+  .ARM.extab   : { *(.ARM.extab* .gnu.linkonce.armextab.*) } >FLASH
   .ARM : {
     __exidx_start = .;
     *(.ARM.exidx*)
     __exidx_end = .;
-  } >RAM_EXEC
+  } >FLASH
 
   .preinit_array     :
   {
     PROVIDE_HIDDEN (__preinit_array_start = .);
     KEEP (*(.preinit_array*))
     PROVIDE_HIDDEN (__preinit_array_end = .);
-  } >RAM_EXEC
+  } >FLASH
   .init_array :
   {
     PROVIDE_HIDDEN (__init_array_start = .);
     KEEP (*(SORT(.init_array.*)))
     KEEP (*(.init_array*))
     PROVIDE_HIDDEN (__init_array_end = .);
-  } >RAM_EXEC
+  } >FLASH
   .fini_array :
   {
     PROVIDE_HIDDEN (__fini_array_start = .);
     KEEP (*(SORT(.fini_array.*)))
     KEEP (*(.fini_array*))
     PROVIDE_HIDDEN (__fini_array_end = .);
-  } >RAM_EXEC
+  } >FLASH
 
   /* used by the startup to initialize data */
   _sidata = LOADADDR(.data);
@@ -111,7 +111,7 @@ SECTIONS
 
     . = ALIGN(4);
     _edata = .;        /* define a global symbol at data end */
-  } >RAM AT> RAM_EXEC
+  } >RAM AT> FLASH
 
   
   /* Uninitialized data section */
@@ -145,7 +145,7 @@ SECTIONS
   {
     . = ABSOLUTE(0x38000000);
     *(.resource_table)
-  } > OPEN_AMP_RSC_TAB AT >RAM_EXEC
+  } > OPEN_AMP_RSC_TAB AT >FLASH
   
 
   /* Remove information from the standard libraries */
