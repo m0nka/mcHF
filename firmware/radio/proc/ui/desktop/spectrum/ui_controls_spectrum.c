@@ -1101,8 +1101,8 @@ void ui_controls_spectrum_refresh(FAST_REFRESH *cb)
 			if(ui_sw.updated)
 			{
 				ui_controls_spectrum_fft_process_big();
-				ui_controls_spectrum_repaint_big(cb);
-				ui_controls_spectrum_wf_repaint_big(cb); // - super laggy
+//!				ui_controls_spectrum_repaint_big(cb);
+//!				ui_controls_spectrum_wf_repaint_big(cb); // - super laggy
 				ui_sw.updated = 0;
 			}
 			break;

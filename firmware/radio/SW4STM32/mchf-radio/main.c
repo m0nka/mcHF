@@ -74,8 +74,10 @@ void HardFault_Handler(void)
 	printf( "==== HARD FAULT ====\r\n");
 	printf( "====================\r\n");
 
-	NVIC_SystemReset();
-	//while(1);
+	printf("fail in: %s \r\n", pcTaskGetName(NULL));
+
+	//NVIC_SystemReset();
+	while(1);
 }
 
 void MemManage_Handler(void)

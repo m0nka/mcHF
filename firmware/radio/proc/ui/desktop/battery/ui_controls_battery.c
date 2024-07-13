@@ -35,7 +35,6 @@ uchar curr_batt_value = 0;
 
 static void ui_controls_battery_progress(uchar val)
 {
-#if 0
 	char buf[10];
 
 	if(val > 100)
@@ -48,11 +47,11 @@ static void ui_controls_battery_progress(uchar val)
 	int y0 = BATTERY_Y + BATTERY_SIZE_Y + 2 - val/2;	// top
 	int y1 = BATTERY_Y + BATTERY_SIZE_Y - 0;			// bottom
 
-	if(bmss.run_on_dc)
-		GUI_SetColor(GUI_MAGENTA);
-	else if(val < 25)
-		GUI_SetColor(GUI_LIGHTRED);
-	else
+	//if(bmss.run_on_dc)
+	//	GUI_SetColor(GUI_MAGENTA);
+	//else if(val < 25)
+	//	GUI_SetColor(GUI_LIGHTRED);
+	//else
 		GUI_SetColor(GUI_LIGHTGREEN);
 
 	// Update
@@ -70,7 +69,6 @@ static void ui_controls_battery_progress(uchar val)
 	GUI_SetColor(GUI_BLACK);
 	GUI_SetFont(&GUI_Font8x15B_1);
 	GUI_DispStringAt(buf,x,BATTERY_Y + BATTERY_SIZE_Y - 18);
-#endif
 }
 
 //*----------------------------------------------------------------------------

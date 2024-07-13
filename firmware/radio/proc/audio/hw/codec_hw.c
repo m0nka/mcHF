@@ -536,9 +536,9 @@ void codec_hw_power_cleanup(void)
 void codec_hw_reset(void)
 {
 	//HAL_GPIO_WritePin(CODEC_RESET_PORT, CODEC_RESET, GPIO_PIN_RESET);
-	HAL_Delay(100);
+	vTaskDelay(100);
 	HAL_GPIO_WritePin(CODEC_RESET_PORT, CODEC_RESET, GPIO_PIN_SET);
-	HAL_Delay(100);
+	vTaskDelay(100);
 }
 
 // context audio proc
@@ -554,7 +554,7 @@ void codec_task_init(void)
 		printf("i2c init err 2!\r\n");
 		return;
 	}
-	//printf("chip id: %02x, chip rev: %02x\r\n", val & CS4245_CHIP_PART_MASK, val & CS4245_CHIP_REV_MASK);
+	printf("chip id: %02x, chip rev: %02x\r\n", val & CS4245_CHIP_PART_MASK, val & CS4245_CHIP_REV_MASK);
 
 	// Debug
 	//--codec_hw_show_registers("cs4245 registers on reset \r\n");
@@ -578,6 +578,8 @@ void codec_task_init(void)
 
 	// 5V on (Speaker amp)
 	//HAL_GPIO_WritePin(GPIOG, GPIO_PIN_10, GPIO_PIN_RESET);
+
+	//printf("codec_task_init ok \r\n");
 }
 
 //
