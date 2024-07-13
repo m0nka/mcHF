@@ -275,7 +275,11 @@
 // PA7			RFM_MOSI_SPI1
 // PA8			CLK_42M
 // PA9			BMS_IRQ
+
 // PA10			FAN_ON
+#define FAN_CNTR						GPIO_PIN_10
+#define FAN_CNTR_PORT					GPIOA
+
 // PA11			USB_DFU_N
 // PA12			USB_DFU_P
 // PA13			SWDIO

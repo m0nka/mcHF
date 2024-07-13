@@ -162,7 +162,18 @@ static void dacs_init(void)
 //*----------------------------------------------------------------------------
 void trx_proc_hw_init(void)
 {
+	GPIO_InitTypeDef  gpio_init_structure;
+
 	//printf("trx_proc_hw_init\r\n");
+
+	gpio_init_structure.Pin   = FAN_CNTR;
+	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	gpio_init_structure.Pull  = GPIO_PULLDOWN;
+	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(FAN_CNTR_PORT, &gpio_init_structure);
+
+	// Fan On
+	HAL_GPIO_WritePin(FAN_CNTR_PORT, FAN_CNTR, GPIO_PIN_SET);
 
 	dacs_init();
 
@@ -276,6 +287,9 @@ void trx_proc_task(void const *arg)
 	tsu.bias0 = 3400;
 	tsu.bias1 = 3400;
 	trx_proc_worker(0xFFFFFFFF);
+
+	// Fan Off
+	HAL_GPIO_WritePin(FAN_CNTR_PORT, FAN_CNTR, GPIO_PIN_RESET);
 
 trx_proc_loop:
 
