@@ -555,7 +555,8 @@ static void bsp_config(void)
 {
 	// Use sharing, as DSP core might be running after reset
 	printf_init(1);
-	printf("\r\n");
+	printf("........................................................\r\n");
+	printf("........................................................\r\n");
 	printf("%s v: %d.%d  \r\n", DEVICE_STRING, MCHF_L_VER_RELEASE, MCHF_L_VER_BUILD);
 
 	// Initialise the screen

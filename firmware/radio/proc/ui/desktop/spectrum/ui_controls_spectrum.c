@@ -60,7 +60,14 @@ WM_HTIMER 						hTimerSpec;
 
 // Memory device created for the combined Spectrum/Waterfall
 // control
+#ifdef USE_MEM_DEVICE
+#define MEMDEV_SP_X				(SW_FRAME_X + SW_FRAME_WIDTH)
+#define MEMDEV_SP_Y				SCOPE_Y
+#define MEMDEV_SP_X_SZ			SCOPE_X_SIZE
+#define MEMDEV_SP_Y_SZ			SCOPE_Y_SIZE
+//
 GUI_MEMDEV_Handle hMemSpWf = 0;
+#endif
 
 const ulong waterfall_blue[65] =
 {
@@ -160,6 +167,31 @@ uchar 		loc_vfo_mode;
 
 uchar 	api_conv_type 	= 1;						// smooth waterfall
 uchar 	sw_light		= 1;						// simplified scope (less resources)
+
+static ushort chk_x(ushort x)
+{
+	ushort ret = x;
+
+	if(ret >= (MEMDEV_SP_X + MEMDEV_SP_X_SZ))
+		ret = (MEMDEV_SP_X + MEMDEV_SP_X_SZ) - 2;
+
+	if(ret <= MEMDEV_SP_X)
+		ret = (MEMDEV_SP_X + 2);
+
+	return ret;
+}
+
+static ushort chk_y(ushort y)
+{
+	ushort ret = y;
+
+	if(ret >= (MEMDEV_SP_Y + MEMDEV_SP_Y_SZ))
+		ret = (MEMDEV_SP_Y + MEMDEV_SP_Y_SZ) - 2;
+
+	if(ret <= MEMDEV_SP_Y)
+		ret = (MEMDEV_SP_Y + 2);
+	return ret;
+}
 
 static void ui_controls_spectrum_fft_process_big(void)
 {
@@ -424,11 +456,9 @@ static void ui_controls_spectrum_move_band_strip(void)
 //*----------------------------------------------------------------------------
 static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 {
-	//GUI_RECT 	Rect;
-	ulong 		i;//,j;
-	int 		old_x,old_y,new_x,new_y;
+	ulong 		i;
+	ushort 		old_x, old_y, new_x, new_y;
 	uchar		val;
-	//ushort		dif;
 
 	// Not implemented
 	ui_controls_spectrum_move_band_strip();
@@ -446,16 +476,16 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 					(SCOPE_Y + SCOPE_Y_SIZE )
 				);
 
-	#if 1
 	// Draw horizontal grid lines
+	#if 1
 	GUI_SetColor(GUI_DARKGRAY);
 	for (i = 0; i < 7; i++)
 		GUI_DrawHLine(((SCOPE_Y + SCOPE_Y_SIZE - 2) - (i * 16)),(sb.x + SW_FRAME_WIDTH),(sb.x + SW_FRAME_X_SIZE - 2));
 
 	#endif
 
-	#if 1
 	// Draw vertical grid lines
+	#if 1
 	GUI_SetColor(GUI_DARKGRAY);
 	for (i = 0; i < 7; i++)
 	    GUI_DrawVLine((43 + i*128), SCOPE_Y, (SCOPE_Y + SCOPE_Y_SIZE - 2));
@@ -468,34 +498,40 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 		val  = ui_sw.fft_value[i];
 
 		// Top clipping
-		if(val > SCOPE_Y_SIZE)
-			val = SCOPE_Y_SIZE;
+		//if(val > SCOPE_Y_SIZE)
+		//	val = SCOPE_Y_SIZE;
 
 		// New point position
-		new_x = ((SW_FRAME_X + SW_FRAME_WIDTH) + i);
-		new_y = (SCOPE_Y + SCOPE_Y_SIZE - 2) - val;
+		new_x = chk_x(((SW_FRAME_X + SW_FRAME_WIDTH) + i));
+		new_y = chk_y(SCOPE_Y + SCOPE_Y_SIZE - val);
 
 		// Alpha is inverted!!!
 		#if 1
 		// Print vertical line for each point, transparent, to fill the spectrum
-		GUI_SetColor(GUI_LIGHTBLUE);
-		//GUI_SetColor(GUI_WHITE);
-		GUI_SetAlpha(88);	//168);
-		GUI_DrawVLine(new_x,new_y,SCOPE_Y + SCOPE_Y_SIZE);
+		GUI_SetColor(GUI_LIGHTGREEN);
+		GUI_SetAlpha(88);
+		GUI_DrawVLine(new_x, new_y, chk_y(SCOPE_Y + SCOPE_Y_SIZE));
 		GUI_SetAlpha(255);
 		#endif
 
-		#if 1
 		// Draw point
+		// Causes draw outside of MEMDEV!!!
+		#if 0
 		GUI_SetColor(GUI_WHITE);
-		GUI_DrawPixel(new_x,new_y);
+		GUI_DrawPixel(new_x, new_y);
 		#endif
 
-		#if 1
 		// Draw line between old and new point
+		// Causes draw outside of MEMDEV!!!
+		#if 0
 		GUI_SetColor(GUI_WHITE);
-		//GUI_SetColor(GUI_LIGHTBLUE);
-		if(i) GUI_DrawLine(old_x,old_y,new_x,new_y);
+		if(i)
+		{
+			if((old_x < new_x)&&(old_y < new_y))
+				GUI_DrawLine(old_x, old_y, new_x, new_y);
+			else if((new_x < old_x)&&(new_y < old_y))
+				GUI_DrawLine(new_x, new_y, old_x, old_y);
+		}
 		#endif
 
 		// Save old point
@@ -505,7 +541,7 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 		// Fast UI update callback
 		if(cb)
 		{
-			GUI_SelectLayer(0);
+			GUI_MEMDEV_Select(0);
 			cb();
 			GUI_MEMDEV_Select(hMemSpWf);
 		}
@@ -522,7 +558,6 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 
 	#ifdef USE_MEM_DEVICE
 	GUI_MEMDEV_CopyToLCD(hMemSpWf);		// Execute
-	//GUI_SelectLayer(0);
 	GUI_MEMDEV_Select(0);				// Allow normal text print in other controls
 	#endif
 }
@@ -820,11 +855,8 @@ static void ui_controls_create_sw_big(void)
 	// Create memory device (for spectrum only!)
 	if (hMemSpWf == 0)
 	{
-		hMemSpWf = GUI_MEMDEV_Create(	(SW_FRAME_X + SW_FRAME_WIDTH),
-										SCOPE_Y,
-										SCOPE_X_SIZE,
-										SCOPE_Y_SIZE
-									);
+		hMemSpWf = GUI_MEMDEV_Create(MEMDEV_SP_X, MEMDEV_SP_Y,
+									 MEMDEV_SP_X_SZ, MEMDEV_SP_Y_SZ);
 		if (hMemSpWf == 0)
 		{
 			printf("err mem dev!\r\n");
@@ -1101,7 +1133,7 @@ void ui_controls_spectrum_refresh(FAST_REFRESH *cb)
 			if(ui_sw.updated)
 			{
 				ui_controls_spectrum_fft_process_big();
-//!				ui_controls_spectrum_repaint_big(cb);
+				ui_controls_spectrum_repaint_big(cb);
 //!				ui_controls_spectrum_wf_repaint_big(cb); // - super laggy
 				ui_sw.updated = 0;
 			}

@@ -93,11 +93,11 @@ void ui_controls_wifi_init(void)
 	// Top line text
 	GUI_SetFont(&GUI_Font8x16_1);
 	GUI_SetColor(GUI_LIGHTGRAY);
-	GUI_DispStringAt("COOP", WIFI_X + 6, WIFI_Y + 4);
+//!	GUI_DispStringAt("COOP", WIFI_X + 6, WIFI_Y + 4);
 	GUI_SetColor(GUI_LIGHTGRAY);
-	GUI_DispStringAt("LORA", (WIFI_X + WIFI_SIZE_X/2) + 6, WIFI_Y + 4);
+//!	GUI_DispStringAt("LORA", (WIFI_X + WIFI_SIZE_X/2) + 6, WIFI_Y + 4);
 	GUI_SetColor(GUI_LIGHTGRAY);
-	GUI_DispStringAt("OFF", (WIFI_X + WIFI_SIZE_X/2) + 48, WIFI_Y + 4);
+//!	GUI_DispStringAt("OFF", (WIFI_X + WIFI_SIZE_X/2) + 48, WIFI_Y + 4);
 
 	// Cut-outs for middle line text
 	// WIFI
@@ -119,9 +119,9 @@ void ui_controls_wifi_init(void)
 	// Middle text
 	GUI_SetFont(&GUI_Font8x16_1);
 	GUI_SetColor(GUI_LIGHTGRAY);
-	GUI_DispStringAt("WIFI", WIFI_X + 6, WIFI_Y + 26);
+//!	GUI_DispStringAt("WIFI", WIFI_X + 6, WIFI_Y + 26);
 	GUI_SetColor(GUI_LIGHTGRAY);
-	GUI_DispStringAt("-52dBm", WIFI_X + 48, WIFI_Y + 26);
+//!	GUI_DispStringAt("-52dBm", WIFI_X + 48, WIFI_Y + 26);
 
 	// Cut-outs for bottom line(SSID)
 	GUI_SetColor(GUI_GRAY);
@@ -132,7 +132,7 @@ void ui_controls_wifi_init(void)
 	// Bottom text
 	GUI_SetFont(&GUI_Font8x8_1);
 	GUI_SetColor(GUI_LIGHTRED);
-	GUI_DispStringAt("Varna City", WIFI_X + 6, WIFI_Y + 45);
+//!	GUI_DispStringAt("Varna City", WIFI_X + 6, WIFI_Y + 45);
 }
 
 //*----------------------------------------------------------------------------
@@ -194,7 +194,7 @@ void ui_controls_wifi_refresh(void)
 			GUI_SetColor(GUI_LIGHTGRAY);
 
 		// Top line text
-		GUI_DispStringAt("COOP", WIFI_X + 6, WIFI_Y + 4);
+//!		GUI_DispStringAt("COOP", WIFI_X + 6, WIFI_Y + 4);
 
 		loc_esp32_status = tsu.esp32_alive;
 	}
@@ -268,7 +268,7 @@ void ui_controls_wifi_refresh(void)
 		else
 			GUI_SetColor(GUI_LIGHTGRAY);
 
-		GUI_DispStringAt("LORA", (WIFI_X + WIFI_SIZE_X/2) + 6, WIFI_Y + 4);
+//!		GUI_DispStringAt("LORA", (WIFI_X + WIFI_SIZE_X/2) + 6, WIFI_Y + 4);
 
 		char buff[50];
 
