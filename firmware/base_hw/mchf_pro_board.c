@@ -35,7 +35,7 @@ struct	CM7_CORE_DETAILS		ccd;
 // Public radio state
 struct	TRANSCEIVER_STATE_UI	tsu;
 
-__IO  uint32_t SystemClock_MHz 		= M7_CLOCK;//480;
+__IO  uint32_t SystemClock_MHz 		= M7_CLOCK;
 __IO  uint32_t SystemClock_changed 	= 0;
 
 /**
@@ -187,7 +187,7 @@ void SystemClockChange_Handler(void)
 void SystemClock_Config(void)
 {
 	RCC_ClkInitTypeDef RCC_ClkInitStruct;
-	RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit;
+	//RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit;
 	HAL_StatusTypeDef ret = HAL_OK;
 
 	//#if (USE_VOS0_480MHZ_OVERCLOCK == 1)

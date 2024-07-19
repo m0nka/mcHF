@@ -131,13 +131,13 @@ static void ui_proc_add_menu_items(void)
 
 static void ui_proc_cb(void)
 {
-//!	ui_controls_frequency_refresh(0);
+	ui_controls_frequency_refresh(0);
 	//ui_controls_volume_refresh();	// blink on constant refresh , ToDo: restore orig code
 }
 
 static void ui_proc_cb_sm(void)
 {
-//!	ui_controls_clock_refresh();
+	ui_controls_clock_refresh();
 }
 
 //*----------------------------------------------------------------------------
@@ -484,18 +484,18 @@ static void ui_proc_init_desktop(void)
 
 	//ui_proc_test_lcd();
 	#else
-//!	ui_controls_volume_init	  (WM_HBKWIN);
-//!	ui_controls_clock_init();
+	ui_controls_volume_init	  (WM_HBKWIN);
+	ui_controls_clock_init();
 	ui_controls_spectrum_init (WM_HBKWIN);
-//!	ui_controls_frequency_init(WM_HBKWIN);
-//!	ui_controls_smeter_init();
-//!	ui_controls_filter_init();
-//!	ui_controls_cpu_stat_init();
-//!	ui_controls_dsp_stat_init();
-//!	ui_controls_battery_init();
-//!	ui_controls_tx_stat_init();
-//!	ui_controls_menu_button_init();
-//!	ui_controls_wifi_init();
+	ui_controls_frequency_init(WM_HBKWIN);
+	ui_controls_smeter_init();
+	ui_controls_filter_init();
+	ui_controls_cpu_stat_init();
+	ui_controls_dsp_stat_init();
+	ui_controls_battery_init();
+	ui_controls_tx_stat_init();
+	ui_controls_menu_button_init();
+	ui_controls_wifi_init();
 
 	#if 0
 	// Return from Menu, when in CW mode and on screen keyer is enabled
@@ -547,7 +547,7 @@ static void ui_proc_change_mode(void)
 			ui_controls_wifi_quit();
 			ui_controls_clock_quit();
 			ui_controls_spectrum_quit();
-//!			ui_controls_frequency_quit();
+			ui_controls_frequency_quit();
 
 			ui_controls_smeter_quit();
 			ui_controls_spectrum_quit();
@@ -746,15 +746,15 @@ static void ui_proc_periodic(void)
 	if(ui_s.cur_state != MODE_DESKTOP)
 		return;
 
-//!	ui_controls_frequency_refresh(0);
-//!	ui_controls_clock_refresh();
+	ui_controls_frequency_refresh(0);
+	ui_controls_clock_refresh();
 
 	//--ui_controls_volume_refresh();
-//!	ui_controls_cpu_stat_refresh();
-//!	ui_controls_dsp_stat_refresh();
-//!	ui_controls_battery_refresh();
-//!	ui_controls_filter_refresh();
-//!	ui_controls_wifi_refresh();
+	ui_controls_cpu_stat_refresh();
+	ui_controls_dsp_stat_refresh();
+	ui_controls_battery_refresh();
+	ui_controls_filter_refresh();
+	ui_controls_wifi_refresh();
 
 	//--on_screen_keyboard_refresh();	// will not allow transparent dialog with moving background
 
@@ -762,11 +762,8 @@ static void ui_proc_periodic(void)
 	if((tsu.rxtx) && (tsu.band[tsu.curr_band].demod_mode == DEMOD_CW)) // && keyer shown
 		return;
 
-//! ToDo: After screen rotation, some hard-coded coordinates in those two controls
-//!       cause hard fault, need fix!!
-//!
 	ui_controls_spectrum_refresh(ui_proc_cb);
-//!	ui_controls_smeter_refresh  (ui_proc_cb_sm);
+	ui_controls_smeter_refresh  (ui_proc_cb_sm);
 
 	#ifdef CONTEXT_BMS
 	on_screen_power_refresh();
@@ -877,7 +874,7 @@ ui_proc_loop:
 				cntr_id = 1;
 				WM_InvalidateWindow(WM_HBKWIN);
 				#else
-//!				ui_controls_frequency_refresh(0);
+				ui_controls_frequency_refresh(0);
 				#endif
 
 				break;

@@ -55,6 +55,7 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include "mchf_pro_board.h"
 #include "stm32h747i_discovery_sdram.h"
 
 SDRAM_HandleTypeDef hsdram[SDRAM_INSTANCES_NBR];
@@ -296,6 +297,7 @@ __weak HAL_StatusTypeDef MX_SDRAM_Init(SDRAM_HandleTypeDef *hSdram)
   hSdram->Init.ReadBurst          = FMC_SDRAM_RBURST_ENABLE;
   hsdram->Init.ReadPipeDelay      = FMC_SDRAM_RPIPE_DELAY_0;
 
+#ifndef SLOW_SDRAM
   /* Timing configuration for 100Mhz as SDRAM clock frequency (System clock is up to 200Mhz) */
   sdram_timing.LoadToActiveDelay    = 2;
   sdram_timing.ExitSelfRefreshDelay = 7;
@@ -304,6 +306,18 @@ __weak HAL_StatusTypeDef MX_SDRAM_Init(SDRAM_HandleTypeDef *hSdram)
   sdram_timing.WriteRecoveryTime    = 2;
   sdram_timing.RPDelay              = 2;
   sdram_timing.RCDDelay             = 2;
+#else
+  // ToDo: Reduce SDRAM speed quick hack to prevent Hard Fault on rev 0.8.4
+  //       need proper fix!!!
+  sdram_timing.LoadToActiveDelay    = 4;
+  sdram_timing.ExitSelfRefreshDelay = 14;
+  sdram_timing.SelfRefreshTime      = 8;
+  sdram_timing.RowCycleDelay        = 14;
+  sdram_timing.WriteRecoveryTime    = 4;
+  sdram_timing.RPDelay              = 4;
+  sdram_timing.RCDDelay             = 4;
+#endif
+
 #endif
   /* SDRAM controller initialization */
   if(HAL_SDRAM_Init(hSdram, &sdram_timing) != HAL_OK)

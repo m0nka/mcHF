@@ -38,14 +38,20 @@
 #include <math.h>
 #include <limits.h>
 
+// ----------------------------------------
 #define USE_PWR_LDO_SUPPLY
 
-//
-// ToDo: Overclocking causes LCD driver to HardFault!
-//
-#define M7_CLOCK			480			//480
+// ----------------------------------------
+#define M7_CLOCK			480
+
+// ----------------------------------------
 //#define	USE_LSE                     // xtal/caps no good on proto?
 
+// ----------------------------------------
+// Prevent Hard Fault on 0.8.4 proto board
+#define		SLOW_SDRAM
+
+// ----------------------------------------
 #define RADIO_FIRM_ADDR		0x08020000
 
 // -----------------------------------------

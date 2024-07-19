@@ -58,13 +58,14 @@ WM_HTIMER 						hTimerSpec;
 //extern struct TD 		t_d;
 // ------------------------------
 
-// Memory device created for the combined Spectrum/Waterfall
-// control
-#ifdef USE_MEM_DEVICE
 #define MEMDEV_SP_X				(SW_FRAME_X + SW_FRAME_WIDTH)
 #define MEMDEV_SP_Y				SCOPE_Y
 #define MEMDEV_SP_X_SZ			SCOPE_X_SIZE
 #define MEMDEV_SP_Y_SZ			SCOPE_Y_SIZE
+
+// Memory device created for the combined Spectrum/Waterfall
+// control
+#ifdef USE_MEM_DEVICE
 //
 GUI_MEMDEV_Handle hMemSpWf = 0;
 #endif
@@ -541,9 +542,13 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 		// Fast UI update callback
 		if(cb)
 		{
+			#ifdef USE_MEM_DEVICE
 			GUI_MEMDEV_Select(0);
 			cb();
 			GUI_MEMDEV_Select(hMemSpWf);
+			#else
+			cb();
+			#endif
 		}
 	}
 
@@ -1134,7 +1139,7 @@ void ui_controls_spectrum_refresh(FAST_REFRESH *cb)
 			{
 				ui_controls_spectrum_fft_process_big();
 				ui_controls_spectrum_repaint_big(cb);
-//!				ui_controls_spectrum_wf_repaint_big(cb); // - super laggy
+				ui_controls_spectrum_wf_repaint_big(cb); // - super laggy
 				ui_sw.updated = 0;
 			}
 			break;
