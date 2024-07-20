@@ -27,7 +27,7 @@ _Min_Stack_Size = 0x800  	/* 1 Kb */; /* required amount of stack */
 /* Currently radio firmware overwrites the dsp temp area      */
 MEMORY
 {
-ROM_ML    (rx)          : ORIGIN = 0x08020000, LENGTH = 1920K
+ROM_ML    (rx)          : ORIGIN = 0x08020000, LENGTH = 896K
 ITCMRAM   (xrw)         : ORIGIN = 0x00000000, LENGTH = 64K
 DTCMRAM   (xrw)         : ORIGIN = 0x20000000, LENGTH = 128K
 RAM       (rw)          : ORIGIN = 0x24000000, LENGTH = 512K
