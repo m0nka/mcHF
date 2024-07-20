@@ -300,7 +300,11 @@
 
 // PB2			ATT_CLK
 // PB3			RFM_SCK_SPI1
+
 // PB4			ENC2_I
+#define ENC2_I_PIN               		GPIO_PIN_4
+#define ENC2_I_PORT               		GPIOB
+
 // PB5			KEYPAD_X5
 // PB6			TOUCH_SCK_I2C1
 // PB7			TOUCH_SDA_I2C1
@@ -345,6 +349,9 @@
 #define BAND0_PORT			GPIOC
 
 // PC7			ENC2_Q
+#define ENC2_Q_PIN               		GPIO_PIN_7
+#define ENC2_Q_PORT               		GPIOC
+
 // PC8			SDMMC1_D0
 #define SDMMC1_D0                   	GPIO_PIN_8
 #define SDMMC1_SDIO_PORTC              	GPIOC

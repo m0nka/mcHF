@@ -444,17 +444,17 @@ uchar rotary_front_enc_init(void)
 	__HAL_RCC_TIM3_CLK_ENABLE();
 
 	// PB4, TIM3, CH1 (I channel)
-	GPIO_InitStruct.Pin 				= GPIO_PIN_4;
+	GPIO_InitStruct.Pin 				= ENC2_I_PIN;
 	GPIO_InitStruct.Mode 				= GPIO_MODE_AF_PP;
 	GPIO_InitStruct.Pull	 			= GPIO_PULLUP;
 	GPIO_InitStruct.Speed 				= GPIO_SPEED_FREQ_LOW;
 	GPIO_InitStruct.Alternate 			= GPIO_AF2_TIM3;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	HAL_GPIO_Init(ENC2_I_PORT, &GPIO_InitStruct);
 
 	// PC7, TIM3, CH2 (Q channel)
-	GPIO_InitStruct.Pin 				= GPIO_PIN_7;
+	GPIO_InitStruct.Pin 				= ENC2_Q_PIN;
 	GPIO_InitStruct.Alternate 			= GPIO_AF2_TIM3;
-	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+	HAL_GPIO_Init(ENC2_Q_PORT, &GPIO_InitStruct);
 
 	htim3.Instance 						= TIM3;
 	htim3.Init.Prescaler 				= 0;
@@ -502,7 +502,7 @@ uchar rotary_front_enc_init(void)
 static void rotary_worker(void)
 {
 	// Encoders
-	rotary_check_side_enc();
+//!	rotary_check_side_enc();
 	rotary_check_front_enc();
 
 	// Push buttons
@@ -513,7 +513,7 @@ static void rotary_worker(void)
 void rotary_proc_hw_init(void)
 {
 	// Encoders
-	rotary_side_enc_init();
+//!	rotary_side_enc_init();
 	rotary_front_enc_init();
 
 	// Push buttons, redundant - side switch is power, freq button routed to ESP32!
