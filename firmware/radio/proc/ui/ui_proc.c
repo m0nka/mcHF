@@ -868,7 +868,7 @@ ui_proc_loop:
 
 			case UI_NEW_FREQ_EVENT:
 			{
-				printf("UI_NEW_FREQ_EVENT\r\n");
+				//printf("UI_NEW_FREQ_EVENT\r\n");
 
 				#ifdef PROC_USE_WM
 				cntr_id = 1;

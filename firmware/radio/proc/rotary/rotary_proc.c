@@ -363,9 +363,9 @@ static void rotary_check_front_enc(void)
 	//printf("cnt = %d\r\n",cnt);
 
 	if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim3))
-		pot_diff = -1;
-	else
 		pot_diff = +1;
+	else
+		pot_diff = -1;
 
 	//printf("pot_diff = %d\r\n",pot_diff);
 
