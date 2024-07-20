@@ -109,7 +109,6 @@
 									<listOptionValue builtIn="false" value="USE_TS_INT"/>
 									<listOptionValue builtIn="false" value="USE_SDCARD"/>
 									<listOptionValue builtIn="false" value="CORE_CM7"/>
-									<listOptionValue builtIn="false" value="USE_USB_HS"/>
 									<listOptionValue builtIn="false" value="VIRTIO_MASTER_ONLY"/>
 									<listOptionValue builtIn="false" value="NO_ATOMIC_64_SUPPORT"/>
 									<listOptionValue builtIn="false" value="METAL_MAX_DEVICE_REGIONS=2"/>

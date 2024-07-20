@@ -588,6 +588,7 @@ static int BSP_VerifyData(const uint64_t *pData, const uint64_t *pFlash, uint32_
   return 0;
 }
 
+#if 0
 /**
   * @brief  Copy resource file into the OctoSPI memory
   * @param  hItem    : Progress bar used to indicate the transfer progression
@@ -731,6 +732,7 @@ exit:
 
   return RetErr;
 }
+#endif
 
 uint8_t BSP_SuspendCPU2 ( void )
 {

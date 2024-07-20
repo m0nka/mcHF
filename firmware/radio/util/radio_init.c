@@ -610,7 +610,7 @@ void radio_init_on_reset(void)
 	// Enforce 20m - test
 	#if 1
 	tsu.curr_band 						= BAND_MODE_20;
-	tsu.band[tsu.curr_band].volume 		= 6;
+	tsu.band[tsu.curr_band].volume 		= 0;
 	tsu.band[tsu.curr_band].vfo_a 		= 14070*1000;
 	tsu.band[tsu.curr_band].fixed_mode 	= 0;
 	tsu.band[tsu.curr_band].nco_freq	= 0;
