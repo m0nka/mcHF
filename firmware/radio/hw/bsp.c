@@ -502,6 +502,22 @@ static void ptt_init(void)
 	HAL_GPIO_WritePin(GPIOI, GPIO_PIN_8, GPIO_PIN_RESET);
 }
 
+void bsp_hold_power(void)
+{
+	GPIO_InitTypeDef  GPIO_InitStruct;
+
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+
+	HAL_GPIO_WritePin(POWER_HOLD_PORT,POWER_HOLD, 1);	// hold power
+
+	GPIO_InitStruct.Pin   = POWER_HOLD;
+	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull  = GPIO_PULLDOWN;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+	HAL_GPIO_Init(POWER_HOLD_PORT, &GPIO_InitStruct);
+}
+
 uint8_t BSP_Config(void)
 {
 	uint8_t RetVal = 0;
@@ -522,7 +538,7 @@ uint8_t BSP_Config(void)
 	__HAL_RCC_CRC_CLK_ENABLE();
 
 	// Hold power
-	#ifdef BOARD_MCHF_PRO
+	//#ifdef BOARD_MCHF_PRO
 	GPIO_InitTypeDef  GPIO_InitStruct;
 	// PG11 is power hold
 	GPIO_InitStruct.Pin   = POWER_HOLD;
@@ -530,14 +546,14 @@ uint8_t BSP_Config(void)
 	GPIO_InitStruct.Pull  = GPIO_PULLDOWN;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 	//
-	HAL_GPIO_Init(POWER_HOLD_PORT, &GPIO_InitStruct);
-	HAL_GPIO_WritePin(POWER_HOLD_PORT,POWER_HOLD, 1);	// hold power
+	//HAL_GPIO_Init(POWER_HOLD_PORT, &GPIO_InitStruct);
+	//HAL_GPIO_WritePin(POWER_HOLD_PORT,POWER_HOLD, 1);	// hold power
 	//
 	// PF6 is LED
 	GPIO_InitStruct.Pin   = POWER_LED;
 	HAL_GPIO_Init(POWER_LED_PORT, &GPIO_InitStruct);
 	HAL_GPIO_WritePin(POWER_LED_PORT,POWER_LED, 0);		// led off
-	#endif
+	//#endif
 
 	// Disable charger
 	#if 0

@@ -586,7 +586,7 @@ static void jump_to_fw(uint32_t SubDemoAddress)
 	#endif
 
 	//GUI_Delay(200);		// causes re-entrance
-	HAL_Delay(200);
+	//HAL_Delay(200);
 
 	/* Disable the MPU */
 	HAL_MPU_Disable();
@@ -1541,7 +1541,7 @@ void boot_process(void)
 		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing Firmware...PASS", LEFT_MODE);
 		line++;
 
-		HAL_Delay(1000);
+		//HAL_Delay(1000);
 
 		// Jump
 		jump_to_fw(RADIO_FIRM_ADDR);

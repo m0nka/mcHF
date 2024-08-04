@@ -48,6 +48,8 @@ int BSP_ResourcesCopy(WM_HWIN hItem, FIL * pResFile, uint32_t Address);
 int BSP_FlashProgram(WM_HWIN hItem, FIL * pResFile, uint32_t Address);
 int BSP_FlashUpdate(uint32_t Address, uint8_t *pData, uint32_t Size);
 
+void bsp_hold_power(void);
+
 #ifdef __cplusplus
 }
 #endif

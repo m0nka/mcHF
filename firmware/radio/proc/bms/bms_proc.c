@@ -404,28 +404,30 @@ static int bms_proc_adc2_init(void)
 
 static void bms_proc_pins_init(void)
 {
+#if 1
 	GPIO_InitTypeDef  gpio_init_structure;
 
-	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
-	gpio_init_structure.Pull  = GPIO_NOPULL;
+	//gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	gpio_init_structure.Pull  = GPIO_PULLDOWN;
 	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
 
 	// BAL1 is PG6, BAL2 is PG3, BAL3 is PG2
-	gpio_init_structure.Pin   = BAL1_ON|BAL2_ON|BAL3_ON;
-	HAL_GPIO_Init(BAL13_PORT, &gpio_init_structure);
+	//gpio_init_structure.Pin   = BAL1_ON|BAL2_ON|BAL3_ON;
+	//HAL_GPIO_Init(BAL13_PORT, &gpio_init_structure);
 
 	// BAL4 is PD7
-	gpio_init_structure.Pin   = BAL4_ON;
-	HAL_GPIO_Init(BAL4_PORT, &gpio_init_structure);
+	//gpio_init_structure.Pin   = BAL4_ON;
+	//HAL_GPIO_Init(BAL4_PORT, &gpio_init_structure);
 
 	// Force OFF
-	HAL_GPIO_WritePin(BAL13_PORT, BAL1_ON|BAL2_ON|BAL3_ON, 	GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(BAL4_PORT,  BAL4_ON, 					GPIO_PIN_RESET);
+	//HAL_GPIO_WritePin(BAL13_PORT, BAL1_ON|BAL2_ON|BAL3_ON, 	GPIO_PIN_RESET);
+	//HAL_GPIO_WritePin(BAL4_PORT,  BAL4_ON, 					GPIO_PIN_RESET);
 
 	// Power button (encoder switch line)
 	gpio_init_structure.Pin   = POWER_BUTTON;
 	gpio_init_structure.Mode  = GPIO_MODE_INPUT;
 	HAL_GPIO_Init(POWER_BUTTON_PORT, &gpio_init_structure);
+#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -443,6 +445,11 @@ void bms_proc_hw_init(void)
 	//printf("bms_proc_hw_init\r\n");
 
 	bms_proc_pins_init();
+
+
+	return;
+
+
 	bms_proc_gpio_init();
 
 	#ifndef USE_DMA
@@ -471,6 +478,7 @@ void bms_proc_hw_init(void)
 
 void bms_proc_power_cleanup(void)
 {
+#if 0
 	GPIO_InitTypeDef  GPIO_InitStruct;
 
 	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
@@ -500,6 +508,7 @@ void bms_proc_power_cleanup(void)
 	// Balancer off
 	HAL_GPIO_WritePin(BAL13_PORT, BAL1_ON|BAL2_ON|BAL3_ON, 	GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(BAL4_PORT,  BAL4_ON, 					GPIO_PIN_RESET);
+#endif
 }
 
 static void bms_proc_measure_adc1(void)
@@ -1046,6 +1055,7 @@ static void bms_proc_decide_balancer(void)
 #else
 static void bms_proc_decide_balancer(void)
 {
+#if 0
 	ulong max_val  = 0;
 	static ulong bal_skip = 0;
 	int i, j = 0;
@@ -1186,6 +1196,7 @@ static void bms_proc_decide_balancer(void)
 	   	default:
 	   		break;
 	}
+#endif
 }
 #endif
 
@@ -1292,19 +1303,14 @@ static void bms_proc_power_off(void)
 	}
 
 	// Check for power off
-	//
-	// - power off is feeding VBAT voltage from Cell1
-	//   into PC13(WKUP2). As part of D3 domain, it needs
-	//   special init to use as GPIO
-	//
-	// 		== fixed by swapping PG11 and PC13! ==
-	//
-   	if(HAL_GPIO_ReadPin(POWER_BUTTON_PORT, POWER_BUTTON) == 1)
+   	if(HAL_GPIO_ReadPin(POWER_BUTTON_PORT, POWER_BUTTON))
    	{
-   		vTaskDelay(2000);// debounce
-   		if(HAL_GPIO_ReadPin(POWER_BUTTON_PORT, POWER_BUTTON) == 1)
+   		vTaskDelay(200);
+
+   		if(HAL_GPIO_ReadPin(POWER_BUTTON_PORT, POWER_BUTTON))
    		{
    			printf("user held button, will power off, bye!\r\n");
+   			vTaskDelay(200);
 
    			// Power off process
    			power_off();
@@ -1322,7 +1328,10 @@ static void bms_proc_power_off(void)
 //*----------------------------------------------------------------------------
 static void bms_proc_worker(void)
 {
+	bms_proc_power_off();
+
 	#ifndef USE_DMA
+#if 0
 	// Handle power off
 	bms_proc_power_off();
 
@@ -1376,6 +1385,7 @@ static void bms_proc_worker(void)
 	//HAL_PWREx_EnableMonitoring();
 	//printf("Battery %d,Temp %d\r\n", HAL_PWREx_GetVBATLevel(), HAL_PWREx_GetTemperatureLevel());
 	//HAL_PWREx_DisableMonitoring();
+#endif
 	#else
 
 	// Check for init success
