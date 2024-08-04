@@ -881,7 +881,7 @@ ui_proc_loop:
 			}
 
 			case UI_NEW_AUDIO_EVENT:
-				printf("UI_NEW_AUDIO_EVENT\r\n");
+				//printf("UI_NEW_AUDIO_EVENT\r\n");
 				ui_controls_volume_refresh();
 				break;
 

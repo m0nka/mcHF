@@ -182,6 +182,7 @@ static void rotary_update_side_enc_menu_publics(int pot_diff)
 	}
 }
 
+#if 0
 static void rotary_check_side_enc(void)
 {
 	ushort 	cnt;
@@ -212,6 +213,46 @@ static void rotary_check_side_enc(void)
 	// Flag preventing calling too often
 	audio_old = cnt;
 }
+#else
+static void rotary_check_side_enc(void)
+{
+	int		pot_diff = 0;
+
+	// --------------------------------------------
+	// ToDo: Use EXTI IRQ and proper debouncing!!!
+	// --------------------------------------------
+
+	if(HAL_GPIO_ReadPin(ENC1_I_PORT, ENC1_I))
+	{
+		vTaskDelay(80);
+		if(HAL_GPIO_ReadPin(ENC1_I_PORT, ENC1_I))
+		{
+			pot_diff = -1;
+			//printf("vol down \r\n");
+			vTaskDelay(80);
+		}
+	}
+
+	if(HAL_GPIO_ReadPin(ENC1_Q_PORT, ENC1_Q))
+	{
+		vTaskDelay(80);
+		if(HAL_GPIO_ReadPin(ENC1_Q_PORT, ENC1_Q))
+		{
+			pot_diff = +1;
+			//printf("vol up \r\n");
+			vTaskDelay(80);
+		}
+	}
+
+	if(pot_diff == 0)
+		return;
+
+	if(tsu.active_side_enc_id == 0)
+		rotary_update_audio_publics(pot_diff);
+	else
+		rotary_update_side_enc_menu_publics(pot_diff);
+}
+#endif
 
 static void rotary_update_freq_publics(int pot_diff)
 {
@@ -382,6 +423,7 @@ static void rotary_check_front_enc(void)
 	freq_old = cnt;
 }
 
+#if 0
 uchar rotary_side_enc_init(void)
 {
 	TIM_Encoder_InitTypeDef 	tim_config;
@@ -434,6 +476,26 @@ uchar rotary_side_enc_init(void)
 
 	return 0;
 }
+#else
+uchar rotary_side_enc_init(void)
+{
+	GPIO_InitTypeDef 			GPIO_InitStruct;
+
+	// --------------------------------------------
+	// ToDo: Use EXTI IRQ and proper debouncing!!!
+	// --------------------------------------------
+
+	GPIO_InitStruct.Mode 	= GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull	= GPIO_PULLDOWN;
+	GPIO_InitStruct.Speed 	= GPIO_SPEED_FREQ_LOW;
+
+	GPIO_InitStruct.Pin 	= ENC1_I;
+	HAL_GPIO_Init(ENC1_I_PORT, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin 	= ENC1_Q;
+	HAL_GPIO_Init(ENC1_Q_PORT, &GPIO_InitStruct);
+}
+#endif
 
 uchar rotary_front_enc_init(void)
 {
@@ -502,7 +564,7 @@ uchar rotary_front_enc_init(void)
 static void rotary_worker(void)
 {
 	// Encoders
-//!	rotary_check_side_enc();
+	rotary_check_side_enc();
 	rotary_check_front_enc();
 
 	// Push buttons
@@ -513,7 +575,7 @@ static void rotary_worker(void)
 void rotary_proc_hw_init(void)
 {
 	// Encoders
-//!	rotary_side_enc_init();
+	rotary_side_enc_init();
 	rotary_front_enc_init();
 
 	// Push buttons, redundant - side switch is power, freq button routed to ESP32!

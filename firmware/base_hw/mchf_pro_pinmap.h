@@ -260,7 +260,11 @@
 // PortA
 
 // PA0			RFM_RST
+
 // PA1			ENC1_I
+#define ENC1_I							GPIO_PIN_1
+#define ENC1_I_PORT						GPIOA
+
 // PA2			LORA_POWER
 // PA3			RFM_DIO2
 
@@ -284,7 +288,10 @@
 // PA12			USB_DFU_P
 // PA13			SWDIO
 // PA14			SWCLK
+
 // PA15			ENC1_Q
+#define ENC1_Q							GPIO_PIN_15
+#define ENC1_Q_PORT						GPIOA
 
 // ----------------------------------------------------
 // ----------------------------------------------------
