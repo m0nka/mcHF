@@ -518,11 +518,8 @@ void bsp_hold_power(void)
 	HAL_GPIO_Init(POWER_HOLD_PORT, &GPIO_InitStruct);
 }
 
-uint8_t BSP_Config(void)
+void bsp_gpio_clocks_on(void)
 {
-	uint8_t RetVal = 0;
-	//uint8_t counter = 10;
-
 	// All GPIO clocks on
 	__HAL_RCC_GPIOA_CLK_ENABLE();
 	__HAL_RCC_GPIOB_CLK_ENABLE();
@@ -533,6 +530,12 @@ uint8_t BSP_Config(void)
 	__HAL_RCC_GPIOG_CLK_ENABLE();
 	__HAL_RCC_GPIOH_CLK_ENABLE();
 	__HAL_RCC_GPIOI_CLK_ENABLE();
+}
+
+uint8_t BSP_Config(void)
+{
+	uint8_t RetVal = 0;
+	//uint8_t counter = 10;
 
 	// Enable CRC to Unlock GUI
 	__HAL_RCC_CRC_CLK_ENABLE();

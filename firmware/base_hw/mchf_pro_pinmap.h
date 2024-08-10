@@ -269,11 +269,11 @@
 // PA3			RFM_DIO2
 
 // PA4			DAC1_OUT1
-#define DAC1_OUT1		GPIO_PIN_4
-#define DAC1_OUTX_PORT	GPIOA
+#define DAC1_OUT1						GPIO_PIN_4
+#define DAC1_OUTX_PORT					GPIOA
 
 // PA5			DAC1_OUT2
-#define DAC1_OUT2		GPIO_PIN_5
+#define DAC1_OUT2						GPIO_PIN_5
 
 // PA6			RFM_MISO_SPI1
 // PA7			RFM_MOSI_SPI1
@@ -302,8 +302,8 @@
 #define CODEC_RESET_PORT           		GPIOB
 
 // PB1			LCD_BL_CTRL
-#define LCD_BL_CTRL_PIN                  GPIO_PIN_1
-#define LCD_BL_CTRL_GPIO_PORT            GPIOB
+#define LCD_BL_CTRL_PIN               	GPIO_PIN_1
+#define LCD_BL_CTRL_GPIO_PORT         	GPIOB
 
 // PB2			ATT_CLK
 // PB3			RFM_SCK_SPI1
@@ -317,14 +317,14 @@
 // PB7			TOUCH_SDA_I2C1
 
 // PB8			CODEC_SCL_I2C4
-#define CODEC_SCL_I2C4_PIN               GPIO_PIN_8
-#define CODEC_SCL_I2C4_PORT              GPIOB
-#define CODEC_SCL_I2C4_AF                GPIO_AF6_I2C4
+#define CODEC_SCL_I2C4_PIN             	GPIO_PIN_8
+#define CODEC_SCL_I2C4_PORT           	GPIOB
+#define CODEC_SCL_I2C4_AF            	GPIO_AF6_I2C4
 
 // PB9			CODEC_SDA_I2C4
-#define CODEC_SDA_I2C4_PIN               GPIO_PIN_9
-#define CODEC_SDA_I2C4_PORT              GPIOB
-#define CODEC_SDA_I2C4_AF                GPIO_AF6_I2C4
+#define CODEC_SDA_I2C4_PIN           	GPIO_PIN_9
+#define CODEC_SDA_I2C4_PORT          	GPIOB
+#define CODEC_SDA_I2C4_AF            	GPIO_AF6_I2C4
 
 // PB10			ATT_LE
 // PB11			DSI_TE
@@ -352,8 +352,8 @@
 // PC5			RFM_DIO0
 
 // PC6			BAND0
-#define BAND0_PIN			GPIO_PIN_6
-#define BAND0_PORT			GPIOC
+#define BAND0_PIN						GPIO_PIN_6
+#define BAND0_PORT						GPIOC
 
 // PC7			ENC2_Q
 #define ENC2_Q_PIN               		GPIO_PIN_7
@@ -458,19 +458,19 @@
 // PG0			FMC_A10
 // PG1			FMC_A11
 // PG2			DIT_IRQ
-#define PADDLE_DIT_PIO			GPIOG
-#define PADDLE_DIT				LL_GPIO_PIN_2
+#define PADDLE_DIT_PIO					GPIOG
+#define PADDLE_DIT						LL_GPIO_PIN_2
 
 // PG3			DAH_IRQ
-#define PADDLE_DAH_PIO 			GPIOG
-#define PADDLE_DAH				LL_GPIO_PIN_3
+#define PADDLE_DAH_PIO 					GPIOG
+#define PADDLE_DAH						LL_GPIO_PIN_3
 
 // PG4			FMC_BA0
 // PG5			FMC_BA1
 
 // PG6			BAND1
-#define BAND1_PIN			GPIO_PIN_6
-#define BAND1_PORT			GPIOG
+#define BAND1_PIN						GPIO_PIN_6
+#define BAND1_PORT						GPIOG
 
 // PG7			SAI1_MCLK_A
 // PG8			FMC_SDCLK
@@ -494,8 +494,8 @@
 // PortH
 
 // PH1			BAND3
-#define BAND3_PIN			GPIO_PIN_1
-#define BAND3_PORT			GPIOH
+#define BAND3_PIN						GPIO_PIN_1
+#define BAND3_PORT						GPIOH
 
 // PH2			FMC_SDCKE0
 // PH3			FMC_SDNE0
@@ -503,13 +503,13 @@
 // PH5			LO_SDA_I2C2
 
 // PH6			TOUCH_INT
-#define TS_INT_PIN                        GPIO_PIN_6
-#define TS_INT_GPIO_PORT                  GPIOH
+#define TS_INT_PIN                 		GPIO_PIN_6
+#define TS_INT_GPIO_PORT            	GPIOH
 
 // PH7			DSI_RESET
-#define LCD_RESET_PIN                    GPIO_PIN_7
-#define LCD_RESET_PULL                   GPIO_NOPULL
-#define LCD_RESET_GPIO_PORT              GPIOH
+#define LCD_RESET_PIN             		GPIO_PIN_7
+#define LCD_RESET_PULL              	GPIO_NOPULL
+#define LCD_RESET_GPIO_PORT         	GPIOH
 
 // PH8			FMC_D16
 // PH9			FMC_D17
@@ -538,8 +538,8 @@
 // PI11			KEYPAD_Y4
 
 // PI15			BAND2
-#define BAND2_PIN			GPIO_PIN_15
-#define BAND2_PORT			GPIOI
+#define BAND2_PIN						GPIO_PIN_15
+#define BAND2_PORT						GPIOI
 
 #endif
 

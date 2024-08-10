@@ -348,6 +348,7 @@ static int start_proc(void)
 //*----------------------------------------------------------------------------
 int main(void)
 {
+	bsp_gpio_clocks_on();
 	bsp_hold_power();
 
 	// Disable FMC Bank1 to avoid speculative/cache accesses

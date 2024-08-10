@@ -278,7 +278,7 @@ static void band_proc_k4_set(void)
 //
 //	17-10m		R			R			S			S
 // -------------------------------------------------------
-void band_proc_change_filter(uchar band,uchar bpf_only)
+void band_proc_change_filter(uchar band, uchar bpf_only, uchar lpf_only)
 {
 	if(bpf_only)
 		goto do_bpf;
@@ -290,7 +290,7 @@ void band_proc_change_filter(uchar band,uchar bpf_only)
 		case BAND_MODE_630:
 		case BAND_MODE_160:
 		{
-			//printf("set 160m...\r\n");
+			printf("set 160m...\r\n");
 			band_proc_k1_reset();
 			band_proc_k2_set();
 			band_proc_k3_set();
@@ -300,7 +300,7 @@ void band_proc_change_filter(uchar band,uchar bpf_only)
 
 		case BAND_MODE_80:
 		{
-			//printf("set 80m...\r\n");
+			printf("set 80m...\r\n");
 			band_proc_k1_reset();
 			band_proc_k2_reset();
 			band_proc_k3_reset();
@@ -311,7 +311,7 @@ void band_proc_change_filter(uchar band,uchar bpf_only)
 		case BAND_MODE_60:
 		case BAND_MODE_40:
 		{
-			//printf("set 60/40m...\r\n");
+			printf("set 60/40m...\r\n");
 			band_proc_k1_set();
 			band_proc_k2_reset();
 			band_proc_k3_reset();
@@ -322,7 +322,7 @@ void band_proc_change_filter(uchar band,uchar bpf_only)
 		case BAND_MODE_30:
 		case BAND_MODE_20:
 		{
-			//printf("set 30/20m...\r\n");
+			printf("set 30/20m...\r\n");
 			band_proc_k1_set();
 			band_proc_k2_set();
 			band_proc_k3_set();
@@ -335,7 +335,7 @@ void band_proc_change_filter(uchar band,uchar bpf_only)
 		case BAND_MODE_12:
 		case BAND_MODE_10:
 		{
-			//printf("set 17/10m...\r\n");
+			printf("set 17/10m...\r\n");
 			band_proc_k1_reset();
 			band_proc_k2_reset();
 			band_proc_k3_set();
@@ -344,8 +344,12 @@ void band_proc_change_filter(uchar band,uchar bpf_only)
 		}
 
 		default:
+			printf("not supported filter!\r\n");
 			break;
 	}
+
+	if(lpf_only)
+		return;
 
 do_bpf:
 
@@ -419,22 +423,22 @@ void band_proc_task(void const * argument)
 	vTaskDelay(BAND_PROC_START_DELAY);
 	//printf("band proc start\r\n");
 
-	//band_proc_change_filter(BAND_MODE_10, 0);
+	//band_proc_change_filter(BAND_MODE_10, 0, 0);
 	//vTaskDelay(50);
-	//band_proc_change_filter(BAND_MODE_20, 0);
+	//band_proc_change_filter(BAND_MODE_20, 0, 0);
 	//vTaskDelay(50);
-	//band_proc_change_filter(BAND_MODE_40, 0);
+	//band_proc_change_filter(BAND_MODE_40, 0, 0);
 	//vTaskDelay(50);
-	//band_proc_change_filter(BAND_MODE_160, 0);
+	//band_proc_change_filter(BAND_MODE_160, 0, 0);
 	//vTaskDelay(50);
-	band_proc_change_filter(tsu.curr_band, 0);
+	band_proc_change_filter(tsu.curr_band, 0, 0);
 
 band_proc_loop:
 
 	ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, BAND_PROC_SLEEP_TIME);
 	if((ulNotif)&&(ulNotificationValue))
 	{
-		band_proc_change_filter(tsu.curr_band, 0);	// use notification value or public ?
+		band_proc_change_filter(tsu.curr_band, 0, 0);	// use notification value or public ?
 	}
 
 	vTaskDelay(500);

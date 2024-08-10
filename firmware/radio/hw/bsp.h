@@ -39,6 +39,7 @@
 /* Exported macros -----------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
  void LCD_LL_Reset(void);
+ void bsp_gpio_clocks_on(void);
  uint8_t BSP_Config(void);
 uint8_t BSP_SuspendCPU2( void );
 uint8_t BSP_ResumeCPU2( void );
