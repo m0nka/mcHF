@@ -49,24 +49,24 @@ typedef struct
 #endif
 
 #ifdef BOARD_MCHF_PRO
-#define BUS_I2C4                              I2C4
-#define BUS_I2C4_CLK_ENABLE()                  __HAL_RCC_I2C4_CLK_ENABLE()
-#define BUS_I2C4_CLK_DISABLE()                 __HAL_RCC_I2C4_CLK_DISABLE()
+#define BUS_I2C4                              I2C1
+#define BUS_I2C4_CLK_ENABLE()                  __HAL_RCC_I2C1_CLK_ENABLE()
+#define BUS_I2C4_CLK_DISABLE()                 __HAL_RCC_I2C1_CLK_DISABLE()
 #define BUS_I2C4_SCL_GPIO_CLK_ENABLE()         __HAL_RCC_GPIOB_CLK_ENABLE()
 #define BUS_I2C4_SCL_GPIO_CLK_DISABLE()        __HAL_RCC_GPIOB_CLK_DISABLE()
 #define BUS_I2C4_SDA_GPIO_CLK_ENABLE()         __HAL_RCC_GPIOB_CLK_ENABLE()
 #define BUS_I2C4_SDA_GPIO_CLK_DISABLE()        __HAL_RCC_GPIOB_CLK_DISABLE()
 
-#define BUS_I2C4_FORCE_RESET()                 __HAL_RCC_I2C4_FORCE_RESET()
-#define BUS_I2C4_RELEASE_RESET()               __HAL_RCC_I2C4_RELEASE_RESET()
+#define BUS_I2C4_FORCE_RESET()                 __HAL_RCC_I2C1_FORCE_RESET()
+#define BUS_I2C4_RELEASE_RESET()               __HAL_RCC_I2C1_RELEASE_RESET()
 
 /* Definition for I2C4 Pins */
 #define BUS_I2C4_SCL_PIN                       GPIO_PIN_6
 #define BUS_I2C4_SDA_PIN                       GPIO_PIN_7
 #define BUS_I2C4_SCL_GPIO_PORT                 GPIOB
 #define BUS_I2C4_SDA_GPIO_PORT                 GPIOB
-#define BUS_I2C4_SCL_AF                        GPIO_AF6_I2C4
-#define BUS_I2C4_SDA_AF                        GPIO_AF6_I2C4
+#define BUS_I2C4_SCL_AF                        GPIO_AF4_I2C1
+#define BUS_I2C4_SDA_AF                        GPIO_AF4_I2C1
 #endif
 
 #ifndef BUS_I2C4_FREQUENCY

@@ -45,7 +45,7 @@
 // -----------------------------------------------------------------------------------------------
 // Touch screen process
 //
-//#define CONTEXT_TOUCH
+#define CONTEXT_TOUCH
 //
 // -----------------------------------------------------------------------------------------------
 // Core to core communication: 	M7 <-> M4
@@ -119,7 +119,7 @@
 #define UI_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 64)
 
 // LCD Touch process parameters
-#define TOUCH_PROC_START_DELAY			0
+#define TOUCH_PROC_START_DELAY			500
 #define TOUCH_PROC_SLEEP_TIME			portMAX_DELAY
 #define TOUCH_PROC_PRIORITY				osPriorityNormal
 #define TOUCH_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 4)

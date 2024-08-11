@@ -812,11 +812,6 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ipc/hw/prog_uart.c</locationURI>
 		</link>
 		<link>
-			<name>proc/touch/hw/calibration.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/touch/hw/calibration.c</locationURI>
-		</link>
-		<link>
 			<name>proc/touch/hw/calibration.h</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/touch/hw/calibration.h</locationURI>
@@ -840,11 +835,6 @@
 			<name>proc/touch/hw/ft6x06_reg.h</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/touch/hw/ft6x06_reg.h</locationURI>
-		</link>
-		<link>
-			<name>proc/touch/hw/stm32h747i_discovery_ts.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/touch/hw/stm32h747i_discovery_ts.c</locationURI>
 		</link>
 		<link>
 			<name>proc/touch/hw/stm32h747i_discovery_ts.h</name>

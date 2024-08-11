@@ -91,7 +91,7 @@ void HAL_HSEM_FreeCallback(uint32_t SemMask)
 			{
 				printf("tune tx\r\n");
 				ts.txrx_mode = 1;
-				HAL_GPIO_WritePin(GPIOI, GPIO_PIN_8, GPIO_PIN_SET);		// Tx exciter power on
+				HAL_GPIO_WritePin(PTT_PIN_PORT, PTT_PIN, GPIO_PIN_SET);		// Tx exciter power on
 			}
 
 			break;
@@ -105,7 +105,7 @@ void HAL_HSEM_FreeCallback(uint32_t SemMask)
 			{
 				printf("tune rx\r\n");
 				ts.txrx_mode = 0;
-				HAL_GPIO_WritePin(GPIOI, GPIO_PIN_8, GPIO_PIN_RESET);	// Tx exciter power off
+				HAL_GPIO_WritePin(PTT_PIN_PORT, PTT_PIN, GPIO_PIN_RESET);	// Tx exciter power off
 			}
 
 			break;
@@ -117,7 +117,7 @@ void HAL_HSEM_FreeCallback(uint32_t SemMask)
 			//printf("dah down\r\n");
 			//HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_6);		// doesn't work
 			ps.virtual_dah_down = 1;
-			__HAL_GPIO_EXTI_GENERATE_SWIT(GPIO_PIN_12);
+//!			__HAL_GPIO_EXTI_GENERATE_SWIT(GPIO_PIN_12);
 			break;
 		}
 
@@ -126,7 +126,7 @@ void HAL_HSEM_FreeCallback(uint32_t SemMask)
 		{
 			//printf("dit down\r\n");
 			ps.virtual_dit_down = 1;
-			__HAL_GPIO_EXTI_GENERATE_SWIT(GPIO_PIN_13);
+//!			__HAL_GPIO_EXTI_GENERATE_SWIT(GPIO_PIN_13);
 			break;
 		}
 
@@ -281,7 +281,7 @@ void icc_proc_hw_init(void)
 {
 	int32_t status = 0;
 
-	printf("icc init...\r\n");
+	//printf("icc init...\r\n");
 
 	// Init the mailbox use notify the other core on new message
 	//MAILBOX_Init();	- called by MX_OPENAMP_Init()
@@ -289,7 +289,7 @@ void icc_proc_hw_init(void)
 	// Init OpenAmp and libmetal libraries
 	if (MX_OPENAMP_Init(RPMSG_REMOTE, NULL) != HAL_OK)
 	{
-		printf("err 1\r\n");
+		//printf("err 1\r\n");
 		return;
 	}
 
@@ -297,7 +297,7 @@ void icc_proc_hw_init(void)
 	status = OPENAMP_create_endpoint(&rp_endpoint, RPMSG_SERVICE_NAME, RPMSG_ADDR_ANY, rpmsg_recv_callback, NULL);
 	if (status < 0)
 	{
-		printf("err 2\r\n");
+		//printf("err 2\r\n");
 		return;
 	}
 
@@ -310,7 +310,7 @@ void icc_proc_hw_init(void)
 	}
 #endif
 
-	printf("icc init done\r\n");
+	//printf("icc init done\r\n");
 	icc_init_done = 1;
 }
 

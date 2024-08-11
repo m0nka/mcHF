@@ -313,6 +313,7 @@
 #define ENC2_I_PORT               		GPIOB
 
 // PB5			KEYPAD_X5
+
 // PB6			TOUCH_SCK_I2C1
 // PB7			TOUCH_SDA_I2C1
 
@@ -328,7 +329,11 @@
 
 // PB10			ATT_LE
 // PB11			DSI_TE
+
 // PB12			PTT
+#define PTT_PIN							GPIO_PIN_12
+#define PTT_PIN_PORT            		GPIOB
+
 // PB13			VCC_5V_ON
 #define VCC_5V_ON						GPIO_PIN_13
 #define VCC_5V_ON_PORT            		GPIOB

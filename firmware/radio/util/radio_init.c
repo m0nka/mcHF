@@ -611,10 +611,10 @@ void radio_init_on_reset(void)
 	#if 1
 	tsu.curr_band 						= BAND_MODE_20;
 	tsu.band[tsu.curr_band].volume 		= 0;
-	tsu.band[tsu.curr_band].vfo_a 		= 14020*1000;
+	tsu.band[tsu.curr_band].vfo_a 		= 14070*1000;
 	tsu.band[tsu.curr_band].fixed_mode 	= 0;
 	tsu.band[tsu.curr_band].nco_freq	= 0;
-	tsu.band[tsu.curr_band].demod_mode	= DEMOD_CW;
+	tsu.band[tsu.curr_band].demod_mode	= DEMOD_USB;
 	#endif
 
 	// Enforce 80m - test

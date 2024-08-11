@@ -661,16 +661,16 @@ void LCD_LL_Reset(void)
 	GPIO_InitTypeDef  gpio_init_structure;
 
 	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
-	gpio_init_structure.Pull  = GPIO_PULLUP;
+	gpio_init_structure.Pull  = LCD_RESET_PULL;
 	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
 
 	// Reset as output
-	gpio_init_structure.Pin   = GPIO_PIN_7;
-	HAL_GPIO_Init(GPIOH, &gpio_init_structure);
+	gpio_init_structure.Pin   = LCD_RESET_PIN;
+	HAL_GPIO_Init(LCD_RESET_GPIO_PORT, &gpio_init_structure);
 
-	HAL_GPIO_WritePin(GPIOH, GPIO_PIN_7, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(LCD_RESET_GPIO_PORT, LCD_RESET_PIN, GPIO_PIN_RESET);
 	vTaskDelay(20);
-	HAL_GPIO_WritePin(GPIOH, GPIO_PIN_7, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(LCD_RESET_GPIO_PORT, LCD_RESET_PIN, GPIO_PIN_SET);
 	vTaskDelay(300);
 }
 #endif

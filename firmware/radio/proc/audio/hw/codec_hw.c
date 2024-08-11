@@ -497,7 +497,7 @@ void codec_hw_init(void)
 	//HAL_GPIO_Init(GPIOI, &gpio_init_structure);
 
 	// RX on start
-	//HAL_GPIO_WritePin(GPIOI, GPIO_PIN_8, GPIO_PIN_RESET);
+	//HAL_GPIO_WritePin(PTT_PIN_PORT, PTT_PIN, GPIO_PIN_RESET);
 
 	// 8.2 PCB has MUTE line
 	#if 1

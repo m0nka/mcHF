@@ -369,6 +369,7 @@ int main(void)
     // Configure the system clock to 400 MHz
     SystemClock_Config();
 
+    // RTC init
     k_CalendarBkupInit();
 
     // Set radio public values
@@ -384,6 +385,7 @@ int main(void)
 
     // Do we need this at all ?
     BSP_Initialized = 1;
+    //printf("run os...\r\n");
 
     // Start scheduler
     osKernelStart();

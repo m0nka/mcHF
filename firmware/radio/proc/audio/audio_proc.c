@@ -47,7 +47,7 @@ static void audio_proc_worker(ulong ulCmd)
 		// HW init from notification
 		case UI_NEW_SAI_INIT_DONE:
 		{
-			printf("->%s<-notified of SAI running, will reset codec...\r\n", pcTaskGetName(NULL));
+			//printf("->%s<-notified of SAI running, will reset codec...\r\n", pcTaskGetName(NULL));
 
 			// Hold reset high until MCLK1/2 is on
 			codec_hw_reset();
@@ -61,7 +61,7 @@ static void audio_proc_worker(ulong ulCmd)
 		// Needed for codec re-load
 		case UI_NEW_SAI_CLEANUP:
 		{
-			printf("->%s<-notified of DSP core reload...\r\n", pcTaskGetName(NULL));
+			//printf("->%s<-notified of DSP core reload...\r\n", pcTaskGetName(NULL));
 
 			// Mute audio path
 			HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);
@@ -179,7 +179,7 @@ void audio_proc_task(void const * argument)
 	goto audio_proc_exit;
 	#endif
 
-	printf("audio proc start\r\n");
+	//printf("audio proc start\r\n");
 
 audio_proc_loop:
 

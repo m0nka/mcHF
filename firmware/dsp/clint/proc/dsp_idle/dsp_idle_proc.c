@@ -1338,12 +1338,12 @@ void ui_driver_toggle_tx()
 
 	if(ts.txrx_mode == TRX_MODE_TX)
 	{
-		HAL_GPIO_WritePin(GPIOI, GPIO_PIN_8, GPIO_PIN_SET);		// Tx exciter power on
+		HAL_GPIO_WritePin(PTT_PIN_PORT, PTT_PIN, GPIO_PIN_SET);		// Tx exciter power on
 		icc_proc_notify_of_tx();								// core callback
 	}
 	else
 	{
-		HAL_GPIO_WritePin(GPIOI, GPIO_PIN_8, GPIO_PIN_RESET);	// Tx exciter power off
+		HAL_GPIO_WritePin(PTT_PIN_PORT, PTT_PIN, GPIO_PIN_RESET);	// Tx exciter power off
 		icc_proc_notify_of_rx();								// core callback
 	}
 

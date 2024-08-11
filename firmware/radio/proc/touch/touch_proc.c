@@ -35,11 +35,8 @@ EXTI_HandleTypeDef hts_exti_[2] = {0};
 
 void EXTI9_5_IRQHandler(void)
 {
-
 	if (__HAL_GPIO_EXTI_GET_IT(TS_INT_PIN) != 0x00U)
-	  {
-	    __HAL_GPIO_EXTI_CLEAR_IT(TS_INT_PIN);
-
+	{
 	    if(tp_init_done)
 	    {
 	    	BaseType_t xHigherPriorityTaskWoken;
@@ -47,7 +44,8 @@ void EXTI9_5_IRQHandler(void)
 	    	xTaskNotifyFromISR(hTouchTask, 0x01, eSetBits, &xHigherPriorityTaskWoken );
 	    	portYIELD_FROM_ISR(xHigherPriorityTaskWoken );
 	    }
-	  }
+	    __HAL_GPIO_EXTI_CLEAR_IT(TS_INT_PIN);
+	 }
 }
 
 static void touch_proc_irq_setup(void)
@@ -132,7 +130,7 @@ static int touch_proc_gt911_init(void)
 	// 66 00 00 00 00 07 00 00 BSP_I2C4_ReadReg
 	if(BSP_I2C4_ReadReg16(GT911_I2C_ADDRESS, 0x8040, data, 8) != 0)
 	{
-		printf("gt911 init err1!\r\n");
+		printf("gt911 init err2!\r\n");
 		return 1;
 	}
 	//printf("mode reg:\r\n");
@@ -141,7 +139,7 @@ static int touch_proc_gt911_init(void)
 	// Read configuration
 	if(BSP_I2C4_ReadReg16(GT911_I2C_ADDRESS, 0x8048, data, 13) != 0)
 	{
-		printf("gt911 init err2!\r\n");
+		printf("gt911 init err3!\r\n");
 		return 1;
 	}
 	//printf("config reg:\r\n");
@@ -179,28 +177,33 @@ static void touch_proc_lcd_reset(uchar context)
 	GPIO_InitTypeDef  gpio_init_structure;
 
 	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
-	gpio_init_structure.Pull  = GPIO_PULLUP;
 	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
 
-	// Reset/INT as output
-	gpio_init_structure.Pin   = GPIO_PIN_6|GPIO_PIN_7;
-	HAL_GPIO_Init(GPIOH, &gpio_init_structure);
+	// Reset output
+	gpio_init_structure.Pin   = LCD_RESET_PIN;
+	gpio_init_structure.Pull  = LCD_RESET_PULL;
+	HAL_GPIO_Init(LCD_RESET_GPIO_PORT, &gpio_init_structure);
+
+	// INT as output
+	gpio_init_structure.Pin   = TS_INT_PIN;
+	gpio_init_structure.Pull  = GPIO_PULLUP;
+	HAL_GPIO_Init(TS_INT_GPIO_PORT, &gpio_init_structure);
 
 	// Reset high, INT low
-	HAL_GPIO_WritePin(GPIOH, GPIO_PIN_7, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOH, GPIO_PIN_6, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(LCD_RESET_GPIO_PORT, 	LCD_RESET_PIN, 	GPIO_PIN_SET);
+	HAL_GPIO_WritePin(TS_INT_GPIO_PORT, 	TS_INT_PIN, 	GPIO_PIN_RESET);
 
 	if(!context)
-		HAL_Delay(10);
+		HAL_Delay(20);
 	else
-		vTaskDelay(10);
+		vTaskDelay(20);
 
-	HAL_GPIO_WritePin(GPIOH, GPIO_PIN_7, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(LCD_RESET_GPIO_PORT, LCD_RESET_PIN, GPIO_PIN_RESET);
 
 	if(!context)
-		HAL_Delay(10);
+		HAL_Delay(20);
 	else
-		vTaskDelay(10);
+		vTaskDelay(20);
 
 	#if GT911_I2C_ADDRESS == (0x28>>1)
 	HAL_Delay(1);
@@ -208,24 +211,25 @@ static void touch_proc_lcd_reset(uchar context)
 	HAL_Delay(1);
 	#endif
 
-	HAL_GPIO_WritePin(GPIOH, GPIO_PIN_7, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(LCD_RESET_GPIO_PORT, LCD_RESET_PIN, GPIO_PIN_SET);
 
 	if(!context)
-		HAL_Delay(100);
+		HAL_Delay(150);
 	else
-		vTaskDelay(100);
+		vTaskDelay(150);
 
-	HAL_GPIO_WritePin(GPIOH, GPIO_PIN_6, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(TS_INT_GPIO_PORT, TS_INT_PIN, GPIO_PIN_RESET);
 
 	if(!context)
-		HAL_Delay(100);
+		HAL_Delay(150);
 	else
-		vTaskDelay(100);
+		vTaskDelay(150);
 
 	// INT pin as input
-	gpio_init_structure.Pin   = GPIO_PIN_6;
+	gpio_init_structure.Pin   = TS_INT_PIN;
 	gpio_init_structure.Mode  = GPIO_MODE_INPUT;
-	HAL_GPIO_Init(GPIOH, &gpio_init_structure);
+	gpio_init_structure.Pull  = GPIO_NOPULL;
+	HAL_GPIO_Init(TS_INT_GPIO_PORT, &gpio_init_structure);
 
 	lcd_touch_reset_done = 1;
 }
@@ -256,12 +260,14 @@ static void touch_proc_post_init(void)
 	// GT911 init
 	if(touch_proc_gt911_init() != 0)
 	{
-		printf("gt911 init err!\r\n");
+		//printf("gt911 init err!\r\n");
 		return;
 	}
 
 	// Set up interrupt
 	touch_proc_irq_setup();
+
+	printf("touch ok\r\n");
 
 	// Allow process
 	tp_init_done = 1;
@@ -368,7 +374,7 @@ void touch_proc_task(void const *argument)
 	ulong 	ulNotificationValue = 0, ulNotif;
 
 	vTaskDelay(TOUCH_PROC_START_DELAY);
-	//printf("touch proc start\r\n");
+	printf("touch proc start\r\n");
 
 	// Interface init
 	touch_proc_post_init();
@@ -379,6 +385,8 @@ void touch_proc_task(void const *argument)
 		if((tp_init_done)&&(ulNotif) && (ulNotificationValue))
 		{
 			struct GT911_TS ts;
+
+			//printf("touch\r\n");
 
 			uchar err = touch_proc_read_td(&ts);
 			if(err == 0)

@@ -1,23 +1,3 @@
-/**
-  ******************************************************************************
-  * @file    stm32h747i_discovery_bus.c
-  * @author  MCD Application Team
-  * @brief   This file provides a set of firmware functions to communicate
-  *          with  external devices available on STM32H747I-DISCO board (MB1248) from
-  *          STMicroelectronics
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
 
 #include "main.h"
 #include "mchf_pro_board.h"
@@ -698,18 +678,19 @@ static void I2C4_MspInit(I2C_HandleTypeDef *phi2c)
   /*** Configure the GPIOs ***/
   /* Enable SCL GPIO clock */
   BUS_I2C4_SCL_GPIO_CLK_ENABLE();
+
   /* Enable SDA GPIO clock */
   BUS_I2C4_SDA_GPIO_CLK_ENABLE();
 
   /* Configure I2C Tx as alternate function */
   gpio_init_structure.Pin       = BUS_I2C4_SCL_PIN;
   gpio_init_structure.Mode      = GPIO_MODE_AF_OD;
-  #ifdef BOARD_EVAL_747
+  //#ifdef BOARD_EVAL_747
   gpio_init_structure.Pull      = GPIO_NOPULL;
-  #endif
-#ifdef BOARD_MCHF_PRO
-gpio_init_structure.Pull      = GPIO_PULLUP; // if R48 not installed
-#endif
+  //#endif
+//#ifdef BOARD_MCHF_PRO
+//gpio_init_structure.Pull      = GPIO_PULLUP; // if R48 not installed
+//#endif
   gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
   gpio_init_structure.Alternate = BUS_I2C4_SCL_AF;
   HAL_GPIO_Init(BUS_I2C4_SCL_GPIO_PORT, &gpio_init_structure);
@@ -717,12 +698,12 @@ gpio_init_structure.Pull      = GPIO_PULLUP; // if R48 not installed
   /* Configure I2C Rx as alternate function */
   gpio_init_structure.Pin       = BUS_I2C4_SDA_PIN;
   gpio_init_structure.Mode      = GPIO_MODE_AF_OD;
-#ifdef BOARD_EVAL_747
+//#ifdef BOARD_EVAL_747
   gpio_init_structure.Pull      = GPIO_NOPULL;
-#endif
-#ifdef BOARD_MCHF_PRO
-gpio_init_structure.Pull      = GPIO_PULLUP; // if R49 not installed
-#endif
+//#endif
+//#ifdef BOARD_MCHF_PRO
+//gpio_init_structure.Pull      = GPIO_PULLUP; // if R49 not installed
+//#endif
   gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
   gpio_init_structure.Alternate = BUS_I2C4_SDA_AF;
   HAL_GPIO_Init(BUS_I2C4_SDA_GPIO_PORT, &gpio_init_structure);

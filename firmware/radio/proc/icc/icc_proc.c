@@ -512,7 +512,7 @@ static void icc_proc_delayed_dsp_init(void)
 				tsu.dsp_rev2 = aRxBuffer[1];
 				tsu.dsp_rev3 = aRxBuffer[2];
 				tsu.dsp_rev4 = aRxBuffer[3];
-				printf("DSP:%d.%d.%d.%d\r\n",tsu.dsp_rev1,tsu.dsp_rev2,tsu.dsp_rev3,tsu.dsp_rev4);
+				//printf("DSP:%d.%d.%d.%d\r\n",tsu.dsp_rev1,tsu.dsp_rev2,tsu.dsp_rev3,tsu.dsp_rev4);
 			}
 			else
 				tsu.dsp_alive = 0;
@@ -561,7 +561,7 @@ static void icc_proc_delayed_dsp_init(void)
 		{
 			if(icc_proc_cmd_xchange(ICC_START_I2S_PROC, NULL, 0) == 0)
 			{
-				printf("SAI state: %x\r\n", aRxBuffer[0]);
+				//printf("SAI state: %x\r\n", aRxBuffer[0]);
 
 			    // Notify local Audio task, so it can do Reset and I2C init
 			    if((hAudioTask != NULL)&&(aRxBuffer[0] == 0))
@@ -716,7 +716,7 @@ static void icc_proc_dsp_command(ulong cmd)
 //*----------------------------------------------------------------------------
 static uchar icc_proc_dsp_on(void)
 {
-	printf("DSP ON...\r\n");
+	//printf("DSP ON...\r\n");
 
 	// Reset driver publics
 	tsu.dsp_alive 		 	= 0;			// remote core assumed off-line
@@ -892,7 +892,7 @@ void icc_proc_task(void const *arg)
 	ulong 	ulNotificationValue = 0, ulNotif;
 
 	vTaskDelay(ICC_PROC_START_DELAY);
-	printf("icc proc start\r\n");
+	//printf("icc proc start\r\n");
 
 	// DSP on
 	if(icc_proc_dsp_on())
