@@ -278,6 +278,46 @@ void EXTI15_10_IRQHandler(void)
 		__HAL_GPIO_EXTID2_CLEAR_IT(GPIO_PIN_13);
 	}
 }
+#else
+void EXTI2_IRQHandler(void)
+{
+	if(__HAL_GPIO_EXTID2_GET_IT(PADDLE_DIT) != 0x00U)
+	{
+		//printf("dit irq\r\n");
+
+		if((!LL_GPIO_IsInputPinSet(PADDLE_DIT_PIO, PADDLE_DIT_LL))||(ps.virtual_dit_down))
+		{
+			if(ts.dmod_mode == DEMOD_CW)
+			{
+				cw_gen_dit_IRQ();
+			}
+		}
+
+		__HAL_GPIO_EXTID2_CLEAR_IT(PADDLE_DIT);
+	}
+}
+void EXTI3_IRQHandler(void)
+{
+	if (__HAL_GPIO_EXTID2_GET_IT(PADDLE_DAH) != 0x00U)
+	{
+		//printf("dah irq\r\n");
+
+		if((!LL_GPIO_IsInputPinSet(PADDLE_DAH_PIO, PADDLE_DAH_LL))||(ps.virtual_dah_down))
+		{
+			if(ts.dmod_mode == DEMOD_CW)
+			{
+				cw_gen_dah_IRQ();
+			}
+			else if((ts.dmod_mode == DEMOD_USB)||(ts.dmod_mode == DEMOD_LSB) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM))
+			{
+				//printf("ptt on\r\n");
+				ts.ptt_req = 1;
+			}
+		}
+
+		__HAL_GPIO_EXTID2_CLEAR_IT(PADDLE_DAH);
+	}
+}
 #endif
 
 void set_cw_irq(void)
@@ -288,8 +328,11 @@ void set_cw_irq(void)
 	// done by M7 ?
 	LL_AHB4_GRP1_EnableClock(LL_AHB4_GRP1_PERIPH_GPIOG);
 
-	HAL_NVIC_SetPriority((IRQn_Type)(EXTI15_10_IRQn), 2U, 0x00);
-	HAL_NVIC_EnableIRQ	((IRQn_Type)(EXTI15_10_IRQn));
+	HAL_NVIC_SetPriority((IRQn_Type)(EXTI2_IRQn), 2U, 0x00);
+	HAL_NVIC_EnableIRQ	((IRQn_Type)(EXTI2_IRQn));
+
+	HAL_NVIC_SetPriority((IRQn_Type)(EXTI3_IRQn), 2U, 0x00);
+	HAL_NVIC_EnableIRQ	((IRQn_Type)(EXTI3_IRQn));
 }
 
 void loc_delay(ulong ms)
@@ -324,48 +367,42 @@ int main(void)
 	//core_hw_init();
 	//HAL_Init();
 
-	  /*HW semaphore Clock enable*/
-	  __HAL_RCC_HSEM_CLK_ENABLE();
-	  /*HW semaphore Notification enable*/
-	  HAL_HSEM_ActivateNotification(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
+	// HW semaphore Clock enable
+	__HAL_RCC_HSEM_CLK_ENABLE();
 
-	  /* When system initialization is finished, Cortex-M7 will release Cortex-M4  by means of
-	  HSEM notification */
-	  HAL_PWREx_ClearPendingEvent();
-	  HAL_PWREx_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFE, PWR_D2_DOMAIN);
+	// HW semaphore Notification enable
+	HAL_HSEM_ActivateNotification(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
 
-	  /* Initialize HAL : systick*/
-	  if (HAL_Init() != HAL_OK)
-	  {
-	    //Error_Handler(34);
-	  }
+	// When system initialization is finished, Cortex-M7 will release Cortex-M4  by means of
+	//  HSEM notification
+	HAL_PWREx_ClearPendingEvent();
+	HAL_PWREx_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFE, PWR_D2_DOMAIN);
 
-	  /*Clear Flags generated during the wakeup notification */
-	  HSEM_COMMON->ICR |= ((uint32_t)__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
-	  HAL_NVIC_ClearPendingIRQ(HSEM2_IRQn);
+	// Initialize HAL : systick
+	if (HAL_Init() != HAL_OK)
+	{
+		CriticalError(123);
+	}
 
+	// Clear Flags generated during the wakeup notification
+	HSEM_COMMON->ICR |= ((uint32_t)__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
+	HAL_NVIC_ClearPendingIRQ(HSEM2_IRQn);
 
     // Init debug print in shared mode
     printf_init(1);
 
 	printf("-->%s v: %d.%d\r\n", DEVICE_STRING, MCHF_D_VER_RELEASE, MCHF_D_VER_BUILD);
-	printf("exec at 0x%08x\r\n", (int)&Reset_Handler);
+	//printf("exec at 0x%08x\r\n", (int)&Reset_Handler);
 
-//!	set_cw_irq();
+	set_cw_irq();
 
 	// ICC driver init
 	icc_proc_hw_init();
-/*
+
 	for(;;)
 	{
-		//HAL_Delay(5000);
-		loc_delay(50000);
-		printf("here\r\n");
+		icc_proc_task(NULL);
+		audio_driver_thread();
+		ui_driver_thread();
 	}
-*/
-main_loop:
-	icc_proc_task(NULL);
-	audio_driver_thread();
-	ui_driver_thread();
-	goto main_loop;
 }

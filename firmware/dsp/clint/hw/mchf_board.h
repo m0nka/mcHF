@@ -17,6 +17,8 @@
 #include "stm32h7xx_hal.h"
 #include "stm32h747i_discovery.h"
 
+#include "mchf_pro_pinmap.h"
+
 #include "core_cm4.h"
 
 #include "mchf_types.h"

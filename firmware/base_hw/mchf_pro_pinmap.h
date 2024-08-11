@@ -457,13 +457,16 @@
 
 // PG0			FMC_A10
 // PG1			FMC_A11
+
 // PG2			DIT_IRQ
 #define PADDLE_DIT_PIO					GPIOG
-#define PADDLE_DIT						LL_GPIO_PIN_2
+#define PADDLE_DIT						GPIO_PIN_2
+#define PADDLE_DIT_LL					LL_GPIO_PIN_2
 
 // PG3			DAH_IRQ
 #define PADDLE_DAH_PIO 					GPIOG
-#define PADDLE_DAH						LL_GPIO_PIN_3
+#define PADDLE_DAH						GPIO_PIN_3
+#define PADDLE_DAH_LL					LL_GPIO_PIN_3
 
 // PG4			FMC_BA0
 // PG5			FMC_BA1

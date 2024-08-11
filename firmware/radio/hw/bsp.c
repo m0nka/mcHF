@@ -266,7 +266,7 @@ static void tasks_pre_os_init(void)
 
 #ifdef CONTEXT_ICC
 // M4 core Keyer IRQ setup
-static void EXTI15_10_IRQHandler_Config(void)
+static void EXTI23_IRQHandler_Config(void)
 {
 	GPIO_InitTypeDef   GPIO_InitStructure;
 
@@ -274,12 +274,16 @@ static void EXTI15_10_IRQHandler_Config(void)
 	GPIO_InitStructure.Mode 	= GPIO_MODE_IT_FALLING;
 	GPIO_InitStructure.Pull 	= GPIO_PULLUP;
 	GPIO_InitStructure.Speed 	= GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitStructure.Pin 		= GPIO_PIN_12|GPIO_PIN_13;
-	HAL_GPIO_Init(GPIOG, &GPIO_InitStructure);
+
+	GPIO_InitStructure.Pin 		= PADDLE_DIT;
+	HAL_GPIO_Init(PADDLE_DIT_PIO, &GPIO_InitStructure);
+
+	GPIO_InitStructure.Pin 		= PADDLE_DAH;
+	HAL_GPIO_Init(PADDLE_DAH_PIO, &GPIO_InitStructure);
 
 	// Configure the second CPU (CM4) EXTI line for IT
-	HAL_EXTI_D2_EventInputConfig(EXTI_LINE12 , EXTI_MODE_IT,  ENABLE);
-	HAL_EXTI_D2_EventInputConfig(EXTI_LINE13 , EXTI_MODE_IT,  ENABLE);
+	HAL_EXTI_D2_EventInputConfig(EXTI_LINE2 , EXTI_MODE_IT,  ENABLE);
+	HAL_EXTI_D2_EventInputConfig(EXTI_LINE3 , EXTI_MODE_IT,  ENABLE);
 }
 #endif
 
@@ -580,8 +584,8 @@ uint8_t BSP_Config(void)
 	LCD_LL_Backlight_init();
 
 	// DSP core Keyer IRQ
-	#ifdef CONTEXT_ICC__
-	EXTI15_10_IRQHandler_Config();
+	#ifdef CONTEXT_ICC
+	EXTI23_IRQHandler_Config();
 	#endif
 
 	// Task hw basic init (after LCD Reset!)
