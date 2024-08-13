@@ -837,11 +837,6 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/touch/hw/ft6x06_reg.h</locationURI>
 		</link>
 		<link>
-			<name>proc/touch/hw/stm32h747i_discovery_ts.h</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/touch/hw/stm32h747i_discovery_ts.h</locationURI>
-		</link>
-		<link>
 			<name>proc/touch/hw/touch_i2c.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/touch/hw/touch_i2c.c</locationURI>

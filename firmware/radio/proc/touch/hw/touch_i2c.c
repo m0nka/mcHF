@@ -670,70 +670,34 @@ static uint32_t I2C_Compute_SCLL_SCLH (uint32_t clock_src_freq, uint32_t I2C_spe
   */
 static void I2C4_MspInit(I2C_HandleTypeDef *phi2c)
 {
-  GPIO_InitTypeDef  gpio_init_structure;
-  //RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef  RCC_PeriphCLKInitStruct;
+	GPIO_InitTypeDef  gpio_init_structure;
+	//RCC_PeriphCLKInitTypeDef  RCC_PeriphCLKInitStruct;
 
-  /* Prevent unused argument(s) compilation warning */
-  UNUSED(phi2c);
+	/* Prevent unused argument(s) compilation warning */
+	UNUSED(phi2c);
 
-  //RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  //RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  //RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  //if (HAL_RCC_OscConfig(&RCC_OscInitStruct)!= HAL_OK)
-  //{
-    /* Error */
-  //  while(1);
-  //}
+	// Use slow clock
+	#if 0
+	RCC_PeriphCLKInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
+	RCC_PeriphCLKInitStruct.I2c123ClockSelection = RCC_I2C123CLKSOURCE_CSI;
+	HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphCLKInitStruct);
+	#endif
 
-  RCC_PeriphCLKInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
-  RCC_PeriphCLKInitStruct.I2c123ClockSelection = RCC_I2C123CLKSOURCE_CSI;
-  HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphCLKInitStruct);
+	gpio_init_structure.Mode      = GPIO_MODE_AF_OD;
+	gpio_init_structure.Pull      = GPIO_NOPULL;
+	gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
 
-    //printf("i2c msp init\r\n");
+	gpio_init_structure.Pin       = TOUCH_SCK_SCL_PIN;
+	gpio_init_structure.Alternate = TOUCH_SCK_SCL_AF;
+	HAL_GPIO_Init(TOUCH_SCK_SCL_GPIO_PORT, &gpio_init_structure);
 
-  /*** Configure the GPIOs ***/
-  /* Enable SCL GPIO clock */
-  //BUS_I2C4_SCL_GPIO_CLK_ENABLE();
+	gpio_init_structure.Pin       = TOUCH_SDA_SDA_PIN;
+	gpio_init_structure.Alternate = TOUCH_SDA_SDA_AF;
+	HAL_GPIO_Init(TOUCH_SDA_SDA_GPIO_PORT, &gpio_init_structure);
 
-  /* Enable SDA GPIO clock */
-  //BUS_I2C4_SDA_GPIO_CLK_ENABLE();
-
-  /* Configure I2C Tx as alternate function */
-  gpio_init_structure.Pin       = BUS_I2C4_SCL_PIN;
-  gpio_init_structure.Mode      = GPIO_MODE_AF_OD;
-  //#ifdef BOARD_EVAL_747
-  gpio_init_structure.Pull      = GPIO_NOPULL;
-  //#endif
-//#ifdef BOARD_MCHF_PRO
-//gpio_init_structure.Pull      = GPIO_PULLUP; // if R48 not installed
-//#endif
-  gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
-  gpio_init_structure.Alternate = BUS_I2C4_SCL_AF;
-  HAL_GPIO_Init(BUS_I2C4_SCL_GPIO_PORT, &gpio_init_structure);
-
-  /* Configure I2C Rx as alternate function */
-  gpio_init_structure.Pin       = BUS_I2C4_SDA_PIN;
-  gpio_init_structure.Mode      = GPIO_MODE_AF_OD;
-//#ifdef BOARD_EVAL_747
-  gpio_init_structure.Pull      = GPIO_NOPULL;
-//#endif
-//#ifdef BOARD_MCHF_PRO
-//gpio_init_structure.Pull      = GPIO_PULLUP; // if R49 not installed
-//#endif
-  gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
-  gpio_init_structure.Alternate = BUS_I2C4_SDA_AF;
-  HAL_GPIO_Init(BUS_I2C4_SDA_GPIO_PORT, &gpio_init_structure);
-
-  /*** Configure the I2C peripheral ***/
-  /* Enable I2C clock */
-  BUS_I2C4_CLK_ENABLE();
-
-  /* Force the I2C peripheral clock reset */
-  BUS_I2C4_FORCE_RESET();
-
-  /* Release the I2C peripheral clock reset */
-  BUS_I2C4_RELEASE_RESET();
+	BUS_I2C4_CLK_ENABLE();
+	BUS_I2C4_FORCE_RESET();
+	BUS_I2C4_RELEASE_RESET();
 }
 
 /**

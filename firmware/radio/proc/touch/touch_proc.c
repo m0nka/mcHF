@@ -252,18 +252,6 @@ void touch_proc_power_cleanup(void)
 
 static void touch_proc_post_init(void)
 {
-	#if 0
-	GPIO_InitTypeDef  gpio_init_structure;
-
-	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
-	gpio_init_structure.Pull  = GPIO_PULLDOWN;
-	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
-	gpio_init_structure.Pin   = BUS_I2C4_SCL_PIN;
-	HAL_GPIO_Init(BUS_I2C4_SCL_GPIO_PORT, &gpio_init_structure);
-
-	return;
-	#endif
-
 	// I2C init
 	if(BSP_I2C4_Init() != 0)
 	{
@@ -281,7 +269,7 @@ static void touch_proc_post_init(void)
 	// Set up interrupt
 	touch_proc_irq_setup();
 
-	printf("touch ok\r\n");
+	//printf("touch ok\r\n");
 
 	// Allow process
 	tp_init_done = 1;
@@ -388,23 +376,17 @@ void touch_proc_task(void const *argument)
 	ulong 	ulNotificationValue = 0, ulNotif;
 
 	vTaskDelay(TOUCH_PROC_START_DELAY);
-	printf("touch proc start\r\n");
+	//printf("touch proc start\r\n");
 
 	// Interface init
 	touch_proc_post_init();
 
 touch_proc:
 
-	#if 0
-	vTaskDelay(50);
-	HAL_GPIO_TogglePin(BUS_I2C4_SCL_GPIO_PORT, BUS_I2C4_SCL_PIN);
-	#else
 	ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, TOUCH_PROC_SLEEP_TIME);
 	if((tp_init_done)&&(ulNotif) && (ulNotificationValue))
 	{
 		struct GT911_TS ts;
-
-		//printf("touch\r\n");
 
 		uchar err = touch_proc_read_td(&ts);
 		if(err == 0)
@@ -415,7 +397,6 @@ touch_proc:
 		//else
 		//	printf("err: %x\r\n", err);
 	}
-	#endif
 
 	goto touch_proc;
 }

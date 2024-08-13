@@ -315,7 +315,14 @@
 // PB5			KEYPAD_X5
 
 // PB6			TOUCH_SCK_I2C1
+#define TOUCH_SCK_SCL_PIN              	GPIO_PIN_6
+#define TOUCH_SCK_SCL_GPIO_PORT      	GPIOB
+#define TOUCH_SCK_SCL_AF             	GPIO_AF4_I2C4
+
 // PB7			TOUCH_SDA_I2C1
+#define TOUCH_SDA_SDA_PIN             	GPIO_PIN_7
+#define TOUCH_SDA_SDA_AF                 GPIO_AF4_I2C4
+#define TOUCH_SDA_SDA_GPIO_PORT          GPIOB
 
 // PB8			CODEC_SCL_I2C4
 #define CODEC_SCL_I2C4_PIN             	GPIO_PIN_8
