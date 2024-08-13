@@ -116,11 +116,13 @@ static int touch_proc_read_td(struct GT911_TS *ts)
 static int touch_proc_gt911_init(void)
 {
 	uchar data[100];
+	ulong i2c_err;
 
 	// Read mode(swapped return FW ID)
-	if(BSP_I2C4_ReadReg(GT911_I2C_ADDRESS, 0x4880, data, 16) != 0)
+	i2c_err = BSP_I2C4_ReadReg(GT911_I2C_ADDRESS, 0x4880, data, 16);
+	if(i2c_err != 0)
 	{
-		printf("gt911 init err1!\r\n");
+		printf("gt911 init err %d\r\n", i2c_err);
 		return 1;
 	}
 	//printf("FW: %s\r\n", (char *)data);
@@ -250,6 +252,18 @@ void touch_proc_power_cleanup(void)
 
 static void touch_proc_post_init(void)
 {
+	#if 0
+	GPIO_InitTypeDef  gpio_init_structure;
+
+	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	gpio_init_structure.Pull  = GPIO_PULLDOWN;
+	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
+	gpio_init_structure.Pin   = BUS_I2C4_SCL_PIN;
+	HAL_GPIO_Init(BUS_I2C4_SCL_GPIO_PORT, &gpio_init_structure);
+
+	return;
+	#endif
+
 	// I2C init
 	if(BSP_I2C4_Init() != 0)
 	{
@@ -354,8 +368,8 @@ static void touch_proc_ts_update_a(struct GT911_TS ts_g)
 		return;
 
 	// Swap coordinates
-	TS_State.x 		= ts_g.t[0].y;
-	TS_State.y 		= (480 - ts_g.t[0].x);
+	TS_State.x 		= (854 - ts_g.t[0].y);
+	TS_State.y 		= ts_g.t[0].x;
 	TS_State.Layer 	= 0;
 
 	//printf("TD: x:%d, y:%d\r\n", TS_State.x, TS_State.y);
@@ -379,25 +393,31 @@ void touch_proc_task(void const *argument)
 	// Interface init
 	touch_proc_post_init();
 
-	while(1)
+touch_proc:
+
+	#if 0
+	vTaskDelay(50);
+	HAL_GPIO_TogglePin(BUS_I2C4_SCL_GPIO_PORT, BUS_I2C4_SCL_PIN);
+	#else
+	ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, TOUCH_PROC_SLEEP_TIME);
+	if((tp_init_done)&&(ulNotif) && (ulNotificationValue))
 	{
-		ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, TOUCH_PROC_SLEEP_TIME);
-		if((tp_init_done)&&(ulNotif) && (ulNotificationValue))
+		struct GT911_TS ts;
+
+		//printf("touch\r\n");
+
+		uchar err = touch_proc_read_td(&ts);
+		if(err == 0)
 		{
-			struct GT911_TS ts;
-
-			//printf("touch\r\n");
-
-			uchar err = touch_proc_read_td(&ts);
-			if(err == 0)
-			{
-				// Push to UI driver
-				touch_proc_ts_update_a(ts);
-			}
-			//else
-			//	printf("err: %x\r\n", err);
+			// Push to UI driver
+			touch_proc_ts_update_a(ts);
 		}
-  }
+		//else
+		//	printf("err: %x\r\n", err);
+	}
+	#endif
+
+	goto touch_proc;
 }
 #endif
 

@@ -671,16 +671,33 @@ static uint32_t I2C_Compute_SCLL_SCLH (uint32_t clock_src_freq, uint32_t I2C_spe
 static void I2C4_MspInit(I2C_HandleTypeDef *phi2c)
 {
   GPIO_InitTypeDef  gpio_init_structure;
+  //RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef  RCC_PeriphCLKInitStruct;
 
   /* Prevent unused argument(s) compilation warning */
   UNUSED(phi2c);
 
+  //RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  //RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  //RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  //if (HAL_RCC_OscConfig(&RCC_OscInitStruct)!= HAL_OK)
+  //{
+    /* Error */
+  //  while(1);
+  //}
+
+  RCC_PeriphCLKInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
+  RCC_PeriphCLKInitStruct.I2c123ClockSelection = RCC_I2C123CLKSOURCE_CSI;
+  HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphCLKInitStruct);
+
+    //printf("i2c msp init\r\n");
+
   /*** Configure the GPIOs ***/
   /* Enable SCL GPIO clock */
-  BUS_I2C4_SCL_GPIO_CLK_ENABLE();
+  //BUS_I2C4_SCL_GPIO_CLK_ENABLE();
 
   /* Enable SDA GPIO clock */
-  BUS_I2C4_SDA_GPIO_CLK_ENABLE();
+  //BUS_I2C4_SDA_GPIO_CLK_ENABLE();
 
   /* Configure I2C Tx as alternate function */
   gpio_init_structure.Pin       = BUS_I2C4_SCL_PIN;
@@ -726,6 +743,7 @@ static void I2C4_MspInit(I2C_HandleTypeDef *phi2c)
   */
 static void I2C4_MspDeInit(I2C_HandleTypeDef *phi2c)
 {
+#if 0
   GPIO_InitTypeDef  gpio_init_structure;
 
   /* Prevent unused argument(s) compilation warning */
@@ -739,6 +757,7 @@ static void I2C4_MspDeInit(I2C_HandleTypeDef *phi2c)
 
   /* Disable I2C clock */
   BUS_I2C4_CLK_DISABLE();
+#endif
 }
 
 /**

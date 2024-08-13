@@ -34,7 +34,6 @@ RAM       (rw)          : ORIGIN = 0x24000000, LENGTH = 512K
 SRAM3     (rw)			: ORIGIN = 0x30040000, LENGTH = 32K
 VIDEO_RAM (rw)          : ORIGIN = 0xC0000000, LENGTH = 3202K
 EXT_RAM   (rw)          : ORIGIN = 0xC0000000, LENGTH = 892K
-DEMO_INFO (rx)          : ORIGIN = 0x0803F800, LENGTH = 2K
 OPEN_AMP_RSC_TAB (xrw)	: ORIGIN = 0x38000000, LENGTH = 1K
 OPEN_AMP_SHMEM (xrw)	: ORIGIN = 0x38000400, LENGTH = 63K
 }
@@ -165,7 +164,6 @@ SECTIONS
   }
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
-  flasher_code_section : { *(flasher_code_section) } >ROM_ML
   heap_mem : { *(heap_mem) } >RAM
   dma_mem : { *(dma_mem) } >SRAM3
   .STemWinMemPool : { *(.STemWinMemPool) } >EXT_RAM
