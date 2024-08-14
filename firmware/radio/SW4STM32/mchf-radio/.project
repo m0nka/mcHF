@@ -137,6 +137,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/hw/sd_diskio_dma.c</locationURI>
 		</link>
 		<link>
+			<name>hw/shared_i2c.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/shared_i2c.c</locationURI>
+		</link>
+		<link>
 			<name>hw/stm32h747i_discovery.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/hw/stm32h747i_discovery.c</locationURI>
@@ -765,16 +770,6 @@
 			<name>proc/audio/hw/codec_hw.h</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/audio/hw/codec_hw.h</locationURI>
-		</link>
-		<link>
-			<name>proc/audio/hw/codec_i2c.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/audio/hw/codec_i2c.c</locationURI>
-		</link>
-		<link>
-			<name>proc/audio/hw/codec_i2c.h</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/audio/hw/codec_i2c.h</locationURI>
 		</link>
 		<link>
 			<name>proc/icc/hw/mbox_hsem.c</name>

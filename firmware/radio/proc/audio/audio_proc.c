@@ -18,7 +18,7 @@
 
 #include "audio_proc.h"
 
-#include "codec_i2c.h"
+#include "shared_i2c.h"
 #include "codec_hw.h"
 
 // Public radio state

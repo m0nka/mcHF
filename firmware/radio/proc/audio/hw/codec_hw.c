@@ -14,7 +14,7 @@
 #include "main.h"
 #include "mchf_pro_board.h"
 
-#include "codec_i2c.h"
+#include "shared_i2c.h"
 #include "codec_hw.h"
 
 //
@@ -249,7 +249,7 @@ static void codec_hw_show_registers(char *msg)
 	// Dump registers
 	for(i = 1; i < 0x10; i++)
 	{
-		if(BSP_I2C1_ReadReg(0x98, i, (data + i), 1) != 0)
+		if(shared_i2c_read_reg(0x98, i, (data + i), 1) != 0)
 			break;
 
 		//printf("%02x: %02x\r\n", i, data[i]);
@@ -262,7 +262,7 @@ static void codec_hw_update_register(uchar id, bool force, uchar value)
 	uchar old;
 
 	// Read current
-	if(BSP_I2C1_ReadReg (0x98, id, &old, 1) != BSP_ERROR_NONE)
+	if(shared_i2c_read_reg(0x98, id, &old, 1) != BSP_ERROR_NONE)
 		goto loc_err;
 
 	// Modify
@@ -272,7 +272,7 @@ static void codec_hw_update_register(uchar id, bool force, uchar value)
 		old = value;
 
 	// Update value
-	if(BSP_I2C1_WriteReg(0x98, id, &old, 1) != BSP_ERROR_NONE)
+	if(shared_i2c_write_reg(0x98, id, &old, 1) != BSP_ERROR_NONE)
 		goto loc_err;
 
 	return;
@@ -486,7 +486,7 @@ void codec_hw_init(void)
 	//HAL_GPIO_WritePin(GPIOG, GPIO_PIN_10, GPIO_PIN_SET);
 
 	// I2C init
-	if(BSP_I2C1_Init() != 0)
+	if(shared_i2c_init() != 0)
 	{
 		printf("i2c init err 1!\r\n");
 		return;
@@ -549,7 +549,7 @@ void codec_task_init(void)
 	int i;
 
 	// Read chip ID - always read first, otherwise comms fail next
-	if(BSP_I2C1_ReadReg(0x98, CS4245_CHIP_ID, &val, 1) != 0)
+	if(shared_i2c_read_reg(0x98, CS4245_CHIP_ID, &val, 1) != 0)
 	{
 		printf("i2c init err 2!\r\n");
 		return;
