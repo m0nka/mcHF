@@ -11,9 +11,12 @@
 **  Licence:       The mcHF project is released for radio amateurs experimentation **
 **               and non-commercial use only.Check 3rd party drivers for licensing **
 ************************************************************************************/
+#include "main.h"
 #include "mchf_pro_board.h"
 
 #ifdef CONTEXT_BMS
+
+#include "shared_i2c.h"
 
 #include "bms_proc.h"
 
@@ -1478,6 +1481,28 @@ void bms_proc_task(void const *arg)
 		printf("err adc1 init (%d)\r\n", res);
 	}
 	#endif
+
+	ushort val;
+	ulong err;
+
+	#ifndef CONTEXT_AUDIO
+	// I2C init
+	if(shared_i2c_init() != 0)
+	{
+		printf("i2c init err 1!\r\n");
+		//return;
+	}
+	#endif
+
+	err = shared_i2c_read_reg(0x17, 0x08, &val, 2);
+	if(err != 0)
+	{
+		printf("bms read temp err %d\r\n", err);
+		//return;
+	}
+	else
+		printf("temp: %d \r\n", (val/10 - 273));
+
 
 bms_proc_loop:
 

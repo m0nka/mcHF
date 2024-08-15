@@ -155,7 +155,7 @@
 #define AUDIO_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 4)
 
 // Battery management system process parameters
-#define BMS_PROC_START_DELAY			0
+#define BMS_PROC_START_DELAY			10000
 #define BMS_PROC_SLEEP_TIME				500
 #define BMS_PROC_PRIORITY				osPriorityNormal
 #define BMS_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 4)

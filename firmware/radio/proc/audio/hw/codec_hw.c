@@ -14,6 +14,8 @@
 #include "main.h"
 #include "mchf_pro_board.h"
 
+#ifdef CONTEXT_AUDIO
+
 #include "shared_i2c.h"
 #include "codec_hw.h"
 
@@ -690,3 +692,4 @@ void codec_hw_volume(void)
 		}
 	}
 }
+#endif

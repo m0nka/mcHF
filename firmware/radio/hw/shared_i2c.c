@@ -300,6 +300,8 @@ static void I2C1_MspInit(I2C_HandleTypeDef *phi2c)
   /* Prevent unused argument(s) compilation warning */
   UNUSED(phi2c);
 
+  //printf("shared i2c gpio init\r\n");
+
   /*** Configure the GPIOs ***/
   /* Enable SCL GPIO clock */
   BUS_I2C1_SCL_GPIO_CLK_ENABLE();
