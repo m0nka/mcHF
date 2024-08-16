@@ -71,6 +71,7 @@
 									<listOptionValue builtIn="false" value="../../../proc/ipc/hw"/>
 									<listOptionValue builtIn="false" value="../../../proc/rotary"/>
 									<listOptionValue builtIn="false" value="../../../proc/bms"/>
+									<listOptionValue builtIn="false" value="../../../proc/bms/hw"/>
 									<listOptionValue builtIn="false" value="../../../proc/icc"/>
 									<listOptionValue builtIn="false" value="../../../proc/audio"/>
 									<listOptionValue builtIn="false" value="../../../proc/audio/hw"/>

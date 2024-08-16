@@ -17,6 +17,7 @@
 #ifdef CONTEXT_BMS
 
 #include "shared_i2c.h"
+#include "bq40z80.h"
 
 #include "bms_proc.h"
 
@@ -1483,26 +1484,28 @@ void bms_proc_task(void const *arg)
 	#endif
 
 	ushort val;
-	ulong err;
+	//ulong err;
 
 	#ifndef CONTEXT_AUDIO
 	// I2C init
 	if(shared_i2c_init() != 0)
-	{
 		printf("i2c init err 1!\r\n");
-		//return;
-	}
 	#endif
 
-	err = shared_i2c_read_reg(0x17, 0x08, &val, 2);
-	if(err != 0)
-	{
-		printf("bms read temp err %d\r\n", err);
-		//return;
-	}
-	else
-		printf("temp: %d \r\n", (val/10 - 273));
+	if(shared_i2c_is_ready(0x17, 10) == 0)
+		printf("== bms ready ==\r\n");
 
+	if(bq40z80_read_16bit_reg(0x08, &val) == 0)
+		printf("temp: %d deg C\r\n", (val/10 - 273));
+
+	if(bq40z80_read_16bit_reg(0x09, &val) == 0)
+		printf("volt: %d \r\n", val);
+
+	//uchar buf[100];
+	//if(bq40z80_mac_read_block(0x0075, buf, 24) == 0)
+	//	printf("fw ver \r\n");
+
+	bq40z80_read_fw_ver();
 
 bms_proc_loop:
 

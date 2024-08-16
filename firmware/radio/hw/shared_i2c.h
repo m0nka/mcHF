@@ -100,7 +100,7 @@ int32_t shared_i2c_write_reg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uin
 int32_t shared_i2c_read_reg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length);
 //int32_t BSP_I2C1_WriteReg16(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length);
 //int32_t BSP_I2C1_ReadReg16(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length);
-//int32_t BSP_I2C1_IsReady(uint16_t DevAddr, uint32_t Trials);
+int32_t shared_i2c_is_ready(uint16_t DevAddr, uint32_t Trials);
 //int32_t BSP_GetTick(void);
 
 #if (USE_HAL_I2C_REGISTER_CALLBACKS == 1)

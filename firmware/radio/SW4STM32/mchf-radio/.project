@@ -772,6 +772,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/audio/hw/codec_hw.h</locationURI>
 		</link>
 		<link>
+			<name>proc/bms/hw/bq40z80.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/bms/hw/bq40z80.c</locationURI>
+		</link>
+		<link>
 			<name>proc/icc/hw/mbox_hsem.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/icc/hw/mbox_hsem.c</locationURI>

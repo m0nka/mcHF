@@ -23,3 +23,8 @@
 - align relays
 - switch to 1S batt holders
 - add GND testing hole
+- usb pd module need isolation diode(to prevent vbus feedin from batt)
+- Q6 and Q7 need large heat pads
+- replace batt socket with 5x1S
+- move heatsink outwards
+- reposition ACC connector

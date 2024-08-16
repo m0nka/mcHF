@@ -560,17 +560,24 @@ int32_t BSP_I2C1_ReadReg16(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint1
 }
 #endif
 
-#if 0
-int32_t BSP_I2C1_IsReady(uint16_t DevAddr, uint32_t Trials)
+#if 1
+int32_t shared_i2c_is_ready(uint16_t DevAddr, uint32_t Trials)
 {
-  int32_t ret = BSP_ERROR_NONE;
+	int32_t ret = BSP_ERROR_NONE;
 
-  if(HAL_I2C_IsDeviceReady(&hbus_i2c1, DevAddr, Trials, 1000) != HAL_OK)
-  {
-    ret = BSP_ERROR_BUSY;
-  }
+	if(dI2CSemaphore == NULL)
+		return BSP_ERROR_PERIPH_FAILURE;
 
-  return ret;
+	if(xSemaphoreTake(dI2CSemaphore, (TickType_t)50) != pdTRUE)
+		return BSP_ERROR_PERIPH_FAILURE;
+
+	if(HAL_I2C_IsDeviceReady(&hbus_i2c1, DevAddr, Trials, 1000) != HAL_OK)
+	{
+		ret = BSP_ERROR_BUSY;
+	}
+
+	xSemaphoreGive(dI2CSemaphore);
+	return ret;
 }
 #endif
 
