@@ -71,10 +71,9 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
 	printf( "====================\r\n");
-	printf( "==== HARD FAULT ====\r\n");
+	printf( "=    HARD FAULT    =\r\n");
+	printf( "=     %s     =\r\n", pcTaskGetName(NULL));
 	printf( "====================\r\n");
-
-	printf("fail in: %s \r\n", pcTaskGetName(NULL));
 
 	//NVIC_SystemReset();
 	while(1);

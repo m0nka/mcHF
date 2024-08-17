@@ -555,9 +555,9 @@ static void bsp_config(void)
 {
 	// Use sharing, as DSP core might be running after reset
 	printf_init(1);
-	printf("........................................................\r\n");
-	printf("........................................................\r\n");
-	printf("%s v: %d.%d  \r\n", DEVICE_STRING, MCHF_L_VER_RELEASE, MCHF_L_VER_BUILD);
+	printf("..........................................................\r\n");
+	printf("..........................................................\r\n");
+	printf("-->%s v: %d.%d  \r\n", DEVICE_STRING, MCHF_L_VER_RELEASE, MCHF_L_VER_BUILD);
 
 	// Initialise the screen
 	hw_lcd_gpio_init();
@@ -597,7 +597,7 @@ static void jump_to_fw(uint32_t SubDemoAddress)
 	// ToDo: stop uart driver..
 	//       other hw ?
 
-	printf("Jump to radio(0x%08x)...\r\n", (int)SubDemoAddress);
+	//printf("Jump to radio(0x%08x)...\r\n", (int)SubDemoAddress);
 
 	/* Disable and Invalidate I-Cache */
 	SCB_DisableICache();

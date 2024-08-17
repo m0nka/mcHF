@@ -295,55 +295,63 @@ static uint32_t I2C_GetTiming(uint32_t clock_src_freq, uint32_t i2c_freq)
 
 static void I2C1_MspInit(I2C_HandleTypeDef *phi2c)
 {
-  GPIO_InitTypeDef  gpio_init_structure;
+	GPIO_InitTypeDef  gpio_init_structure;
+	RCC_PeriphCLKInitTypeDef  RCC_PeriphCLKInitStruct;
 
-  /* Prevent unused argument(s) compilation warning */
-  UNUSED(phi2c);
+	/* Prevent unused argument(s) compilation warning */
+	UNUSED(phi2c);
 
-  //printf("shared i2c gpio init\r\n");
+	//printf("shared i2c gpio init\r\n");
 
-  /*** Configure the GPIOs ***/
-  /* Enable SCL GPIO clock */
-  BUS_I2C1_SCL_GPIO_CLK_ENABLE();
+	/*** Configure the GPIOs ***/
+	/* Enable SCL GPIO clock */
+	BUS_I2C1_SCL_GPIO_CLK_ENABLE();
 
-  /* Enable SDA GPIO clock */
-  BUS_I2C1_SDA_GPIO_CLK_ENABLE();
+	/* Enable SDA GPIO clock */
+	BUS_I2C1_SDA_GPIO_CLK_ENABLE();
 
-  /* Configure I2C Tx as alternate function */
-  gpio_init_structure.Pin       = BUS_I2C1_SCL_PIN;
-  gpio_init_structure.Mode      = GPIO_MODE_AF_OD;
-  #ifdef BOARD_EVAL_747
-  gpio_init_structure.Pull      = GPIO_NOPULL;
-  #endif
-#ifdef BOARD_MCHF_PRO
-gpio_init_structure.Pull      = GPIO_PULLUP; // if R48 not installed
-#endif
-  gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
-  gpio_init_structure.Alternate = BUS_I2C1_SCL_AF;
-  HAL_GPIO_Init(BUS_I2C1_SCL_GPIO_PORT, &gpio_init_structure);
+	// Use slow clock
+	#if 1
+	RCC_PeriphCLKInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2C4;
+	RCC_PeriphCLKInitStruct.I2c123ClockSelection = RCC_I2C4CLKSOURCE_CSI;
+	HAL_RCCEx_PeriphCLKConfig(&RCC_PeriphCLKInitStruct);
+	#endif
 
-  /* Configure I2C Rx as alternate function */
-  gpio_init_structure.Pin       = BUS_I2C1_SDA_PIN;
-  gpio_init_structure.Mode      = GPIO_MODE_AF_OD;
-#ifdef BOARD_EVAL_747
-  gpio_init_structure.Pull      = GPIO_NOPULL;
-#endif
-#ifdef BOARD_MCHF_PRO
-gpio_init_structure.Pull      = GPIO_PULLUP; // if R49 not installed
-#endif
-  gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
-  gpio_init_structure.Alternate = BUS_I2C1_SDA_AF;
-  HAL_GPIO_Init(BUS_I2C1_SDA_GPIO_PORT, &gpio_init_structure);
+	/* Configure I2C Tx as alternate function */
+	gpio_init_structure.Pin       = BUS_I2C1_SCL_PIN;
+	gpio_init_structure.Mode      = GPIO_MODE_AF_OD;
+  	  #ifdef BOARD_EVAL_747
+	gpio_init_structure.Pull      = GPIO_NOPULL;
+  	  #endif
+	#ifdef BOARD_MCHF_PRO
+	gpio_init_structure.Pull      = GPIO_PULLUP; // if R48 not installed
+	#endif
+	gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
+	gpio_init_structure.Alternate = BUS_I2C1_SCL_AF;
+	HAL_GPIO_Init(BUS_I2C1_SCL_GPIO_PORT, &gpio_init_structure);
 
-  /*** Configure the I2C peripheral ***/
-  /* Enable I2C clock */
-  BUS_I2C1_CLK_ENABLE();
+	/* Configure I2C Rx as alternate function */
+	gpio_init_structure.Pin       = BUS_I2C1_SDA_PIN;
+	gpio_init_structure.Mode      = GPIO_MODE_AF_OD;
+	#ifdef BOARD_EVAL_747
+	gpio_init_structure.Pull      = GPIO_NOPULL;
+	#endif
+	#ifdef BOARD_MCHF_PRO
+	gpio_init_structure.Pull      = GPIO_PULLUP; // if R49 not installed
+	#endif
+	gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
+	gpio_init_structure.Alternate = BUS_I2C1_SDA_AF;
+	HAL_GPIO_Init(BUS_I2C1_SDA_GPIO_PORT, &gpio_init_structure);
 
-  /* Force the I2C peripheral clock reset */
-  BUS_I2C1_FORCE_RESET();
+	/*** Configure the I2C peripheral ***/
+	/* Enable I2C clock */
+	BUS_I2C1_CLK_ENABLE();
 
-  /* Release the I2C peripheral clock reset */
-  BUS_I2C1_RELEASE_RESET();
+	/* Force the I2C peripheral clock reset */
+	BUS_I2C1_FORCE_RESET();
+
+	/* Release the I2C peripheral clock reset */
+	BUS_I2C1_RELEASE_RESET();
 }
 
 static void I2C1_MspDeInit(I2C_HandleTypeDef *phi2c)
@@ -457,7 +465,7 @@ int32_t shared_i2c_write_reg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uin
 	if(dI2CSemaphore == NULL)
 		return BSP_ERROR_PERIPH_FAILURE;
 
-	if(xSemaphoreTake(dI2CSemaphore, (TickType_t)50) != pdTRUE)
+	if(xSemaphoreTake(dI2CSemaphore, (TickType_t)0) != pdTRUE)
 		return BSP_ERROR_PERIPH_FAILURE;
 
 	if(I2C1_WriteReg(DevAddr, Reg, I2C_MEMADD_SIZE_8BIT, pData, Length) == 0)
@@ -487,8 +495,13 @@ int32_t shared_i2c_read_reg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint
 	if(dI2CSemaphore == NULL)
 		return BSP_ERROR_PERIPH_FAILURE;
 
-	if(xSemaphoreTake(dI2CSemaphore, (TickType_t)50) != pdTRUE)
+	if(xSemaphoreTake(dI2CSemaphore, (TickType_t)0) != pdTRUE)
+	{
+		//printf( "unable to claim shared i2c %s \r\n", pcTaskGetName(NULL));
 		return BSP_ERROR_PERIPH_FAILURE;
+	}
+
+	//printf( "shared i2c read from %s \r\n", pcTaskGetName(NULL));
 
 	if(I2C1_ReadReg(DevAddr, Reg, I2C_MEMADD_SIZE_8BIT, pData, Length) == 0)
 	{

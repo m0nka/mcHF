@@ -20,6 +20,7 @@ uchar bq40z80_write_16bit_reg(uchar reg, ushort val);
 uchar bq40z80_read_16bit_reg(uchar reg, ushort *val);
 
 uchar bq40z80_read_fw_ver(void);
+void  bq40z80_init(void);
 
 #endif
 
