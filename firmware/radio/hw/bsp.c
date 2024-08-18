@@ -399,7 +399,9 @@ void power_off(void)
 	//printf("power off in\r\n");
 
 	// Stop all repaints
+	#ifdef CONTEXT_VIDEO
 	ui_proc_power_cleanup();
+	#endif
 
 	// Safely stop OS
 	portDISABLE_INTERRUPTS();
