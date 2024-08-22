@@ -1483,7 +1483,7 @@ void bms_proc_task(void const *arg)
 	}
 	#endif
 
-	bq40z80_init();
+	//bq40z80_init();
 
 bms_proc_loop:
 
