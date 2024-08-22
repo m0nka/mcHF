@@ -16,3 +16,6 @@
 - change R40 to 560k and R41 to 100k
 - change R37 to 0 Ohm
 - hook USB programming pins to regulator inhibit(to allow programming when off)
+- speaker connector too close to mix board and too far away from sp terminals
+- add GND testing hole
+- add physical pullups on shared I2C

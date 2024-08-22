@@ -35,7 +35,7 @@ struct	CM7_CORE_DETAILS		ccd;
 // Public radio state
 struct	TRANSCEIVER_STATE_UI	tsu;
 
-__IO  uint32_t SystemClock_MHz 		= M7_CLOCK;//480;
+__IO  uint32_t SystemClock_MHz 		= M7_CLOCK;
 __IO  uint32_t SystemClock_changed 	= 0;
 
 /**
@@ -115,7 +115,7 @@ static void SystemClock_Config_480MHz(void)
 
 	/* Enable HSE Oscillator and activate PLL with HSE as source */
 	RCC_OscInitStruct.OscillatorType	= RCC_OSCILLATORTYPE_HSE;
-	RCC_OscInitStruct.HSEState 			= RCC_HSE_ON;
+	RCC_OscInitStruct.HSEState 			= RCC_HSE_BYPASS;
 	RCC_OscInitStruct.HSIState 			= RCC_HSI_OFF;
 	RCC_OscInitStruct.CSIState 			= RCC_CSI_OFF;
 	RCC_OscInitStruct.PLL.PLLState 		= RCC_PLL_ON;
@@ -187,7 +187,7 @@ void SystemClockChange_Handler(void)
 void SystemClock_Config(void)
 {
 	RCC_ClkInitTypeDef RCC_ClkInitStruct;
-	RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit;
+	//RCC_PeriphCLKInitTypeDef RCC_PeriphClkInit;
 	HAL_StatusTypeDef ret = HAL_OK;
 
 	//#if (USE_VOS0_480MHZ_OVERCLOCK == 1)
@@ -490,7 +490,7 @@ void MPU_Config(void)
 	MPU_InitStruct.Number           = MPU_REGION_NUMBER4;
 	MPU_InitStruct.TypeExtField     = MPU_TEX_LEVEL0;
 	MPU_InitStruct.SubRegionDisable = 0x00;
-	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_ENABLE;
+	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
 	// Setup SRAM3, D2 domain, HW peripherals DMA buffers

@@ -1,0 +1,466 @@
+#########################################################################
+#########################################################################
+##                                                                     ##
+##  This file contains very short release information, newest up!      ##
+##                                                                     ##
+##  KA7OEI, Clint                                                      ##
+##  DF8OE, Andreas                                                     ##
+##  DB4PLE, Danilo                                                     ##
+##  DD4WH, Frank                                                       ##
+##  and all other contributors                                         ##
+##                                                                     ##
+#########################################################################
+#########################################################################
+
+20170318 [DF8OE]
+- switched bootloader and firmware to new STM libs based on HAL
+- switched frequency calibration from Hz to ppm (which is frequency-independent)
+- introduced RX IQ autocorrection (must be enabled in config menue)
+- introduced twin-peaks autocorrection
+- I2C-speed now is user-selectable to get max. speed out of your mcHF
+
+
+20161231 [DF8OE]
+- frequency translation +/- 12KHz uses now more efficient algorithm
+- plopping / klicking sound at PTT is removed
+- I2C Bus speed improved (storing time to serial EEPROM significantly
+  shorter now)
+- many minor bugfixes
+- reduced time for RX <--> TX switching
+- implementing a "menu manual" which is automatically created with every
+  new build - can be found in support/ui/menu and is published in
+  GitHub WIKI
+
+
+20161115 [DF8OE]
+- minor bugfixes
+- implementation of touchscreen for 3.2" LCDs
+- implementation of freeDV
+
+
+20160912 [DF8OE]
+- implemented keyer mode "ULTIMATIC"
+
+
+20160820 [DF8OE]
+- started working on FREEDV (feature is not enabled in daily snapshots yet)
+- implemented using of big USB plug for USB-stick bootloader instead of small plug
+- many minor bugfixes
+
+
+20160819 [DF8OE]
+- reworked DDS code for better quality
+- reworked TX IIR filter for better uppression of spurious signals
+- added new TX filters 'WIDE BASS' and 'WIDE TREBLE'
+- added possibility of adjusting BASS and TREBLE in TX mode
+- bugfix EEPROM detection 24LC1025
+- added EEPROM 24LC256 to usable EEPROMs
+- added 'DEBUG/EXPER. SETTINGS' to menu structure. For now only item is enabling
+  audio out via USB during TX
+- bugfix spectrum and spectrum light
+- bugfix CW frequency offsets
+- many code simplifications and minor bugfixes
+- added MAC support for Makefile
+- reworked TX audio filters for improving spurious suppression
+- reworked TX software chain for better signal quality
+- added "Zoom FFT / magnify" x2 x4 x8 x16 x32
+- added touchscreen support for Zoom FFT / magnify"
+- many minor bugfixes
+
+
+20160713 [DF8OE]
+- minor changes in LCD init for parallel use
+- new ui for encoder boxes
+- CW sidetone now available when TX is disabled
+- smoother magnified spectrum display
+- added dBm/Hz display for RX signals
+- improved  Responsiveness  of the buttons and knobs under heavy load:
+  For a long time the UI responsivness was harmed if certain CPU intensive
+  filters were enabled. This is now gone.
+- several issues with the spectrum display have been sorted out: It is now
+  smoother and  also has the center line properly working
+- the display code incorporates changes to support all known display and
+  controller types: No "white screen" issues have been reported for quite a while.
+- the CW sidetone is now audible even if TX is disabled: practice your CW skills
+  with the mcHF without actually transmitting
+- added some hardware detection code: The Hardware Info Menu now tells you how much Flash,
+  RAM and which CPU type signature (413h -> STM32F405/07/15/17, or 419h ->STM32F42x/3x)
+  your mcHF has.
+- the TUNE mode is now able to generate a two tone signal to better calibrate your mcHF
+  (PA Adjustment Menu).
+- added support to fix the TwinPeaks without rebooting: If you get occasionally a mirrored
+  signal in the mcHF which goes away after rebooting, you now can try to restart the I2S
+  stream by tapping on the DSP box (if you have touch enabled) or by going into the Standard
+  Menu and selecting "Restart I2S". No need to reboot.
+- quite a number of bug fixes to improve stability and fix some more or less annoying issues.
+- bugfix translation +6khz/+12khz not working
+
+
+20160515 [DF8OE]
+-released first stable following new versioning scheme
+
+
+20160511 [DF8OE]
+- bugfix: temperature C/F not stored
+- bugfix: encoder2 state corrected when leaving menu
+- disabled blue digits when tuning is faster than SI570 can follow
+
+
+20160510 [DF8OE]
+- bugfix: when in syncAM-mode now AM is reported instead of SSB
+- minor and major bugfixes regarding CW TX
+- swapped to actual CMSIS-Libs: improvements in many places to more acurate DSP functions
+- improved accuracy of SNAP function
+- added touchfunction: "reset of 100/10/1 Hz to ZERO": touching on "TUNE" box
+- added new graphic "Spectrum light"
+- improved accuracy of touchfunctions
+- bugfix continuos temperature compensation of LO
+- changed some colors for better readability
+- added touchfunction for METER change: touching on meters
+- added manual notch filter
+- added peak filter
+- added bass/treble adjustment
+- again improvement of LCD SPI speed
+- started LCD layout simplifications
+
+
+20160413 [DF8OE]
+- again bugfix "white screen issue" on some left LCDs
+- bugfix loading defaults
+- signal line in spectrum now always is in front of spectrum
+- added poweroff and reboot to "defaults loading screens"
+- expanding "button test function" to encoders
+- DSP NR has joined stable usage again!
+- added config "Cat In Sandbox" where CAT 'set'- commands do not affect actual band settings
+
+
+20160405 [DF8OE]
+- new FilterPath-structure replaces old filter selection method
+- added SAM demodulation for weak AM signals
+- bugfix TX path while in translated mode
+- changed filter character at low frequencies in TX for male voices with high lower frequencies
+- improved TX IQ balance and phase adjustment SSB/CW
+- bugfix "white screen issue" on some LCDs
+- bugfix TX filter ON/OFF was swapped
+- started snap function for SAM (experimantal)
+
+
+20160317 [DF8OE]
+- added dynamically tuning, activated/deactivated by tapping on step size 
+- hopefully improved USB audio recongnition of all Windows versions and Linux
+- removed scope/waterfall blocking in SPI mode
+- added LCD mode difference to dynamic tuning
+- more speed for LCD parallel/SPI
+- added possibility of swapping SPI to 50MHz instead of 25MHz (ununsed at the moment)
+- added more filters: 4.2k, 4.4k, 4.6k, 4.8k, 5k, 5.5k,6k,7k,8k,8,5k,9k and 9.5k
+- completely new functions for menu with submenus
+- slightly improvements in display colors and font usage
+- bugfix SI570 crashes when tuning is very fast and in very large steps
+- bugfix spectrum/waterfall stopped during tuning
+- grouped buttons EXIT-PREV-NEXT for better usability
+- state of dynamic tuning is stored ow
+- started new filter selection method (FilterPath - experimantal!)
+
+
+20160228 [DF8OE]
+- corrected TX/RX switching of AFG/STG and RIT/WPM in CW
+- added USB audio functions
+- added #335 Tune Power Level for antenna tuning with specific power
+- added USB I/Q-Audio
+- reworked much code for better serviceability
+- activatiing ALC for USB-I/Q-input signals
+- added filters 2.7KHz and 2.9KHz as LPF and BPF
+
+
+20160213 [DF8OE]
+- adding new translate modes +/- 12KHz
+- added 5KHz tuning steps
+- added possibility to use filters as LPF (not with center frequency)
+- rework of display code for speed up
+- further code reworking
+- FM only allowed on 10m when #029-LSB/USB Auto Select is ON
+- touchscreen tuning disabled when frequency lock set
+- touchscreen steps 5KHz in AM mode
+- bugfix in EEPROM routines
+
+
+20160203 [DF8OE]
+- CAT implementation finished using small USB plug (FT817 protocol)
+  Linux recognizes serial device out of the box, Windows needs drivers from STM:
+  http://www.st.com/web/en/catalog/tools/PF257938
+- minor bugfixes in reworks
+- started displaying GitHub-versioning in splashscreen for better firmware identifying
+
+
+20160201 [DF8OE]
+- beginning CAT implementation
+- beginning DIGI-modes implementation
+
+
+20160130 [DF8OE]
+- huge reworking in menue / text formatting
+- reworking in configuration save and read functions
+- reworking for improving speed, saving code space and better readability
+- reworking of SPI LCD code for improving speed
+- FM now enabled by default (it is stable)
+
+
+20160125 [DF8OE]
+- many bugfixes in audio functions (out of boundary errors)
+- removing all code errors which causes compiler warnings
+- now it is possible to build with compiler optimization
+- rework of Makefile
+
+20160122 [DF8OE]
+- fixed bug "60m 5W power adjust"
+- fixed bug "long press TUNE in TX disables tune toggle"
+- fixed many compiler warnings (cleanup - thanks to hogthrob!
+- removed tuning borders, now colour of digits indicate:
+  white == within official tuning range and tuned
+  yellow == outside specs, but often works
+  red == completely outside specs or no I2C communication to SI570 possible
+
+
+20160103 [DF8OE]
+- first release which supports future expansion pcbs for adding
+1) RX 12KHz...80MHz, TX 160m, 6m and 4m
+2) RX 80MHz...2000MHz, TX 2m, 70cm and 23cm
+160m TX and RX is rudimentary supported without expansion board.
+Filters for 80m are used. It works (not perfect at all) and you have
+some small gaps at 160m where LO does not work. But a nice preview at all...
+Of course will work much better with fitted expansion pcb ( I hope it will
+be finished in the first 6 months of 2016)!!!
+You can ge a preview how it looks if mcHF selects new bands if you touch
+":" on touchscreen in menu #199 at recent lines (touching toggles pcb present
+or not "hard-coded"). Of course frequency display is RED on any band < 160m or
+> 10m because LO does not work out-of-the-box without needed expansion board(s)...
+
+################## IMPORTANT INFORMATION ##################
+Because of EEPROM addressing for band specific storage *must* be continuously
+EEPROM structure (regardless virtual/serial) is broken with the adding of new
+bands!!! If you take this version YOUR CONFIGURATON SETTINGS WILL BE LOST!!!
+Please write down your actual configuration settings.
+
+If this is the first firmware you install you have to do nothing special - only
+upgrading from older versions are affected.
+
+At first start after upgrading from older firmware version than
+0.219.26.15 you must first reset all settings to default by press & hold
+MENU-SPLIT-TUNE simultaneously while powering up and release after warning
+screen appears. Then power down via power button  After startup enter all
+configuration data you wrote down.
+
+Good news at all:
+If you take this new version and somedays pcbs are available there is no more
+changing in EEPROM structure. Storage is organized for all possible new
+bands regardless if they are active or not. This only consumpts ~40 Bytes of
+virtual/serial EEPROM space and does not affect anything else.
+############################################################
+
+
+20160102 [DF8OE]
+- added autodetection of 7ppm SI570 devices using regs 13+
+
+
+20151217 [DF8OE]
+- added "working" state display for #341
+
+
+20151215 [DF8OE]
+- improved data accquisition of touchscreen, now hopefully more accurate
+- solved "2.3khz filter issue"
+
+
+20151214 [DF8OE]
+- added "power off without saving settings" by pushing BAND+ and POWER simultanusly
+- added possibility of power-off and reboot in button test mode
+
+
+20151214 [DF8OE]
+- added touchscreen support. You have to do the following modifications:
+
+if LCD is in parallel mode:
+remove R30, R31, R32
+put connections between:
+R30/R33 (PC2) to TP_SDO of LCD
+R31/R34 (PC3) to TP_SDI of LCD
+R32/R35 (PB13) to TP_SCK of LCD
+Header Pin7 (PA4) to TP_IRQ of LCD
+P8 Pin1 (PA9) to TP_CS of LCD
+
+if LCD is in SPI mode:
+same as above, but do not remove R30, R31, R32 (or wires if you use HY28B in SPI mode)
+
+You can see signal names on back side of LCD. If you have soldered and cannot remove,
+ask google for a picture of backside of HY28B - there are many.
+
+With this mod you loose DAC which was former used for rf attenuator. This signal is
+unused now and I supose it never will be used in future. Intermodulation while receiving
+very strong signals can be removed by modifying rf preamp for better IP3.
+
+After modifying and applying firmware newer/equal 0.219.26.13 in hardware menu #199
+touchscreen is listed. When you enter BUTTON TEST MODE coordinates are shown if
+you touch LCD screen. If this test is successful, you can use touchfunctions.
+
+At the moment the following functions are supported:
+- tapping right hand waterfall/scope bar: toggling wf/scope
+- tapping left hand waterfall/scope bar: toggling wf/scope magnifying x 2
+- tapping at a frequency/peak shown in wf/spectrum (lower part of the wf/scope) will tune to the tapped frequency
+
+In future much more touch-functions will be added.
+
+
+20151206 [DF8OE]
+- added adjustment menu item #341 "Reset Ser EEPROM" to clean up misidentified EEPROM
+
+
+20151206 [DF8OE]
+- added menu item #197 "Backup Config to virtual EEPROM"
+- added menu item #198 "Restore backup config to serial EEPROM"
+Both items are only available i serial EEPROM is fitted. Now you can restore to
+"working coniguration" if you have destroyed the acive one insteade of only
+loading default values.
+
+
+20151201 [DF8OE]
+- added support for 24LC512 (64kb), 24LC1026 (128kb) and AT24CM02 (256kb). All these
+can be be fitted to board without any additional changings (no wire between pin8 and
+pin3 needed). Only if 24LC1025 is used this wire must be added.
+
+
+20151130 [DF8OE]
+- added detection of unsopported EEPROMs
+
+
+20151126 [DF8OE]
+- completed serial EEPROM support of 24LC1025
+You have to add connection between pin8 and pin3 of 24LC1025
+!!! 24LC01/02/04 are too small and config data cannot fit so that they are UNSUPPORTED !!!
+At first start with fitted serial EEPROM and this (or newer) firmware serial EEPROM is
+autodetected and then (if memory is big enough) virtual EEPROM is copied to serial
+EEPROM. From now on all write functions are done with serial EEPROM and no longer
+to virtual EEPROM. You can see if at menu item #199 serial EEPROM is written in
+green letters. If so, it is in use. If it is in red letters, fitted serial EEPROM do
+not have enough memory for storing settings.
+It is important that EEPRM is brand-new or if not it is written 0xFF to all
+cells before you solder it. Autodetection depends on a completely "empty" device!
+
+
+20151115 [DF8OE]
+- I named this back-rolled version for continuity to 0.219.26.6
+
+
+20151111 [DF8OE]
+- added menu "190" hardware-info
+- beginning of EEPROM including (it is detected if present but not used in this version)
+
+##################
+20151111 Version 0.219.26.5  [KA7OEI]
+- Fixed problem with 2.3k filter adjustment not being possible except in FM.
+- Code cleanup to fix some warnings/function definitions.
+##################
+Comment DF8OE: 
+I reverted this because of some heavy problems
+
+
+20151103 Version 0.219.26.4  [KA7OEI]
+- Increased size of 60 meters to accommodate some EU frequency useages
+- Added function to reset frequencies/modes to default:  Press-and-hold F2 and F4 during power-up
+- Added adjustment menu item "MemFreq Lim Disable".  When "ON", there are no limits imposed on
+frequency bands that may be stored in each "band-memory" location.  WARNING:  This can cause bands to be
+stored in random order and also make it easier to put different bands in VFO-A versus VFO-B which can
+cause relay-switching/timing issues!
+
+
+20151101 Version 0.219.26.3  [KA7OEI]
+- Rewrote "AGC" handler for FM mode to reduce processing overhead when in FM.  The AGC does
+not actually function in FM (there is no need for it!) but the value is calculated only to drive
+the S-meter.  (In 0.219.26.0-2 the S meter did not work in FM.)
+
+
+20151030 Version 0.219.26.2  [KA7OEI]
+- Fixed problem with change detection of "Minor" version
+
+
+20151029 Version 0.219.26.1  [KA7OEI]
+- Fixed problem with key beep on/off
+- Fixed TUNE in CW mode
+- Added support for change detection of "Minor" version (e.g. "219", above)
+
+
+10/28/2015 Version 0.0.219.26  [KA7OEI]
+- Added "Load Defaults" obtained by holding F1, F3 AND F5 on power-up.  Once unit has
+powered up, the user would DISCONNECT power to preserve the OLD settings or PRESS-AND-HOLD the
+POWER button to save the new (default) settings to EEPROM and power down.  The unit halts on this
+screen indefinitely.  Some defaults changes to be more useful.
+- Added "button test" function where pressing-holding any button (other than power) during power-up will
+display the button being being pressed (or the one with highest precedence if multiple) and the number
+of buttons being pressed.
+- Problem in which "PREV" and "NEXT" buttons on menu could skip last screen of "Configuration"
+menu has been fixed.
+- Fixed problem in which line under screen that indicates bandwidth/settings did not change under some
+conditions (e.g. switching from one band to another where the same filter/settings were used, but
+a different sideband was used).  Added "unconditional" update of this line when changing bands.
+- Added "INVGray" and "Blue" waterfall palettes.
+- Streamlined code related to DSP NR and Notch.
+- Added keyboard beep.
+- Completely rewrote AM demodulation to reduce CPU loading.
+- Fixed problem (from 0.0.219.24) in which there were dead spots in Si570 tuning (incorrect FDCO Min/
+max values).
+- Added function where pressing-holding G3 will generate sidetone equivalent to CW offset, used for
+"Spotting", in CW/LSB/USB modes/
+- Added FM modulation/demodulation with squelch, subaudible tone encode/decode and tone burst.
+
+- The following files have been added (I hope that I have them all here!):
+
+  FILTERS:  iir_15k_hpf_fm_squelch.h   - Filter for squelch noise detection
+            iir_2k7_tx_bpf_fm.h        - Filter for FM transmit audio
+
+  AUDIO:    fm_dds_table.h             - DDS/NCO lookup table for FM/Subtone/Burst generation
+            fm_subaudible_tone_table.h - List of subaudible tones for encode/decode
+
+
+10/11/2015: Release of Version 219.24
+
+
+10/10/2015 (KA7OEI)
+- added "Load EEPROM default": Press-and-hold F1+F3+F5 on power-up, read and follow in-screen instructions
+- bugfix "bandwidth indicator sometimes wrong when band was changed"
+
+
+10/02/2015 (DF8OE)
+- minor bugfixes in bootloader
+
+
+09/30/2015 (DF8OE)
+- creation aof new bootloader which allows firmware updates via USB-key
+
+
+09/15/2015 (DF8OE)
+- added autodetection of HY28A / HY28B in SPI mode (hardware changing needed --> see wiki on github pages
+
+
+09/07/2015 (DF8OE)
+- created makefile (thanks to DL4SAI)
+- commented out of some curious lines which prevent building using makefile
+- building is now possible with makefile but there is one issue to find:
+  firmware binary is 600 bytes shorter than binary generated by eclipse and does only show splashscreen, then ends
+
+
+08/19/2015 (DF8OE)
+- added detection of SI570 hardware address (possible addresses 0x50 / 0x55)
+- added workaround for malfunction of startupfrequency detection during unattended boots or bootloops
+- merging Eclipse and CooCox configuration to one package so that both IDEs can be used
+
+
+09/09/2015 (DF8OE)
+- I merged Clint KA7OEI new released version 219.22. This new version now is named 219.23 and will be the base
+for all future firmware developments - I hope...
+
+
+09/08/2015 (DF8OE)
+- makefile is now working
+
+
+09/05/2015 (DF8OE)
+- start: I used mcHF Firmware Source 219.19 from Clint KA7OEI as base of new mchf-firmware-community working with GITHUB

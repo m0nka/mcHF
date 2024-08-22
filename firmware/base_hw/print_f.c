@@ -33,21 +33,13 @@
 //--#define USE_ITM_SWO
 
 #ifdef RADIO
-//
-// Use HW semaphore for core sharing
-#define USE_CORE_SHARING
-//
 // Use SW semaphore for task sharing
 #define USE_TASK_SHARING
 //
 #endif
 
-#ifdef DSP_CORE
-//
 // Use HW semaphore for core sharing
 #define USE_CORE_SHARING
-//
-#endif
 
 // Maximum string size allowed (in bytes)
 #define MAX_STRING_SIZE         300
@@ -63,12 +55,12 @@ uchar				share_port  = 0;
 
 #ifndef DSP_CORE
 #ifdef BOOTLOADER
-const char 			cpu_id_str[] = "b:::";
+const char 			cpu_id_str[] = "b:";
 #else
-const char 			cpu_id_str[] = "r:::";
+const char 			cpu_id_str[] = "r:";
 #endif
 #else
-const char 			cpu_id_str[] = "d:::";
+const char 			cpu_id_str[] = "d:";
 #endif
 
 #ifdef RADIO
