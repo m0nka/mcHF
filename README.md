@@ -6,6 +6,8 @@ Both, hardware and firmware is built by combining the great work of many hams an
 
 https://youtu.be/kt2p1det-wE
 
+[![mcHF](https://img.youtube.com/vi/kt2p1det-wE/0.jpg)](https://www.youtube.com/watch?v=kt2p1det-wE)
+
 # Features
 
 <ul>
