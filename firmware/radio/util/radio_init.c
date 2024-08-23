@@ -614,7 +614,7 @@ void radio_init_on_reset(void)
 	tsu.band[tsu.curr_band].vfo_a 		= 14200*1000 + 300;
 	tsu.band[tsu.curr_band].fixed_mode 	= 0;
 	tsu.band[tsu.curr_band].nco_freq	= 0;
-	tsu.band[tsu.curr_band].demod_mode	= DEMOD_USB;
+	tsu.band[tsu.curr_band].demod_mode	= DEMOD_CW;
 	tsu.demo_mode 						= 1;
 	#endif
 
