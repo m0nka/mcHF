@@ -4,6 +4,8 @@ The mcHF is a fully open source SDR ham transceiver intended to be used on the H
 The hardware is designed to be modular with mostly off the shelf components that could be easily soldered by hand and easy to repair.\
 Both, hardware and firmware is built by combining the great work of many hams and in the true spirit of amateur radio, everything we design, we stand on shoulders of giants.
 
+https://youtu.be/kt2p1det-wE
+
 # Features
 
 <ul>
