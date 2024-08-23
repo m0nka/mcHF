@@ -23,8 +23,12 @@ Both, hardware and firmware is built by combining the great work of many hams an
 
 # Downloads
 
-You can downlad all files here http://www.m0nka.co.uk
+You can download all files here http://www.m0nka.co.uk
+
+# PCB Files
+
+ * [`latest`, `mcHF`, `0.8.4` *(pcb/mchf)*](./pcb/mchf)
 
 # License
 
-VanitySearch is licensed under GPLv3.
+mcHF is licensed under GPLv3.
