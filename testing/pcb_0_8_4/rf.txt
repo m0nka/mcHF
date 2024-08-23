@@ -28,3 +28,15 @@
 - replace batt socket with 5x1S
 - move heatsink outwards
 - reposition ACC connector
+- Q4 and Q5 footprint rotated
+--------------------------------------------
+ToDo: Rearange rooms:
+
+- U3/U4 move somewhere under cells
+- SMPS go around the encoder - top and bottom layer(away from cells)
+- bms go to where tx pre-amp is(away from cells)
+- battery footprint rotated 180deg
+- under cells - LPF control, tx pre-amp, pa bias and BPFs
+- BPFs - go where SMPS was
+- BMS mosfets, under PA heatsink
+--------------------------------------------
