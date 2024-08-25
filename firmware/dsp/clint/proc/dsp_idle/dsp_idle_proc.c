@@ -1275,7 +1275,7 @@ static void dsp_idle_proc_ptt_off(void)
 		{
 			if(!ts.tx_disable)
 			{
-				printf("ptt on\r\n");
+				//printf("ptt on\r\n");
 				ts.txrx_mode = TRX_MODE_TX;
 				ui_driver_toggle_tx();
 			}
@@ -1310,7 +1310,7 @@ static void dsp_idle_proc_ptt_off(void)
 
 				ptt_break = 0;
 
-				printf("ptt off\r\n");
+				//printf("ptt off\r\n");
 
 				// Back to RX
 				ts.txrx_mode = TRX_MODE_RX;
