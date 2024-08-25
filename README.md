@@ -25,9 +25,9 @@ Both, hardware and firmware is built by combining the great work of many hams. P
 
 # Downloads
 
-You can download various release files [here](http://www.m0nka.co.uk) \
-For older HW versions, firmware repository [here](https://github.com/df8oe/UHSDR)
-
+You can download various release files from [here](http://www.m0nka.co.uk) \
+For older HW versions, firmware repository  [here](https://github.com/df8oe/UHSDR)
+Crash course into the project and features  [here](https://github.com/df8oe/UHSDR/wiki)
 # PCB Files
 
  * [`latest`, `mcHF`, `0.8.4` *(pcb/mchf)*](./pcb/mchf)
