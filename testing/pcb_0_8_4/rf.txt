@@ -40,3 +40,4 @@ ToDo: Rearange rooms:
 - BPFs - go where SMPS was
 - BMS mosfets, under PA heatsink
 --------------------------------------------
+- replace D5(pa) with 1k resistor
