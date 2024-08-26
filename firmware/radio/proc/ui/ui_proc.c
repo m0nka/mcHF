@@ -755,6 +755,7 @@ static void ui_proc_periodic(void)
 	ui_controls_battery_refresh();
 	ui_controls_filter_refresh();
 	ui_controls_wifi_refresh();
+	ui_controls_tx_stat_refresh();
 
 	//--on_screen_keyboard_refresh();	// will not allow transparent dialog with moving background
 

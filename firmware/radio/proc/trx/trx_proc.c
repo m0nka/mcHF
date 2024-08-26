@@ -225,8 +225,8 @@ static void trx_proc_worker(ulong val)
 	{
 		if(dat1)
 		{
-			//printf("bias0 on, %d\r\n", tsu.bias0);
-			if(HAL_DAC_SetValue(&DacHandle, DAC_CHANNEL_1, DAC_ALIGN_12B_R, tsu.bias0) != HAL_OK)
+			//printf("bias0 on, %dmV\r\n", tsu.bias0);
+			if(HAL_DAC_SetValue(&DacHandle, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (tsu.bias0 - DAC_OFFSET)) != HAL_OK)
 			{
 				printf("dac err 4\r\n");
 			}
@@ -249,8 +249,8 @@ static void trx_proc_worker(ulong val)
 	{
 		if(dat2)
 		{
-			//printf("bias1 on, %d\r\n", tsu.bias1);
-			if(HAL_DAC_SetValue(&DacHandle, DAC_CHANNEL_2, DAC_ALIGN_12B_R, tsu.bias1) != HAL_OK)
+			//printf("bias1 on, %dmV\r\n", tsu.bias1);
+			if(HAL_DAC_SetValue(&DacHandle, DAC_CHANNEL_2, DAC_ALIGN_12B_R, (tsu.bias1 - DAC_OFFSET)) != HAL_OK)
 			{
 				printf("dac err 4\r\n");
 			}
@@ -283,9 +283,12 @@ void trx_proc_task(void const *arg)
 	vTaskDelay(TRX_PROC_START_DELAY);
 	//printf("trx proc start\r\n");
 
-	// Test only
-	tsu.bias0 = 3400;
-	tsu.bias1 = 3400;
+	// Test only, running final MOSFETS at 20V require lower bias
+	//
+	// ToDo: Actual value doesn't match code setting(832mV higher), fix!!
+	//
+	tsu.bias0 = 2800;
+	tsu.bias1 = 2800;
 	trx_proc_worker(0xFFFFFFFF);
 
 	// Fan Off

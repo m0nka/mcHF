@@ -192,29 +192,14 @@
 			<locationURI>PARENT-2-PROJECT_LOC/util/cpu_utils.c</locationURI>
 		</link>
 		<link>
-			<name>util/cpu_utils.h</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/util/cpu_utils.h</locationURI>
-		</link>
-		<link>
 			<name>util/radio_init.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/util/radio_init.c</locationURI>
 		</link>
 		<link>
-			<name>util/radio_init.h</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/util/radio_init.h</locationURI>
-		</link>
-		<link>
 			<name>util/virt_eeprom.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/util/virt_eeprom.c</locationURI>
-		</link>
-		<link>
-			<name>util/virt_eeprom.h</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/util/virt_eeprom.h</locationURI>
 		</link>
 		<link>
 			<name>Drivers/STM32H7xx_HAL_Driver/stm32h7xx_hal.c</name>
