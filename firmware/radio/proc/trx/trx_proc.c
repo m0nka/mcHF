@@ -287,8 +287,8 @@ void trx_proc_task(void const *arg)
 	//
 	// ToDo: Actual value doesn't match code setting(832mV higher), fix!!
 	//
-	tsu.bias0 = 2800;
-	tsu.bias1 = 2800;
+	tsu.bias0 = 2100;
+	tsu.bias1 = 2100;
 	trx_proc_worker(0xFFFFFFFF);
 
 	// Fan Off

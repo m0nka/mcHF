@@ -95,7 +95,7 @@ static void ui_controls_tx_stat_repaint(void)
 	GUI_SetFont(&GUI_Font8x16_1);
 
 	if(tsu.rxtx)
-		GUI_SetColor(GUI_ORANGE);
+		GUI_SetColor(GUI_RED);
 	else
 		GUI_SetColor(GUI_GRAY);
 
