@@ -44,3 +44,4 @@ ToDo: Rearange rooms:
 - pack resistor(R73) reduce to 1k
 - short VC5 and VC6, connect to top cell via 100ohm, add cap
 - connect all four thermistors to BMS chip
+- Fuse pin(BMS) needs to be connected to GND
