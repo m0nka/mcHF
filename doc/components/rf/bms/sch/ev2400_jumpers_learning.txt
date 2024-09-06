@@ -1,0 +1,4 @@
+Jumpers position:
+J3 	    J4 	    J5 	        J6 	            J7 	            J8 	    J9 	    J10 	        J13 	J14 	    J15 	    J16 	    J17 	    J18 	        J20 	        J21 	        J22
+None 	None 	PIN12_PRES 	PIN15_VC7EN 	PIN12_VC7SNS 	None 	None 	PIN16_CB7EN 	None 	PIN13_LED 	PIN20_LED 	PIN22_LED 	PIN21_LED 	EV2400_SMBD1 	PIN12_onward 	PIN13_onward 	EV2400_SMBC1
+
