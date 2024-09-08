@@ -1,0 +1,49 @@
+-------------------------
+Calibration 
+-------------------------
+
+From chemistry file ?
+
+-------------------------
+Settings, set bits only!
+-------------------------
+Protection:
+A: COV, CUV
+B: ASCDL, ASCCL
+Configuration:
+Temperature Enable: TS3, TS2
+Temperature Mode: TS3 Mode
+Cell Configuration: CC2, CC0
+Sbs Configuration: BLT1
+Pin Configuration: MFP20_SEL0, MFP16_SEL1, MFP15_SEL1, MFP13_SEL0, MFP12_SEL0
+GPIO Sealed Access Config: GPIO_PIN17
+FlagMapSetUp0 --- ITGaugingExt - as per default
+AFE - all default
+Fuse - all cleared
+BTP, SMBUS, Current Scaling and Manufacturing - as default
+
+--------------------------
+Protections
+--------------------------
+
+CUV: 2500, 2, 3000
+CUVC: 4300, 3900
+COV: 4300, 3900
+All the rest default ?
+
+--------------------------
+Gas Gauging
+--------------------------
+
+Current thresholds: 2000, 100, 50
+Design: 4000, 4500, 18000
+FD: 3000, 3100 (maybe bad ?)
+FC: 3000, 3010 ..
+TD: 2900, 2950 ..
+TC: 3900, 3950 ..
+State: 4000, 40xx (learning cycle result ?)
+IT Cfg - Term Voltage: 13000
+IT Cfg - Term Min Cell V: 2600
+
+
+
