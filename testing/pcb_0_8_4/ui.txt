@@ -19,3 +19,4 @@
 - speaker connector too close to mix board and too far away from sp terminals
 - add GND testing hole
 - add physical pullups on shared I2C
+- change SMPS inductors

@@ -1,7 +1,7 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2021                     **
+**                         Krassi Atanassov - M0NKA, 2013-2024                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
@@ -755,6 +755,7 @@ static void ui_proc_periodic(void)
 	ui_controls_battery_refresh();
 	ui_controls_filter_refresh();
 	ui_controls_wifi_refresh();
+	ui_controls_tx_stat_refresh();
 
 	//--on_screen_keyboard_refresh();	// will not allow transparent dialog with moving background
 

@@ -1,7 +1,7 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2021                     **
+**                         Krassi Atanassov - M0NKA, 2013-2024                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
@@ -25,11 +25,15 @@
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
 
+// Refresh flags
 uchar ui_power_factor 	= 0xFF;
 uchar ui_tx_power 		= 0xFF;
+ushort bias0 			= 0;
+ushort bias1 			= 0;
+uchar  txs				= 0;
 
 //*----------------------------------------------------------------------------
-//* Function Name       :
+//* Function Name       : ui_controls_tx_stat_repaint
 //* Object              :
 //* Notes    			:
 //* Notes   			:
@@ -89,17 +93,27 @@ static void ui_controls_tx_stat_repaint(void)
 	GUI_DispStringAt(buf,  TX_STAT_X + 4, TX_STAT_Y + 22);
 
 	GUI_SetFont(&GUI_Font8x16_1);
-	GUI_SetColor(GUI_GRAY);
-	GUI_DispStringAt("4.35V", TX_STAT_X + 59, TX_STAT_Y + 2);
-	GUI_DispStringAt("4.35V", TX_STAT_X + 59, TX_STAT_Y + 20);
+
+	if(tsu.rxtx)
+		GUI_SetColor(GUI_RED);
+	else
+		GUI_SetColor(GUI_GRAY);
+
+	sprintf(buf, "%d.%dV", tsu.bias0/1000, (tsu.bias0%1000)/10);
+	GUI_DispStringAt(buf, TX_STAT_X + 59, TX_STAT_Y + 2);
+	sprintf(buf, "%d.%dV", tsu.bias1/1000, (tsu.bias1%1000)/10);
+	GUI_DispStringAt(buf, TX_STAT_X + 59, TX_STAT_Y + 20);
 
 	// Save
 	ui_power_factor = tsu.band[tsu.curr_band].power_factor;
 	ui_tx_power 	= tsu.band[tsu.curr_band].tx_power;
+	bias0			= tsu.bias0;
+	bias1			= tsu.bias1;
+	txs   			= tsu.rxtx;
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       :
+//* Function Name       : ui_controls_tx_stat_init
 //* Object              :
 //* Notes    			:
 //* Notes   			:
@@ -112,7 +126,7 @@ void ui_controls_tx_stat_init(void)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       :
+//* Function Name       : ui_controls_tx_stat_quit
 //* Object              :
 //* Notes    			:
 //* Notes   			:
@@ -125,7 +139,7 @@ void ui_controls_tx_stat_quit(void)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       :
+//* Function Name       : ui_controls_tx_stat_touch
 //* Object              :
 //* Notes    			:
 //* Notes   			:
@@ -138,7 +152,7 @@ void ui_controls_tx_stat_touch(void)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       :
+//* Function Name       : ui_controls_tx_stat_refresh
 //* Object              :
 //* Notes    			:
 //* Notes   			:
@@ -148,7 +162,12 @@ void ui_controls_tx_stat_touch(void)
 void ui_controls_tx_stat_refresh(void)
 {
 	// Skip needless update
-	if((ui_power_factor == tsu.band[tsu.curr_band].power_factor)&&(ui_tx_power == tsu.band[tsu.curr_band].tx_power))
+	if(	(ui_power_factor == tsu.band[tsu.curr_band].power_factor)&&\
+		(ui_tx_power == tsu.band[tsu.curr_band].tx_power)&&\
+		(bias0 == tsu.bias0)&&\
+		(bias1 == tsu.bias1)&&\
+		(txs   == tsu.rxtx)\
+	   )
 		return;
 
 	ui_controls_tx_stat_repaint();

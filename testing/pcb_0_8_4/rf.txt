@@ -1,3 +1,13 @@
+--------------------------------------------
+ToDo: Rearange rooms:
+- U3/U4 move somewhere under cells
+- SMPS go around the encoder - top and bottom layer(away from cells)
+- bms go to where tx pre-amp is(away from cells)
+- battery footprint rotated 180deg
+- under cells - LPF control, tx pre-amp, pa bias and BPFs
+- BPFs - go where SMPS was
+- BMS mosfets, under PA heatsink
+--------------------------------------------
 - heatsink mount holes wrong
 - batt holder footprint wrong
 - usb footprint wrong
@@ -5,7 +15,7 @@
 - fan conn top overlay under connector
 - encoder poss might be wrong
 - fan position holes wrong spacing
-- heatsink bolts need mask and spacing around
+- heatsink bolts holes need to be grounded slots, with large contact surfice(to cool PCB as well)
 - final mosfets needs to come closer to heatsink
 - U6 footprint is rotated
 - C77 needs 10uF ceramic
@@ -29,15 +39,9 @@
 - move heatsink outwards
 - reposition ACC connector
 - Q4 and Q5 footprint rotated
---------------------------------------------
-ToDo: Rearange rooms:
-
-- U3/U4 move somewhere under cells
-- SMPS go around the encoder - top and bottom layer(away from cells)
-- bms go to where tx pre-amp is(away from cells)
-- battery footprint rotated 180deg
-- under cells - LPF control, tx pre-amp, pa bias and BPFs
-- BPFs - go where SMPS was
-- BMS mosfets, under PA heatsink
---------------------------------------------
-- replace D5(pa) with 1k resistor
+- rotate D5(pa), add cap to GND ?
+- change SMPS inductors
+- pack resistor(R73) reduce to 1k
+- short VC5 and VC6, connect to top cell via 100ohm, add cap
+- connect all four thermistors to BMS chip
+- Fuse pin(BMS) needs to be connected to GND

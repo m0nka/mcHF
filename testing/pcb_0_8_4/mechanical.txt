@@ -1,0 +1,1 @@
+- fan cap to have redirect holes to cool batteries during charge( < 10% of flow)

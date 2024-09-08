@@ -1,0 +1,28 @@
+Battery Mode: 		ChgM, AM, CF, ICC
+
+CHGM (Bit 14): Charger_Mode (R/W)
+1 = Disables ChargingVoltage() and ChargingCurrent() broadcasts 
+to the host and smart battery charger (default)
+0 = Enables ChargingVoltage() and ChargingCurrent() broadcasts 
+to the host and smart battery charger
+
+AM (Bit 13): ALARM Mode (R/W)
+1 = Disables AlarmWarning() broadcasts to host and smart battery charger
+0 = Enables AlarmWarning() broadcasts to host and smart battery 
+charger (default)
+
+CF (Bit 7): Condition_Flag (R)
+1 = Conditioning cycle requested
+0 = Battery OK
+
+ICC (Bit 0): Internal_Charge_Controller (R)
+1 = Function supported
+0 = Function not supported (default)
+---------------------------------------
+Battery Status:		TCA, TDA, INIT, DSG
+Operation Status A:	XCHG, XDSG, SEC0, FUSE
+Temp Range:			STH
+Charging Status:	HV
+Gauging Status:		CF, DSG, BAL_EN
+IT Status:			RDIS
+Manif Status:		CAL_EN

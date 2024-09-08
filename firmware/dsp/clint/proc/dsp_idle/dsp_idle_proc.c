@@ -1,7 +1,7 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2021                     **
+**                         Krassi Atanassov - M0NKA, 2013-2024                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
@@ -1934,6 +1934,8 @@ void UiCalcTxIqGainAdj(void)
 void UiDriverSetBandPowerFactor(uchar band)
 {
 	float	pf_temp;	// used as a holder for percentage of power output scaling
+
+	//printf("pf id %d(power level %d)\r\n", band, ts.power_level);
 
 	// Display clear
 //	UiLcdHy28_PrintText(((POS_SM_IND_X + 18) + 140),(POS_SM_IND_Y + 59),"PROT",Black,Black,4);
@@ -9756,36 +9758,6 @@ void UiLCDBlankTiming(void)
 		ts.lcd_blanking_flag = 0;		// clear flag to make LCD turn on
 	}
 }
-//
-//
-
-//
-//
-
-//
-//
-
-//
-//
-
-//
-
-//
-//
-
-//
-//
-
-
-
-
-//
-
-//
-//
-
-//
-
 
 //
 //#ifndef DSP_MODE
