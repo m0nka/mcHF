@@ -31,6 +31,7 @@ Crash course into the project and features  [here](https://github.com/df8oe/UHSD
 # PCB Files
 
  * [`latest`, `mcHF`, `0.8.4` *(pcb/mchf)*](./pcb/mchf)
+ * [`legacy`, `mcHF`, `0.6.3` *(pcb/__legacy/v6)*](./pcb/__legacy/v6)
 
 # License
 
