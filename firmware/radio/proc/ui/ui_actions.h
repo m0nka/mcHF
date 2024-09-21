@@ -19,7 +19,7 @@
 
 uchar ui_actions_ipc_msg(uchar send, uchar msg, uchar *in_buff);
 
-void ui_actions_change_band(uchar band);
+void ui_actions_change_band(uchar band, uchar skip_destop_upd);
 void ui_actions_change_vfo_mode(void);
 void ui_actions_change_span(void);
 void ui_actions_change_step(void);

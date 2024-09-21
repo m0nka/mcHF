@@ -23,9 +23,9 @@
 #include "ui_menu_module.h"
 #include "ui_actions.h"
 
-//extern GUI_CONST_STORAGE GUI_BITMAP bmicon_test;
+#include "menu_pa.h"
+
 extern GUI_CONST_STORAGE GUI_BITMAP bmtx;
-//extern GUI_CONST_STORAGE GUI_BITMAP bmtx_block397;
 
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
@@ -52,70 +52,6 @@ K_ModuleItem_Typedef  menu_pa =
   KillPA
 };
 
-#define ID_WINDOW_0               	(GUI_ID_USER + 0x00)
-//#define ID_BUTTON_EXIT            	(GUI_ID_USER + 0x01)
-
-#define ID_CHECKBOX_0				(GUI_ID_USER + 0x02)
-#define ID_CHECKBOX_1				(GUI_ID_USER + 0x03)
-
-#define ID_SLIDER_0 			  	(GUI_ID_USER + 0x04)
-#define ID_SLIDER_1 			  	(GUI_ID_USER + 0x05)
-
-// -----------------------------------------------------
-#define FRAME_X						160
-#define FRAME_Y						40
-
-#define FRAME_SZ_X					550
-#define FRAME_SZ_Y					135
-// -----------------------------------------------------
-#define DIAG_X						260
-#define DIAG_Y						90
-
-#define DIAG_SZ_X					397
-#define DIAG_SZ_Y					300
-// -----------------------------------------------------
-#define CHK1X						FRAME_X + 10
-#define CHK1Y						FRAME_Y + 20
-
-#define CHK2X						FRAME_X + 10
-#define CHK2Y						FRAME_Y + 80
-// -----------------------------------------------------
-#define SLD1X						FRAME_X + 80
-#define SLD1Y						FRAME_Y + 15
-
-#define SLD1SX						FRAME_SZ_X - 150
-#define SLD1SY						40
-// -----------------------------------------------------
-#define SLD2X						FRAME_X + 80
-#define SLD2Y						FRAME_Y + 75
-
-#define SLD2SX						FRAME_SZ_X - 150
-#define SLD2SY						40
-// -----------------------------------------------------
-#define TXT1X						SLD1X + SLD1SX + 20
-#define TXT1Y						FRAME_Y + 20
-
-#define TXT1SX						40
-#define TXT1SY						30
-// -----------------------------------------------------
-#define TXT2X						SLD2X + SLD2SX + 20
-#define TXT2Y						FRAME_Y + 80
-
-#define TXT2SX						40
-#define TXT2SY						30
-// -----------------------------------------------------
-#define TXT3X						DIAG_X + DIAG_SZ_X + 10
-#define TXT3Y						300
-
-#define TXT3SX						40
-#define TXT3SY						30
-// -----------------------------------------------------
-#define TXT4X						DIAG_X + DIAG_SZ_X + 10
-#define TXT4Y						340
-
-#define TXT4SX						40
-#define TXT4SY						30
-// -----------------------------------------------------
 
 static const GUI_WIDGET_CREATE_INFO _aDialog[] = 
 {
@@ -127,28 +63,31 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 	// Back Button
 	//{ BUTTON_CreateIndirect, 	"Quit",			ID_BUTTON_EXIT, 	765, 	375, 	80, 		45, 		0, 		0x0, 	0 },
 	// TUNE button
-	{ BUTTON_CreateIndirect, 	"TUNE",			GUI_ID_BUTTON0, 	160, 	200, 	80, 		45, 		0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"TUNE",			GUI_ID_BUTTON0, 	150, 	325, 	100, 		80, 		0, 		0x0, 	0 },
 
 	// Check boxes
 	{ CHECKBOX_CreateIndirect,	"Chk0", 		ID_CHECKBOX_0, 		CHK1X, 	CHK1Y,	200, 		30, 		0, 		0x0, 	0 },
 	{ CHECKBOX_CreateIndirect,	"Chk1",	 		ID_CHECKBOX_1, 		CHK2X, 	CHK2Y,	200, 		30, 		0, 		0x0, 	0 },
 
-	// BIAS Sliders
+	// Sliders, bias and power factor
 	{ SLIDER_CreateIndirect, 	"Bias0", 		ID_SLIDER_0, 		SLD1X, 	SLD1Y,  SLD1SX, 	SLD1SY, 	0, 		0x0, 	0 },
 	{ SLIDER_CreateIndirect, 	"Bias1", 		ID_SLIDER_1, 		SLD2X, 	SLD2Y,  SLD2SX, 	SLD2SY,		0, 		0x0, 	0 },
+	{ SLIDER_CreateIndirect, 	"BandPF", 		ID_SLIDER_2, 		SLD3X, 	SLD3Y,  SLD3SX, 	SLD3SY,		0, 		0x0, 	0 },
 
 	// Slider text
 	{ EDIT_CreateIndirect, 		"Edit0",		GUI_ID_EDIT0,		TXT1X,	 TXT1Y,	TXT1SX, 	TXT1SY,  	0, 		0x0,	0 },
 	{ EDIT_CreateIndirect, 		"Edit1", 		GUI_ID_EDIT1,		TXT2X,	 TXT2Y,	TXT2SX, 	TXT2SY,  	0, 		0x0,	0 },
+	{ EDIT_CreateIndirect, 		"Edit2", 		GUI_ID_EDIT2,		TXT3X,	 TXT3Y,	TXT3SX, 	TXT3SY,  	0, 		0x0,	0 },
 
 	// Power out and Vcc text
-	{ EDIT_CreateIndirect, 		"Edit2", 		GUI_ID_EDIT2,		TXT3X,	 TXT3Y,	TXT3SX, 	TXT3SY,  	0, 		0x0,	0 },
 	{ EDIT_CreateIndirect, 		"Edit3", 		GUI_ID_EDIT3,		TXT4X,	 TXT4Y,	TXT4SX, 	TXT4SY,  	0, 		0x0,	0 },
+	{ EDIT_CreateIndirect, 		"Edit4", 		GUI_ID_EDIT4,		TXT5X,	 TXT5Y,	TXT5SX, 	TXT5SY,  	0, 		0x0,	0 },
 
 	// Band selection
 	{ TEXT_CreateIndirect, 		"Band List",	GUI_ID_TEXT0,		10,		40,		120, 		40,  		0, 		0x0,	0 },
 	{ LISTBOX_CreateIndirect, 	"BandList",		GUI_ID_LISTBOX0, 	10, 	90, 	120, 		340, 		0, 		0x0, 	0 },
 
+	{ TEXT_CreateIndirect,"Finals Bias/Power Factor",GUI_ID_TEXT1,		150,	40,		550, 		40,  		0, 		0x0,	0 }
 };
 
 WM_HWIN hPA;
@@ -274,9 +213,18 @@ static void _bias_set(WM_MESSAGE * pMsg)
 	#endif
 }
 
+static void menu_pa_edit_look(WM_HWIN hEdit)
+{
+	EDIT_SetFont(hEdit,&GUI_Font16B_1);
+	EDIT_SetBkColor(hEdit,EDIT_CI_ENABLED,GUI_LIGHTBLUE);
+	EDIT_SetTextColor(hEdit,EDIT_CI_ENABLED,GUI_WHITE);
+	EDIT_SetTextAlign(hEdit,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
+}
+
 static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 {
-	WM_HWIN hItem;
+	WM_HWIN hItem, hEdit;
+	char 	tbuf[20];
 
 	switch(Id)
 	{
@@ -331,6 +279,31 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 		      break;
 		}
 
+		case ID_SLIDER_2:
+		{
+			switch(NCode)
+			{
+		      case WM_NOTIFICATION_CLICKED:
+		        break;
+		      case WM_NOTIFICATION_RELEASED:
+		        break;
+		      case WM_NOTIFICATION_VALUE_CHANGED:
+		      {
+				hItem = WM_GetDialogItem(pMsg->hWin, ID_SLIDER_2);
+				tsu.band[tsu.curr_band].power_factor = SLIDER_GetValue(hItem);
+
+				hEdit = WM_GetDialogItem(pMsg->hWin, GUI_ID_EDIT0 + 2);
+				sprintf(tbuf, "%d", tsu.band[tsu.curr_band].power_factor);
+				EDIT_SetText(hEdit, tbuf);
+
+				// ToDo: push to DSP ?
+
+		        break;
+		      }
+		     }
+		    break;
+		}
+
 		case GUI_ID_LISTBOX0:
 		{
 			switch(NCode)
@@ -350,7 +323,14 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 						//LISTBOX_GetItemText(hItem,sel,buf,sizeof(buf));
 						//printf("lb0 text=%s(%d)\r\n", buf, sel);
 
-						ui_actions_change_band((uchar)(sel + 2));
+						ui_actions_change_band((uchar)(sel + 2), 1);
+
+						hItem = WM_GetDialogItem(pMsg->hWin, ID_SLIDER_2);
+						SLIDER_SetValue(hItem, tsu.band[tsu.curr_band].power_factor);
+
+						hEdit = WM_GetDialogItem(pMsg->hWin, GUI_ID_EDIT0 + 2);
+						sprintf(tbuf, "%d", tsu.band[tsu.curr_band].power_factor);
+						EDIT_SetText(hEdit, tbuf);
 					}
 
 					break;
@@ -435,11 +415,12 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 	  		for (int i = 0; i < 2; i++)
 	    	{
-	    		hEdit = WM_GetDialogItem(hDlg, GUI_ID_EDIT0 + i + 2);
-	    		EDIT_SetFont(hEdit,&GUI_Font16B_1);
-	    		EDIT_SetBkColor(hEdit,EDIT_CI_ENABLED,GUI_LIGHTBLUE);
-	    		EDIT_SetTextColor(hEdit,EDIT_CI_ENABLED,GUI_WHITE);
-	    		EDIT_SetTextAlign(hEdit,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
+	    		hEdit = WM_GetDialogItem(hDlg, GUI_ID_EDIT0 + i + 3);
+	    		//EDIT_SetFont(hEdit,&GUI_Font16B_1);
+	    		//EDIT_SetBkColor(hEdit,EDIT_CI_ENABLED,GUI_LIGHTBLUE);
+	    		//EDIT_SetTextColor(hEdit,EDIT_CI_ENABLED,GUI_WHITE);
+	    		//EDIT_SetTextAlign(hEdit,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
+	    		menu_pa_edit_look(hEdit);
 
 	    		if(i == 0)
 	    			EDIT_SetText(hEdit, "20W");
@@ -449,20 +430,24 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 			// Fill voltage 1 edit
 			hEdit = WM_GetDialogItem(hDlg, GUI_ID_EDIT0 + 0);
-			EDIT_SetFont(hEdit,&GUI_Font16B_1);
-			EDIT_SetBkColor(hEdit,EDIT_CI_ENABLED,GUI_LIGHTBLUE);
-			EDIT_SetTextColor(hEdit,EDIT_CI_ENABLED,GUI_WHITE);
-			EDIT_SetTextAlign(hEdit,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
+			//EDIT_SetFont(hEdit,&GUI_Font16B_1);
+			//EDIT_SetBkColor(hEdit,EDIT_CI_ENABLED,GUI_LIGHTBLUE);
+			//EDIT_SetTextColor(hEdit,EDIT_CI_ENABLED,GUI_WHITE);
+			//EDIT_SetTextAlign(hEdit,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
+			menu_pa_edit_look(hEdit);
 			sprintf(tbuf, "%d.%dV", tsu.bias0/1000, (tsu.bias0%1000)/10);
 			EDIT_SetText(hEdit, tbuf);
 
 			// Fill voltage 2 edit
 			hEdit = WM_GetDialogItem(hDlg, GUI_ID_EDIT0 + 1);
-			EDIT_SetFont(hEdit,&GUI_Font16B_1);
-			EDIT_SetBkColor(hEdit,EDIT_CI_ENABLED,GUI_LIGHTBLUE);
-			EDIT_SetTextColor(hEdit,EDIT_CI_ENABLED,GUI_WHITE);
-			EDIT_SetTextAlign(hEdit,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
+			menu_pa_edit_look(hEdit);
 			sprintf(tbuf, "%d.%dV", tsu.bias1/1000, (tsu.bias1%1000)/10);
+			EDIT_SetText(hEdit, tbuf);
+
+			// Fill PF  edit
+			hEdit = WM_GetDialogItem(hDlg, GUI_ID_EDIT0 + 2);
+			menu_pa_edit_look(hEdit);
+			sprintf(tbuf, "%d", tsu.band[tsu.curr_band].power_factor);
 			EDIT_SetText(hEdit, tbuf);
 
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_SLIDER_0);
@@ -481,12 +466,18 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			perc = (tsu.bias1*100)/5000;
 			SLIDER_SetValue(hItem, perc);
 
+			hItem = WM_GetDialogItem(pMsg->hWin, ID_SLIDER_2);
+			SLIDER_SetWidth(hItem, 20);
+			SLIDER_SetRange(hItem, 0, 255);
+			SLIDER_SetValue(hItem, tsu.band[tsu.curr_band].power_factor);
+
 			// Band list
 			hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_TEXT0);
 			TEXT_SetFont(hItem,&GUI_Font24B_1);
 			TEXT_SetBkColor(hItem,GUI_LIGHTBLUE);
 			TEXT_SetTextColor(hItem,GUI_WHITE);
 			TEXT_SetTextAlign(hItem,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
+
 			hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_LISTBOX0);
 			LISTBOX_SetFont(hItem, &GUI_Font32B_1);
 			LISTBOX_SetTextColor(hItem, LISTBOX_CI_UNSEL, GUI_LIGHTBLUE);
@@ -501,6 +492,12 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			LISTBOX_AddString(hItem, "12m");
 			LISTBOX_AddString(hItem, "10m");
 			LISTBOX_SetSel(hItem, tsu.curr_band - 2);
+
+			hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_TEXT1);
+			TEXT_SetFont(hItem, &GUI_Font24B_1);
+			TEXT_SetBkColor(hItem, GUI_DARKCYAN);
+			TEXT_SetTextColor(hItem, GUI_WHITE);
+			TEXT_SetTextAlign(hItem, TEXT_CF_HCENTER|TEXT_CF_VCENTER);
 
 			allow_bias_update = 1;
 			break;

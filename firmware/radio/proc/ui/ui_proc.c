@@ -395,46 +395,46 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        }
 
 		        case '1':
-		        	ui_actions_change_band(BAND_MODE_160);
+		        	ui_actions_change_band(BAND_MODE_160, 0);
 		        	break;
 		        case '4':
-		        	ui_actions_change_band(BAND_MODE_30);
+		        	ui_actions_change_band(BAND_MODE_30, 0);
 		        	break;
 		        case '7':
-		        	ui_actions_change_band(BAND_MODE_12);
+		        	ui_actions_change_band(BAND_MODE_12, 0);
 		        	break;
 		        case '.':
-		        	ui_actions_change_band(BAND_MODE_2200);
+		        	ui_actions_change_band(BAND_MODE_2200, 0);
 		        	break;
 		        case '2':
-		        	ui_actions_change_band(BAND_MODE_80);
+		        	ui_actions_change_band(BAND_MODE_80, 0);
 		        	break;
 		        case '5':
-		        	ui_actions_change_band(BAND_MODE_20);
+		        	ui_actions_change_band(BAND_MODE_20, 0);
 		        	break;
 		        case '8':
-		        	ui_actions_change_band(BAND_MODE_10);
+		        	ui_actions_change_band(BAND_MODE_10, 0);
 		        	break;
 		        case '0':
-		        	ui_actions_change_band(BAND_MODE_630);
+		        	ui_actions_change_band(BAND_MODE_630, 0);
 		        	break;
 		        case '3':
-		        	ui_actions_change_band(BAND_MODE_60);
+		        	ui_actions_change_band(BAND_MODE_60, 0);
 		        	break;
 		        case '6':
-		        	ui_actions_change_band(BAND_MODE_17);
+		        	ui_actions_change_band(BAND_MODE_17, 0);
 		        	break;
 		        case '9':
-		        	ui_actions_change_band(BAND_MODE_GEN);
+		        	ui_actions_change_band(BAND_MODE_GEN, 0);
 		        	break;
 		        case 'C':
 		        	ui_actions_change_span();
 		        	break;
 		        case 'M':
-		        	ui_actions_change_band(BAND_MODE_40);
+		        	ui_actions_change_band(BAND_MODE_40, 0);
 		        	break;
 		        case 'S':
-		        	ui_actions_change_band(BAND_MODE_15);
+		        	ui_actions_change_band(BAND_MODE_15, 0);
 		        	break;
 
 		        //ToDo: The rest....

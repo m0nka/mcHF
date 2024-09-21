@@ -122,43 +122,43 @@ static void KH_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 	switch(Id)
 	{
 		case ID_BUTTON_2200M:
-			ui_actions_change_band(BAND_MODE_2200);
+			ui_actions_change_band(BAND_MODE_2200, 0);
 			break;
 		case ID_BUTTON_630M:
-			ui_actions_change_band(BAND_MODE_630);
+			ui_actions_change_band(BAND_MODE_630, 0);
 			break;
 		case ID_BUTTON_160M:
-			ui_actions_change_band(BAND_MODE_160);
+			ui_actions_change_band(BAND_MODE_160, 0);
 			break;
 		case ID_BUTTON_80M:
-			ui_actions_change_band(BAND_MODE_80);
+			ui_actions_change_band(BAND_MODE_80, 0);
 			break;
 		case ID_BUTTON_60M:
-			ui_actions_change_band(BAND_MODE_60);
+			ui_actions_change_band(BAND_MODE_60, 0);
 			break;
 		case ID_BUTTON_40M:
-			ui_actions_change_band(BAND_MODE_40);
+			ui_actions_change_band(BAND_MODE_40, 0);
 			break;
 		case ID_BUTTON_30M:
-			ui_actions_change_band(BAND_MODE_30);
+			ui_actions_change_band(BAND_MODE_30, 0);
 			break;
 		case ID_BUTTON_20M:
-			ui_actions_change_band(BAND_MODE_20);
+			ui_actions_change_band(BAND_MODE_20, 0);
 			break;
 		case ID_BUTTON_17M:
-			ui_actions_change_band(BAND_MODE_17);
+			ui_actions_change_band(BAND_MODE_17, 0);
 			break;
 		case ID_BUTTON_15M:
-			ui_actions_change_band(BAND_MODE_15);
+			ui_actions_change_band(BAND_MODE_15, 0);
 			break;
 		case ID_BUTTON_12M:
-			ui_actions_change_band(BAND_MODE_12);
+			ui_actions_change_band(BAND_MODE_12, 0);
 			break;
 		case ID_BUTTON_10M:
-			ui_actions_change_band(BAND_MODE_10);
+			ui_actions_change_band(BAND_MODE_10, 0);
 			break;
 		case ID_BUTTON_GEN:
-			ui_actions_change_band(BAND_MODE_GEN);
+			ui_actions_change_band(BAND_MODE_GEN, 0);
 			break;
 
 		case ID_BUTTON_FIX:
