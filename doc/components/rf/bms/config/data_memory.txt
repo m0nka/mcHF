@@ -13,6 +13,7 @@ B: ASCDL, ASCCL
 Configuration:
 Temperature Enable: TS3, TS2
 Temperature Mode: TS3 Mode
+DA Configuration: NR
 Cell Configuration: CC2, CC0
 Sbs Configuration: BLT1
 Pin Configuration: MFP20_SEL0, MFP16_SEL1, MFP15_SEL1, MFP13_SEL0, MFP12_SEL0
