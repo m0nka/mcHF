@@ -45,3 +45,4 @@ ToDo: Rearange rooms:
 - short VC5 and VC6, connect to top cell via 100ohm, add cap
 - connect all four thermistors to BMS chip
 - Fuse pin(BMS) needs to be connected to GND
+- D6 needs to be hooked to BAT+ after the fuse!

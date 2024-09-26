@@ -199,7 +199,7 @@ void ui_actions_change_demod_mode(uchar mode)
 //* Output Parameters   :
 //* Functions called    : CONTEXT_VIDEO
 //*----------------------------------------------------------------------------
-void ui_actions_change_band(uchar band)
+void ui_actions_change_band(uchar band, uchar skip_destop_upd)
 {
 	if((hBandTask == NULL)||(hVfoTask == NULL)||(hAudioTask == NULL)||(hIccTask == NULL))
 	{
@@ -218,6 +218,9 @@ void ui_actions_change_band(uchar band)
 
 	// Save band info to eeprom
 	//save_band_info();
+
+	if(skip_destop_upd)
+		return;
 
 	ui_s.show_band_guide = 1;	// Show band guide
 

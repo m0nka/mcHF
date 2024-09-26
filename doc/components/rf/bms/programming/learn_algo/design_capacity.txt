@@ -1,0 +1,5 @@
+The cWh Design Capacity is based on the mAh Design Capacity and Design Voltage.
+
+You are already using 3.3-V with the 19.8-V value. Since you are using BQ40Z80 in 6s configuration, (3.3-V)*(6) = 19.8-V.
+
+So the cWh design capacity is calculated by: (3.3-V)*(6)*(2.5-Ah)*(100-centi) = 4950-cWh.
