@@ -17,3 +17,4 @@ Notes:
 
 	1. The charging current must drop below the Taper Current for at least 80 seconds 
 	for charge termination
+	2. Discharge current needs to be around 600mA(0.5W output on 30m, 3.5V bias on dummy load)
