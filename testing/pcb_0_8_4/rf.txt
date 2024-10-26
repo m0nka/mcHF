@@ -1,12 +1,13 @@
 --------------------------------------------
 ToDo: Rearange rooms:
-- U3/U4 move somewhere under cells
-- SMPS go around the encoder - top and bottom layer(away from cells)
-- bms go to where tx pre-amp is(away from cells)
-- battery footprint rotated 180deg
-- under cells - LPF control, tx pre-amp, pa bias and BPFs
-- BPFs - go where SMPS was
-- BMS mosfets, under PA heatsink
+[- U3/U4 move somewhere under cells]
+[- SMPS go around the encoder - top and bottom layer(away from cells)]
+[- bms go to where tx pre-amp is(away from cells)]
+[- battery footprint rotated 180deg]
+[- under cells - tx pre-amp, pa bias and BPFs]
+- under cells - LPF control
+[- BPFs - go where SMPS was]
+[- BMS mosfets, under PA heatsink]
 --------------------------------------------
 - heatsink mount holes wrong
 - batt holder footprint wrong
@@ -46,3 +47,7 @@ ToDo: Rearange rooms:
 - connect all four thermistors to BMS chip
 - Fuse pin(BMS) needs to be connected to GND
 - D6 needs to be hooked to BAT+ after the fuse!
+- feedback from PD chip - hook to where ?
+- add 1mm to top and bottom of the board
+- verify if new tall comp pos touch UI board
+- use relay tx switch
