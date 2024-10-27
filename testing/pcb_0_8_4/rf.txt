@@ -5,7 +5,7 @@ ToDo: Rearange rooms:
 [- bms go to where tx pre-amp is(away from cells)]
 [- battery footprint rotated 180deg]
 [- under cells - tx pre-amp, pa bias and BPFs]
-- under cells - LPF control
+[- under cells - LPF control]
 [- BPFs - go where SMPS was]
 [- BMS mosfets, under PA heatsink]
 --------------------------------------------
