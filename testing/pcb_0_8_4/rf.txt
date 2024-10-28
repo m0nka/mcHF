@@ -50,4 +50,4 @@ ToDo: Rearange rooms:
 - feedback from PD chip - hook to where ?
 - add 1mm to top and bottom of the board
 - verify if new tall comp pos touch UI board
-- use relay tx switch
+[- use relay tx switch]
