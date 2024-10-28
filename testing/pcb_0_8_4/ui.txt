@@ -20,3 +20,5 @@
 - add GND testing hole
 - add physical pullups on shared I2C
 - change SMPS inductors
+- add filter on BT module powe
+- replace Lora module

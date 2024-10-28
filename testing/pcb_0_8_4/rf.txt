@@ -51,3 +51,5 @@ ToDo: Rearange rooms:
 - add 1mm to top and bottom of the board
 - verify if new tall comp pos touch UI board
 [- use relay tx switch]
+[- add filter on fan power]
+- J9 is under paddles - move or remove
