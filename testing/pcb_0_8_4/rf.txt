@@ -1,5 +1,5 @@
 --------------------------------------------
-ToDo: Rearange rooms:
+Rearange rooms:
 [- U3/U4 move somewhere under cells]
 [- SMPS go around the encoder - top and bottom layer(away from cells)]
 [- bms go to where tx pre-amp is(away from cells)]
@@ -8,48 +8,70 @@ ToDo: Rearange rooms:
 [- under cells - LPF control]
 [- BPFs - go where SMPS was]
 [- BMS mosfets, under PA heatsink]
+- add 1mm to top and bottom of the board
 --------------------------------------------
-- heatsink mount holes wrong
+BMS changes:
+[- pack resistor(R73) reduce to 1k]
+[- short VC5 and VC6, connect to top cell via 100ohm, add cap]
+[- connect all four thermistors to BMS chip]
+[- Fuse pin(BMS) needs to be connected to GND]
+[- D6 needs to be hooked to BAT+ after the fuse!]
+[- add PWM ch mosfet control]
+- hook BMS_PWM line to the UI board
+--------------------------------------------
 - batt holder footprint wrong
-- usb footprint wrong
-- usb conn sticking out too much
-- fan conn top overlay under connector
-- encoder poss might be wrong
-- fan position holes wrong spacing
-- heatsink bolts holes need to be grounded slots, with large contact surfice(to cool PCB as well)
+- replace batt socket with 5x1S, update footprint
+- add two thermistors to pack
+--------------------------------------------
+TX PA:
+- heatsink mount holes wrong
+- heatsink bolts holes need to be grounded slots, with large 
+  contact surfice(to cool PCB as well)
 - final mosfets needs to come closer to heatsink
-- U6 footprint is rotated
-- C77 needs 10uF ceramic
-- C29 to 100nF
-- U4 maybe touching components on the MIX board
-- encoder needs caps(1nF) to GND
-- add LEDs on power rails
-- put solder mask rectangluars for each LPF(both sides)
-- U7 and U8 need large heat pads on top layer only
-- C97 text, move
-- USB footprint mirrored
-- CFG1,2 and 3 need to be NC
-- C29 needs discharge resistor
-- L28 needs to be bigger inductor
-- align relays
-- switch to 1S batt holders
-- add GND testing hole
-- usb pd module need isolation diode(to prevent vbus feedin from batt)
-- Q6 and Q7 need large heat pads
-- replace batt socket with 5x1S
 - move heatsink outwards
-- reposition ACC connector
 - Q4 and Q5 footprint rotated
 - rotate D5(pa), add cap to GND ?
-- change SMPS inductors
-- pack resistor(R73) reduce to 1k
-- short VC5 and VC6, connect to top cell via 100ohm, add cap
-- connect all four thermistors to BMS chip
-- Fuse pin(BMS) needs to be connected to GND
-- D6 needs to be hooked to BAT+ after the fuse!
+--------------------------------------------
+USB_PD:
+- usb footprint wrong
+- usb conn sticking out too much
+- USB footprint mirrored
+- U6 footprint is rotated
+- C77 needs 10uF ceramic
+- CFG1,2 and 3 need to be NC
+- usb pd module need isolation diode
+  (to prevent vbus feedin from batt)
 - feedback from PD chip - hook to where ?
-- add 1mm to top and bottom of the board
-- verify if new tall comp pos touch UI board
+--------------------------------------------
+- fan conn top overlay under connector
+- fan position holes wrong spacing
+--------------------------------------------
+- encoder poss might be wrong
+- encoder needs caps(1nF) to GND
+--------------------------------------------
+
+- C29 to 100nF
+- U7 and U8 need large heat pads on top layer only
+- C97 text, move
+- C29 needs discharge resistor
+- L28 needs to be bigger inductor
+- Q6 and Q7 need large heat pads
+- change SMPS inductors
+
 [- use relay tx switch]
 [- add filter on fan power]
+
+- add GND testing hole
+- add LEDs on power rails
+
+- add voltage boost module(21V)
+
+- put solder mask rectangluars for each LPF(both sides)
+- align relays
+- reposition ACC connector
 - J9 is under paddles - move or remove
+
+- U4 maybe touching components on the MIX board
+- verify if new tall comp pos touch UI board
+
+- update sch sheets version
