@@ -18,6 +18,8 @@ BMS changes:
 [- D6 needs to be hooked to BAT+ after the fuse!]
 [- add PWM ch mosfet control]
 - hook BMS_PWM line to the UI board
+- add cooling pads at bottom layer
+- Q6 and Q7 need large heat pads
 --------------------------------------------
 - batt holder footprint wrong
 - replace batt socket with 5x1S, update footprint
@@ -55,7 +57,6 @@ USB_PD:
 - C97 text, move
 - C29 needs discharge resistor
 - L28 needs to be bigger inductor
-- Q6 and Q7 need large heat pads
 - change SMPS inductors
 
 [- use relay tx switch]
