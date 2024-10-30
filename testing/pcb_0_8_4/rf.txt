@@ -8,7 +8,6 @@ Rearange rooms:
 [- under cells - LPF control]
 [- BPFs - go where SMPS was]
 [- BMS mosfets, under PA heatsink]
-- add 1mm to top and bottom of the board
 --------------------------------------------
 BMS changes:
 [- pack resistor(R73) reduce to 1k]
@@ -17,7 +16,7 @@ BMS changes:
 [- Fuse pin(BMS) needs to be connected to GND]
 [- D6 needs to be hooked to BAT+ after the fuse!]
 [- add PWM ch mosfet control]
-- hook BMS_PWM line to the UI board
+[- hook BMS_PWM line to the UI board]
 - add cooling pads at bottom layer
 - Q6 and Q7 need large heat pads
 --------------------------------------------
@@ -37,13 +36,12 @@ TX PA:
 USB_PD:
 - usb footprint wrong
 - usb conn sticking out too much
-- USB footprint mirrored
-- U6 footprint is rotated
-- C77 needs 10uF ceramic
-- CFG1,2 and 3 need to be NC
-- usb pd module need isolation diode
-  (to prevent vbus feedin from batt)
-- feedback from PD chip - hook to where ?
+[- USB footprint mirrored]
+[- U6 footprint is rotated]
+[- C77 needs 10uF ceramic]
+[- CFG1,2 and 3 need to be NC]
+[- usb pd module need isolation diode]
+[- feedback from PD chip - hook to where ?]
 --------------------------------------------
 - fan conn top overlay under connector
 - fan position holes wrong spacing
@@ -72,6 +70,7 @@ USB_PD:
 - reposition ACC connector
 - J9 is under paddles - move or remove
 
+- add 1mm to top and bottom of the board
 - U4 maybe touching components on the MIX board
 - verify if new tall comp pos touch UI board
 
