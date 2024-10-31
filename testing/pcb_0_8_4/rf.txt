@@ -20,6 +20,7 @@ BMS changes:
 - add cooling pads at bottom layer
 - Q6 and Q7 need large heat pads
 --------------------------------------------
+Batt holder:
 - batt holder footprint wrong
 - replace batt socket with 5x1S, update footprint
 - add two thermistors to pack
@@ -34,8 +35,8 @@ TX PA:
 - rotate D5(pa), add cap to GND ?
 --------------------------------------------
 USB_PD:
-- usb footprint wrong
-- usb conn sticking out too much
+[- usb footprint wrong]
+[- usb conn sticking out too much] NB: left as it is!
 [- USB footprint mirrored]
 [- U6 footprint is rotated]
 [- C77 needs 10uF ceramic]
