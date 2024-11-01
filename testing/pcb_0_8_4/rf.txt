@@ -73,10 +73,10 @@ SMPS:
 
 - put solder mask rectangluars for each LPF(both sides)
 - align relays
-- reposition ACC connector
+[- reposition ACC connector]
 - J9 is under paddles - move or remove
 
-- add 1mm to top and bottom of the board
+- add 0.5mm to top and bottom of the board
 - U4 maybe touching components on the MIX board
 - verify if new tall comp pos touch UI board
 
