@@ -16,14 +16,14 @@ BMS changes:
 [- Fuse pin(BMS) needs to be connected to GND]
 [- D6 needs to be hooked to BAT+ after the fuse!]
 [- add PWM ch mosfet control]
-[- hook BMS_PWM line to the UI board]
-- add cooling pads at bottom layer
-- Q6 and Q7 need large heat pads
+[- hook BMS_PWM line to the UI board]S
+[- Q6 and Q7 need large heat pads(moved to bottom layer)]
 --------------------------------------------
 Batt holder:
-- batt holder footprint wrong
-- replace batt socket with 5x1S, update footprint
-- add two thermistors to pack
+[- batt holder footprint wrong]
+[- replace batt socket with 5x1S, update footprint]
+[- add two thermistors to pack]2
+[- add extra support spacer under battery holder]
 --------------------------------------------
 TX PA:
 - heatsink mount holes wrong
@@ -44,25 +44,30 @@ USB_PD:
 [- usb pd module need isolation diode]
 [- feedback from PD chip - hook to where ?]
 --------------------------------------------
+Fan:
 - fan conn top overlay under connector
 - fan position holes wrong spacing
+[- fan new position due to battery move]
+[- mounting screw no.3 away from speaker]
 --------------------------------------------
+Encoder:
 - encoder poss might be wrong
 - encoder needs caps(1nF) to GND
 --------------------------------------------
-
+SMPS:
 - C29 to 100nF
-- U7 and U8 need large heat pads on top layer only
+- U7 and U8 need large heat pads on top bottom layer
 - C97 text, move
 - C29 needs discharge resistor
 - L28 needs to be bigger inductor
 - change SMPS inductors
+- add LEDs on power rails
+--------------------------------------------
 
 [- use relay tx switch]
 [- add filter on fan power]
 
 - add GND testing hole
-- add LEDs on power rails
 
 - add voltage boost module(21V)
 
