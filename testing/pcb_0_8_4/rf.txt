@@ -26,13 +26,13 @@ Batt holder:
 [- add extra support spacer under battery holder]
 --------------------------------------------
 TX PA:
-- heatsink mount holes wrong
-- heatsink bolts holes need to be grounded slots, with large 
-  contact surfice(to cool PCB as well)
-- final mosfets needs to come closer to heatsink
-- move heatsink outwards
-- Q4 and Q5 footprint rotated
-- rotate D5(pa), add cap to GND ?
+[- heatsink mount holes wrong]
+[- heatsink bolts holes need to be grounded slots, with large] 
+[  contact surfice(to cool PCB 2as well)]
+[- final mosfets needs to come closer to heatsink]
+[- move heatsink outwards]
+[- Q4 and Q5 footprint rotated]
+[- rotate D5(pa), add cap to GND]
 --------------------------------------------
 USB_PD:
 [- usb footprint wrong]
@@ -45,8 +45,8 @@ USB_PD:
 [- feedback from PD chip - hook to where ?]
 --------------------------------------------
 Fan:
-- fan conn top overlay under connector
-- fan position holes wrong spacing
+[- fan conn top overlay under connector]
+[- fan position holes wrong spacing]
 [- fan new position due to battery move]
 [- mounting screw no.3 away from speaker]
 --------------------------------------------
