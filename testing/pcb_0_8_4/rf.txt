@@ -52,16 +52,15 @@ Fan:
 --------------------------------------------
 Encoder:
 - encoder poss might be wrong
-- encoder needs caps(1nF) to GND
+[- encoder needs caps(1nF) to GND]
 --------------------------------------------
 SMPS:
-- C29 to 100nF
-- U7 and U8 need large heat pads on top bottom layer
-- C97 text, move
-- C29 needs discharge resistor
-- L28 needs to be bigger inductor
+[- C29 to 100nF]
+[- U7 and U8 need large heat pads on top bottom layer]
+[- C97 text, move]
+[- C29 needs discharge resistor]
 - change SMPS inductors
-- add LEDs on power rails
+[- add LEDs on power rails]
 --------------------------------------------
 
 [- use relay tx switch]
@@ -77,7 +76,7 @@ SMPS:
 - J9 is under paddles - move or remove
 
 - add 0.5mm to top and bottom of the board
-- U4 maybe touching components on the MIX board
+[- U4 maybe touching components on the MIX board]
 - verify if new tall comp pos touch UI board
 
 - update sch sheets version
