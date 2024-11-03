@@ -59,7 +59,7 @@ SMPS:
 [- U7 and U8 need large heat pads on top bottom layer]
 [- C97 text, move]
 [- C29 needs discharge resistor]
-- change SMPS inductors
+[- change SMPS inductors]
 [- add LEDs on power rails]
 --------------------------------------------
 
