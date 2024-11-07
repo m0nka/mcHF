@@ -51,7 +51,7 @@ Fan:
 [- mounting screw no.3 away from speaker]
 --------------------------------------------
 Encoder:
-- encoder poss might be wrong
+[- encoder poss might be wrong] - moved 1mm outwards and down!
 [- encoder needs caps(1nF) to GND]
 --------------------------------------------
 SMPS:
@@ -66,17 +66,16 @@ SMPS:
 [- use relay tx switch]
 [- add filter on fan power]
 
-- add GND testing hole
+[- put solder mask rectangluars for each LPF]
+[- align relays] - not a great idea, so no
+[- reposition ACC connector]
+[- J9 is under paddles - move or remove]
+
+[- add 0.5mm to top and bottom of the board] - maybe next revision!
+[- U4 maybe touching components on the MIX board]
 
 - add voltage boost module(21V)
 
-- put solder mask rectangluars for each LPF(both sides)
-- align relays
-[- reposition ACC connector]
-- J9 is under paddles - move or remove
-
-- add 0.5mm to top and bottom of the board
-[- U4 maybe touching components on the MIX board]
+- add GND testing hole
 - verify if new tall comp pos touch UI board
-
 - update sch sheets version
