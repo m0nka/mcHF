@@ -74,8 +74,8 @@ SMPS:
 [- add 0.5mm to top and bottom of the board] - maybe next revision!
 [- U4 maybe touching components on the MIX board]
 
-- add voltage boost module(21V)
+[- add voltage boost module(21V)]
 
-- add GND testing hole
+[- add GND testing hole]
 - verify if new tall comp pos touch UI board
 - update sch sheets version

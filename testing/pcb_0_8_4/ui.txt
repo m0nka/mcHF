@@ -22,3 +22,4 @@
 - change SMPS inductors
 - add filter on BT module powe
 - replace Lora module
+- Wire BST_EN (J1, A7)
