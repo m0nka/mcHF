@@ -1,10 +1,18 @@
 - board to board holes - remove plating, need larger mask
+
 - rotary dial - fix holes too small
+
 - fan switch - footprint wrong pad size, wrong spacing
 - S22/S24 footprint completely wrong
+
 - speaker conn top overlay under connector
+
 - paddles conn top overlay under connector
+- replace paddle connector with 3pin header(plugable from printed case)
+
 - add Vcc to USB-C connector(for programmer feedback)
+- hook USB programming pins to regulator inhibit(to allow programming when off)
+
 - move LCD connectors to the left
 - C29, move close to TS1
 - TS1 pinout is wrong!!!
@@ -12,14 +20,18 @@
 - CP43E too far away from CPU
 - C35 probably wrong voltage/footprint
 - CC20E, CC25, C6 and C7 touch PA transformer on RF board
-- add LED on 3.3V power rail
+
 - change R40 to 560k and R41 to 100k
 - change R37 to 0 Ohm
-- hook USB programming pins to regulator inhibit(to allow programming when off)
+
 - speaker connector too close to mix board and too far away from sp terminals
+- add filter on BT module power
+
 - add GND testing hole
 - add physical pullups on shared I2C
+
 - change SMPS inductors
-- add filter on BT module powe
+- add LED on 3.3V power rail
+
 - replace Lora module
 - Wire BST_EN (J1, A7)
