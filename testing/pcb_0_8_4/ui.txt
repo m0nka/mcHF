@@ -1,21 +1,23 @@
-- board to board holes - remove plating, need larger mask
+[- move 3v regulator to old position]
+[- change SMPS inductors]
 
-- rotary dial - fix holes too small
+[- rotary dial - fix holes too small]
+[- C29, move close to TS1]S
+[- TS1 pinout is wrong!!!]
 
-- fan switch - footprint wrong pad size, wrong spacing
-- S22/S24 footprint completely wrong
+[- speaker connector too close to mix board and too far away from sp terminals]
+[- speaker new footprint from RF board]
+[- speaker conn top overlay under connector]
 
-- speaker conn top overlay under connector
-
-- paddles conn top overlay under connector
-- replace paddle connector with 3pin header(plugable from printed case)
+[- paddles conn top overlay under connector]
+[- replace paddle connector with 3pin header(plugable from printed case)] - scrapped
 
 - add Vcc to USB-C connector(for programmer feedback)
 - hook USB programming pins to regulator inhibit(to allow programming when off)
 
-- move LCD connectors to the left
-- C29, move close to TS1
-- TS1 pinout is wrong!!!
+[- move LCD connectors to the left]
+- move codec up
+
 - sd card not grounded
 - CP43E too far away from CPU
 - C35 probably wrong voltage/footprint
@@ -24,14 +26,17 @@
 - change R40 to 560k and R41 to 100k
 - change R37 to 0 Ohm
 
-- speaker connector too close to mix board and too far away from sp terminals
+- fan switch - footprint wrong pad size, wrong spacing
+- S22/S24 footprint completely wrong
+
 - add filter on BT module power
 
 - add GND testing hole
 - add physical pullups on shared I2C
 
-- change SMPS inductors
 - add LED on 3.3V power rail
 
 - replace Lora module
 - Wire BST_EN (J1, A7)
+
+- board to board holes - remove plating, need larger mask
