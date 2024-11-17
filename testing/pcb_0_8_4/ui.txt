@@ -36,7 +36,9 @@
 
 - add LED on 3.3V power rail
 
-- replace Lora module
+[- replace Lora module]
+[- position Lora antenna]
+
 - Wire BST_EN (J1, A7)
 
 - board to board holes - remove plating, need larger mask
