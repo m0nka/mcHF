@@ -38,8 +38,8 @@
 [- add Vcc to USB-C connector(for programmer feedback)]
 [- hook USB programming pins to regulator inhibit(to allow programming when off)]
 
-- fan switch - footprint wrong pad size, wrong spacing
-- S22/S24 footprint completely wrong
+[- fan switch - footprint wrong pad size, wrong spacing]
+[- S22/S24 footprint completely wrong]
 
 - board to board holes - remove plating, need larger mask
 - update version on sch sheets
