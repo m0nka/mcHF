@@ -42,4 +42,4 @@
 [- S22/S24 footprint completely wrong]
 
 - board to board holes - remove plating, need larger mask
-- update version on sch sheets
+[- update version on sch sheets]

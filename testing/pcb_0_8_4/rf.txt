@@ -77,5 +77,7 @@ SMPS:
 [- add voltage boost module(21V)]
 
 [- add GND testing hole]
+[- update sch sheets version]
+
 - verify if new tall comp pos touch UI board
-- update sch sheets version
+
