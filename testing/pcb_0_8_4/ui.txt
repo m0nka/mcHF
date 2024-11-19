@@ -1,22 +1,45 @@
-- board to board holes - remove plating, need larger mask
-- rotary dial - fix holes too small
-- fan switch - footprint wrong pad size, wrong spacing
-- S22/S24 footprint completely wrong
-- speaker conn top overlay under connector
-- paddles conn top overlay under connector
-- add Vcc to USB-C connector(for programmer feedback)
-- move LCD connectors to the left
-- C29, move close to TS1
-- TS1 pinout is wrong!!!
-- sd card not grounded
+[- move 3v regulator to old position]
+[- change SMPS inductors]
+
+[- rotary dial - fix holes too small]
+[- C29, move close to TS1]S
+[- TS1 pinout is wrong!!!]
+
+[- speaker connector too close to mix board and too far away from sp terminals]
+[- speaker new footprint from RF board]
+[- speaker conn top overlay under connector]
+
+[- paddles conn top overlay under connector]
+[- replace paddle connector with 3pin header(plugable from printed case)] - scrapped
+
+[- replace Lora module]
+[- position Lora antenna]
+
+[- move LCD connectors to the left]
+[- move codec up]
+
+[- Wire BST_EN (J1, A7)]
+[- Wire BMS_PWM(J3, A18)]
+
+[- sd card not grounded]
+[- add LED on 3.3V power rail]
+[- add filter on BT module power]
+
 - CP43E too far away from CPU
 - C35 probably wrong voltage/footprint
 - CC20E, CC25, C6 and C7 touch PA transformer on RF board
-- add LED on 3.3V power rail
-- change R40 to 560k and R41 to 100k
-- change R37 to 0 Ohm
-- hook USB programming pins to regulator inhibit(to allow programming when off)
-- speaker connector too close to mix board and too far away from sp terminals
-- add GND testing hole
-- add physical pullups on shared I2C
-- change SMPS inductors
+
+[- change R40 to 560k and R41 to 100k] - moved to RF board
+[- change R37 to 0 Ohm]
+
+[- add GND testing hole]
+[- add physical pullups on shared I2C]
+
+[- add Vcc to USB-C connector(for programmer feedback)]
+[- hook USB programming pins to regulator inhibit(to allow programming when off)]
+
+[- fan switch - footprint wrong pad size, wrong spacing]
+[- S22/S24 footprint completely wrong]
+
+- board to board holes - remove plating, need larger mask
+[- update version on sch sheets]

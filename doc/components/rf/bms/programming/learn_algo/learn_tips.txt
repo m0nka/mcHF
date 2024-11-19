@@ -1,11 +1,13 @@
-1. Configure the dataflash with appropriate parameters suitable for customer's application; 
+1. Configure the dataflash with appropriate parameters suitable for customer's application 
 configure pack's chemistry and perform calibration
 
-2. Activate impedance track then ensure RDIS flag is set and discharge the pack in full (without triggering any protection!!!)
+2. Activate impedance track then ensure RDIS flag is set and discharge the pack in full
+ (without triggering any protection!!!)
 
 3. Relax for 5 hours and ensure both RDIS and VOK are cleared at the end of relaxation
 
-4. Fully charge the pack; ensure VOK is set at the beginning of charge and FC flag is set at the end of charge
+4. Fully charge the pack; ensure VOK is set at the beginning of charge and FC flag is 
+set at the end of charge
 
 5. Relax for approximately 2 hours; ensure both VOK and RDIS are cleared at the end of relaxation
 
@@ -13,4 +15,6 @@ configure pack's chemistry and perform calibration
 
 Notes:
 
-	1. The charging current must drop below the Taper Current for at least 80 seconds for charge termination
+	1. The charging current must drop below the Taper Current for at least 80 seconds 
+	for charge termination
+	2. Discharge current needs to be around 600mA(0.5W output on 30m, 3.5V bias on dummy load)

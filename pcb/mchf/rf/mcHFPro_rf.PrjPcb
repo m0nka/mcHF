@@ -496,6 +496,86 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=MPRJBCLL
 
+[GeneratedDocument1]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf-RoundHoles.TXT
+DItemRevisionGUID=
+
+[GeneratedDocument2]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf-SlotHoles.TXT
+DItemRevisionGUID=
+
+[GeneratedDocument3]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.DRR
+DItemRevisionGUID=
+
+[GeneratedDocument4]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.EXTREP
+DItemRevisionGUID=
+
+[GeneratedDocument5]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.GBL
+DItemRevisionGUID=
+
+[GeneratedDocument6]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.GBO
+DItemRevisionGUID=
+
+[GeneratedDocument7]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.GBP
+DItemRevisionGUID=
+
+[GeneratedDocument8]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.GBS
+DItemRevisionGUID=
+
+[GeneratedDocument9]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.GD1
+DItemRevisionGUID=
+
+[GeneratedDocument10]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.GG1
+DItemRevisionGUID=
+
+[GeneratedDocument11]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.GKO
+DItemRevisionGUID=
+
+[GeneratedDocument12]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.GPB
+DItemRevisionGUID=
+
+[GeneratedDocument13]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.GPT
+DItemRevisionGUID=
+
+[GeneratedDocument14]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.GTL
+DItemRevisionGUID=
+
+[GeneratedDocument15]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.GTO
+DItemRevisionGUID=
+
+[GeneratedDocument16]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.GTP
+DItemRevisionGUID=
+
+[GeneratedDocument17]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.GTS
+DItemRevisionGUID=
+
+[GeneratedDocument18]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.LDP
+DItemRevisionGUID=
+
+[GeneratedDocument19]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.REP
+DItemRevisionGUID=
+
+[GeneratedDocument20]
+DocumentPath=Project Outputs for mcHFPro_rf\mchf_pro_rf.RUL
+DItemRevisionGUID=
+
 [Configuration1]
 Name=Sources
 ParameterCount=0
@@ -654,7 +734,7 @@ OutputDefault20=0
 [OutputGroup2]
 Name=Simulator Outputs
 Description=
-TargetPrinter=Microsoft Print to PDF
+TargetPrinter=Samsung M262x 282x Series
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 
 [OutputGroup3]
@@ -776,7 +856,7 @@ PageOptions3=Record=PageOptions|CenterHorizontal=True|CenterVertical=True|PrintS
 [OutputGroup5]
 Name=Fabrication Outputs
 Description=
-TargetPrinter=Microsoft Print to PDF
+TargetPrinter=Samsung M262x 282x Series
 PrinterOptions=Record=PrinterOptions|Copies=1|Duplex=1|TrueTypeOptions=3|Collate=1|PrintJobKind=1|PrintWhat=1
 OutputType1=NC Drill
 OutputName1=NC Drill Files

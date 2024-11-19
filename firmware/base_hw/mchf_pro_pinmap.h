@@ -301,7 +301,7 @@
 #define CODEC_RESET						GPIO_PIN_0
 #define CODEC_RESET_PORT           		GPIOB
 
-// PB1			LCD_BL_CTRL
+// PB1			LCD_BL_CTRL - ToDo: changed to PA9 in rev 0.8.5!
 #define LCD_BL_CTRL_PIN               	GPIO_PIN_1
 #define LCD_BL_CTRL_GPIO_PORT         	GPIOB
 
