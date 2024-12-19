@@ -1,0 +1,2 @@
+- BH1 still need a bit of offset on the pins, also NTC holes not centered
+- RFC1 touches LORA module
