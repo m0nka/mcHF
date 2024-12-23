@@ -1,3 +1,4 @@
 - S22 and S24 footprint still wrong
 - LORA module touches large inductor on RF board
 - C21b maybe touches relays on RF board ?
+- RFC5/RFC6 needs larger footprint
