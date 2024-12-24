@@ -1,2 +1,5 @@
 - BH1 still need a bit of offset on the pins, also NTC holes not centered
 - RFC1 touches LORA module
+- RFC2, need bigger inductor/footprint, to handle 1A
+- U200, the MT3608 has diff footprint than RT9293, use same type for both ?
+- U200 control ok via 3V logic levels ? Is there feedtrough of 20V to the cpu ?
