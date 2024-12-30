@@ -3,3 +3,5 @@
 - RFC2, need bigger inductor/footprint, to handle 1A
 - U200, the MT3608 has diff footprint than RT9293, use same type for both ?
 - U200 control ok via 3V logic levels ? Is there feedtrough of 20V to the cpu ?
+- D6, replace with SS24 maybe ?
+- SS34 footrpint needs to be wider, and pads need spacing out!
