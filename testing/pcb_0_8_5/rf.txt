@@ -5,3 +5,4 @@
 - U200 control ok via 3V logic levels ? Is there feedtrough of 20V to the cpu ?
 - D6, replace with SS24 maybe ?
 - SS34 footrpint needs to be wider, and pads need spacing out!
+- C27/C28 possible wrong placement
