@@ -6,3 +6,4 @@
 - D6, replace with SS24 maybe ?
 - SS34 footrpint needs to be wider, and pads need spacing out!
 - C27/C28 possible wrong placement
+- C114/C115 needs to be next to R50/R51
