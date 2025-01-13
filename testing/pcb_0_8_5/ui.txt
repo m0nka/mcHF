@@ -2,3 +2,6 @@
 - LORA module touches large inductor on RF board
 - C21b maybe touches relays on RF board ?
 - RFC5/RFC6 needs larger footprint
+- CC25 touches final PA transformer
+- C19 touches RFC3 on RF board
+- C21b touches one of the LPF relays
