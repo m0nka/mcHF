@@ -1,0 +1,20 @@
+Electrical and firmware:
+
+ - RF 5V, ok
+ - RF 8V, ok
+ - RF 21V, ok
+ - RF all 21, 8 and 5V rails ok
+ - RF USB PD, ok
+ 
+ - UI 3V, ok
+ - UI power on from dial, ok
+ - UI power hold via programmer, ok
+ - UI programming interface, ok
+ - UI bootloader GPIO changes, ok
+ - UI radio firmware GPIO changes, ok
+ - UI dsp firmware GPIO changes, ok
+ - UI SD Card interface, ok
+ - UI TCXO, not tested
+ - UI 5V, not tested
+ - UI VREF chip, not tested
+ - UI touch interface, FAILED

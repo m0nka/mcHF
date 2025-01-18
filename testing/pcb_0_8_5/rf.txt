@@ -10,3 +10,4 @@
 - C89/M21/R38a too close to inductor, not easy for rework
 - R34h is under D2a!!!
 - RFC4 under heatsink not optimal!
+- USB connector body not connected to GND

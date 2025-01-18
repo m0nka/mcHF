@@ -18,11 +18,11 @@
 // Version and device id
 //
 #define	DEVICE_STRING				"mcHFBootloader"
-#define	AUTHOR_STRING				"Krassi Atanassov,M0NKA 2013-2024"
+#define	AUTHOR_STRING				"Krassi Atanassov,M0NKA 2013-2025"
 //
 #define	MCHF_L_VER_MAJOR			0
 #define	MCHF_L_VER_MINOR			0
 #define	MCHF_L_VER_RELEASE			0
-#define	MCHF_L_VER_BUILD			42
+#define	MCHF_L_VER_BUILD			43
 // -----------------------------------------------------------------------------
 #endif

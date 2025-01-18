@@ -1,0 +1,13 @@
+NET					0.8.4		0.8.5
+--------------------------------------
+LCD_BL_CTRL			PB1			PA9
+BST_EN				---			PB1
+BMS_IRQ				PA9			---
+
+CLK_42M				PA8			---
+BMS_PWM				---			PA8
+
+FREE3				PD12		---
+FREE5				PD13		---
+BMS_SCL				PB8			PD12
+BMS_SDA				PB9			PD13
