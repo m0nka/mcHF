@@ -5,3 +5,4 @@
 - CC25 touches final PA transformer
 - C19 touches RFC3 on RF board
 - C21b touches one of the LPF relays
+- move C51 as it prevents rework on the touch conn
