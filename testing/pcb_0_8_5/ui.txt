@@ -6,3 +6,4 @@
 - C19 touches RFC3 on RF board
 - C21b touches one of the LPF relays
 - move C51 as it prevents rework on the touch conn
+- add test points next to J8 connector, bottom layer for all touch signals
