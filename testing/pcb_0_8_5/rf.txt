@@ -11,3 +11,4 @@
 - R34h is under D2a!!!
 - RFC4 under heatsink not optimal! Also touches speaker terminal pad(needs new location!)
 - USB connector body not connected to GND
+- R13e needs to be 10k(not 1k)
