@@ -7,3 +7,4 @@
 - C21b touches one of the LPF relays
 - move C51 as it prevents rework on the touch conn
 - add test points next to J8 connector, bottom layer for all touch signals
+- connect PE2(M46) to R19(pin3) together to have BT connection status in firmware

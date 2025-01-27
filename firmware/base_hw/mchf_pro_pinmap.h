@@ -759,7 +759,11 @@
 
 // PE0			FMC_NBL0
 // PE1			FMC_NBL1
+
 // PE2			FREE4
+#define BT_CONNECT_STATUS				GPIO_PIN_2
+#define BT_CONNECT_STATUS_PORT          GPIOE
+
 // PE3			SAI1_SD_B
 // PE4			SAI1_FS_A
 // PE5			SAI1_SCK_A

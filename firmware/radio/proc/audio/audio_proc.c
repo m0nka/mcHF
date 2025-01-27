@@ -160,6 +160,31 @@ void audio_proc_power_cleanup(void)
 	codec_hw_power_cleanup();
 }
 
+static void btm_proc_task(void *arg)
+{
+	uchar old_bt_state = 0;
+	uchar new_bt_state;
+
+	for(;;)
+	{
+		new_bt_state = HAL_GPIO_ReadPin(BT_CONNECT_STATUS_PORT, BT_CONNECT_STATUS);
+		if(new_bt_state != old_bt_state)
+		{
+			if(new_bt_state)
+			{
+				printf("== bt connected ==\r\n");
+				HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);	// mute
+			}
+			else
+			{
+				printf("== bt disconnected ==\r\n");
+				HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);	// unmute
+			}
+			old_bt_state = new_bt_state;
+		}
+	}
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_proc_task
 //* Object              :
@@ -179,6 +204,14 @@ void audio_proc_task(void const * argument)
 	goto audio_proc_exit;
 	#endif
 
+	// BT Monitor task
+    xTaskCreate((TaskFunction_t)btm_proc_task,\
+    					"btm_proc",\
+						128,\
+						NULL,\
+						AUDIO_PROC_PRIORITY,\
+						NULL);
+
 	//printf("audio proc start\r\n");
 
 audio_proc_loop:
@@ -190,7 +223,7 @@ audio_proc_loop:
 	}
 	goto audio_proc_loop;
 
-audio_proc_exit:
+//audio_proc_exit:
 	vTaskDelete(NULL);
 }
 #endif
