@@ -1,0 +1,3 @@
+There is an engineering question about your order W96857ASD53_mcHFPro_ui_0_8_5_19_Nov_2024.
+See pic1,the space between these 0.4mm holes is less than 0.35mm,the space is too small to produce.So it will cause short circuit after production.
+We suggest to shrink these holes size by 0.05mm for production,is this ok for you?

@@ -1,0 +1,10 @@
+- S22 and S24 footprint still wrong
+- LORA module touches large inductor on RF board
+- C21b maybe touches relays on RF board ?
+- RFC5/RFC6 needs larger footprint
+- CC25 touches final PA transformer
+- C19 touches RFC3 on RF board
+- C21b touches one of the LPF relays
+- move C51 as it prevents rework on the touch conn
+- add test points next to J8 connector, bottom layer for all touch signals
+- connect PE2(M46) to R19(pin3) together to have BT connection status in firmware

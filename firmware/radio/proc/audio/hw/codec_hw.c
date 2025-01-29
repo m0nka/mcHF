@@ -469,12 +469,17 @@ void codec_hw_init(void)
 {
 	GPIO_InitTypeDef  gpio_init_structure;
 
-	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
 	gpio_init_structure.Pull  = GPIO_NOPULL;
-	gpio_init_structure.Speed = GPIO_SPEED_FREQ_HIGH;
+
+	// BT Connect input line
+	gpio_init_structure.Pin   = BT_CONNECT_STATUS;
+	gpio_init_structure.Mode  = GPIO_MODE_INPUT;
+	HAL_GPIO_Init(BT_CONNECT_STATUS_PORT, &gpio_init_structure);
 
 	// Reset line is PC14
 	gpio_init_structure.Pin   = CODEC_RESET;
+	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	gpio_init_structure.Speed = GPIO_SPEED_FREQ_HIGH;
 	HAL_GPIO_Init(CODEC_RESET_PORT, &gpio_init_structure);
 
 	// Keep in reset

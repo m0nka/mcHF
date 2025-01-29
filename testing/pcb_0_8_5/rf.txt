@@ -1,0 +1,14 @@
+- BH1 still need a bit of offset on the pins, also NTC holes not centered
+- RFC1 touches LORA module
+- RFC2, need bigger inductor/footprint, to handle 1A
+- U200, the MT3608 has diff footprint than RT9293, use same type for both ?
+- U200 control ok via 3V logic levels ? Is there feedtrough of 20V to the cpu ?
+- D6, replace with SS24 maybe ?
+- SS34 footrpint needs to be wider, and pads need spacing out!
+- C27/C28 possible wrong placement
+- C114/C115 needs to be next to R50/R51
+- C89/M21/R38a too close to inductor, not easy for rework
+- R34h is under D2a!!!
+- RFC4 under heatsink not optimal! Also touches speaker terminal pad(needs new location!)
+- USB connector body not connected to GND
+- R13e needs to be 10k(not 1k)

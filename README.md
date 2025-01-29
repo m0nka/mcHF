@@ -17,6 +17,7 @@ Both, hardware and firmware is built by combining the great work of many hams. P
   <li>25W output power</li>
   <li>Built in 100Wh LiOn battery</li>
   <li>Dual USB-C ports for power, charging and PC connection</li>
+  <li>Support for Bluetooth stereo headphones</li>
 </ul>
 
 # Discussion Thread
