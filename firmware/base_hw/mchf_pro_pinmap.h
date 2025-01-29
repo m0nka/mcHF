@@ -302,7 +302,7 @@
 #define CODEC_RESET						GPIO_PIN_0
 #define CODEC_RESET_PORT           		GPIOB
 
-// PB1			LCD_BL_CTRL - ToDo: changed to PA9 in rev 0.8.5!
+// PB1			LCD_BL_CTRL
 #define LCD_BL_CTRL_PIN               	GPIO_PIN_1
 #define LCD_BL_CTRL_GPIO_PORT         	GPIOB
 
@@ -581,14 +581,21 @@
 // ----------------------------------------------------
 // PortA
 
-// PA0			RFM_RST
+// PA0			RFM_RST -> ToDo: Lora driver
+#define RFM_RST							GPIO_PIN_0
+#define RFM_RST_PORT					GPIOA
 
 // PA1			ENC1_I
 #define ENC1_I							GPIO_PIN_1
 #define ENC1_I_PORT						GPIOA
 
-// PA2			LORA_POWER
-// PA3			RFM_DIO2
+// PA2			LORA_POWER -> ToDo: Lora driver
+#define LORA_POWER						GPIO_PIN_2
+#define LORA_POWER_PORT					GPIOA
+
+// PA3			RFM_DIO2 -> ToDo: Lora driver
+#define RFM_DIO2						GPIO_PIN_3
+#define RFM_DIO2_PORT					GPIOA
 
 // PA4			DAC1_OUT1
 #define DAC1_OUT1						GPIO_PIN_4
@@ -597,10 +604,15 @@
 // PA5			DAC1_OUT2
 #define DAC1_OUT2						GPIO_PIN_5
 
-// PA6			RFM_MISO_SPI1
-// PA7			RFM_MOSI_SPI1
+// PA6			RFM_MISO_SPI1 -> ToDo: Lora driver
+#define RFM_MISO_SPI1					GPIO_PIN_6
+#define RFM_MISO_SPI1_PORT				GPIOA
 
-// PA8			BMS_PWM
+// PA7			RFM_MOSI_SPI1 -> ToDo: Lora driver
+#define RFM_MOSI_SPI1					GPIO_PIN_7
+#define RFM_MOSI_SPI1_PORT				GPIOA
+
+// PA8			BMS_PWM -> ToDo: BMS CC control
 #define BMS_PWM_PIN               		GPIO_PIN_8
 #define BMS_PWM_PORT         			GPIOA
 
@@ -612,8 +624,11 @@
 #define FAN_CNTR						GPIO_PIN_10
 #define FAN_CNTR_PORT					GPIOA
 
+// ToDo: Allocate to DSP core for rig control and real time audio streaming
 // PA11			USB_DFU_N
 // PA12			USB_DFU_P
+
+// Programming port only
 // PA13			SWDIO
 // PA14			SWCLK
 
@@ -629,18 +644,25 @@
 #define CODEC_RESET						GPIO_PIN_0
 #define CODEC_RESET_PORT           		GPIOB
 
-// PB1			BST_EN
-#define BST_EN_PIN               		GPIO_PIN_1
+// PB1			BST_EN -> ToDo: BMS step-up converter enable
+#define BST_EN		               		GPIO_PIN_1
 #define BST_EN_PORT         			GPIOB
 
-// PB2			ATT_CLK
-// PB3			RFM_SCK_SPI1
+// PB2			ATT_CLK -> ToDo: Attenuator
+#define ATT_CLK               			GPIO_PIN_2
+#define ATT_CLK_PORT         			GPIOB
+
+// PB3			RFM_SCK_SPI1 -> ToDo: Lora driver
+#define RFM_SCK_SPI1               		GPIO_PIN_3
+#define RFM_SCK_SPI1_PORT         		GPIOB
 
 // PB4			ENC2_I
 #define ENC2_I_PIN               		GPIO_PIN_4
 #define ENC2_I_PORT               		GPIOB
 
-// PB5			KEYPAD_X5
+// PB5			KEYPAD_X5 -> ToDo: Keypad
+#define KEYPAD_X5               		GPIO_PIN_5
+#define KEYPAD_X5_PORT               	GPIOB
 
 // PB6			TOUCH_SCK_I2C1
 #define TOUCH_SCK_SCL_PIN              	GPIO_PIN_6
@@ -649,8 +671,8 @@
 
 // PB7			TOUCH_SDA_I2C1
 #define TOUCH_SDA_SDA_PIN             	GPIO_PIN_7
-#define TOUCH_SDA_SDA_AF                 GPIO_AF4_I2C4
-#define TOUCH_SDA_SDA_GPIO_PORT          GPIOB
+#define TOUCH_SDA_SDA_AF                GPIO_AF4_I2C4
+#define TOUCH_SDA_SDA_GPIO_PORT         GPIOB
 
 // PB8			CODEC_SCL_I2C4
 #define CODEC_SCL_I2C4_PIN             	GPIO_PIN_8
@@ -662,8 +684,13 @@
 #define CODEC_SDA_I2C4_PORT          	GPIOB
 #define CODEC_SDA_I2C4_AF            	GPIO_AF6_I2C4
 
-// PB10			ATT_LE
-// PB11			DSI_TE
+// PB10			ATT_LE -> ToDo: Attenuator
+#define ATT_LE							GPIO_PIN_10
+#define ATT_LE_PORT            			GPIOB
+
+// PB11			DSI_TE - reserved, future use
+#define DSI_TE							GPIO_PIN_11
+#define DSI_TE_PORT            			GPIOB
 
 // PB12			PTT
 #define PTT_PIN							GPIO_PIN_12
@@ -673,6 +700,7 @@
 #define VCC_5V_ON						GPIO_PIN_13
 #define VCC_5V_ON_PORT            		GPIOB
 
+// Physical keyboard ? Allocate to DPS core ? Bootrom USB stick support ?
 // PB14			OTG_HS_DM
 // PB15			OTG_HS_DP
 
@@ -681,15 +709,28 @@
 // PortC
 
 // PC0			FMC_SDNWE
-// PC1			RFM_NSS
+//
+//
+
+// PC1			RFM_NSS -> ToDo: Lora driver
+#define RFM_NSS							GPIO_PIN_1
+#define RFM_NSS_PORT           			GPIOC
 
 // PC2			MUTE
 #define CODEC_MUTE						GPIO_PIN_2
 #define CODEC_MUTE_PORT           		GPIOC
 
-// PC3			ADC3_INP1
-// PC4			RFM_DIO1
-// PC5			RFM_DIO0
+// PC3			ADC3_INP1 -> ToDo: Reflected Power, from bridge
+#define ADC3_INP1						GPIO_PIN_3
+#define ADC3_INP1_PORT           		GPIOC
+
+// PC4			RFM_DIO1 -> ToDo: Lora driver
+#define RFM_DIO1						GPIO_PIN_4
+#define RFM_DIO1_PORT           		GPIOC
+
+// PC5			RFM_DIO0 -> ToDo: Lora driver
+#define RFM_DIO0						GPIO_PIN_5
+#define RFM_DIO0_PORT           		GPIOC
 
 // PC6			BAND0
 #define BAND0_PIN						GPIO_PIN_6
@@ -724,12 +765,19 @@
 // PortD
 
 // PD0			FMC_D2
+//
+//
+
 // PD1			FMC_D3
+//
+//
+
 // PD2			SDMMC1_CMD
 #define SDMMC1_CMD                   	GPIO_PIN_2
 #define SDMMC1_SDIO_PORTD              	GPIOD
 
 // PD3			KEYPAD_X1
+
 // PD4			SD_DET
 #define SD_DET                   		GPIO_PIN_4
 #define SD_DET_PORT              		GPIOD

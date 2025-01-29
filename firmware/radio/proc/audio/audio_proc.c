@@ -170,6 +170,10 @@ static void btm_proc_task(void *arg)
 		new_bt_state = HAL_GPIO_ReadPin(BT_CONNECT_STATUS_PORT, BT_CONNECT_STATUS);
 		if(new_bt_state != old_bt_state)
 		{
+			//
+			// ToDo: Send MUTE message to audio task, instead of hardware access here
+			// so we can syncronize manual mute with automatic from BT module!
+			//
 			if(new_bt_state)
 			{
 				printf("== bt connected ==\r\n");

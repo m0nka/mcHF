@@ -54,6 +54,9 @@ void ui_controls_wifi_init(void)
 	GUI_DrawRect(WIFI_X, WIFI_Y, WIFI_X + WIFI_SIZE_X, WIFI_Y + WIFI_SIZE_Y);
 	GUI_DrawRect(WIFI_X + 1, WIFI_Y + 1, WIFI_X + WIFI_SIZE_X - 1, WIFI_Y + WIFI_SIZE_Y - 1);
 
+	return;
+
+
 	// Control separators
 	GUI_SetColor(GUI_WHITE);
 	GUI_DrawHLine(WIFI_Y + 20, WIFI_X, WIFI_X + WIFI_SIZE_X/2);
