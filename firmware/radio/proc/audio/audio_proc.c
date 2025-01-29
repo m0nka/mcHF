@@ -182,6 +182,9 @@ static void btm_proc_task(void *arg)
 			}
 			old_bt_state = new_bt_state;
 		}
+
+		// Yield execution
+		vTaskDelay(200);
 	}
 }
 
