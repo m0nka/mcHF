@@ -1,7 +1,7 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
@@ -32,6 +32,7 @@
 #include "vfo_proc.h"
 #include "band_proc.h"
 #include "trx_proc.h"
+#include "keypad_proc.h"
 
 #if configAPPLICATION_ALLOCATED_HEAP == 1
 __attribute__((section("heap_mem"))) uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
@@ -53,6 +54,7 @@ TaskHandle_t 							hVfoTask	= NULL;
 TaskHandle_t 							hAudioTask	= NULL;
 TaskHandle_t 							hBandTask	= NULL;
 TaskHandle_t 							hTrxTask	= NULL;
+TaskHandle_t 							hKbdTask	= NULL;
 
 QueueHandle_t 							hEspMessage;
 
@@ -101,6 +103,17 @@ void DebugMon_Handler(void)
 void SysTick_Handler(void)
 {
 	osSystickHandler();
+}
+
+void EXTI15_10_IRQHandler(void)
+{
+	/*
+	if (__HAL_GPIO_EXTI_GET_IT(BUTTON_WAKEUP_PIN) != 0x00U)
+	{
+	    __HAL_GPIO_EXTI_CLEAR_IT(BUTTON_WAKEUP_PIN);
+
+	    printf("btn1\r\n");
+	}*/
 }
 
 void Error_Handler(int err)
@@ -331,6 +344,21 @@ static int start_proc(void)
     {
     	printf("unable to create trx process\r\n");
     	return 6;
+    }
+	#endif
+
+	#ifdef CONTEXT_KEYPAD
+    res = xTaskCreate(	(TaskFunction_t)keypad_proc_task,\
+						"kbd_proc",\
+						KEYPAD_PROC_STACK_SIZE,\
+						NULL,\
+						KEYPAD_PROC_PRIORITY,\
+						&hKbdTask);
+
+    if(res != pdPASS)
+    {
+    	printf("unable to create kbd process\r\n");
+    	return 7;
     }
 	#endif
 

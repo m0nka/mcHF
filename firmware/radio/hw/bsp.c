@@ -33,6 +33,7 @@
 #include "touch_proc.h"
 #include "ui_proc.h"
 #include "bms_proc.h"
+#include "keypad_proc.h"
 
 #include "version.h"
 
@@ -261,6 +262,10 @@ static void tasks_pre_os_init(void)
 
 	#ifdef CONTEXT_TRX
 	trx_proc_hw_init();
+	#endif
+
+	#ifdef CONTEXT_KEYPAD
+	keypad_proc_init();
 	#endif
 }
 

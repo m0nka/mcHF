@@ -8,3 +8,7 @@
 - move C51 as it prevents rework on the touch conn
 - add test points next to J8 connector, bottom layer for all touch signals
 - connect PE2(M46) to R19(pin3) together to have BT connection status in firmware
+- 'LORA ANT' text in the cutout
+- swap M12/M29 (x3 and y1)
+- swap M33/M28 (x4 and y2)
+- add BT power control
