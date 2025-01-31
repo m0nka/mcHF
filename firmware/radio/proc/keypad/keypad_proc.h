@@ -18,34 +18,34 @@
 
 #ifdef CONTEXT_KEYPAD
 
-#define scan_y1() 	{	KEYPAD_Y1_PORT->BSRR = KEYPAD_Y1;\
-						KEYPAD_Y2_PORT->BSRR = (uint32_t)KEYPAD_Y2 << 16;\
-						KEYPAD_Y3_PORT->BSRR = (uint32_t)KEYPAD_Y3 << 16;\
-						KEYPAD_Y4_PORT->BSRR = (uint32_t)KEYPAD_Y4 << 16;\
-					}
-
-#define scan_y2() 	{	KEYPAD_Y1_PORT->BSRR = (uint32_t)KEYPAD_Y1 << 16;\
+#define scan_y1() 	{	KEYPAD_Y1_PORT->BSRR = KEYPAD_Y1 << 16;\
 						KEYPAD_Y2_PORT->BSRR = KEYPAD_Y2;\
-						KEYPAD_Y3_PORT->BSRR = (uint32_t)KEYPAD_Y3 << 16;\
-						KEYPAD_Y4_PORT->BSRR = (uint32_t)KEYPAD_Y4 << 16;\
-					}
-
-#define scan_y3() 	{	KEYPAD_Y1_PORT->BSRR = (uint32_t)KEYPAD_Y1 << 16;\
-						KEYPAD_Y2_PORT->BSRR = (uint32_t)KEYPAD_Y2 << 16;\
 						KEYPAD_Y3_PORT->BSRR = KEYPAD_Y3;\
-						KEYPAD_Y4_PORT->BSRR = (uint32_t)KEYPAD_Y4 << 16;\
-					}
-
-#define scan_y4() 	{	KEYPAD_Y1_PORT->BSRR = (uint32_t)KEYPAD_Y1 << 16;\
-						KEYPAD_Y2_PORT->BSRR = (uint32_t)KEYPAD_Y2 << 16;\
-						KEYPAD_Y3_PORT->BSRR = (uint32_t)KEYPAD_Y3 << 16;\
 						KEYPAD_Y4_PORT->BSRR = KEYPAD_Y4;\
 					}
 
-#define scan_off() 	{	KEYPAD_Y1_PORT->BSRR = (uint32_t)KEYPAD_Y1 << 16;\
-						KEYPAD_Y2_PORT->BSRR = (uint32_t)KEYPAD_Y2 << 16;\
-						KEYPAD_Y3_PORT->BSRR = (uint32_t)KEYPAD_Y3 << 16;\
-						KEYPAD_Y4_PORT->BSRR = (uint32_t)KEYPAD_Y4 << 16;\
+#define scan_y2() 	{	KEYPAD_Y1_PORT->BSRR = KEYPAD_Y1;\
+						KEYPAD_Y2_PORT->BSRR = KEYPAD_Y2 << 16;\
+						KEYPAD_Y3_PORT->BSRR = KEYPAD_Y3;\
+						KEYPAD_Y4_PORT->BSRR = KEYPAD_Y4;\
+					}
+
+#define scan_y3() 	{	KEYPAD_Y1_PORT->BSRR = KEYPAD_Y1;\
+						KEYPAD_Y2_PORT->BSRR = KEYPAD_Y2;\
+						KEYPAD_Y3_PORT->BSRR = KEYPAD_Y3 << 16;\
+						KEYPAD_Y4_PORT->BSRR = KEYPAD_Y4;\
+					}
+
+#define scan_y4() 	{	KEYPAD_Y1_PORT->BSRR = KEYPAD_Y1;\
+						KEYPAD_Y2_PORT->BSRR = KEYPAD_Y2;\
+						KEYPAD_Y3_PORT->BSRR = KEYPAD_Y3;\
+						KEYPAD_Y4_PORT->BSRR = KEYPAD_Y4 << 16;\
+					}
+
+#define scan_off() 	{	KEYPAD_Y1_PORT->BSRR = KEYPAD_Y1;\
+						KEYPAD_Y2_PORT->BSRR = KEYPAD_Y2;\
+						KEYPAD_Y3_PORT->BSRR = KEYPAD_Y3;\
+						KEYPAD_Y4_PORT->BSRR = KEYPAD_Y4;\
 					}
 
 /*

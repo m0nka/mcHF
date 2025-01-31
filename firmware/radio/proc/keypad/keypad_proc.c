@@ -205,12 +205,17 @@ void keypad_proc_init(void)
 {
 	GPIO_InitTypeDef  gpio_init_structure;
 
-	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_HIGH;
+	// All output lines high
+	KEYPAD_Y1_PORT->BSRR = KEYPAD_Y1;
+	KEYPAD_Y2_PORT->BSRR = KEYPAD_Y2;
+	KEYPAD_Y3_PORT->BSRR = KEYPAD_Y3;
+	KEYPAD_Y4_PORT->BSRR = KEYPAD_Y4;
+
+	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_LOW;
 
 	// -------------------------------------------------------------
 	// Outputs - horizontal, four lines
 	gpio_init_structure.Mode 	= GPIO_MODE_OUTPUT_PP;
-	gpio_init_structure.Pull 	= GPIO_PULLUP;
 	//
 	// KEYPAD_Y1
 	gpio_init_structure.Pin 	= KEYPAD_Y1;
@@ -256,12 +261,6 @@ void keypad_proc_init(void)
 	// KEYPAD_X6
 	gpio_init_structure.Pin 	= KEYPAD_X6;
 	HAL_GPIO_Init(KEYPAD_X6_PORT, &gpio_init_structure);
-
-	// All output lines high
-	KEYPAD_Y1_PORT->BSRR = KEYPAD_Y1;
-	KEYPAD_Y2_PORT->BSRR = KEYPAD_Y2;
-	KEYPAD_Y3_PORT->BSRR = KEYPAD_Y3;
-	KEYPAD_Y4_PORT->BSRR = KEYPAD_Y4;
 
 	// Keypad publics
 	//ks.btn_id 			= 0;
@@ -313,11 +312,10 @@ static void keypad_handle_multitap(uchar max_ids)
 //*----------------------------------------------------------------------------
 static void keypad_cmd_processor_desktop(uchar x,uchar y, uchar hold, uchar release)
 {
-
 	#ifdef KEYPAD_ALLOW_DEBUG
 	printf("x=%d, y=%d, hold=%d, release=%d\r\n",x,y,hold,release);
 	#endif
-#if 0
+#if 1
 	// SSB - USB/LSB
 	if((x == 1) && (y == 1))
 	{
@@ -696,14 +694,14 @@ static void keypad_cmd_processor_desktop(uchar x,uchar y, uchar hold, uchar rele
 					tsu.band[tsu.curr_band].nco_freq = 0;
 
 					// Set request to DSP as well
-					tsu.update_nco_dsp_req = 1;
+//!					tsu.update_nco_dsp_req = 1;
 				}
 
 				// Toggle key LED
-				if(!loc_osc_mode)
-					keypad_driver_change_led_state(KEY_LED_FIX,KEY_LED_OFF_LIGHT);
-				else
-					keypad_driver_change_led_state(KEY_LED_FIX,KEY_LED_MID_LIGHT);
+				//if(!loc_osc_mode)
+				//	keypad_driver_change_led_state(KEY_LED_FIX,KEY_LED_OFF_LIGHT);
+				//else
+				//	keypad_driver_change_led_state(KEY_LED_FIX,KEY_LED_MID_LIGHT);
 
 				tsu.band[tsu.curr_band].fixed_mode = loc_osc_mode;
 			}
@@ -783,10 +781,10 @@ static void keypad_cmd_processor_desktop(uchar x,uchar y, uchar hold, uchar rele
 				tsu.band[tsu.curr_band].active_vfo = !tsu.band[tsu.curr_band].active_vfo;
 
 				// Toggle key LED
-				if(!tsu.band[tsu.curr_band].active_vfo)
-					keypad_driver_change_led_state(KEY_LED_SPLIT,KEY_LED_OFF_LIGHT);
-				else
-					keypad_driver_change_led_state(KEY_LED_SPLIT,KEY_LED_MID_LIGHT);
+//				if(!tsu.band[tsu.curr_band].active_vfo)
+//					keypad_driver_change_led_state(KEY_LED_SPLIT,KEY_LED_OFF_LIGHT);
+//				else
+//					keypad_driver_change_led_state(KEY_LED_SPLIT,KEY_LED_MID_LIGHT);
 			}
 		}
 		else
