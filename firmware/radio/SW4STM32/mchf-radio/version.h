@@ -1,7 +1,7 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2021                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
@@ -18,11 +18,11 @@
 // Version and device id
 //
 #define	DEVICE_STRING				"mcHF Pro Radio"
-#define	AUTHOR_STRING				"Krassi Atanassov,M0NKA 2013-2022"
+#define	AUTHOR_STRING				"Krassi Atanassov,M0NKA 2013-2025"
 //
 #define	MCHF_R_VER_MAJOR			0
 #define	MCHF_R_VER_MINOR			0
 #define	MCHF_R_VER_RELEASE			0
-#define	MCHF_R_VER_BUILD			51
+#define	MCHF_R_VER_BUILD			52
 // -----------------------------------------------------------------------------
 #endif

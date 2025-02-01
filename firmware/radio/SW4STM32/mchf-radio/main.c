@@ -105,35 +105,52 @@ void SysTick_Handler(void)
 	osSystickHandler();
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : EXTI9_5_IRQHandler
+//* Object              :
+//* Notes    			: Handle touch events
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void EXTI9_5_IRQHandler(void)
+{
+	if (__HAL_GPIO_EXTI_GET_IT(TS_INT_PIN) != 0x00U)
+	{
+	    touch_proc_irq();
+	    __HAL_GPIO_EXTI_CLEAR_IT(TS_INT_PIN);
+	}
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : EXTI15_10_IRQHandler
+//* Object              :
+//* Notes    			: Handle keyboard events
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
 void EXTI15_10_IRQHandler(void)
 {
 	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_11) != RESET)
 	{
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_11);
-
-	    // Wake up keyboard process
-		keypad_proc_exti(0);
+		keypad_proc_irq(4);
 	}
 	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_12) != RESET)
 	{
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_12);
-
-	    // Wake up keyboard process
-		keypad_proc_exti(1);
+		keypad_proc_irq(2);
 	}
 	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_13) != RESET)
 	{
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_13);
-
-	    // Wake up keyboard process
-		keypad_proc_exti(2);
+		keypad_proc_irq(1);
 	}
 	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) != RESET)
 	{
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
-
-	    // Wake up keyboard process
-		keypad_proc_exti(3);
+		keypad_proc_irq(3);
 	}
 }
 

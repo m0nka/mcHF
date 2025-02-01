@@ -661,7 +661,6 @@
 #define ENC2_I_PORT               		GPIOB
 
 // PB5			KEYPAD_X5
-#define KEYPAD_X5               		GPIO_PIN_5
 #define KEYPAD_X5_LL                   	LL_GPIO_PIN_5
 #define KEYPAD_X5_PORT               	GPIOB
 
@@ -778,7 +777,6 @@
 #define SDMMC1_SDIO_PORTD              	GPIOD
 
 // PD3			KEYPAD_X1
-#define KEYPAD_X1                   	GPIO_PIN_3
 #define KEYPAD_X1_LL                   	LL_GPIO_PIN_3
 #define KEYPAD_X1_PORT              	GPIOD
 
@@ -792,12 +790,10 @@
 #define USART2_TX_AF                    GPIO_AF7_USART2
 
 // PD6		KEYPAD_X4
-#define KEYPAD_X4                   	GPIO_PIN_6
 #define KEYPAD_X4_LL                   	LL_GPIO_PIN_6
 #define KEYPAD_X4_PORT              	GPIOD
 
 // PD7			KEYPAD_X2
-#define KEYPAD_X2                   	GPIO_PIN_7
 #define KEYPAD_X2_LL                   	LL_GPIO_PIN_7
 #define KEYPAD_X2_PORT              	GPIOD
 
@@ -1012,7 +1008,6 @@
 //
 
 // PG9		KEYPAD_X3
-#define KEYPAD_X3                   	GPIO_PIN_9
 #define KEYPAD_X3_LL                   	LL_GPIO_PIN_9
 #define KEYPAD_X3_PORT              	GPIOG
 
@@ -1025,17 +1020,14 @@
 #define POWER_BUTTON_PORT            	GPIOG
 
 // PG12		KEYPAD_Y2
-#define KEYPAD_Y2                   	GPIO_PIN_12
 #define KEYPAD_Y2_LL                   	LL_GPIO_PIN_12
 #define KEYPAD_Y2_PORT              	GPIOG
 
 // PG13		KEYPAD_Y1
-#define KEYPAD_Y1                   	GPIO_PIN_13
 #define KEYPAD_Y1_LL                   	LL_GPIO_PIN_13
 #define KEYPAD_Y1_PORT              	GPIOG
 
 // PG14		KEYPAD_Y3
-#define KEYPAD_Y3                   	GPIO_PIN_14
 #define KEYPAD_Y3_LL                   	LL_GPIO_PIN_14
 #define KEYPAD_Y3_PORT              	GPIOG
 
@@ -1145,7 +1137,6 @@
 //
 
 // PI8			KEYPAD_X6
-#define KEYPAD_X6						GPIO_PIN_8
 #define KEYPAD_X6_LL                   	LL_GPIO_PIN_8
 #define KEYPAD_X6_PORT					GPIOI
 
@@ -1158,7 +1149,6 @@
 //
 
 // PI11			KEYPAD_Y4
-#define KEYPAD_Y4						GPIO_PIN_11
 #define KEYPAD_Y4_LL                   	LL_GPIO_PIN_11
 #define KEYPAD_Y4_PORT					GPIOI
 

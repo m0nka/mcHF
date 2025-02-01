@@ -37,168 +37,31 @@ T_STEP_10MHZ
 
 #ifdef CONTEXT_KEYPAD
 
+
+// Local keypad state
+struct 			KEYPAD_STATE			ks;
+
 // Public UI driver state
 extern struct	UI_DRIVER_STATE			ui_s;
 
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
 
-// Local keypad state
-struct 			KEYPAD_STATE			ks;
+// Process handle
+extern 			TaskHandle_t 			hKbdTask;
 
 // API Driver messaging
 //extern osMessageQId 					hApiMessage;
 //struct APIMessage						api_keypad;
 
-static void keypad_driver_leds_init(void)
+void keypad_proc_irq(uchar id)
 {
-#if 0
-	GPIO_InitTypeDef  gpio_init_structure;
+	BaseType_t xHigherPriorityTaskWoken;
 
-	// SCK - PA5 (ToDo: GPIO for start, finally, use SPI HW)
-	gpio_init_structure.Pin 	= KEYLED_SCK_PIN;
-	gpio_init_structure.Mode 	= GPIO_MODE_OUTPUT_PP;
-	gpio_init_structure.Pull 	= GPIO_PULLUP;
-	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(KEYLED_SCK_PORT, &gpio_init_structure);
-
-	// MOSI - PB5 (ToDo: GPIO for start, finally, use SPI HW)
-	gpio_init_structure.Pin 	= KEYLED_MOSI_PIN;
-	gpio_init_structure.Mode 	= GPIO_MODE_OUTPUT_PP;
-	gpio_init_structure.Pull 	= GPIO_PULLUP;
-	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(KEYLED_MOSI_PORT, &gpio_init_structure);
-
-	// XLAT - PI11
-	gpio_init_structure.Pin 	= KEYLED_XLAT_PIN;
-	gpio_init_structure.Mode 	= GPIO_MODE_OUTPUT_PP;
-	gpio_init_structure.Pull 	= GPIO_PULLUP;
-	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(KEYLED_XLAT_PORT, &gpio_init_structure);
-
-	// BLANK - PI8
-	gpio_init_structure.Pin 	= KEYLED_BLANK_PIN;
-	gpio_init_structure.Mode 	= GPIO_MODE_OUTPUT_PP;
-	gpio_init_structure.Pull 	= GPIO_PULLUP;
-	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(KEYLED_BLANK_PORT, &gpio_init_structure);
-
-	// BLANK high - all off
-	KEYLED_BLANK_PORT->BSRRL = KEYLED_BLANK_PIN;
-
-	// XLAT low
-	KEYLED_XLAT_PORT->BSRRH = KEYLED_XLAT_PIN;
-
-	memset(ks.pwmbuffer,0,2*24*1);
-#endif
+	xHigherPriorityTaskWoken = pdFALSE;
+	xTaskNotifyFromISR(hKbdTask, id, eSetBits, &xHigherPriorityTaskWoken);
+	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
-
-static void keypad_driver_mini_delay(void)
-{
-	uchar i;
-
-	for(i = 0; i < 200; i++)
-		__asm(".word 0x46004600");
-}
-
-static void keypad_driver_shift(void)
-{
-#if 0
-	KEYLED_XLAT_PORT->BSRRH = KEYLED_XLAT_PIN;
-	keypad_driver_mini_delay();
-
-	  // 24 channels per TLC5974
-	  for (int16_t c=24*1 - 1; c >= 0 ; c--)
-	  {
-	    // 12 bits per channel, send MSB first
-	    for (int8_t b=11; b>=0; b--)
-	    {
-	    	// Clock low
-	    	KEYLED_SCK_PORT->BSRRH = KEYLED_SCK_PIN;
-	    	keypad_driver_mini_delay();
-
-	    	// Next data bit
-	    	if (ks.pwmbuffer[c] & (1 << b))
-	    		KEYLED_MOSI_PORT->BSRRL = KEYLED_MOSI_PIN;
-	    	else
-	    		KEYLED_MOSI_PORT->BSRRH = KEYLED_MOSI_PIN;
-
-	    	// Clock high
-	    	KEYLED_SCK_PORT->BSRRL = KEYLED_SCK_PIN;
-	    	keypad_driver_mini_delay();
-	    }
-	  }
-
-	  // Clock it out on the Latch pin
-	  KEYLED_XLAT_PORT->BSRRH = KEYLED_XLAT_PIN;
-	  keypad_driver_mini_delay();
-
-	  KEYLED_XLAT_PORT->BSRRL = KEYLED_XLAT_PIN;
-	  keypad_driver_mini_delay();
-
-	  KEYLED_XLAT_PORT->BSRRH = KEYLED_XLAT_PIN;
-	  keypad_driver_mini_delay();
-#endif
-}
-
-static void keypad_driver_change_led_state(uchar button,uchar brightness)
-{/*
-	// LED state
-	ks.btn_id = button;
-	ks.pwmbuffer[ks.btn_id] = brightness;
-
-	keypad_driver_shift();*/
-}
-
-static void keyboard_driver_blink_all(void)
-{
-#if 0
-	uchar i;
-	// -------------------------------
-		//if(uc_keep_flag)
-		//	pwmbuffer[0] = 0;
-		//else
-		//	pwmbuffer[0] = 64;
-
-		for(i = 0; i < 24; i++)
-			ks.pwmbuffer[i] = 0;
-
-		ks.pwmbuffer[ks.btn_id] = 64;
-
-		(ks.btn_id)++;
-		if(ks.btn_id > 23)
-			ks.btn_id = 0;
-
-		keypad_driver_shift();
-		// --------------------------------
-#endif
-}
-
-// Set up blank early on, to prevent
-// LEDs being lit up on start
-void keypad_driver_prevent_startup_blink(void)
-{
-#if 0
-	GPIO_InitTypeDef  gpio_init_structure;
-
-	// BLANK - PI8
-	gpio_init_structure.Pin 	= KEYLED_BLANK_PIN;
-	gpio_init_structure.Mode 	= GPIO_MODE_OUTPUT_PP;
-	gpio_init_structure.Pull 	= GPIO_PULLUP;
-	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(KEYLED_BLANK_PORT, &gpio_init_structure);
-
-	// BLANK high - all off
-	KEYLED_BLANK_PORT->BSRRL = KEYLED_BLANK_PIN;
-#endif
-}
-
-void keypad_proc_exti(uchar id)
-{
-	//printf("wakeup %d \r\n", id);
-	ks.irq_id = id;
-}
-
 
 //*----------------------------------------------------------------------------
 //* Function Name       : keypad_task
@@ -210,71 +73,6 @@ void keypad_proc_exti(uchar id)
 //*----------------------------------------------------------------------------
 void keypad_proc_init(void)
 {
-	#if 0
-	GPIO_InitTypeDef  gpio_init_structure;
-
-	// All output lines high
-	KEYPAD_Y1_PORT->BSRR = KEYPAD_Y1;
-	KEYPAD_Y2_PORT->BSRR = KEYPAD_Y2;
-	KEYPAD_Y3_PORT->BSRR = KEYPAD_Y3;
-	KEYPAD_Y4_PORT->BSRR = KEYPAD_Y4;
-
-	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_LOW;
-
-	// -------------------------------------------------------------
-	// Outputs - horizontal, four lines
-	gpio_init_structure.Mode 	= GPIO_MODE_OUTPUT_PP;
-	//
-	// KEYPAD_Y1
-	gpio_init_structure.Pin 	= KEYPAD_Y1;
-	HAL_GPIO_Init(KEYPAD_Y1_PORT, &gpio_init_structure);
-	//
-	// KEYPAD_Y2
-	gpio_init_structure.Pin 	= KEYPAD_Y2;
-	HAL_GPIO_Init(KEYPAD_Y2_PORT, &gpio_init_structure);
-	//
-	// KEYPAD_Y3
-	gpio_init_structure.Pin 	= KEYPAD_Y3;
-	HAL_GPIO_Init(KEYPAD_Y2_PORT, &gpio_init_structure);
-	//
-	// KEYPAD_Y4
-	gpio_init_structure.Pin 	= KEYPAD_Y4;
-	HAL_GPIO_Init(KEYPAD_Y4_PORT, &gpio_init_structure);
-
-	// -------------------------------------------------------------
-	// Inputs - vertical, six lines
-	gpio_init_structure.Mode 	= GPIO_MODE_INPUT;
-	gpio_init_structure.Pull 	= GPIO_PULLUP;
-	//
-	// KEYPAD_X1
-	gpio_init_structure.Pin 	= KEYPAD_X1;
-	HAL_GPIO_Init(KEYPAD_X1_PORT, &gpio_init_structure);
-	//
-	// KEYPAD_X2
-	gpio_init_structure.Pin 	= KEYPAD_X2;
-	HAL_GPIO_Init(KEYPAD_X2_PORT, &gpio_init_structure);
-	//
-	// KEYPAD_X3
-	gpio_init_structure.Pin 	= KEYPAD_X3;
-	HAL_GPIO_Init(KEYPAD_X3_PORT, &gpio_init_structure);
-	//
-	// KEYPAD_X4
-	gpio_init_structure.Pin 	= KEYPAD_X4;
-	HAL_GPIO_Init(KEYPAD_X4_PORT, &gpio_init_structure);			// not wired on rev 0.7, 12 Apr 2018 !!!
-	//
-	// KEYPAD_X5
-	gpio_init_structure.Pin 	= KEYPAD_X5;
-	HAL_GPIO_Init(KEYPAD_X5_PORT, &gpio_init_structure);
-	//
-	// KEYPAD_X6
-	gpio_init_structure.Pin 	= KEYPAD_X6;
-	HAL_GPIO_Init(KEYPAD_X6_PORT, &gpio_init_structure);
-
-	// Keypad publics
-	//ks.btn_id 			= 0;
-	//ks.start_counter	= 0;
-	#else
-
 	// All horizontal lines as inputs
 	LL_GPIO_SetPinMode(KEYPAD_Y1_PORT, KEYPAD_Y1_LL, LL_GPIO_MODE_INPUT);
 	LL_GPIO_SetPinMode(KEYPAD_Y2_PORT, KEYPAD_Y2_LL, LL_GPIO_MODE_INPUT);
@@ -336,8 +134,6 @@ void keypad_proc_init(void)
 	LL_GPIO_ResetOutputPin(KEYPAD_X5_PORT, KEYPAD_X5_LL);
 	LL_GPIO_ResetOutputPin(KEYPAD_X6_PORT, KEYPAD_X6_LL);
 
-	#endif
-
 	// Multitap publics
 	ks.tap_cnt 	= 0;
 	ks.tap_id	= 0;
@@ -354,7 +150,7 @@ void keypad_proc_init(void)
 //*----------------------------------------------------------------------------
 static void keypad_handle_multitap(uchar max_ids)
 {
-#if 0
+#if 1
 	//printf("tap_cnt=%d\r\n",ks.tap_cnt);
 
 	// Only if clicks are not far apart
@@ -381,10 +177,10 @@ static void keypad_handle_multitap(uchar max_ids)
 //* Notes    			:
 //* Context    			: CONTEXT_DRIVER_KEYPAD
 //*----------------------------------------------------------------------------
-static void keypad_cmd_processor_desktop(uchar x,uchar y, uchar hold, uchar release)
+static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar release)
 {
 	#ifdef KEYPAD_ALLOW_DEBUG
-	printf("x=%d, y=%d, hold=%d, release=%d\r\n",x,y,hold,release);
+	printf("x=%d, y=%d, hld=%d, rel=%d\r\n", x, y, hold, release);
 	#endif
 #if 0
 	// SSB - USB/LSB
@@ -876,11 +672,10 @@ static void keypad_cmd_processor_desktop(uchar x,uchar y, uchar hold, uchar rele
 //*----------------------------------------------------------------------------
 static void keypad_cmd_processor_wm(uchar x,uchar y, uchar hold, uchar release)
 {
-#if 0
 	#ifdef KEYPAD_ALLOW_DEBUG
-	printf("x=%d, y=%d, hold=%d, release=%d\r\n",x,y,hold,release);
+	printf("x=%d, y=%d, hld=%d, rel=%d\r\n", x, y, hold, release);
 	#endif
-
+#if 0
 	// SSB - USB/LSB
 	if((x == 1) && (y == 1))
 	{
@@ -1464,7 +1259,7 @@ static void keypad_cmd_processor_wm(uchar x,uchar y, uchar hold, uchar release)
 				}
 
 				// Large debounce
-				OsDelayMs(500);
+				vTaskDelay(500);
 			}
 			else
 				printf("locked\r\n");
@@ -1675,33 +1470,15 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 //* Notes    			:
 //* Context    			: CONTEXT_DRIVER_KEYPAD
 //*----------------------------------------------------------------------------
-static uchar keypad_check_input_lines(void)
-{/*
-	if((KEYPAD_X1_PORT->IDR & KEYPAD_X1) != KEYPAD_X1)
-		return 1;
-	if((KEYPAD_X2_PORT->IDR & KEYPAD_X2) != KEYPAD_X2)
-		return 2;
-	if((KEYPAD_X3_PORT->IDR & KEYPAD_X3) != KEYPAD_X3)
-		return 3;
-	if((KEYPAD_X4_PORT->IDR & KEYPAD_X4) != KEYPAD_X4)
-		return 4;
-	if((KEYPAD_X5_PORT->IDR & KEYPAD_X5) != KEYPAD_X5)
-		return 5;
-	if((KEYPAD_X6_PORT->IDR & KEYPAD_X6) != KEYPAD_X6)
-		return 6;
-*/
-	return 0;
-}
-
 static uchar keypad_check_input_lines_a(void)
 {
-	if((KEYPAD_Y1_PORT->IDR & KEYPAD_Y1) != KEYPAD_Y1)
+	if((KEYPAD_Y1_PORT->IDR & KEYPAD_Y1_LL) != KEYPAD_Y1_LL)
 		return 1;
-	if((KEYPAD_Y2_PORT->IDR & KEYPAD_Y2) != KEYPAD_Y2)
+	if((KEYPAD_Y2_PORT->IDR & KEYPAD_Y2_LL) != KEYPAD_Y2_LL)
 		return 2;
-	if((KEYPAD_Y3_PORT->IDR & KEYPAD_Y3) != KEYPAD_Y3)
+	if((KEYPAD_Y3_PORT->IDR & KEYPAD_Y3_LL) != KEYPAD_Y3_LL)
 		return 3;
-	if((KEYPAD_Y4_PORT->IDR & KEYPAD_Y4) != KEYPAD_Y4)
+	if((KEYPAD_Y4_PORT->IDR & KEYPAD_Y4_LL) != KEYPAD_Y4_LL)
 		return 4;
 
 	return 0;
@@ -1715,29 +1492,6 @@ static uchar keypad_check_input_lines_a(void)
 //* Notes    			:
 //* Context    			: CONTEXT_DRIVER_KEYPAD
 //*----------------------------------------------------------------------------
-static void keypad_set_out_lines(uchar y)
-{/*
-	// Rotate output state
-	switch(y)
-	{
-		case 0:
-			scan_y1();
-			break;
-		case 1:
-			scan_y2();
-			break;
-		case 2:
-			scan_y3();
-			break;
-		case 3:
-			scan_y4();
-			break;
-		default:
-			scan_off();
-			return;
-	}*/
-}
-
 static void keypad_set_out_lines_a(uchar y)
 {
 	// Rotate output state
@@ -1781,56 +1535,11 @@ static void keypad_set_out_lines_a(uchar y)
 //* Notes    			:
 //* Context    			: CONTEXT_DRIVER_KEYPAD
 //*----------------------------------------------------------------------------
-static void keypad_scan(void)
-{/*
-	uchar i,j,id;
-
-	(ks.tap_cnt)++;											// Increase multitap counter
-	if(ks.tap_cnt > 20) ks.tap_id = 0;						// Reset multitap char id
-
-	// Full 4x6 matrix scan
-	for(i = 0; i < 4; i++)
-	{
-		keypad_set_out_lines(i);							// Rotate output state
-
-		id = keypad_check_input_lines();					// Check lines, and get an id
-		if(!id) continue;									// Next
-
-		for(j = 0; j < 40; j++)								// More than 400mS is press and hold
-		{
-			vTaskDelay(10);									// High resolution debounce
-			if(keypad_check_input_lines() != id)
-			{
-				keypad_set_out_lines(8);					// Scan off
-				keypad_cmd_processor(id,(i + 1),0,0);		// Process 'click', button down
-
-				if(keypad_check_input_lines() != id)		// Finally is key released ?
-				{
-					ks.tap_cnt = 0;							// Reset multitap counter
-					keypad_cmd_processor(id,(i + 1),0,1);	// Process 'click', button up
-				}
-				else
-					vTaskDelay(100);						// Need this ?
-
-				return;
-			}
-		}
-		keypad_set_out_lines(8);							// Scan off
-		keypad_cmd_processor(id,(i + 1),1,0);				// Process 'hold', button down
-
-		if(keypad_check_input_lines() != id)				// Finally is key released ?
-			keypad_cmd_processor(id,(i + 1),1,1);			// Process 'hold', button up
-
-		vTaskDelay(500);									// Static debounce, maybe there is a better way ?
-		return;
-	}*/
-}
-
 static void keypad_scan_a(void)
 {
-	uchar i,j,id;
+	uchar i, j, id;
 
-	//printf("proc %d \r\n", ks.irq_id);
+	//--printf("proc %d \r\n", ks.irq_id);
 
 	(ks.tap_cnt)++;											// Increase multi-tap counter
 	if(ks.tap_cnt > 20) ks.tap_id = 0;						// Reset multi-tap char id
@@ -1843,18 +1552,19 @@ static void keypad_scan_a(void)
 		id = keypad_check_input_lines_a();					// Check lines, and get an id
 		if(!id) continue;									// Next
 
+		//--printf("id %d \r\n", id);
 		for(j = 0; j < 40; j++)								// More than 400mS is press and hold
 		{
 			vTaskDelay(10);									// High resolution de-bounce
 			if(keypad_check_input_lines_a() != id)
 			{
 				keypad_set_out_lines_a(8);					// Scan off
-				keypad_cmd_processor(id,(i + 1),0,0);		// Process 'click', button down
+				keypad_cmd_processor((i + 1), id ,0, 0);	// Process 'click', button down
 
 				if(keypad_check_input_lines_a() != id)		// Finally is key released ?
 				{
 					ks.tap_cnt = 0;							// Reset multi-tap counter
-					keypad_cmd_processor(id,(i + 1),0,1);	// Process 'click', button up
+					keypad_cmd_processor((i + 1), id, 0, 1);// Process 'click', button up
 				}
 				else
 					vTaskDelay(100);						// Need this ?
@@ -1863,10 +1573,10 @@ static void keypad_scan_a(void)
 			}
 		}
 		keypad_set_out_lines_a(8);							// Scan off
-		keypad_cmd_processor(id,(i + 1),1,0);				// Process 'hold', button down
+		keypad_cmd_processor((i + 1), id, 1, 0);			// Process 'hold', button down
 
 		if(keypad_check_input_lines_a() != id)				// Finally is key released ?
-			keypad_cmd_processor(id,(i + 1),1,1);			// Process 'hold', button up
+			keypad_cmd_processor((i + 1), id, 1, 1);		// Process 'hold', button up
 
 		vTaskDelay(500);									// Static de-bounce, maybe there is a better way ?
 		return;
@@ -1879,38 +1589,43 @@ static void keypad_scan_a(void)
 //* Notes    			:
 //* Notes   			:
 //* Notes    			:
-//* Context    			: CONTEXT_DRIVER_KEYPAD
+//* Context    			: CONTEXT_KEYPAD
 //*----------------------------------------------------------------------------
 void keypad_proc_task(void const * argument)
 {
+	ulong 	ulNotificationValue = 0, ulNotif;
+
 	// Delay start, so UI can paint properly
 	vTaskDelay(KEYPAD_PROC_START_DELAY);
 
-	printf("keypad process start\r\n");
+	//printf("keypad process start\r\n");
 
 	// Enable process wake-up
 	NVIC_EnableIRQ	(EXTI15_10_IRQn);
-	NVIC_SetPriority(EXTI15_10_IRQn, 0x03);
+	NVIC_SetPriority(EXTI15_10_IRQn, 15);
 
 keypad_proc_loop:
 
-	// Scan for event
-	//keypad_scan();
-
-	if(ks.irq_id)
+	// Wait key press
+	ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, KEYPAD_PROC_SLEEP_TIME);
+	if((ulNotif) && (ulNotificationValue))
 	{
-		NVIC_DisableIRQ	(EXTI15_10_IRQn);
-		scan_off();
+		ks.irq_id = (uchar)ulNotificationValue;
+		if(ks.irq_id)
+		{
+			// Disable wait
+			NVIC_DisableIRQ	(EXTI15_10_IRQn);
+			scan_off();
 
-		keypad_scan_a();
+			// Quick scan on a single horizontal line
+			keypad_scan_a();
 
-		scan_on();
-		NVIC_EnableIRQ	(EXTI15_10_IRQn);
-		ks.irq_id = 0;
+			// Back to wait
+			scan_on();
+			NVIC_EnableIRQ	(EXTI15_10_IRQn);
+			ks.irq_id = 0;
+		}
 	}
-
-	// Sleep
-	vTaskDelay(KEYPAD_PROC_SLEEP_TIME);
 
 	goto keypad_proc_loop;
 }

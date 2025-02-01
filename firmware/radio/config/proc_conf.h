@@ -183,7 +183,7 @@
 
 // Keypad process parameters
 #define KEYPAD_PROC_START_DELAY			2000
-#define KEYPAD_PROC_SLEEP_TIME			50
+#define KEYPAD_PROC_SLEEP_TIME			portMAX_DELAY
 #define KEYPAD_PROC_PRIORITY			osPriorityNormal
 #define KEYPAD_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 4)
 
