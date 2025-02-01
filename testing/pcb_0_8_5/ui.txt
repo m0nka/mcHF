@@ -9,6 +9,6 @@
 - add test points next to J8 connector, bottom layer for all touch signals
 - connect PE2(M46) to R19(pin3) together to have BT connection status in firmware
 - 'LORA ANT' text in the cutout
-- swap M12/M29 (x3 and y1), bad mod, only in next revision(info in keypad_pins.txt)
-- swap M33/M28 (x4 and y2)
+- swap M12/M29 (Y1 and X4), (info in keypad_pins.txt)
+- swap M33/M28 (Y2 and X3)
 - add BT power control

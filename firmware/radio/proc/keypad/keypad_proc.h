@@ -18,6 +18,7 @@
 
 #ifdef CONTEXT_KEYPAD
 
+#if 0
 #define scan_y1() 	{	KEYPAD_Y1_PORT->BSRR = KEYPAD_Y1 << 16;\
 						KEYPAD_Y2_PORT->BSRR = KEYPAD_Y2;\
 						KEYPAD_Y3_PORT->BSRR = KEYPAD_Y3;\
@@ -47,6 +48,7 @@
 						KEYPAD_Y3_PORT->BSRR = KEYPAD_Y3;\
 						KEYPAD_Y4_PORT->BSRR = KEYPAD_Y4;\
 					}
+#endif
 
 /*
 #define KEYLED_XLAT_PIN		GPIO_PIN_11
@@ -102,6 +104,7 @@ __attribute__((__common__)) struct KEYPAD_STATE {
 
 } KEYPAD_STATE;
 
+void keypad_proc_exti(uchar id);
 void keypad_proc_init(void);
 void keypad_proc_task(void const * argument);
 

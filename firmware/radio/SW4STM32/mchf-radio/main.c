@@ -107,13 +107,34 @@ void SysTick_Handler(void)
 
 void EXTI15_10_IRQHandler(void)
 {
-	/*
-	if (__HAL_GPIO_EXTI_GET_IT(BUTTON_WAKEUP_PIN) != 0x00U)
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_11) != RESET)
 	{
-	    __HAL_GPIO_EXTI_CLEAR_IT(BUTTON_WAKEUP_PIN);
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_11);
 
-	    printf("btn1\r\n");
-	}*/
+	    // Wake up keyboard process
+		keypad_proc_exti(11);
+	}
+	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_12) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_12);
+
+	    // Wake up keyboard process
+		keypad_proc_exti(12);
+	}
+	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_13) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_13);
+
+	    // Wake up keyboard process
+		keypad_proc_exti(13);
+	}
+	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
+
+	    // Wake up keyboard process
+		keypad_proc_exti(14);
+	}
 }
 
 void Error_Handler(int err)

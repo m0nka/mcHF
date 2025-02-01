@@ -193,6 +193,12 @@ void keypad_driver_prevent_startup_blink(void)
 #endif
 }
 
+void keypad_proc_exti(uchar id)
+{
+	printf("wakeup %d \r\n", id);
+}
+
+
 //*----------------------------------------------------------------------------
 //* Function Name       : keypad_task
 //* Object              :
@@ -203,6 +209,7 @@ void keypad_driver_prevent_startup_blink(void)
 //*----------------------------------------------------------------------------
 void keypad_proc_init(void)
 {
+	#if 0
 	GPIO_InitTypeDef  gpio_init_structure;
 
 	// All output lines high
@@ -265,12 +272,74 @@ void keypad_proc_init(void)
 	// Keypad publics
 	//ks.btn_id 			= 0;
 	//ks.start_counter	= 0;
+	#else
+
+	// All horizontal lines as inputs
+	LL_GPIO_SetPinMode(KEYPAD_Y1_PORT, KEYPAD_Y1_LL, LL_GPIO_MODE_INPUT);
+	LL_GPIO_SetPinMode(KEYPAD_Y2_PORT, KEYPAD_Y2_LL, LL_GPIO_MODE_INPUT);
+	LL_GPIO_SetPinMode(KEYPAD_Y3_PORT, KEYPAD_Y3_LL, LL_GPIO_MODE_INPUT);
+	LL_GPIO_SetPinMode(KEYPAD_Y4_PORT, KEYPAD_Y4_LL, LL_GPIO_MODE_INPUT);
+
+	// All with pullups
+	LL_GPIO_SetPinPull(KEYPAD_Y1_PORT, KEYPAD_Y1_LL, LL_GPIO_PULL_UP);
+	LL_GPIO_SetPinPull(KEYPAD_Y2_PORT, KEYPAD_Y2_LL, LL_GPIO_PULL_UP);
+	LL_GPIO_SetPinPull(KEYPAD_Y3_PORT, KEYPAD_Y3_LL, LL_GPIO_PULL_UP);
+	LL_GPIO_SetPinPull(KEYPAD_Y4_PORT, KEYPAD_Y4_LL, LL_GPIO_PULL_UP);
+
+	// Slow speed
+	LL_GPIO_SetPinSpeed(KEYPAD_Y1_PORT, KEYPAD_Y1_LL, LL_GPIO_SPEED_FREQ_LOW);
+	LL_GPIO_SetPinSpeed(KEYPAD_Y2_PORT, KEYPAD_Y2_LL, LL_GPIO_SPEED_FREQ_LOW);
+	LL_GPIO_SetPinSpeed(KEYPAD_Y3_PORT, KEYPAD_Y3_LL, LL_GPIO_SPEED_FREQ_LOW);
+	LL_GPIO_SetPinSpeed(KEYPAD_Y4_PORT, KEYPAD_Y4_LL, LL_GPIO_SPEED_FREQ_LOW);
+
+	// This clock already set ?
+	LL_APB4_GRP1_EnableClock(LL_APB4_GRP1_PERIPH_SYSCFG);
+
+	// Connect External Line to the GPIO
+	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTI, LL_SYSCFG_EXTI_LINE11);
+	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE12);
+	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE13);
+	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE14);
+
+	// Enable interrupt
+	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_11);
+	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_12);
+	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_13);
+	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_14);
+
+	// On falling edge
+	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_11);
+	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_12);
+	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_13);
+	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_14);
+
+	// All vertical lines as outputs(low)
+	LL_GPIO_SetPinMode(KEYPAD_X1_PORT, KEYPAD_X1_LL, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetPinMode(KEYPAD_X2_PORT, KEYPAD_X2_LL, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetPinMode(KEYPAD_X3_PORT, KEYPAD_X3_LL, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetPinMode(KEYPAD_X4_PORT, KEYPAD_X4_LL, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetPinMode(KEYPAD_X5_PORT, KEYPAD_X5_LL, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetPinMode(KEYPAD_X6_PORT, KEYPAD_X6_LL, LL_GPIO_MODE_OUTPUT);
+	//
+	LL_GPIO_SetPinSpeed(KEYPAD_X1_PORT, KEYPAD_X1_LL, LL_GPIO_SPEED_FREQ_LOW);
+	LL_GPIO_SetPinSpeed(KEYPAD_X2_PORT, KEYPAD_X2_LL, LL_GPIO_SPEED_FREQ_LOW);
+	LL_GPIO_SetPinSpeed(KEYPAD_X3_PORT, KEYPAD_X3_LL, LL_GPIO_SPEED_FREQ_LOW);
+	LL_GPIO_SetPinSpeed(KEYPAD_X4_PORT, KEYPAD_X4_LL, LL_GPIO_SPEED_FREQ_LOW);
+	LL_GPIO_SetPinSpeed(KEYPAD_X5_PORT, KEYPAD_X5_LL, LL_GPIO_SPEED_FREQ_LOW);
+	LL_GPIO_SetPinSpeed(KEYPAD_X6_PORT, KEYPAD_X6_LL, LL_GPIO_SPEED_FREQ_LOW);
+	//
+	LL_GPIO_ResetOutputPin(KEYPAD_X1_PORT, KEYPAD_X1_LL);
+	LL_GPIO_ResetOutputPin(KEYPAD_X2_PORT, KEYPAD_X2_LL);
+	LL_GPIO_ResetOutputPin(KEYPAD_X3_PORT, KEYPAD_X3_LL);
+	LL_GPIO_ResetOutputPin(KEYPAD_X4_PORT, KEYPAD_X4_LL);
+	LL_GPIO_ResetOutputPin(KEYPAD_X5_PORT, KEYPAD_X5_LL);
+	LL_GPIO_ResetOutputPin(KEYPAD_X6_PORT, KEYPAD_X6_LL);
+
+	#endif
 
 	// Multitap publics
 	ks.tap_cnt 	= 0;
 	ks.tap_id	= 0;
-
-	//keypad_driver_leds_init();
 }
 
 //*----------------------------------------------------------------------------
@@ -315,7 +384,7 @@ static void keypad_cmd_processor_desktop(uchar x,uchar y, uchar hold, uchar rele
 	#ifdef KEYPAD_ALLOW_DEBUG
 	printf("x=%d, y=%d, hold=%d, release=%d\r\n",x,y,hold,release);
 	#endif
-#if 1
+#if 0
 	// SSB - USB/LSB
 	if((x == 1) && (y == 1))
 	{
@@ -1727,10 +1796,14 @@ void keypad_proc_task(void const * argument)
 
 	printf("keypad process start\r\n");
 
+	// Enable process wake-up
+	NVIC_EnableIRQ(EXTI15_10_IRQn);
+	NVIC_SetPriority(EXTI15_10_IRQn, 0x03);
+
 keypad_proc_loop:
 
 	// Scan for event
-	keypad_scan();
+	//keypad_scan();
 
 	// Sleep
 	vTaskDelay(KEYPAD_PROC_SLEEP_TIME);
