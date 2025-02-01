@@ -50,52 +50,76 @@
 					}
 #endif
 
-/*
-#define KEYLED_XLAT_PIN		GPIO_PIN_11
-#define KEYLED_XLAT_PORT	GPIOI
-#define KEYLED_BLANK_PIN	GPIO_PIN_8
-#define KEYLED_BLANK_PORT	GPIOI
+#define scan_x1() 	{	KEYPAD_X1_PORT->BSRR = KEYPAD_X1 << 16;\
+						KEYPAD_X2_PORT->BSRR = KEYPAD_X2;\
+						KEYPAD_X3_PORT->BSRR = KEYPAD_X3;\
+						KEYPAD_X4_PORT->BSRR = KEYPAD_X4;\
+						KEYPAD_X5_PORT->BSRR = KEYPAD_X5;\
+						KEYPAD_X6_PORT->BSRR = KEYPAD_X6;\
+					}
 
-#define KEYLED_SCK_PIN		GPIO_PIN_5
-#define KEYLED_SCK_PORT		GPIOA
-#define KEYLED_MOSI_PIN		GPIO_PIN_5
-#define KEYLED_MOSI_PORT	GPIOB
+#define scan_x2() 	{	KEYPAD_X1_PORT->BSRR = KEYPAD_X1;\
+						KEYPAD_X2_PORT->BSRR = KEYPAD_X2 << 16;\
+						KEYPAD_X3_PORT->BSRR = KEYPAD_X3;\
+						KEYPAD_X4_PORT->BSRR = KEYPAD_X4;\
+						KEYPAD_X5_PORT->BSRR = KEYPAD_X5;\
+						KEYPAD_X6_PORT->BSRR = KEYPAD_X6;\
+					}
 
-#define KEY_LED_SSB			0
-#define KEY_LED_ONE			1
-#define KEY_LED_TWO			2
-#define KEY_LED_THREE		3
-#define KEY_LED_M			4
-#define KEY_LED_DSP			5
-#define KEY_LED_CW			6
-#define KEY_LED_FOUR		7
-#define KEY_LED_FIVE		8
-#define KEY_LED_SIX			9
-#define KEY_LED_S			10
-#define KEY_LED_STEP		11
-#define KEY_LED_AM			12
-#define KEY_LED_SEVEN		13
-#define KEY_LED_EIGHT		14
-#define KEY_LED_NINE		15
-#define KEY_LED_ENTER		16
-#define KEY_LED_FILTER		17
-#define KEY_LED_FIX			18
-#define KEY_LED_DOT			19
-#define KEY_LED_ZERO		20
-#define KEY_LED_C			21
-#define KEY_LED_SPLIT		22
+#define scan_x3() 	{	KEYPAD_X1_PORT->BSRR = KEYPAD_X1;\
+						KEYPAD_X2_PORT->BSRR = KEYPAD_X2;\
+						KEYPAD_X3_PORT->BSRR = KEYPAD_X3 << 16;\
+						KEYPAD_X4_PORT->BSRR = KEYPAD_X4;\
+						KEYPAD_X5_PORT->BSRR = KEYPAD_X5;\
+						KEYPAD_X6_PORT->BSRR = KEYPAD_X6;\
+					}
 
-#define KEY_LED_OFF_LIGHT	0
-#define KEY_LED_LOW_LIGHT	64
-#define KEY_LED_MID_LIGHT	96
-#define KEY_LED_HIGH_LIGHT	128
-*/
+#define scan_x4() 	{	KEYPAD_X1_PORT->BSRR = KEYPAD_X1;\
+						KEYPAD_X2_PORT->BSRR = KEYPAD_X2;\
+						KEYPAD_X3_PORT->BSRR = KEYPAD_X3;\
+						KEYPAD_X4_PORT->BSRR = KEYPAD_X4 << 16;\
+						KEYPAD_X5_PORT->BSRR = KEYPAD_X5;\
+						KEYPAD_X6_PORT->BSRR = KEYPAD_X6;\
+					}
+
+#define scan_x5() 	{	KEYPAD_X1_PORT->BSRR = KEYPAD_X1;\
+						KEYPAD_X2_PORT->BSRR = KEYPAD_X2;\
+						KEYPAD_X3_PORT->BSRR = KEYPAD_X3;\
+						KEYPAD_X4_PORT->BSRR = KEYPAD_X4;\
+						KEYPAD_X5_PORT->BSRR = KEYPAD_X5 << 16;\
+						KEYPAD_X6_PORT->BSRR = KEYPAD_X6;\
+					}
+
+#define scan_x6() 	{	KEYPAD_X1_PORT->BSRR = KEYPAD_X1;\
+						KEYPAD_X2_PORT->BSRR = KEYPAD_X2;\
+						KEYPAD_X3_PORT->BSRR = KEYPAD_X3;\
+						KEYPAD_X4_PORT->BSRR = KEYPAD_X4;\
+						KEYPAD_X5_PORT->BSRR = KEYPAD_X5;\
+						KEYPAD_X6_PORT->BSRR = KEYPAD_X6 << 16;\
+					}
+
+#define scan_off() 	{	KEYPAD_X1_PORT->BSRR = KEYPAD_X1;\
+						KEYPAD_X2_PORT->BSRR = KEYPAD_X2;\
+						KEYPAD_X3_PORT->BSRR = KEYPAD_X3;\
+						KEYPAD_X4_PORT->BSRR = KEYPAD_X4;\
+						KEYPAD_X5_PORT->BSRR = KEYPAD_X5;\
+						KEYPAD_X6_PORT->BSRR = KEYPAD_X6;\
+					}
+
+#define scan_on() 	{	KEYPAD_X1_PORT->BSRR = KEYPAD_X1 << 16;\
+						KEYPAD_X2_PORT->BSRR = KEYPAD_X2 << 16;\
+						KEYPAD_X3_PORT->BSRR = KEYPAD_X3 << 16;\
+						KEYPAD_X4_PORT->BSRR = KEYPAD_X4 << 16;\
+						KEYPAD_X5_PORT->BSRR = KEYPAD_X5 << 16;\
+						KEYPAD_X6_PORT->BSRR = KEYPAD_X6 << 16;\
+					}
 
 __attribute__((__common__)) struct KEYPAD_STATE {
 
 	// Keypad
 	ulong	tap_cnt;
 	uchar	tap_id;
+	uchar	irq_id;
 
 	// LEDs
 	//uchar 	btn_id;

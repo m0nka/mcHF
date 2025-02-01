@@ -112,28 +112,28 @@ void EXTI15_10_IRQHandler(void)
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_11);
 
 	    // Wake up keyboard process
-		keypad_proc_exti(11);
+		keypad_proc_exti(0);
 	}
 	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_12) != RESET)
 	{
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_12);
 
 	    // Wake up keyboard process
-		keypad_proc_exti(12);
+		keypad_proc_exti(1);
 	}
 	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_13) != RESET)
 	{
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_13);
 
 	    // Wake up keyboard process
-		keypad_proc_exti(13);
+		keypad_proc_exti(2);
 	}
 	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) != RESET)
 	{
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
 
 	    // Wake up keyboard process
-		keypad_proc_exti(14);
+		keypad_proc_exti(3);
 	}
 }
 

@@ -195,7 +195,8 @@ void keypad_driver_prevent_startup_blink(void)
 
 void keypad_proc_exti(uchar id)
 {
-	printf("wakeup %d \r\n", id);
+	//printf("wakeup %d \r\n", id);
+	ks.irq_id = id;
 }
 
 
@@ -340,6 +341,7 @@ void keypad_proc_init(void)
 	// Multitap publics
 	ks.tap_cnt 	= 0;
 	ks.tap_id	= 0;
+	ks.irq_id	= 0;
 }
 
 //*----------------------------------------------------------------------------
@@ -1674,7 +1676,7 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 //* Context    			: CONTEXT_DRIVER_KEYPAD
 //*----------------------------------------------------------------------------
 static uchar keypad_check_input_lines(void)
-{
+{/*
 	if((KEYPAD_X1_PORT->IDR & KEYPAD_X1) != KEYPAD_X1)
 		return 1;
 	if((KEYPAD_X2_PORT->IDR & KEYPAD_X2) != KEYPAD_X2)
@@ -1687,6 +1689,20 @@ static uchar keypad_check_input_lines(void)
 		return 5;
 	if((KEYPAD_X6_PORT->IDR & KEYPAD_X6) != KEYPAD_X6)
 		return 6;
+*/
+	return 0;
+}
+
+static uchar keypad_check_input_lines_a(void)
+{
+	if((KEYPAD_Y1_PORT->IDR & KEYPAD_Y1) != KEYPAD_Y1)
+		return 1;
+	if((KEYPAD_Y2_PORT->IDR & KEYPAD_Y2) != KEYPAD_Y2)
+		return 2;
+	if((KEYPAD_Y3_PORT->IDR & KEYPAD_Y3) != KEYPAD_Y3)
+		return 3;
+	if((KEYPAD_Y4_PORT->IDR & KEYPAD_Y4) != KEYPAD_Y4)
+		return 4;
 
 	return 0;
 }
@@ -1700,7 +1716,7 @@ static uchar keypad_check_input_lines(void)
 //* Context    			: CONTEXT_DRIVER_KEYPAD
 //*----------------------------------------------------------------------------
 static void keypad_set_out_lines(uchar y)
-{
+{/*
 	// Rotate output state
 	switch(y)
 	{
@@ -1715,6 +1731,35 @@ static void keypad_set_out_lines(uchar y)
 			break;
 		case 3:
 			scan_y4();
+			break;
+		default:
+			scan_off();
+			return;
+	}*/
+}
+
+static void keypad_set_out_lines_a(uchar y)
+{
+	// Rotate output state
+	switch(y)
+	{
+		case 0:
+			scan_x1();
+			break;
+		case 1:
+			scan_x2();
+			break;
+		case 2:
+			scan_x3();
+			break;
+		case 3:
+			scan_x4();
+			break;
+		case 4:
+			scan_x5();
+			break;
+		case 5:
+			scan_x6();
 			break;
 		default:
 			scan_off();
@@ -1737,7 +1782,7 @@ static void keypad_set_out_lines(uchar y)
 //* Context    			: CONTEXT_DRIVER_KEYPAD
 //*----------------------------------------------------------------------------
 static void keypad_scan(void)
-{
+{/*
 	uchar i,j,id;
 
 	(ks.tap_cnt)++;											// Increase multitap counter
@@ -1778,6 +1823,53 @@ static void keypad_scan(void)
 
 		vTaskDelay(500);									// Static debounce, maybe there is a better way ?
 		return;
+	}*/
+}
+
+static void keypad_scan_a(void)
+{
+	uchar i,j,id;
+
+	//printf("proc %d \r\n", ks.irq_id);
+
+	(ks.tap_cnt)++;											// Increase multi-tap counter
+	if(ks.tap_cnt > 20) ks.tap_id = 0;						// Reset multi-tap char id
+
+	// Line scan
+	for(i = 0; i < 6; i++)
+	{
+		keypad_set_out_lines_a(i);							// Rotate output state
+
+		id = keypad_check_input_lines_a();					// Check lines, and get an id
+		if(!id) continue;									// Next
+
+		for(j = 0; j < 40; j++)								// More than 400mS is press and hold
+		{
+			vTaskDelay(10);									// High resolution de-bounce
+			if(keypad_check_input_lines_a() != id)
+			{
+				keypad_set_out_lines_a(8);					// Scan off
+				keypad_cmd_processor(id,(i + 1),0,0);		// Process 'click', button down
+
+				if(keypad_check_input_lines_a() != id)		// Finally is key released ?
+				{
+					ks.tap_cnt = 0;							// Reset multi-tap counter
+					keypad_cmd_processor(id,(i + 1),0,1);	// Process 'click', button up
+				}
+				else
+					vTaskDelay(100);						// Need this ?
+
+				return;
+			}
+		}
+		keypad_set_out_lines_a(8);							// Scan off
+		keypad_cmd_processor(id,(i + 1),1,0);				// Process 'hold', button down
+
+		if(keypad_check_input_lines_a() != id)				// Finally is key released ?
+			keypad_cmd_processor(id,(i + 1),1,1);			// Process 'hold', button up
+
+		vTaskDelay(500);									// Static de-bounce, maybe there is a better way ?
+		return;
 	}
 }
 
@@ -1797,13 +1889,25 @@ void keypad_proc_task(void const * argument)
 	printf("keypad process start\r\n");
 
 	// Enable process wake-up
-	NVIC_EnableIRQ(EXTI15_10_IRQn);
+	NVIC_EnableIRQ	(EXTI15_10_IRQn);
 	NVIC_SetPriority(EXTI15_10_IRQn, 0x03);
 
 keypad_proc_loop:
 
 	// Scan for event
 	//keypad_scan();
+
+	if(ks.irq_id)
+	{
+		NVIC_DisableIRQ	(EXTI15_10_IRQn);
+		scan_off();
+
+		keypad_scan_a();
+
+		scan_on();
+		NVIC_EnableIRQ	(EXTI15_10_IRQn);
+		ks.irq_id = 0;
+	}
 
 	// Sleep
 	vTaskDelay(KEYPAD_PROC_SLEEP_TIME);
