@@ -804,7 +804,7 @@ static void LCD_LL_Init(void)
     // dsi_hs_clk = ((480 + 160 + 160 +24) * (1280 + 12 + 10 + 2) * 54 * 24) / 4 = 348136704 bps = 348 Mbps
     int dsi_bandwidth = (((lcd_x_size + HSYNC + HBP + HFP)*(VSYNC + lcd_y_size + VBP + VFP)) * refresh_rate * 24)/2;
 
-    printf("== LCD CLK: %dkHz, FPS: %d.%dHz, bandwidth 2x%dMbps ==\r\n", ST7701_PIXEL_CLK, refresh_rate, refresh_rate_m/10000, dsi_bandwidth/(1000*1000));
+    //printf("== LCD CLK: %dkHz, FPS: %d.%dHz, bandwidth 2x%dMbps ==\r\n", ST7701_PIXEL_CLK, refresh_rate, refresh_rate_m/10000, dsi_bandwidth/(1000*1000));
 
     hdsivideo_handle.VirtualChannelID 					= 0;
     hdsivideo_handle.ColorCoding 						= DSI_COLOR;

@@ -14,7 +14,7 @@
 #ifndef __KEYPAD_PROC_H
 #define __KEYPAD_PROC_H
 
-#define KEYPAD_ALLOW_DEBUG
+//#define KEYPAD_ALLOW_DEBUG
 
 #ifdef CONTEXT_KEYPAD
 

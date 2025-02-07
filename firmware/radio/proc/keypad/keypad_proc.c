@@ -14,29 +14,17 @@
 #include "main.h"
 #include "mchf_pro_board.h"
 
-//#include "ui_driver.h"
+//--#include "ui_driver.h"
+#include "ui_actions.h"
+#include "radio_init.h"
+
 #include "keypad_proc.h"
 
 //#include "gui.h"
 //#include "dialog.h"
 //#include "ST_GUI_Addons.h"
 
-//#include "stm32h7xx_hal_gpio.h"
-
-// Tuning steps
-const ulong tune_steps[T_STEP_MAX_STEPS] = {
-T_STEP_1HZ,
-T_STEP_10HZ,
-T_STEP_100HZ,
-T_STEP_1KHZ,
-T_STEP_10KHZ,
-T_STEP_100KHZ,
-T_STEP_1MHZ,
-T_STEP_10MHZ
-};
-
 #ifdef CONTEXT_KEYPAD
-
 
 // Local keypad state
 struct 			KEYPAD_STATE			ks;
@@ -182,14 +170,14 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	#ifdef KEYPAD_ALLOW_DEBUG
 	printf("x=%d, y=%d, hld=%d, rel=%d\r\n", x, y, hold, release);
 	#endif
-#if 0
+
 	// SSB - USB/LSB
 	if((x == 1) && (y == 1))
 	{
 		if(!hold)
 		{
 			if(!release)
-			{
+			{/*
 				if(tsu.band[tsu.curr_band].demod_mode > DEMOD_LSB)
 					tsu.band[tsu.curr_band].demod_mode = DEMOD_LSB;
 				else
@@ -198,7 +186,11 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 						tsu.band[tsu.curr_band].demod_mode = DEMOD_USB;
 					else
 						tsu.band[tsu.curr_band].demod_mode = DEMOD_LSB;
-				}
+				}*/
+
+				printf("SSB - USB/LSB\r\n");
+
+				ui_actions_change_demod_mode(radio_init_default_mode_from_band());
 			}
 		}
 		else
@@ -230,6 +222,10 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 				if(bc_mode_toggle > 2) bc_mode_toggle = 0;
 				// ------------------------------------------------------------------
 				#endif
+
+				printf("160m\r\n");
+
+				ui_actions_change_band(BAND_MODE_160, 1);
 			}
 
 		}
@@ -245,7 +241,14 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			if(!release) tsu.curr_band = BAND_MODE_80;
+			if(!release)
+			{
+				//tsu.curr_band = BAND_MODE_80;
+
+				printf("80m\r\n");
+
+				ui_actions_change_band(BAND_MODE_80, 1);
+			}
 		}
 		else
 		{
@@ -259,7 +262,14 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			if(!release) tsu.curr_band = BAND_MODE_60;
+			if(!release)
+			{
+				//tsu.curr_band = BAND_MODE_60;
+
+				printf("60m\r\n");
+
+				ui_actions_change_band(BAND_MODE_60, 1);
+			}
 		}
 		else
 		{
@@ -273,7 +283,14 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			if(!release) tsu.curr_band = BAND_MODE_40;
+			if(!release)
+			{
+				//tsu.curr_band = BAND_MODE_40;
+
+				printf("40m\r\n");
+
+				ui_actions_change_band(BAND_MODE_40, 1);
+			}
 		}
 		else
 		{
@@ -288,6 +305,8 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		if(!hold)
 		{
 			//--tsu.cw_tx_on = !tsu.cw_tx_on;
+
+			printf("DSP\r\n");
 		}
 		else
 		{
@@ -301,7 +320,14 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			if(!release) tsu.band[tsu.curr_band].demod_mode = DEMOD_CW;
+			if(!release)
+			{
+				//tsu.band[tsu.curr_band].demod_mode = DEMOD_CW;
+
+				printf("CW\r\n");
+
+				ui_actions_change_demod_mode(DEMOD_CW);
+			}
 		}
 		else
 		{
@@ -315,7 +341,14 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			if(!release) tsu.curr_band = BAND_MODE_30;
+			if(!release)
+			{
+				//tsu.curr_band = BAND_MODE_30;
+
+				printf("30m\r\n");
+
+				ui_actions_change_band(BAND_MODE_30, 1);
+			}
 		}
 		else
 		{
@@ -330,16 +363,16 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 
 		if(!hold)
 		{
-			if(!release) tsu.curr_band = BAND_MODE_20;
+			if(!release)
+			{
+				//tsu.curr_band = BAND_MODE_20;
 
-			// ToDo: to make this work, need to put all other band leds to off
-			//       in every band selection case!
-			//
-			// Toggle key LED
-			//if(tsu.curr_band != BAND_MODE_20)
-			//	keypad_driver_change_led_state(KEY_LED_FIVE,KEY_LED_OFF_LIGHT);
-			//else
-			//	keypad_driver_change_led_state(KEY_LED_FIVE,KEY_LED_LOW_LIGHT);
+				printf("20m\r\n");
+
+				ui_actions_change_band(BAND_MODE_20, 1);
+			}
+
+
 		}
 		else
 		{
@@ -353,7 +386,14 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			if(!release) tsu.curr_band = BAND_MODE_17;
+			if(!release)
+			{
+				//tsu.curr_band = BAND_MODE_17;
+
+				printf("17m\r\n");
+
+				ui_actions_change_band(BAND_MODE_17, 1);
+			}
 		}
 		else
 		{
@@ -367,7 +407,14 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			if(!release) tsu.curr_band = BAND_MODE_15;
+			if(!release)
+			{
+				//tsu.curr_band = BAND_MODE_15;
+
+				printf("15m\r\n");
+
+				ui_actions_change_band(BAND_MODE_15, 1);
+			}
 		}
 		else
 		{
@@ -384,16 +431,20 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 			if(!release)
 			{
 				// Toggle 1KHz and 10Khz only
-				if(tsu.band[tsu.curr_band].step != T_STEP_1KHZ)
-					tsu.band[tsu.curr_band].step = T_STEP_1KHZ;
-				else
-					tsu.band[tsu.curr_band].step = T_STEP_10KHZ;
+				//if(tsu.band[tsu.curr_band].step != T_STEP_1KHZ)
+				//	tsu.band[tsu.curr_band].step = T_STEP_1KHZ;
+				//else
+				//	tsu.band[tsu.curr_band].step = T_STEP_10KHZ;
+
+				printf("Step\r\n");
+
+				ui_actions_change_step();
 			}
 		}
 		else
 		{
 			if(!release)
-			{
+			{/*
 				uchar id;
 
 				// Jump through all possible steps
@@ -409,7 +460,9 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 				else
 					id = 0;
 
-				tsu.band[tsu.curr_band].step = tune_steps[id];
+				tsu.band[tsu.curr_band].step = tune_steps[id];*/
+
+				printf("Step Hold\r\n");
 			}
 		}
 
@@ -435,13 +488,17 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 				//tsu.band[tsu.curr_band].demod_mode = DEMOD_DIGI;
 
 				// Pass request to UI driver to change mode
-				if(ui_s.req_state == MODE_DESKTOP)
-					ui_s.req_state = MODE_DESKTOP_FT8;
+				//if(ui_s.req_state == MODE_DESKTOP)
+				//	ui_s.req_state = MODE_DESKTOP_FT8;
 				//else
 				//{
 				//	if(ui_s.req_state == MODE_DESKTOP_FT8)
 				//		ui_s.req_state = MODE_DESKTOP;
 				//}
+
+				printf("AM\r\n");
+
+				ui_actions_change_demod_mode(DEMOD_AM);
 			}
 		}
 
@@ -452,7 +509,14 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			if(!release) tsu.curr_band = BAND_MODE_12;
+			if(!release)
+			{
+				//tsu.curr_band = BAND_MODE_12;
+
+				printf("12m\r\n");
+
+				ui_actions_change_band(BAND_MODE_12, 1);
+			}
 		}
 		else
 		{
@@ -466,7 +530,13 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			if(!release) tsu.curr_band = BAND_MODE_10;
+			if(!release)
+			{
+				//tsu.curr_band = BAND_MODE_10;
+				printf("10m\r\n");
+
+				ui_actions_change_band(BAND_MODE_10, 1);
+			}
 		}
 		else
 		{
@@ -481,6 +551,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		if(!hold)
 		{
 			//tsu.curr_band = BAND_MODE_6;
+			printf("6m\r\n");
 		}
 		else
 		{
@@ -494,7 +565,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			// ...
+			printf("Enter\r\n");
 		}
 		else
 		{
@@ -506,13 +577,15 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 				//ui_s.lock_requests = 1;
 
 				// Pass request to UI driver to change mode
-				if(ui_s.req_state == MODE_DESKTOP)
+				/*if(ui_s.req_state == MODE_DESKTOP)
 					ui_s.req_state = MODE_MENU;
 				else
 				{
 					if(ui_s.req_state == MODE_MENU)
 						ui_s.req_state = MODE_DESKTOP;
-				}
+				}*/
+
+				printf("Enter Hold\r\n");
 
 				// Large debounce
 				//OsDelayMs(500);
@@ -530,11 +603,13 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		{
 			if(!release)
 			{
-				tsu.band[tsu.curr_band].filter++;
-				if(tsu.band[tsu.curr_band].filter > AUDIO_WIDE)
-					tsu.band[tsu.curr_band].filter = AUDIO_300HZ;
+				//tsu.band[tsu.curr_band].filter++;
+				//if(tsu.band[tsu.curr_band].filter > AUDIO_WIDE)
+				//	tsu.band[tsu.curr_band].filter = AUDIO_300HZ;
 
 				//printf("keypad filter: %d\r\n",tsu.curr_filter);
+
+				printf("Filter\r\n");
 			}
 		}
 		else
@@ -550,7 +625,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		if(!hold)
 		{
 			if(!release)
-			{
+			{/*
 				uchar loc_osc_mode = tsu.band[tsu.curr_band].fixed_mode;
 
 				loc_osc_mode = !loc_osc_mode;
@@ -570,7 +645,9 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 				//else
 				//	keypad_driver_change_led_state(KEY_LED_FIX,KEY_LED_MID_LIGHT);
 
-				tsu.band[tsu.curr_band].fixed_mode = loc_osc_mode;
+				tsu.band[tsu.curr_band].fixed_mode = loc_osc_mode;*/
+
+				printf("Fix/Centre\r\n");
 			}
 		}
 		else
@@ -586,6 +663,8 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		if(!hold)
 		{
 			//tsu.curr_band = BAND_MODE_4;
+
+			printf("4m\r\n");
 		}
 		else
 		{
@@ -600,19 +679,24 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		if(!hold)
 		{
 			//tsu.curr_band = BAND_MODE_LF;
+			printf("LF\r\n");
+
+			ui_actions_change_band(BAND_MODE_2200, 0);
 		}
 		else
 		{
 			if(!release)
 			{
 				// Pass request to UI driver to change mode
-				if(ui_s.req_state == MODE_DESKTOP)
-					ui_s.req_state = MODE_QUICK_LOG;
+				//if(ui_s.req_state == MODE_DESKTOP)
+				//	ui_s.req_state = MODE_QUICK_LOG;
 				//else
 				//{
 					//if(ui_s.req_state == MODE_QUICK_LOG)
 					//	ui_s.req_state = MODE_DESKTOP;
 				//}
+
+				printf("LF Hold\r\n");
 			}
 		}
 
@@ -624,6 +708,9 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		if(!hold)
 		{
 			//tsu.curr_band = BAND_MODE_MF;
+			printf("MF\r\n");
+
+			ui_actions_change_band(BAND_MODE_630, 0);
 		}
 		else
 		{
@@ -636,6 +723,8 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	if((x == 5) && (y == 4))
 	{
 		// NA
+
+		printf("Record/Mute ?\r\n");
 	}
 	// VFO A/B, SPLIT
 	if((x == 6) && (y == 4))
@@ -645,13 +734,17 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 			if(!release)
 			{
 				// Toggle active
-				tsu.band[tsu.curr_band].active_vfo = !tsu.band[tsu.curr_band].active_vfo;
+				//tsu.band[tsu.curr_band].active_vfo = !tsu.band[tsu.curr_band].active_vfo;
 
 				// Toggle key LED
 //				if(!tsu.band[tsu.curr_band].active_vfo)
 //					keypad_driver_change_led_state(KEY_LED_SPLIT,KEY_LED_OFF_LIGHT);
 //				else
 //					keypad_driver_change_led_state(KEY_LED_SPLIT,KEY_LED_MID_LIGHT);
+
+				printf("VFO\r\n");
+
+				ui_actions_change_vfo_mode();
 			}
 		}
 		else
@@ -659,7 +752,6 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 			// ..
 		}
 	}
-#endif
 }
 
 //*----------------------------------------------------------------------------
