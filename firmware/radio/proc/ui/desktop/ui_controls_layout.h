@@ -251,7 +251,7 @@
 // ----------------------------------------------------------------------------
 // CPU Load control
 //
-#define CPU_L_X						357
+#define CPU_L_X						572
 #define CPU_L_Y						33
 //
 // ----------------------------------------------------------------------------
@@ -300,20 +300,13 @@
 #define BATTERY_SIZE_Y				54
 //
 // ----------------------------------------------------------------------------
-// Speaker control
-#define WIFI_X						468
-#define WIFI_Y						32
-//
-#define WIFI_SIZE_X					210
-#define WIFI_SIZE_Y					56
-//
-// ----------------------------------------------------------------------------
 // TX Status control
 //
-#define TX_STAT_X					412 - 55
-#define TX_STAT_Y					53
+#define TX_STAT_X					357
+#define TX_STAT_Y					32
 
-#define TX_STAT_SIZE_Y				34
+#define TX_STAT_SIZE_X				210
+#define TX_STAT_SIZE_Y				56
 //
 // ----------------------------------------------------------------------------
 // Filter

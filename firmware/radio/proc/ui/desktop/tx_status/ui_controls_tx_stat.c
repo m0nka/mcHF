@@ -46,19 +46,19 @@ static void ui_controls_tx_stat_repaint(void)
 
 	// Clear control
 	GUI_SetColor(GUI_BLACK);
-	GUI_FillRect(TX_STAT_X, TX_STAT_Y,	TX_STAT_X + 106, TX_STAT_Y + TX_STAT_SIZE_Y);
+	GUI_FillRect(TX_STAT_X, TX_STAT_Y,	TX_STAT_X + TX_STAT_SIZE_X, TX_STAT_Y + TX_STAT_SIZE_Y);
 
 	// Clear dynamic part
 	GUI_SetColor(GUI_WHITE);
-	GUI_FillRect(TX_STAT_X + 53, TX_STAT_Y + 1,	TX_STAT_X + 102,	TX_STAT_Y + TX_STAT_SIZE_Y - 1);
+	GUI_FillRect(TX_STAT_X + 53, TX_STAT_Y + 1,	TX_STAT_X + TX_STAT_SIZE_X - 4,	TX_STAT_Y + TX_STAT_SIZE_Y - 1);
 
 	// Create frame
 	GUI_SetColor(GUI_GRAY);
-	GUI_DrawRect(TX_STAT_X,		 TX_STAT_Y,      TX_STAT_X + 105,  TX_STAT_Y + TX_STAT_SIZE_Y);
-	GUI_DrawRect(TX_STAT_X - 1,	 TX_STAT_Y - 1,  TX_STAT_X + 106,  TX_STAT_Y + TX_STAT_SIZE_Y + 1);
+	GUI_DrawRect(TX_STAT_X,		 TX_STAT_Y,      TX_STAT_X + TX_STAT_SIZE_X - 1,  TX_STAT_Y + TX_STAT_SIZE_Y);
+	GUI_DrawRect(TX_STAT_X - 1,	 TX_STAT_Y - 1,  TX_STAT_X + TX_STAT_SIZE_X,  TX_STAT_Y + TX_STAT_SIZE_Y + 1);
 	GUI_FillRect(TX_STAT_X + 50, TX_STAT_Y + 1,	 TX_STAT_X + 53,   TX_STAT_Y + TX_STAT_SIZE_Y - 1);
 	GUI_FillRect(TX_STAT_X + 0,	 TX_STAT_Y + 20, TX_STAT_X +  49,  TX_STAT_Y + TX_STAT_SIZE_Y);
-	GUI_FillRect(TX_STAT_X + 103,TX_STAT_Y - 1,  TX_STAT_X +  106, TX_STAT_Y + TX_STAT_SIZE_Y + 1);
+	GUI_FillRect(TX_STAT_X + 103,TX_STAT_Y - 1,  TX_STAT_X +  TX_STAT_SIZE_X, TX_STAT_Y + TX_STAT_SIZE_Y + 1);
 
 	GUI_SetFont(&GUI_Font8x16_1);
 	GUI_SetColor(GUI_GREEN);

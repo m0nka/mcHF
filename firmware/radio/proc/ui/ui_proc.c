@@ -42,7 +42,6 @@
 #include "cpu_stat\ui_controls_cpu_stat.h"
 #include "dsp_stat\ui_controls_dsp_stat.h"
 #include "sd_icon\ui_controls_sd_icon.h"
-#include "wifi_stat\ui_controls_wifi.h"
 #include "battery\ui_controls_battery.h"
 #include "menu_button\ui_controls_menu_button.h"
 #include "on_screen\on_screen_keyboard.h"
@@ -495,7 +494,6 @@ static void ui_proc_init_desktop(void)
 	ui_controls_battery_init();
 	ui_controls_tx_stat_init();
 	ui_controls_menu_button_init();
-	ui_controls_wifi_init();
 
 	#if 0
 	// Return from Menu, when in CW mode and on screen keyer is enabled
@@ -544,7 +542,6 @@ static void ui_proc_change_mode(void)
 
 			// Destroy desktop controls
 			ui_controls_volume_quit();
-			ui_controls_wifi_quit();
 			ui_controls_clock_quit();
 			ui_controls_spectrum_quit();
 			ui_controls_frequency_quit();
@@ -754,7 +751,6 @@ static void ui_proc_periodic(void)
 	ui_controls_dsp_stat_refresh();
 	ui_controls_battery_refresh();
 	ui_controls_filter_refresh();
-	ui_controls_wifi_refresh();
 	ui_controls_tx_stat_refresh();
 
 	//--on_screen_keyboard_refresh();	// will not allow transparent dialog with moving background
