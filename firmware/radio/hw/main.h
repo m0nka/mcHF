@@ -51,6 +51,7 @@
 #include "stm32h7xx_ll_exti.h"
 #include "stm32h7xx_ll_spi.h"
 #include "stm32h7xx_ll_pwr.h"
+#include "stm32h7xx_ll_adc.h"
 
 /* FatFs includes component */
 #include "ff_gen_drv.h"

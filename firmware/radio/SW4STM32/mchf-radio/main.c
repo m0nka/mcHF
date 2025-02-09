@@ -20,6 +20,7 @@
 #include "k_rtc.h"
 
 #include "bsp.h"
+#include "adc.h"
 #include "WM.h"
 
 #include "ipc_proc.h"
@@ -151,6 +152,16 @@ void EXTI15_10_IRQHandler(void)
 	{
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
 		keypad_proc_irq(3);
+	}
+}
+
+void ADC_IRQHandler(void)
+{
+	//if(LL_ADC_IsActiveFlag_AWD1(ADC1) != 0)
+	if(LL_ADC_IsActiveFlag_EOC(ADC1) != 0)
+	{
+		LL_ADC_ClearFlag_EOC(ADC1);
+		adc_callback();
 	}
 }
 
@@ -443,6 +454,9 @@ int main(void)
     // HW init
     if(BSP_Config() != 0)
     	goto stall_radio;
+
+    // Init ADC HW
+    adc_init();
 
     // Define running processes
     if(start_proc())

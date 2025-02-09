@@ -720,7 +720,7 @@
 #define CODEC_MUTE						GPIO_PIN_2
 #define CODEC_MUTE_PORT           		GPIOC
 
-// PC3			ADC3_INP1 -> ToDo: Reflected Power, from bridge
+// PC3			ADC3_INP1, Reflected Power, from bridge
 #define ADC3_INP1						GPIO_PIN_3
 #define ADC3_INP1_PORT           		GPIOC
 
@@ -925,11 +925,11 @@
 //
 //
 
-// PF6			ADC3_INP8 -> ToDo: ambient light sensor
+// PF6			ADC3_INP8, Ambient light sensor
 #define POWER_LED						GPIO_PIN_6
 #define POWER_LED_PORT            		GPIOF
 
-// PF7			ADC3_INP3 -> ToDo: PA Temperature
+// PF7			ADC3_INP3, PA Temperature
 #define ADC3_INP3						GPIO_PIN_7
 #define ADC3_INP3_PORT            		GPIOF
 
@@ -941,7 +941,7 @@
 //
 //
 
-// PF10			ADC3_INP6-> ToDo: Forward Power
+// PF10			ADC3_INP6, Forward Power
 #define ADC3_INP6						GPIO_PIN_10
 #define ADC3_INP6_PORT            		GPIOF
 

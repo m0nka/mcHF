@@ -97,6 +97,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/config/stm32h7xx_hal_conf.h</locationURI>
 		</link>
 		<link>
+			<name>hw/adc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/adc.c</locationURI>
+		</link>
+		<link>
 			<name>hw/bsp.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/hw/bsp.c</locationURI>
