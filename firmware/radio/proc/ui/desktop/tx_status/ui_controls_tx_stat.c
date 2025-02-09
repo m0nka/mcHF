@@ -58,7 +58,7 @@ static void ui_controls_tx_stat_repaint(void)
 	GUI_DrawRect(TX_STAT_X - 1,	 TX_STAT_Y - 1,  TX_STAT_X + TX_STAT_SIZE_X,  TX_STAT_Y + TX_STAT_SIZE_Y + 1);
 	GUI_FillRect(TX_STAT_X + 50, TX_STAT_Y + 1,	 TX_STAT_X + 53,   TX_STAT_Y + TX_STAT_SIZE_Y - 1);
 	GUI_FillRect(TX_STAT_X + 0,	 TX_STAT_Y + 20, TX_STAT_X +  49,  TX_STAT_Y + TX_STAT_SIZE_Y);
-	GUI_FillRect(TX_STAT_X + 103,TX_STAT_Y - 1,  TX_STAT_X +  TX_STAT_SIZE_X, TX_STAT_Y + TX_STAT_SIZE_Y + 1);
+	GUI_FillRect(TX_STAT_X + 123,TX_STAT_Y - 1,  TX_STAT_X +  TX_STAT_SIZE_X, TX_STAT_Y + TX_STAT_SIZE_Y + 1);
 
 	GUI_SetFont(&GUI_Font8x16_1);
 	GUI_SetColor(GUI_GREEN);
@@ -94,15 +94,40 @@ static void ui_controls_tx_stat_repaint(void)
 
 	GUI_SetFont(&GUI_Font8x16_1);
 
+	// Show gate text
+	GUI_SetColor(GUI_GRAY);
+	GUI_DispStringAt("G1", TX_STAT_X + 57, TX_STAT_Y +  2);
+	GUI_DispStringAt("G2", TX_STAT_X + 57, TX_STAT_Y + 20);
+
 	if(tsu.rxtx)
 		GUI_SetColor(GUI_RED);
 	else
 		GUI_SetColor(GUI_GRAY);
 
 	sprintf(buf, "%d.%dV", tsu.bias0/1000, (tsu.bias0%1000)/10);
-	GUI_DispStringAt(buf, TX_STAT_X + 59, TX_STAT_Y + 2);
+	GUI_DispStringAt(buf,  TX_STAT_X + 79, TX_STAT_Y + 2);
+
 	sprintf(buf, "%d.%dV", tsu.bias1/1000, (tsu.bias1%1000)/10);
-	GUI_DispStringAt(buf, TX_STAT_X + 59, TX_STAT_Y + 20);
+	GUI_DispStringAt(buf, TX_STAT_X + 79, TX_STAT_Y + 20);
+
+	// ----------------------------------------------------------
+	// Prototype new control positions
+	GUI_SetColor(GUI_WHITE);
+	// Forward voltage on the bridge
+	sprintf(buf, "FWD %d.%dV", 2, 31);
+	GUI_DispStringAt(buf, TX_STAT_X + 130, TX_STAT_Y +  2);
+	// Reflected voltage on the bridge
+	sprintf(buf, "REF %d.%dV", 0, 42);
+	GUI_DispStringAt(buf, TX_STAT_X + 130, TX_STAT_Y + 20);
+	// PA Temp
+	sprintf(buf, "TMP %d.%dC", 31, 4);
+	GUI_DispStringAt(buf, TX_STAT_X + 130, TX_STAT_Y + 38);
+	// PA Rail Voltage
+	GUI_SetColor(GUI_GRAY);
+	sprintf(buf, "%d.%dV", 20, 5);
+	GUI_DispStringAt("Dv", TX_STAT_X + 57, TX_STAT_Y + 38);
+	GUI_DispStringAt(buf,  TX_STAT_X + 79, TX_STAT_Y + 38);
+	// ----------------------------------------------------------
 
 	// Save
 	ui_power_factor = tsu.band[tsu.curr_band].power_factor;

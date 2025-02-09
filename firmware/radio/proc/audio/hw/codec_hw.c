@@ -361,7 +361,7 @@ static void codec_hw_set_sampling_rate(void)
 	{
 		codec_hw_update_register(CS4245_MCLK_FREQ, false, 0x44);
 	}
-	printf("sampling rate set to: %d Hz\r\n", ts.samp_rate);
+	//printf("sampling rate set to: %d Hz\r\n", ts.samp_rate);
 }
 
 void codec_hw_set_audio_route(uchar route_id)
@@ -561,7 +561,7 @@ void codec_task_init(void)
 		printf("i2c init err 2!\r\n");
 		return;
 	}
-	printf("chip id: %02x, chip rev: %02x\r\n", val & CS4245_CHIP_PART_MASK, val & CS4245_CHIP_REV_MASK);
+	//printf("chip id: %02x, chip rev: %02x\r\n", val & CS4245_CHIP_PART_MASK, val & CS4245_CHIP_REV_MASK);
 
 	// Debug
 	//--codec_hw_show_registers("cs4245 registers on reset \r\n");
