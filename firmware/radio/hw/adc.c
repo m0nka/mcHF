@@ -68,27 +68,28 @@ static void Configure_ADC(void)
 	//LL_AHB4_GRP1_EnableClock(LL_AHB4_GRP1_PERIPH_GPIOA);
 
 	// ADC3_INP1, Reflected Power (PC3)
-	LL_GPIO_SetPinMode(ADC3_INP1_PORT, ADC3_INP1, LL_GPIO_MODE_ANALOG);
+//	LL_GPIO_SetPinMode(ADC3_INP1_PORT, ADC3_INP1, LL_GPIO_MODE_ANALOG);
 
 	// ADC3_INP8, Ambient light sensor (PF6)
-	LL_GPIO_SetPinMode(POWER_LED_PORT, POWER_LED, LL_GPIO_MODE_ANALOG);
+//	LL_GPIO_SetPinMode(POWER_LED_PORT, POWER_LED, LL_GPIO_MODE_ANALOG);
 
 	// ADC3_INP3, PA Temperature (PF7)
 	LL_GPIO_SetPinMode(ADC3_INP3_PORT, ADC3_INP3, LL_GPIO_MODE_ANALOG);
 
 	// ADC3_INP6, Forward Power (PF10)
-	LL_GPIO_SetPinMode(ADC3_INP6_PORT, ADC3_INP6, LL_GPIO_MODE_ANALOG);
+//	LL_GPIO_SetPinMode(ADC3_INP6_PORT, ADC3_INP6, LL_GPIO_MODE_ANALOG);
 
 	/*## Configuration of NVIC #################################################*/
-	/* Configure NVIC to enable ADC1 interruptions */
-	NVIC_SetPriority(ADC_IRQn, 4);
-	NVIC_EnableIRQ	(ADC_IRQn);
+	/* Configure NVIC to enable ADC3 interruptions */
+	NVIC_SetPriority(ADC3_IRQn, 3);
+	//NVIC_EnableIRQ	(ADC3_IRQn);
 
 	/*## Configuration of ADC ##################################################*/
 	/*## Configuration of ADC hierarchical scope: common to several ADC ########*/
 
 	/* Enable ADC clock (core clock) */
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_ADC12);
+	//LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_ADC12);
+	LL_AHB4_GRP1_EnableClock(LL_AHB4_GRP1_PERIPH_ADC3);
 
 	/* Note: Hardware constraint (refer to description of the functions         */
 	/*       below):                                                            */
@@ -101,29 +102,29 @@ static void Configure_ADC(void)
 	/*       Software can be optimized by removing some of these checks, if     */
 	/*       they are not relevant considering previous settings and actions    */
 	/*       in user application.                                               */
-	if(__LL_ADC_IS_ENABLED_ALL_COMMON_INSTANCE(__LL_ADC_COMMON_INSTANCE(ADC1)) == 0)
+	if(__LL_ADC_IS_ENABLED_ALL_COMMON_INSTANCE(__LL_ADC_COMMON_INSTANCE(ADC3)) == 0)
 	{
 		/* Note: Call of the functions below are commented because they are       */
 		/*       useless in this example:                                         */
 		/*       setting corresponding to default configuration from reset state. */
 
 		/* Set ADC clock (conversion clock) common to several ADC instances */
-		LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(ADC1), LL_ADC_CLOCK_SYNC_PCLK_DIV4);
+		LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_CLOCK_SYNC_PCLK_DIV4);
 
 		/* Set ADC measurement path to internal channels */
-		// LL_ADC_SetCommonPathInternalCh(__LL_ADC_COMMON_INSTANCE(ADC1), LL_ADC_PATH_INTERNAL_NONE);
+		// LL_ADC_SetCommonPathInternalCh(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_PATH_INTERNAL_NONE);
 
 
 		/*## Configuration of ADC hierarchical scope: multimode ####################*/
 
 		/* Set ADC multimode configuration */
-		// LL_ADC_SetMultimode(__LL_ADC_COMMON_INSTANCE(ADC1), LL_ADC_MULTI_INDEPENDENT);
+		// LL_ADC_SetMultimode(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_MULTI_INDEPENDENT);
 
 		/* Set ADC multimode DMA transfer */
-		// LL_ADC_SetMultiDMATransfer(__LL_ADC_COMMON_INSTANCE(ADC1), LL_ADC_MULTI_REG_DMA_EACH_ADC);
+		// LL_ADC_SetMultiDMATransfer(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_MULTI_REG_DMA_EACH_ADC);
 
 		/* Set ADC multimode: delay between 2 sampling phases */
-		// LL_ADC_SetMultiTwoSamplingDelay(__LL_ADC_COMMON_INSTANCE(ADC1), LL_ADC_MULTI_TWOSMP_DELAY_1CYCLE);
+		// LL_ADC_SetMultiTwoSamplingDelay(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_MULTI_TWOSMP_DELAY_1CYCLE);
 	}
 
 	/*## Configuration of ADC hierarchical scope: ADC instance #################*/
@@ -133,23 +134,23 @@ static void Configure_ADC(void)
 	/*       On this STM32 series, setting of these features is conditioned to   */
 	/*       ADC state:                                                         */
 	/*       ADC must be disabled.                                              */
-	if (LL_ADC_IsEnabled(ADC1) == 0)
+	if (LL_ADC_IsEnabled(ADC3) == 0)
 	{
 		/* Note: Call of the functions below are commented because they are       */
 		/*       useless in this example:                                         */
 		/*       setting corresponding to default configuration from reset state. */
 
 		/* Set ADC data resolution */
-		LL_ADC_SetResolution(ADC1, LL_ADC_RESOLUTION_16B);
+		LL_ADC_SetResolution(ADC3, LL_ADC_RESOLUTION_16B);
 
 		/* Set ADC conversion data alignment */
-		//LL_ADC_SetResolution(ADC1, LL_ADC_DATA_ALIGN_RIGHT);
+		//LL_ADC_SetResolution(ADC3, LL_ADC_DATA_ALIGN_RIGHT);
 
 		/* Set ADC low power mode */
-		//LL_ADC_SetLowPowerMode(ADC1, LL_ADC_LP_MODE_NONE);
+		//LL_ADC_SetLowPowerMode(ADC3, LL_ADC_LP_MODE_NONE);
 
 		/* Set ADC selected offset number: channel and offset level */
-		// LL_ADC_SetOffset(ADC1, LL_ADC_OFFSET_1, LL_ADC_CHANNEL_15, 0x000);
+		//LL_ADC_SetOffset(ADC3, LL_ADC_OFFSET_1, LL_ADC_CHANNEL_15, 0x000);
 	}
 
 	/*## Configuration of ADC hierarchical scope: ADC group regular ############*/
@@ -160,23 +161,23 @@ static void Configure_ADC(void)
 	/*       ADC state:                                                         */
 	/*       ADC must be disabled or enabled without conversion on going        */
 	/*       on group regular.                                                  */
-	if ((LL_ADC_IsEnabled(ADC1) == 0)               ||
-		(LL_ADC_REG_IsConversionOngoing(ADC1) == 0)   )
+	if ((LL_ADC_IsEnabled(ADC3) == 0)               ||
+		(LL_ADC_REG_IsConversionOngoing(ADC3) == 0)   )
 	{
 		/* Set ADC group regular trigger source */
-		LL_ADC_REG_SetTriggerSource(ADC1, LL_ADC_REG_TRIG_SOFTWARE);
+		LL_ADC_REG_SetTriggerSource(ADC3, LL_ADC_REG_TRIG_SOFTWARE);
 
 		/* Set ADC group regular trigger polarity */
-		// LL_ADC_REG_SetTriggerEdge(ADC1, LL_ADC_REG_TRIG_EXT_RISING);
+		// LL_ADC_REG_SetTriggerEdge(ADC3, LL_ADC_REG_TRIG_EXT_RISING);
 
 		/* Set ADC group regular continuous mode */
-		LL_ADC_REG_SetContinuousMode(ADC1, LL_ADC_REG_CONV_CONTINUOUS);
+		LL_ADC_REG_SetContinuousMode(ADC3, LL_ADC_REG_CONV_SINGLE);
 
 		/* Set ADC group regular conversion data transfer */
-		// LL_ADC_REG_SetDMATransfer(ADC1, LL_ADC_REG_DMA_TRANSFER_NONE);
+		//LL_ADC_REG_SetDMATransfer(ADC3, LL_ADC_REG_DMA_TRANSFER_NONE);
 
 		/* Set ADC group regular overrun behavior */
-		LL_ADC_REG_SetOverrun(ADC1, LL_ADC_REG_OVR_DATA_OVERWRITTEN);
+		LL_ADC_REG_SetOverrun(ADC3, LL_ADC_REG_OVR_DATA_OVERWRITTEN);
 
 		/* Set ADC group regular sequencer */
 		/* Note: On this STM32 series, ADC group regular sequencer is              */
@@ -185,24 +186,24 @@ static void Configure_ADC(void)
 		/*       Refer to description of function                                 */
 		/*       "LL_ADC_REG_SetSequencerLength()".                               */
 
-		/* Preselect ADC1 channel 15 */
-//!    LL_ADC_SetChannelPreSelection(ADC1, LL_ADC_CHANNEL_15);
-		LL_ADC_SetChannelSingleDiff(ADC1, LL_ADC_CHANNEL_1, LL_ADC_SINGLE_ENDED);
-		LL_ADC_SetChannelSingleDiff(ADC1, LL_ADC_CHANNEL_3, LL_ADC_SINGLE_ENDED);
-		LL_ADC_SetChannelSingleDiff(ADC1, LL_ADC_CHANNEL_6, LL_ADC_SINGLE_ENDED);
-		LL_ADC_SetChannelSingleDiff(ADC1, LL_ADC_CHANNEL_8, LL_ADC_SINGLE_ENDED);
+		/* Preselect ADC3 channel 15 */
+//!    LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_15);
+//		LL_ADC_SetChannelSingleDiff(ADC3, LL_ADC_CHANNEL_1, LL_ADC_SINGLE_ENDED);
+		LL_ADC_SetChannelSingleDiff(ADC3, LL_ADC_CHANNEL_3, LL_ADC_SINGLE_ENDED);
+//		LL_ADC_SetChannelSingleDiff(ADC3, LL_ADC_CHANNEL_6, LL_ADC_SINGLE_ENDED);
+//		LL_ADC_SetChannelSingleDiff(ADC3, LL_ADC_CHANNEL_8, LL_ADC_SINGLE_ENDED);
 
 		/* Set ADC group regular sequencer length and scan direction */
-		LL_ADC_REG_SetSequencerLength(ADC1, LL_ADC_REG_SEQ_SCAN_ENABLE_4RANKS);
+		LL_ADC_REG_SetSequencerLength(ADC3, LL_ADC_REG_SEQ_SCAN_DISABLE);
 
 		/* Set ADC group regular sequencer discontinuous mode */
-		// LL_ADC_REG_SetSequencerDiscont(ADC1, LL_ADC_REG_SEQ_DISCONT_DISABLE);
+		LL_ADC_REG_SetSequencerDiscont(ADC3, LL_ADC_REG_SEQ_DISCONT_DISABLE);
 
 		/* Set ADC group regular sequence: channel on the selected sequence rank. */
-		LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_1);
-		LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_3);
-		LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_6);
-		LL_ADC_REG_SetSequencerRanks(ADC1, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_8);
+//		LL_ADC_REG_SetSequencerRanks(ADC3, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_1);
+		LL_ADC_REG_SetSequencerRanks(ADC3, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_3);
+//		LL_ADC_REG_SetSequencerRanks(ADC3, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_6);
+//		LL_ADC_REG_SetSequencerRanks(ADC3, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_8);
 	}
 
 	/*## Configuration of ADC hierarchical scope: ADC group injected ###########*/
@@ -213,26 +214,26 @@ static void Configure_ADC(void)
 	/*       ADC state:                                                         */
 	/*       ADC must be disabled or enabled without conversion on going        */
 	/*       on group injected.                                                 */
-	if ((LL_ADC_IsEnabled(ADC1) == 0)               ||
-		(LL_ADC_INJ_IsConversionOngoing(ADC1) == 0)   )
+	if ((LL_ADC_IsEnabled(ADC3) == 0)               ||
+		(LL_ADC_INJ_IsConversionOngoing(ADC3) == 0)   )
 	{
 		/* Note: Call of the functions below are commented because they are       */
 		/*       useless in this example:                                         */
 		/*       setting corresponding to default configuration from reset state. */
 
 		/* Set ADC group injected trigger source */
-		// LL_ADC_INJ_SetTriggerSource(ADC1, LL_ADC_INJ_TRIG_SOFTWARE);
+		// LL_ADC_INJ_SetTriggerSource(ADC3, LL_ADC_INJ_TRIG_SOFTWARE);
 
 		/* Set ADC group injected trigger polarity */
-		// LL_ADC_INJ_SetTriggerEdge(ADC1, LL_ADC_INJ_TRIG_EXT_RISING);
+		// LL_ADC_INJ_SetTriggerEdge(ADC3, LL_ADC_INJ_TRIG_EXT_RISING);
 
 		/* Set ADC group injected conversion trigger  */
-		// LL_ADC_INJ_SetTrigAuto(ADC1, LL_ADC_INJ_TRIG_INDEPENDENT);
+		// LL_ADC_INJ_SetTrigAuto(ADC3, LL_ADC_INJ_TRIG_INDEPENDENT);
 
 		/* Set ADC group injected contexts queue mode */
 		/* Note: If ADC group injected contexts queue are enabled, configure      */
 		/*       contexts using function "LL_ADC_INJ_ConfigQueueContext()".       */
-		// LL_ADC_INJ_SetQueueMode(ADC1, LL_ADC_INJ_QUEUE_DISABLE);
+		// LL_ADC_INJ_SetQueueMode(ADC3, LL_ADC_INJ_QUEUE_DISABLE);
 
 		/* Set ADC group injected sequencer */
 		/* Note: On this STM32 series, ADC group injected sequencer is             */
@@ -242,13 +243,13 @@ static void Configure_ADC(void)
 		/*       "LL_ADC_INJ_SetSequencerLength()".                               */
 
 		/* Set ADC group injected sequencer length and scan direction */
-		// LL_ADC_INJ_SetSequencerLength(ADC1, LL_ADC_INJ_SEQ_SCAN_DISABLE);
+		// LL_ADC_INJ_SetSequencerLength(ADC3, LL_ADC_INJ_SEQ_SCAN_DISABLE);
 
 		/* Set ADC group injected sequencer discontinuous mode */
-		// LL_ADC_INJ_SetSequencerDiscont(ADC1, LL_ADC_INJ_SEQ_DISCONT_DISABLE);
+		// LL_ADC_INJ_SetSequencerDiscont(ADC3, LL_ADC_INJ_SEQ_DISCONT_DISABLE);
 
 		/* Set ADC group injected sequence: channel on the selected sequence rank. */
-		// LL_ADC_INJ_SetSequencerRanks(ADC1, LL_ADC_INJ_RANK_1, LL_ADC_CHANNEL_15);
+		// LL_ADC_INJ_SetSequencerRanks(ADC3, LL_ADC_INJ_RANK_1, LL_ADC_CHANNEL_15);
 	}
 
 	/*## Configuration of ADC hierarchical scope: channels #####################*/
@@ -259,9 +260,9 @@ static void Configure_ADC(void)
 	/*       ADC state:                                                         */
 	/*       ADC must be disabled or enabled without conversion on going        */
 	/*       on either groups regular or injected.                              */
-	if ((LL_ADC_IsEnabled(ADC1) == 0)                    ||
-		((LL_ADC_REG_IsConversionOngoing(ADC1) == 0) &&
-		(LL_ADC_INJ_IsConversionOngoing(ADC1) == 0)   )   )
+	if ((LL_ADC_IsEnabled(ADC3) == 0)                    ||
+		((LL_ADC_REG_IsConversionOngoing(ADC3) == 0) &&
+		(LL_ADC_INJ_IsConversionOngoing(ADC3) == 0)   )   )
 	{
 		/* Set ADC channels sampling time */
 		/* Note: Considering interruption occurring after each ADC conversion     */
@@ -269,25 +270,25 @@ static void Configure_ADC(void)
 		/*       selected (IT from ADC analog watchdog),                          */
 		/*       select sampling time and ADC clock with sufficient               */
 		/*       duration to not create an overhead situation in IRQHandler.      */
-//!		LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_15, LL_ADC_SAMPLINGTIME_810CYCLES_5);
-		LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_1, LL_ADC_SAMPLINGTIME_810CYCLES_5);
-		LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_3, LL_ADC_SAMPLINGTIME_810CYCLES_5);
-		LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_6, LL_ADC_SAMPLINGTIME_810CYCLES_5);
-		LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_8, LL_ADC_SAMPLINGTIME_810CYCLES_5);
+//!		LL_ADC_SetChannelSamplingTime(ADC3, LL_ADC_CHANNEL_15, LL_ADC_SAMPLINGTIME_810CYCLES_5);
+//		LL_ADC_SetChannelSamplingTime(ADC3, LL_ADC_CHANNEL_1, LL_ADC_SAMPLINGTIME_810CYCLES_5);
+		LL_ADC_SetChannelSamplingTime(ADC3, LL_ADC_CHANNEL_3, LL_ADC_SAMPLINGTIME_810CYCLES_5);
+//		LL_ADC_SetChannelSamplingTime(ADC3, LL_ADC_CHANNEL_6, LL_ADC_SAMPLINGTIME_810CYCLES_5);
+//		LL_ADC_SetChannelSamplingTime(ADC3, LL_ADC_CHANNEL_8, LL_ADC_SAMPLINGTIME_810CYCLES_5);
 
 
 		/* Set mode single-ended or differential input of the selected            */
 		/* ADC channel.                                                           */
-		// LL_ADC_SetChannelSingleDiff(ADC1, LL_ADC_CHANNEL_15, LL_ADC_SINGLE_ENDED);
+		// LL_ADC_SetChannelSingleDiff(ADC3, LL_ADC_CHANNEL_15, LL_ADC_SINGLE_ENDED);
 	}
 
 	/*## Configuration of ADC transversal scope: analog watchdog ###############*/
 
 	/* Set ADC analog watchdog channels to be monitored */
-//!	LL_ADC_SetAnalogWDMonitChannels(ADC1, LL_ADC_AWD1, LL_ADC_AWD_ALL_CHANNELS_REG);
+//!	LL_ADC_SetAnalogWDMonitChannels(ADC3, LL_ADC_AWD1, LL_ADC_AWD_ALL_CHANNELS_REG);
 
 	/* Set ADC analog watchdog thresholds */
-//!  LL_ADC_ConfigAnalogWDThresholds(ADC1, LL_ADC_AWD1, ADC_AWD_THRESHOLD_HIGH, ADC_AWD_THRESHOLD_LOW);
+//!  LL_ADC_ConfigAnalogWDThresholds(ADC3, LL_ADC_AWD1, ADC_AWD_THRESHOLD_HIGH, ADC_AWD_THRESHOLD_LOW);
 
 	/*## Configuration of ADC transversal scope: oversampling ##################*/
 
@@ -296,7 +297,8 @@ static void Configure_ADC(void)
 
 	/*## Configuration of ADC interruptions ####################################*/
 	/* Enable ADC analog watchdog 1 interruption */
-	LL_ADC_EnableIT_EOC(ADC1);
+	//LL_ADC_EnableIT_EOC(ADC3);
+	LL_ADC_EnableIT_EOSMP(ADC3);
 
 	printf("adc conf \r\n");
 }
@@ -322,13 +324,13 @@ static void Activate_ADC(void)
   /*       Software can be optimized by removing some of these checks, if     */
   /*       they are not relevant considering previous settings and actions    */
   /*       in user application.                                               */
-  if (LL_ADC_IsEnabled(ADC1) == 0)
+  if (LL_ADC_IsEnabled(ADC3) == 0)
   {
     /* Disable ADC deep power down (enabled by default after reset state) */
-    LL_ADC_DisableDeepPowerDown(ADC1);
+    LL_ADC_DisableDeepPowerDown(ADC3);
 
     /* Enable ADC internal voltage regulator */
-    LL_ADC_EnableInternalRegulator(ADC1);
+    LL_ADC_EnableInternalRegulator(ADC3);
 
     /* Delay for ADC internal voltage regulator stabilization.                */
     /* Compute number of CPU cycles to wait for, from delay in us.            */
@@ -344,15 +346,15 @@ static void Activate_ADC(void)
 
     /* Run ADC self calibration */
     // Need to define which calib parameter has to be used
-    // LL_ADC_StartCalibration(ADC1, LL_ADC_CALIB_OFFSET, LL_ADC_SINGLE_ENDED);
-    // LL_ADC_StartCalibration(ADC1, LL_ADC_CALIB_OFFSET_LINEARITY, LL_ADC_SINGLE_ENDED);
+    // LL_ADC_StartCalibration(ADC3, LL_ADC_CALIB_OFFSET, LL_ADC_SINGLE_ENDED);
+    // LL_ADC_StartCalibration(ADC3, LL_ADC_CALIB_OFFSET_LINEARITY, LL_ADC_SINGLE_ENDED);
 
     /* Poll for ADC effectively calibrated */
     #if (USE_TIMEOUT == 1)
     Timeout = ADC_CALIBRATION_TIMEOUT_MS;
     #endif /* USE_TIMEOUT */
 
-    while (LL_ADC_IsCalibrationOnGoing(ADC1) != 0)
+    while (LL_ADC_IsCalibrationOnGoing(ADC3) != 0)
     {
     #if (USE_TIMEOUT == 1)
       /* Check Systick counter flag to decrement the time-out value */
@@ -377,14 +379,14 @@ static void Activate_ADC(void)
     }
 
     /* Enable ADC */
-    LL_ADC_Enable(ADC1);
+    LL_ADC_Enable(ADC3);
 
     /* Poll for ADC ready to convert */
     #if (USE_TIMEOUT == 1)
     Timeout = ADC_ENABLE_TIMEOUT_MS;
     #endif /* USE_TIMEOUT */
 
-    while (LL_ADC_IsActiveFlag_ADRDY(ADC1) == 0)
+    while (LL_ADC_IsActiveFlag_ADRDY(ADC3) == 0)
     {
     #if (USE_TIMEOUT == 1)
       /* Check Systick counter flag to decrement the time-out value */
@@ -425,25 +427,41 @@ ushort ch3;
 ushort ch6;
 ushort ch8;
 
+uchar samp_done = 0;
+
 static void adc_proc_task(void *arg)
 {
+	vTaskDelay(1000);
+	printf("adc sampling start \r\n");
+
+	NVIC_EnableIRQ	(ADC3_IRQn);
+
 	for(;;)
 	{
 		vTaskDelay(5000);
-		printf("ch1: %d, ch3: %d, ch6: %d, ch8: %d\r\n", ch1, ch3, ch6, ch8);
+
+		if(samp_done)
+		{
+			//printf("ch1: %d, ch3: %d, ch6: %d, ch8: %d\r\n", ch1, ch3, ch6, ch8);
+			printf("ch1: %d \r\n", ch1);
+			LL_ADC_REG_StartConversion(ADC3);
+			samp_done = 0;
+		}
 	}
 }
 
 void adc_callback(void)
 {
-	/* Disable ADC analog watchdog 1 interruption */
-	//LL_ADC_DisableIT_EOC(ADC1);
+	//LL_ADC_DisableIT_EOC(ADC3);
+	//LL_ADC_DisableIT_EOSMP(ADC3);
 
 	//printf("adc irq\r\n");
-	ch1 = LL_ADC_REG_ReadConversionData16(ADC1);
-	ch3 = LL_ADC_REG_ReadConversionData16(ADC1);
-	ch6 = LL_ADC_REG_ReadConversionData16(ADC1);
-	ch8 = LL_ADC_REG_ReadConversionData16(ADC1);
+	ch1 = LL_ADC_REG_ReadConversionData16(ADC3);
+	//ch3 = LL_ADC_REG_ReadConversionData16(ADC3);
+	//ch6 = LL_ADC_REG_ReadConversionData16(ADC3);
+	//ch8 = LL_ADC_REG_ReadConversionData16(ADC3);
+
+	samp_done = 1;
 }
 
 void adc_init(void)
@@ -451,10 +469,10 @@ void adc_init(void)
 	Configure_ADC();
 	Activate_ADC();
 
-	if((LL_ADC_IsEnabled(ADC1) == 1)&&(LL_ADC_IsDisableOngoing(ADC1) == 0)&&(LL_ADC_REG_IsConversionOngoing(ADC1) == 0))
+	if((LL_ADC_IsEnabled(ADC3) == 1)&&(LL_ADC_IsDisableOngoing(ADC3) == 0)&&(LL_ADC_REG_IsConversionOngoing(ADC3) == 0))
 	{
-	    LL_ADC_REG_StartConversion(ADC1);
-	    printf("adc start \r\n");
+	    LL_ADC_REG_StartConversion(ADC3);
+	    //printf("adc start \r\n");
 	}
 	else
 	{
