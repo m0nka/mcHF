@@ -509,7 +509,7 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 		// Alpha is inverted!!!
 		#if 1
 		// Print vertical line for each point, transparent, to fill the spectrum
-		GUI_SetColor(GUI_LIGHTGREEN);
+		GUI_SetColor(HOT_PINK);
 		GUI_SetAlpha(88);
 		GUI_DrawVLine(new_x, new_y, chk_y(SCOPE_Y + SCOPE_Y_SIZE));
 		GUI_SetAlpha(255);

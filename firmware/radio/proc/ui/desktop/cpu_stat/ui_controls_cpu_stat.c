@@ -13,10 +13,10 @@
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "version.h"
-//#include "main.h"
 
 #ifdef CONTEXT_VIDEO
 
+#include "ui_proc.h"
 #include "gui.h"
 #include "dialog.h"
 //#include "ST_GUI_Addons.h"
@@ -82,7 +82,7 @@ static void ui_controls_cpu_stat_show_cpu_load(void)
 	GUI_FillRect(CPU_L_X + 53,	CPU_L_Y + 1,	CPU_L_X + 102,	CPU_L_Y + 13);
 
 	// Create frame
-	GUI_SetColor(GUI_MAKE_COLOR(0x008054E7));
+	GUI_SetColor(HOT_PINK);
 	GUI_DrawRect(CPU_L_X - 1,	CPU_L_Y - 1,	CPU_L_X + 106,	CPU_L_Y + 15);
 	GUI_DrawRect(CPU_L_X,		CPU_L_Y,		CPU_L_X + 105,	CPU_L_Y + 14);
 	GUI_FillRect(CPU_L_X + 20,	CPU_L_Y,		CPU_L_X + 52,	CPU_L_Y + 14);
@@ -99,7 +99,7 @@ static void ui_controls_cpu_stat_show_cpu_load(void)
 	GUI_SetFont(&GUI_Font8x16_1);
 	GUI_SetColor(GUI_WHITE);
 	GUI_DispStringAt("CPU", CPU_L_X + 25, CPU_L_Y + 1);
-	GUI_SetColor(GUI_MAKE_COLOR(0x008054E7));
+	GUI_SetColor(HOT_PINK);
 	GUI_DispStringAt(tmp,CPU_L_X + 65,CPU_L_Y + 1);
 
 	// Reset accumulator

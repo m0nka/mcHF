@@ -157,11 +157,22 @@ void EXTI15_10_IRQHandler(void)
 
 void ADC3_IRQHandler(void)
 {
-	//if(LL_ADC_IsActiveFlag_EOC(ADC3) != 0)
+	if(LL_ADC_IsActiveFlag_EOC(ADC3) != 0)
+	{
+		LL_ADC_ClearFlag_EOC(ADC3);
+		adc_callback();
+	}
+
 	if(LL_ADC_IsActiveFlag_EOSMP(ADC3) != 0)
 	{
-		//LL_ADC_ClearFlag_EOC(ADC3);
+
 		LL_ADC_ClearFlag_EOSMP(ADC3);
+		adc_callback();
+	}
+
+	if(LL_ADC_IsActiveFlag_OVR(ADC3) != 0)
+	{
+		LL_ADC_ClearFlag_OVR(ADC3);
 		adc_callback();
 	}
 }
