@@ -106,6 +106,7 @@ void SysTick_Handler(void)
 	osSystickHandler();
 }
 
+#ifdef CONTEXT_TOUCH
 //*----------------------------------------------------------------------------
 //* Function Name       : EXTI9_5_IRQHandler
 //* Object              :
@@ -122,7 +123,9 @@ void EXTI9_5_IRQHandler(void)
 	    __HAL_GPIO_EXTI_CLEAR_IT(TS_INT_PIN);
 	}
 }
+#endif
 
+#ifdef CONTEXT_KEYPAD
 //*----------------------------------------------------------------------------
 //* Function Name       : EXTI15_10_IRQHandler
 //* Object              :
@@ -154,6 +157,7 @@ void EXTI15_10_IRQHandler(void)
 		keypad_proc_irq(3);
 	}
 }
+#endif
 
 void ADC3_IRQHandler(void)
 {

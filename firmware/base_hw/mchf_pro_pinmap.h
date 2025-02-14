@@ -721,7 +721,7 @@
 #define CODEC_MUTE_PORT           		GPIOC
 
 // PC3			ADC3_INP1, Reflected Power, from bridge
-#define ADC3_INP1						GPIO_PIN_3
+#define ADC3_INP1						LL_GPIO_PIN_3
 #define ADC3_INP1_PORT           		GPIOC
 
 // PC4			RFM_DIO1 -> ToDo: Lora driver
@@ -930,7 +930,7 @@
 #define POWER_LED_PORT            		GPIOF
 
 // PF7			ADC3_INP3, PA Temperature
-#define ADC3_INP3						GPIO_PIN_7
+#define ADC3_INP3						LL_GPIO_PIN_7
 #define ADC3_INP3_PORT            		GPIOF
 
 // PF8			SAI1_SCK_B
@@ -942,7 +942,7 @@
 //
 
 // PF10			ADC3_INP6, Forward Power
-#define ADC3_INP6						GPIO_PIN_10
+#define ADC3_INP6						LL_GPIO_PIN_10
 #define ADC3_INP6_PORT            		GPIOF
 
 // PF11			FMC_SDNRAS

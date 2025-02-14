@@ -32,7 +32,7 @@ static void adc_configure(void)
 
 	// -----------------------------------------------------------------
 	// ADC3_INP8, Ambient light sensor (PF6)
-	LL_GPIO_SetPinMode(POWER_LED_PORT, POWER_LED, LL_GPIO_MODE_ANALOG);
+	LL_GPIO_SetPinMode(POWER_LED_PORT, LL_GPIO_PIN_6, LL_GPIO_MODE_ANALOG);
 
 	// -----------------------------------------------------------------
 	// ADC3_INP3, PA Temperature (PF7)
@@ -40,15 +40,12 @@ static void adc_configure(void)
 
 	// -----------------------------------------------------------------
 	// ADC3_INP6, Forward Power (PF10)
-	LL_GPIO_SetPinMode(ADC3_INP6_PORT, ADC3_INP6, LL_GPIO_MODE_ANALOG);
-
-	NVIC_SetPriority(ADC3_IRQn, 3);
+	LL_GPIO_SetPinMode(ADC3_INP6_PORT, ADC3_INP6, LL_GPIO_MODE_ANALOG|LL_GPIO_MODE_ALTERNATE);
 
 	LL_AHB4_GRP1_EnableClock(LL_AHB4_GRP1_PERIPH_ADC3);
-	LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_CLOCK_SYNC_PCLK_DIV4);
+	LL_ADC_SetCommonClock	(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_CLOCK_SYNC_PCLK_DIV4);
 
 	//LL_SYSCFG_OpenAnalogSwitch(LL_SYSCFG_ANALOG_SWITCH_PC2|LL_SYSCFG_ANALOG_SWITCH_PC3);
-	//LL_ADC_SetMultimode(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_MULTI_INDEPENDENT);
 	//LL_ADC_SetMultiDMATransfer(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_MULTI_REG_DMA_EACH_ADC);
 	//LL_ADC_SetMultiTwoSamplingDelay(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_MULTI_TWOSMP_DELAY_1CYCLE);
 	//LL_ADC_SetResolution(ADC3, LL_ADC_DATA_ALIGN_RIGHT);
@@ -58,6 +55,7 @@ static void adc_configure(void)
 	//LL_ADC_REG_SetTriggerEdge(ADC3, LL_ADC_REG_TRIG_EXT_RISING);
 	//LL_ADC_REG_SetSequencerDiscont(ADC3, LL_ADC_REG_SEQ_DISCONT_DISABLE);
 
+	LL_ADC_SetMultimode(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_MULTI_INDEPENDENT);
 	LL_ADC_SetResolution			(ADC3, LL_ADC_RESOLUTION_16B);
 	LL_ADC_REG_SetTriggerSource		(ADC3, LL_ADC_REG_TRIG_SOFTWARE);
 	LL_ADC_REG_SetContinuousMode	(ADC3, LL_ADC_REG_CONV_SINGLE);
@@ -66,7 +64,7 @@ static void adc_configure(void)
 	// not working, ToDo:
 	LL_ADC_REG_SetSequencerLength	(ADC3, LL_ADC_REG_SEQ_SCAN_DISABLE);
 
-	#if 0
+	#if 1
 	// VREF internal channel
 	LL_ADC_SetCommonPathInternalCh	(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_PATH_INTERNAL_VREFINT);
 	LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_VREFINT, LL_ADC_SAMPLINGTIME_810CYCLES_5);
@@ -81,13 +79,13 @@ static void adc_configure(void)
 	#endif
 
 	#if 0
-	// VBAT internal channel
+	// Temp internal channel
 	LL_ADC_SetCommonPathInternalCh	(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_PATH_INTERNAL_TEMPSENSOR);
 	LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_TEMPSENSOR, LL_ADC_SAMPLINGTIME_810CYCLES_5);
 	LL_ADC_REG_SetSequencerRanks	(ADC3, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_TEMPSENSOR);
 	#endif
 
-	#if 1
+	#if 0
 	// CH1, Reflected Power (PC3)
 	LL_ADC_SetChannelSingleDiff		(ADC3, LL_ADC_CHANNEL_1, LL_ADC_SINGLE_ENDED);
 	LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_1, LL_ADC_SAMPLINGTIME_810CYCLES_5);
@@ -114,6 +112,8 @@ static void adc_configure(void)
 	LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_8, LL_ADC_SAMPLINGTIME_810CYCLES_5);
 	LL_ADC_REG_SetSequencerRanks	(ADC3, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_8);
 	#endif
+
+	NVIC_SetPriority(ADC3_IRQn, 3);
 
 	// Set correct IRQ
 	LL_ADC_EnableIT_EOC(ADC3);
