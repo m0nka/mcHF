@@ -159,6 +159,7 @@ void EXTI15_10_IRQHandler(void)
 }
 #endif
 
+#ifdef LL_ADC_USE_IRQ
 void ADC3_IRQHandler(void)
 {
 	if(LL_ADC_IsActiveFlag_EOC(ADC3) != 0)
@@ -180,6 +181,7 @@ void ADC3_IRQHandler(void)
 		adc_callback();
 	}
 }
+#endif
 
 void Error_Handler(int err)
 {

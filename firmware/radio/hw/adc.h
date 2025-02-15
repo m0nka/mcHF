@@ -1,6 +1,16 @@
 #ifndef __ADC_H
 #define __ADC_H
 
+// Implementation options
+//
+// IRQ
+//
+#define LL_ADC_USE_IRQ
+//
+// DMA
+//
+//#define LL_ADC_USE_DMA
+
 // Timeout to wait for current conversion on going to be completed.
 // Timeout fixed to worst case, for 1 channel.
 //   - maximum sampling time (830.5 adc_clk)
