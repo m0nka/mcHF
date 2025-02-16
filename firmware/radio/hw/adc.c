@@ -26,8 +26,8 @@ uchar samp_done = 0;
 #endif
 
 #ifdef LL_ADC_USE_DMA
-//ushort dma_rx_buffer[2];
-__attribute__((section("dma_mem"))) __attribute__ ((aligned (32))) ushort dma_rx_buffer[2];
+__attribute__((section("dma_mem"))) __attribute__ ((aligned (32))) ushort dma_rx_buffer[3];
+//__attribute__((section("heap_mem"))) __attribute__ ((aligned (32))) ushort dma_rx_buffer[2];
 #endif
 
 static void adc_configure(void)
@@ -54,12 +54,28 @@ static void adc_configure(void)
 
 	LL_AHB4_GRP1_EnableClock(LL_AHB4_GRP1_PERIPH_ADC3);
 
-	LL_ADC_SetCommonClock	(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_CLOCK_SYNC_PCLK_DIV4);
+	#ifndef LL_ADC_USE_DMA
+	LL_ADC_SetCommonClock	(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_CLOCK_ASYNC_DIV4);
+	#else
 
-	//LL_RCC_SetADCClockSource(LL_RCC_ADC_CLKSOURCE_PLL2P);
-	//LL_ADC_SetCommonClock	(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_CLOCK_ASYNC_DIV1);
+#if 0
+	// Is it safe to use this PLL ?
+	LL_RCC_PLL2_SetM(4);
+	LL_RCC_PLL2_SetN(9);
+	LL_RCC_PLL2_SetP(4);
+	LL_RCC_PLL2_SetFRACN(6144);
+	LL_RCC_PLL2_SetVCOInputRange(LL_RCC_PLLINPUTRANGE_8_16);
+	LL_RCC_PLL2_SetVCOOutputRange(LL_RCC_PLLVCORANGE_WIDE);
+	LL_RCC_SetADCClockSource(LL_RCC_ADC_CLKSOURCE_PLL2P);
+	LL_RCC_PLL2FRACN_Enable();
+	LL_RCC_PLL2P_Enable();
+	LL_RCC_PLL2_Enable();
+	while((LL_RCC_PLL2_IsReady() == 0));
+#else
+LL_ADC_SetCommonClock	(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_CLOCK_ASYNC_DIV8);
+#endif
 
-	#ifdef LL_ADC_USE_DMA
+
 	//
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
 	//
@@ -70,7 +86,7 @@ static void adc_configure(void)
 	ADC_Config_DMA.MemoryOrM2MDstDataSize 	= LL_DMA_MDATAALIGN_HALFWORD;
 	ADC_Config_DMA.MemoryOrM2MDstIncMode 	= LL_DMA_MEMORY_INCREMENT;
 	ADC_Config_DMA.Mode 					= LL_DMA_MODE_CIRCULAR;
-	ADC_Config_DMA.NbData 					= 2;
+	ADC_Config_DMA.NbData 					= NUMBER_OF_ADC3_CHANNELS;
 	ADC_Config_DMA.PeriphBurst 				= LL_DMA_PBURST_SINGLE;
 	ADC_Config_DMA.PeriphOrM2MSrcAddress 	= (uint32_t)&ADC3->DR;
 	ADC_Config_DMA.PeriphOrM2MSrcDataSize 	= LL_DMA_PDATAALIGN_HALFWORD;
@@ -95,60 +111,65 @@ static void adc_configure(void)
 	LL_ADC_SetMultimode				(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_MULTI_INDEPENDENT);
 	LL_ADC_SetResolution			(ADC3, LL_ADC_RESOLUTION_16B);
 	LL_ADC_REG_SetTriggerSource		(ADC3, LL_ADC_REG_TRIG_SOFTWARE);
-	//LL_ADC_REG_SetOverrun			(ADC3, LL_ADC_REG_OVR_DATA_OVERWRITTEN);
-	LL_ADC_REG_SetOverrun			(ADC3, LL_ADC_REG_OVR_DATA_PRESERVED);
-
-	#if 0
-	LL_ADC_REG_SetSequencerLength	(ADC3, LL_ADC_REG_SEQ_SCAN_DISABLE);
+	LL_ADC_REG_SetOverrun			(ADC3, LL_ADC_REG_OVR_DATA_OVERWRITTEN);
+	//LL_ADC_REG_SetOverrun			(ADC3, LL_ADC_REG_OVR_DATA_PRESERVED);
 	LL_ADC_REG_SetContinuousMode	(ADC3, LL_ADC_REG_CONV_SINGLE);
-	#else
-	LL_ADC_REG_SetSequencerLength	(ADC3, LL_ADC_REG_SEQ_SCAN_ENABLE_2RANKS);
+
+	#if (NUMBER_OF_ADC3_CHANNELS == 1)
+	LL_ADC_REG_SetSequencerLength	(ADC3, LL_ADC_REG_SEQ_SCAN_DISABLE);
+	#endif
+
+	#ifdef LL_ADC_USE_DMA
 	LL_ADC_REG_SetContinuousMode	(ADC3, LL_ADC_REG_CONV_CONTINUOUS);
 	#endif
 
-	LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_VREFINT);
-	LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_TEMPSENSOR);
-
-	#if 1
 	// VREF internal channel
+	LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_VREFINT);
 	LL_ADC_SetCommonPathInternalCh	(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_PATH_INTERNAL_VREFINT);
-	LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_VREFINT, LL_ADC_SAMPLINGTIME_810CYCLES_5);
+	LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_VREFINT, LL_ADC_SAMPLINGTIME_64CYCLES_5);
 	LL_ADC_REG_SetSequencerRanks	(ADC3, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_VREFINT);
-	#endif
 
-	#if 0
 	// VBAT internal channel
+	#if (NUMBER_OF_ADC3_CHANNELS > 1)
+	LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_VBAT);
 	LL_ADC_SetCommonPathInternalCh	(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_PATH_INTERNAL_VBAT);
-	LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_VBAT, LL_ADC_SAMPLINGTIME_810CYCLES_5);
-	LL_ADC_REG_SetSequencerRanks	(ADC3, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_VBAT);
+	LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_VBAT, LL_ADC_SAMPLINGTIME_64CYCLES_5);
+	LL_ADC_REG_SetSequencerRanks	(ADC3, LL_ADC_REG_RANK_2, LL_ADC_CHANNEL_VBAT);
+	LL_ADC_REG_SetSequencerLength	(ADC3, LL_ADC_REG_SEQ_SCAN_ENABLE_2RANKS);
 	#endif
 
-	#if 1
 	// Temp internal channel
+	#if (NUMBER_OF_ADC3_CHANNELS > 2)
+	LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_TEMPSENSOR);
 	LL_ADC_SetCommonPathInternalCh	(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_PATH_INTERNAL_TEMPSENSOR);
-	LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_TEMPSENSOR, LL_ADC_SAMPLINGTIME_810CYCLES_5);
-	LL_ADC_REG_SetSequencerRanks	(ADC3, LL_ADC_REG_RANK_2, LL_ADC_CHANNEL_TEMPSENSOR);
+	LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_TEMPSENSOR, LL_ADC_SAMPLINGTIME_64CYCLES_5);
+	LL_ADC_REG_SetSequencerRanks	(ADC3, LL_ADC_REG_RANK_3, LL_ADC_CHANNEL_TEMPSENSOR);
+	LL_ADC_REG_SetSequencerLength	(ADC3, LL_ADC_REG_SEQ_SCAN_ENABLE_3RANKS);
 	#endif
 
-	#if 0
 	// CH1, Reflected Power (PC3)
+	#if (NUMBER_OF_ADC3_CHANNELS > 3)
+	LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_1);
 	LL_ADC_SetChannelSingleDiff		(ADC3, LL_ADC_CHANNEL_1, LL_ADC_SINGLE_ENDED);
 	LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_1, LL_ADC_SAMPLINGTIME_810CYCLES_5);
-	LL_ADC_REG_SetSequencerRanks	(ADC3, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_1);
+	LL_ADC_REG_SetSequencerRanks	(ADC3, LL_ADC_REG_RANK_4, LL_ADC_CHANNEL_1);
+	LL_ADC_REG_SetSequencerLength	(ADC3, LL_ADC_REG_SEQ_SCAN_ENABLE_4RANKS);
 	#endif
 
-	#if 0
 	// CH3, PA Temperature (PF7) - not working, pin multiplexer ? ToDo:
+	#if (NUMBER_OF_ADC3_CHANNELS > 4)
+	LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_3);
 	LL_ADC_SetChannelSingleDiff		(ADC3, LL_ADC_CHANNEL_3, LL_ADC_SINGLE_ENDED);
 	LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_3, LL_ADC_SAMPLINGTIME_810CYCLES_5);
-	LL_ADC_REG_SetSequencerRanks	(ADC3, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_3);
+	LL_ADC_REG_SetSequencerRanks	(ADC3, LL_ADC_REG_RANK_4, LL_ADC_CHANNEL_3);
+	LL_ADC_REG_SetSequencerLength	(ADC3, LL_ADC_REG_SEQ_SCAN_ENABLE_5RANKS);
 	#endif
 
 	#if 0
 	// CH6, Forward Power (PF10) - not working, pin multiplexer ? ToDo:
 	LL_ADC_SetChannelSingleDiff		(ADC3, LL_ADC_CHANNEL_6, LL_ADC_SINGLE_ENDED);
 	LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_6, LL_ADC_SAMPLINGTIME_810CYCLES_5);
-	LL_ADC_REG_SetSequencerRanks	(ADC3, LL_ADC_REG_RANK_1,LL_ADC_CHANNEL_6);
+	LL_ADC_REG_SetSequencerRanks	(ADC3, LL_ADC_REG_RANK_6,LL_ADC_CHANNEL_6);
 	#endif
 
 	#if 0
@@ -204,6 +225,29 @@ static void adc_activate(void)
 	printf("adc act \r\n");
 }
 
+static void adc_switch_channel(uchar id)
+{
+	LL_ADC_Disable(ADC3);
+
+	if(id == 0)
+	{
+		// VREF internal channel
+		LL_ADC_SetCommonPathInternalCh	(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_PATH_INTERNAL_VREFINT);
+		LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_VREFINT, LL_ADC_SAMPLINGTIME_64CYCLES_5);
+		LL_ADC_REG_SetSequencerRanks	(ADC3, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_VBAT);
+	}
+	else
+	{
+		// VBAT internal channel
+		LL_ADC_SetCommonPathInternalCh	(__LL_ADC_COMMON_INSTANCE(ADC3), LL_ADC_PATH_INTERNAL_VBAT);
+		LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_VBAT, LL_ADC_SAMPLINGTIME_64CYCLES_5);
+		LL_ADC_REG_SetSequencerRanks	(ADC3, LL_ADC_REG_RANK_1, LL_ADC_CHANNEL_VBAT);
+	}
+
+	LL_ADC_Enable(ADC3);
+	while(LL_ADC_IsActiveFlag_ADRDY(ADC3) == 0);
+}
+
 static void adc_proc_task(void *arg)
 {
 	vTaskDelay(4000);
@@ -237,17 +281,41 @@ static void adc_proc_task(void *arg)
 		#endif
 
 		#ifdef LL_ADC_USE_DMA
-		if(LL_DMA_IsActiveFlag_TC1(DMA1))
+
+		SCB_InvalidateDCache_by_Addr((uint32_t *)dma_rx_buffer, 6);
+
+		ushort ch1v =  __LL_ADC_CALC_DATA_TO_VOLTAGE(VDDA_APPLI, dma_rx_buffer[0], LL_ADC_RESOLUTION_16B);
+		ushort ch2v =  __LL_ADC_CALC_DATA_TO_VOLTAGE(VDDA_APPLI, dma_rx_buffer[1], LL_ADC_RESOLUTION_16B);
+		ushort ch3v =  __LL_ADC_CALC_DATA_TO_VOLTAGE(VDDA_APPLI, dma_rx_buffer[2], LL_ADC_RESOLUTION_16B);
+		printf("ch1: %dmV, ch2: %dmV, ch2: %dmV\r\n", ch1v, ch2v, ch3v);
+
+		//tempSensor = (TEMPSENSOR_CAL2_TEMP - TEMPSENSOR_CAL1_TEMP)/(*TEMPSENSOR_CAL2_ADDR - *TEMPSENSOR_CAL1_ADDR) * dataStructure->getRxBuffer()[4] + 30;
+		#endif
+
+		#ifdef LL_ADC_USE_POLLING
+		ushort ADC_Val[10];
+		static uchar ch_id = 0;
+		LL_ADC_REG_StartConversion(ADC3);
+		for (uint8_t i = 0; i < NUMBER_OF_ADC3_CHANNELS; i++)
 		{
-			LL_DMA_ClearFlag_TC1(DMA1);
-
-			ushort v =  __LL_ADC_CALC_DATA_TO_VOLTAGE(VDDA_APPLI, dma_rx_buffer[0], LL_ADC_RESOLUTION_16B);
-			printf("ch1: %d.%dV\r\n",v/1000, v%1000);
-
-			//tempSensor = (TEMPSENSOR_CAL2_TEMP - TEMPSENSOR_CAL1_TEMP)/(*TEMPSENSOR_CAL2_ADDR - *TEMPSENSOR_CAL1_ADDR) * dataStructure->getRxBuffer()[4] + 30;
-
+			while(LL_ADC_IsActiveFlag_EOC(ADC3) == 0);
+			LL_ADC_ClearFlag_EOC(ADC3);
+			ADC_Val[i] = LL_ADC_REG_ReadConversionData16(ADC3);
 		}
-#endif
+		LL_ADC_REG_StopConversion(ADC3);
+
+		for (uint8_t i = 0; i < NUMBER_OF_ADC3_CHANNELS; i++)
+		{
+			ushort chv =  __LL_ADC_CALC_DATA_TO_VOLTAGE(VDDA_APPLI, ADC_Val[i], LL_ADC_RESOLUTION_16B);
+			printf("ch%d: %dmV \r\n", i, chv);
+		}
+		printf("-------------------- \r\n");
+
+		//adc_switch_channel(ch_id);
+		ch_id++;
+		if(ch_id == 2) ch_id = 0;
+		#endif
+
 	}
 }
 
@@ -261,7 +329,7 @@ void adc_callback(void)
 	ch1 = LL_ADC_REG_ReadConversionData16(ADC3);
 
 	ch3 = LL_ADC_REG_ReadConversionData16(ADC3);
-	//ch6 = LL_ADC_REG_ReadConversionData16(ADC3);
+	ch6 = LL_ADC_REG_ReadConversionData16(ADC3);
 	//ch8 = LL_ADC_REG_ReadConversionData16(ADC3);
 
 	samp_done = 1;
@@ -273,7 +341,7 @@ void adc_init(void)
 	adc_configure();
 	adc_activate();
 
-	//#ifdef LL_ADC_USE_IRQ
+	#ifndef LL_ADC_USE_POLLING
 	if((LL_ADC_IsEnabled(ADC3) == 1)&&(LL_ADC_IsDisableOngoing(ADC3) == 0)&&(LL_ADC_REG_IsConversionOngoing(ADC3) == 0))
 	{
 	    LL_ADC_REG_StartConversion(ADC3);
@@ -283,7 +351,7 @@ void adc_init(void)
 	{
 		return;
 	}
-	//#endif
+	#endif
 
 	// ADC processor (only register, will start with scheduler)
     xTaskCreate((TaskFunction_t)adc_proc_task, "adc_proc", 256, NULL, osPriorityNormal, NULL);

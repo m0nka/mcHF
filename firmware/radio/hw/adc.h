@@ -5,11 +5,17 @@
 //
 // IRQ
 //
-#define LL_ADC_USE_IRQ
+//#define LL_ADC_USE_IRQ
 //
 // DMA
 //
 //#define LL_ADC_USE_DMA
+//
+// Polling
+//
+#define LL_ADC_USE_POLLING
+
+#define NUMBER_OF_ADC3_CHANNELS			1
 
 // Timeout to wait for current conversion on going to be completed.
 // Timeout fixed to worst case, for 1 channel.
