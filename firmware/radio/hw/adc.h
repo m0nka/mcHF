@@ -1,21 +1,31 @@
 #ifndef __ADC_H
 #define __ADC_H
 
+// ----------------------------------------------------------------------
+//
 // Implementation options
 //
 // IRQ
 //
 //#define LL_ADC_USE_IRQ
 //
-// DMA
+// DMA1
 //
 //#define LL_ADC_USE_DMA
 //
 // Polling
 //
 #define LL_ADC_USE_POLLING
-
-#define NUMBER_OF_ADC3_CHANNELS			1
+//
+// BDMA
+//
+//#define LL_ADC_USE_BDMA
+//
+// ----------------------------------------------------------------------
+//
+#define NUMBER_OF_ADC3_CHANNELS			7
+//
+#define ADC_SAMP_TIME					LL_ADC_SAMPLINGTIME_810CYCLES_5
 
 // Timeout to wait for current conversion on going to be completed.
 // Timeout fixed to worst case, for 1 channel.

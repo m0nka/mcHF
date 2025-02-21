@@ -183,6 +183,29 @@ void ADC3_IRQHandler(void)
 }
 #endif
 
+#ifdef LL_ADC_USE_BDMA
+void BDMA_Channel0_IRQHandler(void)
+{
+	if(LL_BDMA_IsActiveFlag_TC0(BDMA) != 0)
+	{
+		adc_callback();
+		LL_BDMA_ClearFlag_TC0(BDMA);
+	}
+
+	if(LL_BDMA_IsActiveFlag_HT0(BDMA) != 0)
+	{
+		adc_callback();
+		LL_BDMA_ClearFlag_HT0(BDMA);
+	}
+
+	if(LL_BDMA_IsActiveFlag_TE0(BDMA) != 0)
+	{
+		adc_callback();
+		LL_BDMA_ClearFlag_TE0(BDMA);
+	}
+}
+#endif
+
 void Error_Handler(int err)
 {
   /* Turn LED RED on */
