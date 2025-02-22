@@ -27,6 +27,14 @@
 //
 #define ADC_SAMP_TIME					LL_ADC_SAMPLINGTIME_810CYCLES_5
 
+#define VIRT_CH0_INT_VREF				0
+#define VIRT_CH1_REF_PWR				1
+#define VIRT_CH2_VBAT					2
+#define VIRT_CH3_CPU_TEMP				3
+#define VIRT_CH4_FWD_PWR				4
+#define VIRT_CH5_PA_TEMP				5
+#define VIRT_CH6_AMB_SENS				6
+
 // Timeout to wait for current conversion on going to be completed.
 // Timeout fixed to worst case, for 1 channel.
 //   - maximum sampling time (830.5 adc_clk)
@@ -49,7 +57,13 @@
 
 #define VDDA_APPLI                       (3300U)
 
-void adc_callback(void);
-void adc_init(void);
+// ---------------------------------------------------------------------
+//
+void  adc_callback(void);
+uchar adc_init(void);
+//
+// Exports for safe calling
+ushort adc_read_ref_power(void);
+ushort adc_read_fwd_power(void);
 
 #endif

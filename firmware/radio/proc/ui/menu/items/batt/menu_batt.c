@@ -518,7 +518,7 @@ static void _cbSettingsControl(WM_MESSAGE * pMsg, int Id, int NCode)
 					printf("...power off\r\n");
 					vTaskDelay(300);
 
-					power_off();
+					bsp_power_off();
 					break;
 				}
 			}

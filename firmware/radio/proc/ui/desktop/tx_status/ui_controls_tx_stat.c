@@ -14,6 +14,8 @@
 #include "mchf_pro_board.h"
 #include "version.h"
 
+#include "adc.h"
+
 #ifdef CONTEXT_VIDEO
 
 #include "gui.h"
@@ -31,6 +33,9 @@ uchar ui_tx_power 		= 0xFF;
 ushort bias0 			= 0;
 ushort bias1 			= 0;
 uchar  txs				= 0;
+
+ushort fwd_volts		= 0;
+ushort f_volts			= 0;
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_tx_stat_repaint
@@ -113,9 +118,19 @@ static void ui_controls_tx_stat_repaint(void)
 	// ----------------------------------------------------------
 	// Prototype new control positions
 	GUI_SetColor(GUI_WHITE);
+
 	// Forward voltage on the bridge
-	sprintf(buf, "FWD %d.%dV", 2, 31);
+	f_volts = adc_read_fwd_power();
+	if(f_volts == 0xFFFF)
+		sprintf(buf, "FWD %d.%dV", 0, 0);
+	else
+	{
+		sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
+		printf("%4dmV(fwd) \r\n", f_volts);
+	}
+
 	GUI_DispStringAt(buf, TX_STAT_X + 130, TX_STAT_Y +  2);
+
 	// Reflected voltage on the bridge
 	sprintf(buf, "REF %d.%dV", 0, 42);
 	GUI_DispStringAt(buf, TX_STAT_X + 130, TX_STAT_Y + 20);
@@ -135,6 +150,7 @@ static void ui_controls_tx_stat_repaint(void)
 	bias0			= tsu.bias0;
 	bias1			= tsu.bias1;
 	txs   			= tsu.rxtx;
+	fwd_volts		= f_volts;
 }
 
 //*----------------------------------------------------------------------------
@@ -187,14 +203,15 @@ void ui_controls_tx_stat_touch(void)
 void ui_controls_tx_stat_refresh(void)
 {
 	// Skip needless update
-	if(	(ui_power_factor == tsu.band[tsu.curr_band].power_factor)&&\
-		(ui_tx_power == tsu.band[tsu.curr_band].tx_power)&&\
-		(bias0 == tsu.bias0)&&\
-		(bias1 == tsu.bias1)&&\
-		(txs   == tsu.rxtx)\
+	if(	(ui_power_factor != tsu.band[tsu.curr_band].power_factor)||\
+		(ui_tx_power != tsu.band[tsu.curr_band].tx_power)||\
+		(bias0 != tsu.bias0)||\
+		(bias1 != tsu.bias1)||\
+		(txs   != tsu.rxtx) ||\
+		(fwd_volts != f_volts)\
 	   )
-		return;
-
-	ui_controls_tx_stat_repaint();
+	{
+		ui_controls_tx_stat_repaint();
+	}
 }
 #endif

@@ -169,26 +169,6 @@ static inline uint32_t GetBank(uint32_t Addr)
   return bank;
 }
 
-#if 0
-// test only
-static void pa8_on(void)
-{
-	 GPIO_InitTypeDef  gpio_init_structure;
-
-	  __HAL_RCC_GPIOA_CLK_ENABLE();
-
-	  /* Configure the GPIO on PG3 */
-	  gpio_init_structure.Pin   = GPIO_PIN_8;
-	  gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
-	  gpio_init_structure.Pull  = GPIO_PULLUP;
-	  gpio_init_structure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-
-	  HAL_GPIO_Init(GPIOA, &gpio_init_structure);
-
-	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
-}
-#endif
-
 // ToDo: measure this delay and adjust !!
 void bsp_delay_100uS(ulong delay)
 {
@@ -205,7 +185,7 @@ void bsp_delay_100uS(ulong delay)
 	}
 }
 
-void LCD_LL_Backlight_init(void)
+static void bsp_backlight_init(void)
 {
 	  GPIO_InitTypeDef  gpio_init_structure;
 
@@ -398,7 +378,7 @@ void power_off(void)
 //                               	 PWR_WAKEUP_FLAG4 | PWR_WAKEUP_FLAG5 | PWR_WAKEUP_FLAG6)
 
 // Via stop mode
-void power_off(void)
+void bsp_power_off(void)
 {
 	//PWREx_WakeupPinTypeDef sPinParams;
 	//printf("power off in\r\n");
@@ -438,7 +418,8 @@ void power_off(void)
 	// Backlight off
 	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
 	// Regulator off
-	HAL_GPIO_WritePin(POWER_HOLD_PORT, POWER_HOLD, 0);
+	//HAL_GPIO_WritePin(POWER_HOLD_PORT, POWER_HOLD, 0);
+	LL_GPIO_ResetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
 	#endif
 
 	#if 0
@@ -515,6 +496,7 @@ static void ptt_init(void)
 
 void bsp_hold_power(void)
 {
+#if 0
 	GPIO_InitTypeDef  GPIO_InitStruct;
 
 	__HAL_RCC_GPIOC_CLK_ENABLE();
@@ -527,6 +509,22 @@ void bsp_hold_power(void)
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 
 	HAL_GPIO_Init(POWER_HOLD_PORT, &GPIO_InitStruct);
+#else
+	LL_GPIO_InitTypeDef 		GPIO_InitStruct = {0};
+
+	// This is first ever call, so enable gpio clock
+	LL_AHB4_GRP1_EnableClock(LL_AHB4_GRP1_PERIPH_GPIOC);
+
+	// Hold the regulator line
+	LL_GPIO_SetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
+
+	GPIO_InitStruct.Pin 	= POWER_HOLD;
+	GPIO_InitStruct.Mode 	= LL_GPIO_MODE_OUTPUT;
+	GPIO_InitStruct.Pull 	= LL_GPIO_PULL_DOWN;
+	LL_GPIO_Init(POWER_HOLD_PORT, &GPIO_InitStruct);
+
+
+#endif
 }
 
 void bsp_gpio_clocks_on(void)
@@ -543,49 +541,32 @@ void bsp_gpio_clocks_on(void)
 	__HAL_RCC_GPIOI_CLK_ENABLE();
 }
 
-uint8_t BSP_Config(void)
+uint8_t bsp_config(void)
 {
-	GPIO_InitTypeDef  	GPIO_InitStruct;
-	uint8_t 			RetVal = 0;
-	//uint8_t counter = 10;
+	LL_GPIO_InitTypeDef 		GPIO_InitStruct = {0};
 
 	// Enable CRC to Unlock GUI
 	__HAL_RCC_CRC_CLK_ENABLE();
 
-	GPIO_InitStruct.Pin   = POWER_HOLD;
-	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull  = GPIO_PULLDOWN;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-
-	// PG11 is power hold
-	//HAL_GPIO_Init(POWER_HOLD_PORT, &GPIO_InitStruct);
-	//HAL_GPIO_WritePin(POWER_HOLD_PORT,POWER_HOLD, 1);	// hold power
-
 	// PF6 is LED
-	GPIO_InitStruct.Pin   = POWER_LED;
-	HAL_GPIO_Init(POWER_LED_PORT, &GPIO_InitStruct);
-	HAL_GPIO_WritePin(POWER_LED_PORT,POWER_LED, 0);		// led off
-
-	// Disable charger
 	#if 0
-	GPIO_InitStruct.Pin   = CHGR_ON;
-	HAL_GPIO_Init(CHGR_ON_PORT, &GPIO_InitStruct);
-	//
-	GPIO_InitStruct.Pin   = CC_CV;
-	HAL_GPIO_Init(CC_CV_PORT, &GPIO_InitStruct);
-	//
-	HAL_GPIO_WritePin(CHGR_ON_PORT, CHGR_ON, 0);
-	HAL_GPIO_WritePin(CC_CV_PORT,   CC_CV,   0);
+	GPIO_InitStruct.Pin 	= POWER_LED;
+	GPIO_InitStruct.Mode 	= LL_GPIO_MODE_OUTPUT;
+	GPIO_InitStruct.Pull 	= LL_GPIO_PULL_DOWN;
+	LL_GPIO_Init(POWER_LED_PORT, &GPIO_InitStruct);
+
+	// Power LED set out and On by bootloader, turn off
+	LL_GPIO_ResetOutputPin(POWER_LED_PORT, POWER_LED);
 	#endif
 
 	printf_init(1);
 	printf("-->%s v: %d.%d\r\n", DEVICE_STRING, MCHF_R_VER_RELEASE, MCHF_R_VER_BUILD);
 
 	power_cntr_init();
-	//--bal_control_init();	- moved to bms proc hw init
+
 	ptt_init();
 
-	LCD_LL_Backlight_init();
+	bsp_backlight_init();
 
 	// DSP core Keyer IRQ
 	#ifdef CONTEXT_ICC

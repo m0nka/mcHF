@@ -107,11 +107,6 @@
 			<locationURI>PARENT-2-PROJECT_LOC/hw/bsp.c</locationURI>
 		</link>
 		<link>
-			<name>hw/bsp.h</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/bsp.h</locationURI>
-		</link>
-		<link>
 			<name>hw/is42s32800j.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/hw/is42s32800j.c</locationURI>
@@ -120,21 +115,6 @@
 			<name>hw/k_rtc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/hw/k_rtc.c</locationURI>
-		</link>
-		<link>
-			<name>hw/k_rtc.h</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Projects/STM32H747I-DISCO/Demonstrations/STemWin/Core/Inc/k_rtc.h</locationURI>
-		</link>
-		<link>
-			<name>hw/main.h</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/main.h</locationURI>
-		</link>
-		<link>
-			<name>hw/sd_diskio.h</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/sd_diskio.h</locationURI>
 		</link>
 		<link>
 			<name>hw/sd_diskio_dma.c</name>
@@ -170,11 +150,6 @@
 			<name>hw/storage.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/hw/storage.c</locationURI>
-		</link>
-		<link>
-			<name>hw/storage.h</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/storage.h</locationURI>
 		</link>
 		<link>
 			<name>startup/startup_stm32h747xx_CM7.s</name>

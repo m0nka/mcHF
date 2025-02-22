@@ -465,8 +465,11 @@ static int start_proc(void)
 //*----------------------------------------------------------------------------
 int main(void)
 {
-	bsp_gpio_clocks_on();
+	// Hold power line
 	bsp_hold_power();
+
+	// All GPIO clocks
+	bsp_gpio_clocks_on();
 
 	// Disable FMC Bank1 to avoid speculative/cache accesses
 	FMC_Bank1_R->BTCR[0] &= ~FMC_BCRx_MBKEN;
@@ -483,8 +486,11 @@ int main(void)
     // HAL init
     HAL_Init();
 
-    // Configure the system clock to 400 MHz
+    // Configure the system clock to 480 MHz
     SystemClock_Config();
+
+	// ADC3 clock from PLL2
+	PeriphCommonClock_Config();
 
     // RTC init
     k_CalendarBkupInit();
@@ -493,11 +499,12 @@ int main(void)
     radio_init_on_reset();
 
     // HW init
-    if(BSP_Config() != 0)
+    if(bsp_config() != 0)
     	goto stall_radio;
 
     // Init ADC HW
-    adc_init();
+    if(adc_init() != 0)
+    	goto stall_radio;
 
     // Define running processes
     if(start_proc())
@@ -511,5 +518,7 @@ int main(void)
     osKernelStart();
 
 stall_radio:
+// ToDo: Handle critical errors
+//
     while(1);
 }

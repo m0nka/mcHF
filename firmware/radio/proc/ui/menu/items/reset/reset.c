@@ -134,7 +134,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 					//HAL_GPIO_WritePin(GPIOG, GPIO_PIN_11, 1);	// drop power
 					#endif
 
-					power_off();
+					bsp_power_off();
 					break;
 				}
 			}

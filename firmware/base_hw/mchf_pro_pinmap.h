@@ -757,7 +757,7 @@
 #define SDMMC1_CLK                   	GPIO_PIN_12
 
 // PC13			POWER_HOLD
-#define POWER_HOLD						GPIO_PIN_13
+#define POWER_HOLD						LL_GPIO_PIN_13
 #define POWER_HOLD_PORT            		GPIOC
 
 // ----------------------------------------------------
@@ -926,7 +926,7 @@
 //
 
 // PF6			ADC3_INP8, Ambient light sensor
-#define POWER_LED						GPIO_PIN_6
+#define POWER_LED						LL_GPIO_PIN_6
 #define POWER_LED_PORT            		GPIOF
 
 // PF7			ADC3_INP3, PA Temperature

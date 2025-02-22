@@ -25,10 +25,13 @@ ushort ch8;
 uchar samp_done = 0;
 #endif
 
-//#ifdef LL_ADC_USE_DMA
+#ifdef LL_ADC_USE_DMA
 __attribute__((section("dma_mem"))) __attribute__ ((aligned (32))) ushort dma_rx_buffer[10];
 //__attribute__((section("heap_mem"))) __attribute__ ((aligned (32))) ushort dma_rx_buffer[2];
-//#endif
+#endif
+
+ushort 	ADC_Val[NUMBER_OF_ADC3_CHANNELS + 1];
+uchar	adc_init_done = 0;
 
 #ifndef LL_ADC_USE_BDMA
 static void adc_configure(void)
@@ -37,14 +40,13 @@ static void adc_configure(void)
 	LL_DMA_InitTypeDef       ADC_Config_DMA;
 	#endif
 
-	#if 1
 	// -----------------------------------------------------------------
 	// ADC3_INP1, Reflected Power (PC3)
 	LL_GPIO_SetPinMode(ADC3_INP1_PORT, ADC3_INP1, LL_GPIO_MODE_ANALOG);
 
 	// -----------------------------------------------------------------
 	// ADC3_INP8, Ambient light sensor (PF6)
-	LL_GPIO_SetPinMode(POWER_LED_PORT, LL_GPIO_PIN_6, LL_GPIO_MODE_ANALOG);
+	LL_GPIO_SetPinMode(POWER_LED_PORT, POWER_LED, LL_GPIO_MODE_ANALOG);
 
 	// -----------------------------------------------------------------
 	// ADC3_INP3, PA Temperature (PF7)
@@ -53,21 +55,8 @@ static void adc_configure(void)
 	// -----------------------------------------------------------------
 	// ADC3_INP6, Forward Power (PF10)
 	LL_GPIO_SetPinMode(ADC3_INP6_PORT, ADC3_INP6, LL_GPIO_MODE_ANALOG);
-	#else
-	LL_GPIO_InitTypeDef 		GPIO_InitStruct = {0};
 
-	GPIO_InitStruct.Pin = LL_GPIO_PIN_6|LL_GPIO_PIN_7|LL_GPIO_PIN_10;
-	GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
-	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-	LL_GPIO_Init(GPIOF, &GPIO_InitStruct);
-
-	GPIO_InitStruct.Pin = LL_GPIO_PIN_3;
-	GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
-	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-	LL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-	#endif
-
-	LL_RCC_SetADCClockSource(LL_RCC_ADC_CLKSOURCE_PLL2P);
+	LL_RCC_SetADCClockSource(LL_RCC_ADC_CLKSOURCE_PLL2P); // PLL init in main.c
 	LL_AHB4_GRP1_EnableClock(LL_AHB4_GRP1_PERIPH_ADC3);
 
 	#ifndef LL_ADC_USE_DMA
@@ -122,9 +111,13 @@ static void adc_configure(void)
 																  LL_ADC_PATH_INTERNAL_VBAT);
 
 	// Connect channels on portF
-	LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_3);
+	//LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_3);
 	LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_6);
-	LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_8);
+	//LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_8);
+	//LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_1);
+	//LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_VREFINT);
+	//LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_VBAT);
+	//LL_ADC_SetChannelPreSelection(ADC3, LL_ADC_CHANNEL_TEMPSENSOR);
 
 	// VREF internal channel
 	LL_ADC_SetChannelSamplingTime	(ADC3, LL_ADC_CHANNEL_VREFINT, ADC_SAMP_TIME);
@@ -265,9 +258,11 @@ static void adc_proc_task(void *arg)
 	//--LL_ADC_REG_StartConversion(ADC3);
 	#endif
 
+	 adc_init_done = 1;
+
 	for(;;)
 	{
-		vTaskDelay(800);
+		vTaskDelay(100);
 
 		#ifdef LL_ADC_USE_IRQ
 		if(samp_done)
@@ -297,8 +292,7 @@ static void adc_proc_task(void *arg)
 		#endif
 
 		#ifdef LL_ADC_USE_POLLING
-		ushort ADC_Val[10];
-		//static uchar ch_id = 0;
+
 		LL_ADC_REG_StartConversion(ADC3);
 
 		for (uint8_t i = 0; i < NUMBER_OF_ADC3_CHANNELS; i++)
@@ -310,31 +304,32 @@ static void adc_proc_task(void *arg)
 		}
 		//LL_ADC_REG_StopConversion(ADC3);
 
+		#if 0
 		for (uint8_t i = 0; i < NUMBER_OF_ADC3_CHANNELS; i++)
 		{
 			ushort chv =  __LL_ADC_CALC_DATA_TO_VOLTAGE(VDDA_APPLI, ADC_Val[i], LL_ADC_RESOLUTION_16B);
 
-			if(i == 3)	// int temperature
+			if(i == VIRT_CH3_CPU_TEMP)
 			{
 				ulong temp = (TEMPSENSOR_CAL2_TEMP - TEMPSENSOR_CAL1_TEMP);
 				temp = (temp * (ADC_Val[i] - *TEMPSENSOR_CAL1_ADDR))/(*TEMPSENSOR_CAL2_ADDR - *TEMPSENSOR_CAL1_ADDR);
 				temp += 30;
-				printf("ch%d: %dC   (int)\r\n", i, temp);
+				printf("ch%d: %dC   (int)\r\n", i, (int)temp);
 			}
-			else if(i == 5)
+			else if(i == VIRT_CH5_PA_TEMP)
 			{
 				printf("ch%d: %dC   (pa )\r\n", i, chv/1500 + 20);
 			}
-			else if(i == 2) // vbat
+			else if(i == VIRT_CH2_VBAT)
 			{
 				chv *= 4;
 				printf("ch%d: %d.%2dV (vbat)\r\n", i, chv/1000, (chv%1000)/10);
 			}
-			else if(i == 1)
+			else if(i == VIRT_CH1_REF_PWR)
 			{
 				printf("ch%d: %4dmV(ref)\r\n", i, chv);
 			}
-			else if(i == 4)
+			else if(i == VIRT_CH4_FWD_PWR)
 			{
 				printf("ch%d: %4dmV(fwd)\r\n", i, chv);
 			}
@@ -342,10 +337,10 @@ static void adc_proc_task(void *arg)
 				printf("ch%d: %dmV \r\n", i, chv);
 		}
 		printf(" \r\n");
+		#endif
 
-		//adc_switch_channel(ch_id);
-		//ch_id++;
-		//if(ch_id == 2) ch_id = 0;
+		//printf("ch%d: %4dmV(fwd)\r\n", VIRT_CH4_FWD_PWR, __LL_ADC_CALC_DATA_TO_VOLTAGE(VDDA_APPLI, ADC_Val[VIRT_CH4_FWD_PWR], LL_ADC_RESOLUTION_16B));
+
 		#endif
 
 		#ifdef LL_ADC_USE_BDMA
@@ -528,34 +523,18 @@ static void MX_ADC3_Init(void)
 
 #endif
 
-void PeriphCommonClock_Config(void)
-{
-	LL_RCC_PLL2P_Enable();
-	LL_RCC_PLL2_SetVCOInputRange(LL_RCC_PLLINPUTRANGE_8_16);
-	LL_RCC_PLL2_SetVCOOutputRange(LL_RCC_PLLVCORANGE_MEDIUM);
-	LL_RCC_PLL2_SetM(2);
-	LL_RCC_PLL2_SetN(12);
-	LL_RCC_PLL2_SetP(2);
-	LL_RCC_PLL2_SetQ(2);
-	LL_RCC_PLL2_SetR(2);
-	LL_RCC_PLL2_Enable();
-
-	// Wait till PLL is ready
-	while(LL_RCC_PLL2_IsReady() != 1)
-	{
-	}
-}
-
-void adc_init(void)
+uchar adc_init(void)
 {
 	int i;
 
 	// Clear DMA buffer
+	#ifdef LL_ADC_USE_DMA
 	for(i = 0; i < sizeof(dma_rx_buffer); i++)
 		dma_rx_buffer[i] = 0;
+	#endif
 
-	// ADC3 clock from PLL2
-	PeriphCommonClock_Config();
+	for(i = 0; i < sizeof(ADC_Val); i++)
+		ADC_Val[i] = 0;
 
 	#ifndef LL_ADC_USE_BDMA
 	adc_configure();
@@ -584,4 +563,22 @@ void adc_init(void)
 
 	// ADC processor (only register, will start with scheduler)
     xTaskCreate((TaskFunction_t)adc_proc_task, "adc_proc", 256, NULL, osPriorityNormal, NULL);
+
+    return 0;
+}
+
+ushort adc_read_ref_power(void)
+{
+	if(!adc_init_done)
+		return 0xFFFF;
+
+	return __LL_ADC_CALC_DATA_TO_VOLTAGE(VDDA_APPLI, ADC_Val[VIRT_CH1_REF_PWR], LL_ADC_RESOLUTION_16B);
+}
+
+ushort adc_read_fwd_power(void)
+{
+	if(!adc_init_done)
+		return 0xFFFF;
+
+	return __LL_ADC_CALC_DATA_TO_VOLTAGE(VDDA_APPLI, ADC_Val[VIRT_CH4_FWD_PWR], LL_ADC_RESOLUTION_16B);
 }

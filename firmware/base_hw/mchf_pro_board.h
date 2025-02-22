@@ -519,6 +519,7 @@ void 	mchf_pro_board_sensitive_hw_init(void);
 
 void 	SystemClockChange_Handler(void);
 void 	SystemClock_Config(void);
+void 	PeriphCommonClock_Config(void);
 void 	MPU_Config(void);
 void 	CPU_CACHE_Enable(void);
 
@@ -529,6 +530,6 @@ void 	printf_init(uchar is_shared);
 void 	print_hex_array(uchar *pArray, ushort aSize);
 
 // bsp.c
-void power_off(void);
+void bsp_power_off(void);
 void power_off_a(void);
 #endif
