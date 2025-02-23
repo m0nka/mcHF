@@ -71,9 +71,9 @@ typedef struct DialFrequency
 
 //#ifdef CLASSIC_LAYOUT
 #define M_FREQ_X					531 + 54
-#define M_FREQ_Y					122
+#define M_FREQ_Y					440//122
 #define M_FREQ1_X					356	+ 54
-#define M_FREQ1_Y					136
+#define M_FREQ1_Y					454//136
 //#else
 //#define M_FREQ_X					531
 //#define M_FREQ_Y					350
@@ -84,33 +84,33 @@ typedef struct DialFrequency
 // ----------------------------------------------------------------------------
 // Band control
 #define BAND_X						696 + 54
-#define BAND_Y						95
+#define BAND_Y						413//95
 // ----------------------------------------------------------------------------
 // Step
 #define VFO_STEP_X					414 + 54
-#define VFO_STEP_Y					95
+#define VFO_STEP_Y					413//95
 //
 #define VFO_STEP_SIZE_X				52
 #define VFO_STEP_SIZE_Y				20
 // ----------------------------------------------------------------------------
 // RX/TX
 #define RADIO_MODE1_X				360 + 54
-#define RADIO_MODE1_Y				122
+#define RADIO_MODE1_Y				440//122
 //
 // ----------------------------------------------------------------------------
 // Decoder
 #define DECODER_MODE_X				356 + 54
-#define DECODER_MODE_Y				95
+#define DECODER_MODE_Y				413//95
 //
 // ----------------------------------------------------------------------------
 // AGC control
 #define AGC_X						473 + 54
-#define AGC_Y						95
+#define AGC_Y						413//95
 
 // ----------------------------------------------------------------------------
 // RX/TX indicator
 #define RXTX_X						415 + 54
-#define RXTX_Y						122
+#define RXTX_Y						440//122
 
 // Exports
 void ui_controls_agc_init(void);

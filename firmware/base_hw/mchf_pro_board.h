@@ -82,6 +82,7 @@
 //
 #define		UI_REFRESH_25HZ			(1000/25)
 #define		UI_REFRESH_60HZ			(1000/60)
+#define		UI_REFRESH_100HZ		(1000/100)
 
 //#define 	LCD_LANE_CLK			62500
 #define 	LCD_LANE_CLK			58750				// 58750

@@ -313,18 +313,18 @@ uchar ui_controls_keyer_init(WM_HWIN hParent)
 	ui_controls_keyer_draw_btm(0);
 #endif
 
-	if(hKeyerDialog == 0)
-	{
-		hKeyerDialog = GUI_CreateDialogBox(KeyerDialog, GUI_COUNTOF(KeyerDialog), KeyerHandler, hParent, KEYER_X, KEYER_Y);
-		return 1;
-	}
-	else
-	{
+//	if(hKeyerDialog == 0)
+//	{
+//		hKeyerDialog = GUI_CreateDialogBox(KeyerDialog, GUI_COUNTOF(KeyerDialog), KeyerHandler, hParent, KEYER_X, KEYER_Y);
+//		return 1;
+//	}
+//	else
+//	{
 		// Doesn't work
 		//ui_controls_keyer_quit();
 		//ui_controls_spectrum_init(WM_HBKWIN);
 		//vTaskDelay(300);
-	}
+//	}
 
 	return 0;
 }
@@ -339,11 +339,11 @@ uchar ui_controls_keyer_init(WM_HWIN hParent)
 //*----------------------------------------------------------------------------
 void ui_controls_keyer_quit(void)
 {
-	if(hKeyerDialog != 0)
-	{
-		GUI_EndDialog(hKeyerDialog, 0);
-		hKeyerDialog = 0;
-	}
+//	if(hKeyerDialog != 0)
+//	{
+////		GUI_EndDialog(hKeyerDialog, 0);
+//		hKeyerDialog = 0;
+//	}
 }
 
 //*----------------------------------------------------------------------------
@@ -439,8 +439,8 @@ void ui_controls_keyer_refresh(void)
 	}
 #endif
 
-	if(hKeyerDialog == 0)
-		WM_InvalidateWindow(hKeyerDialog);
+//	if(hKeyerDialog == 0)
+//		WM_InvalidateWindow(hKeyerDialog);
 }
 
 #endif

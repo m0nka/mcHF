@@ -61,7 +61,7 @@
 #define LCD_WIDTH					854
 //
 #define SW_FRAME_X					0
-#define SW_FRAME_Y					167	//171
+#define SW_FRAME_Y					95	//167
 //
 #define HEADER_Y_SIZE				20
 //
@@ -256,8 +256,8 @@
 //
 // ----------------------------------------------------------------------------
 // DSP alive control
-#define DSP_POS_X					356
-#define DSP_POS_Y					96
+#define DSP_POS_X					300//356
+#define DSP_POS_Y					30//96
 //
 #define DSP_POS_SIZE_X				48
 #define DSP_POS_SIZE_Y				64
@@ -265,7 +265,7 @@
 // ----------------------------------------------------------------------------
 // Clock control
 #define CLOCK_X						1
-#define CLOCK_Y						145
+#define CLOCK_Y						1//145
 //
 #define CLOCK_SIZE_X				350
 #define CLOCK_SIZE_Y				20

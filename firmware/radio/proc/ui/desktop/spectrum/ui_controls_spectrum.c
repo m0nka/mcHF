@@ -383,7 +383,7 @@ static void ui_controls_spectrum_show_band_strip(void)
 		Rect.y0 = SCOPE_Y;
 		Rect.y1 = SCOPE_Y + SCOPE_Y_SIZE;
 		GUI_SetClipRect(&Rect);
-		GUI_SetColor(GUI_LIGHTBLUE);	//0xd99100
+		GUI_SetColor(GUI_LIGHTGRAY);	//0xd99100
 		GUI_SetAlpha(88);		// Alpha is inverted!!!
 		GUI_FillRoundedRect((SW_FRAME_X + SW_FRAME_WIDTH) + 4, SCOPE_Y, (SW_FRAME_X + SW_FRAME_WIDTH) + SCOPE_X_SIZE, SCOPE_Y + SCOPE_Y_SIZE, 4);
 		GUI_SetClipRect(NULL);
@@ -478,7 +478,7 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 				);
 
 	// Draw horizontal grid lines
-	#if 1
+	#if 0
 	GUI_SetColor(GUI_DARKGRAY);
 	for (i = 0; i < 7; i++)
 		GUI_DrawHLine(((SCOPE_Y + SCOPE_Y_SIZE - 2) - (i * 16)),(sb.x + SW_FRAME_WIDTH),(sb.x + SW_FRAME_X_SIZE - 2));
@@ -486,7 +486,7 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 	#endif
 
 	// Draw vertical grid lines
-	#if 1
+	#if 0
 	GUI_SetColor(GUI_DARKGRAY);
 	for (i = 0; i < 7; i++)
 	    GUI_DrawVLine((43 + i*128), SCOPE_Y, (SCOPE_Y + SCOPE_Y_SIZE - 2));
@@ -509,8 +509,8 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 		// Alpha is inverted!!!
 		#if 1
 		// Print vertical line for each point, transparent, to fill the spectrum
-		GUI_SetColor(HOT_PINK);
-		GUI_SetAlpha(88);
+		GUI_SetColor(GUI_WHITE);
+		GUI_SetAlpha(128);
 		GUI_DrawVLine(new_x, new_y, chk_y(SCOPE_Y + SCOPE_Y_SIZE));
 		GUI_SetAlpha(255);
 		#endif
@@ -723,6 +723,7 @@ static void ui_spectrum_create_span(void)
 
 static void ui_controls_create_header_big(void)
 {
+#if 0
 	// Left part
 	GUI_DrawGradientH(	(sb.x + SW_FRAME_WIDTH),
 						(sb.y + 2),
@@ -740,6 +741,7 @@ static void ui_controls_create_header_big(void)
 						GUI_GRAY,
 						GUI_DARKGRAY
 						);
+#endif
 
 	// Common labels colour and font
 	GUI_SetFont(&GUI_Font20B_ASCII);
@@ -909,10 +911,10 @@ static void ui_controls_create_sw_big(void)
 							SW_FRAME_WIDTH
 						);
 	#else
-	GUI_DrawHLine((sb.y + 0), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
-	GUI_DrawHLine((sb.y + 1), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
-	//GUI_DrawHLine((sb.y + 3 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
-	//GUI_DrawHLine((sb.y + 4 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
+	//GUI_DrawHLine((sb.y + 0), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
+	//GUI_DrawHLine((sb.y + 1), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_DrawHLine((sb.y + 3 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_DrawHLine((sb.y + 4 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
 	#endif
 
 	// Draw header
@@ -970,7 +972,7 @@ static void ui_controls_create_bottom_bar(void)
 	int i,j,x0,y0,FontSizeY;
 
 	// Bottom divider below waterfall
-	GUI_SetColor(GUI_DARKGRAY);
+	GUI_SetColor(GUI_BLACK);
 	//GUI_DrawHLine((WATERFALL_Y + WATERFALL_Y_SIZE), ((SW_FRAME_X + SW_FRAME_WIDTH) + SW_FRAME_WIDTH),((SW_FRAME_X + SW_FRAME_WIDTH) + WATERFALL_X_SIZE - SW_FRAME_WIDTH));
 	GUI_FillRect((SW_FRAME_X + SW_FRAME_WIDTH),
 				 (WATERFALL_Y + WATERFALL_Y_SIZE),
@@ -979,7 +981,7 @@ static void ui_controls_create_bottom_bar(void)
 
 	// Bottom Frequency Span markers
 	GUI_SetFont(&GUI_Font8x16_1);
-	GUI_SetColor(GUI_ORANGE);
+	GUI_SetColor(GUI_GRAY);
 	FontSizeY = GUI_GetFontSizeY();
 
 	int sm;

@@ -1,4 +1,4 @@
-/************************************************************************************
+     /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
 **                         Krassi Atanassov - M0NKA, 2013-2024                     **
@@ -487,7 +487,7 @@ static void ui_proc_init_desktop(void)
 	ui_controls_clock_init();
 	ui_controls_spectrum_init (WM_HBKWIN);
 	ui_controls_frequency_init(WM_HBKWIN);
-	ui_controls_smeter_init();
+	//ui_controls_smeter_init();
 	ui_controls_filter_init();
 	ui_controls_cpu_stat_init();
 	ui_controls_dsp_stat_init();
@@ -760,7 +760,7 @@ static void ui_proc_periodic(void)
 		return;
 
 	ui_controls_spectrum_refresh(ui_proc_cb);
-	ui_controls_smeter_refresh  (ui_proc_cb_sm);
+	//ui_controls_smeter_refresh  (ui_proc_cb_sm);
 
 	#ifdef CONTEXT_BMS
 	on_screen_power_refresh();
@@ -903,7 +903,7 @@ ui_proc_loop:
 
 		// test
 		//WM_InvalidateWindow(WM_HBKWIN);
-		GUI_Delay(UI_PROC_SLEEP_TIME);
+		GUI_Delay(UI_REFRESH_100HZ);
 		GUI_Exec();
 	}
 	#endif

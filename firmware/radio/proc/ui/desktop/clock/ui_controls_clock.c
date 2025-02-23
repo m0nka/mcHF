@@ -190,8 +190,8 @@ void ui_controls_clock_refresh(void)
 		sprintf(buf,"%02d",stimestructureget.Seconds);
 
 		// Update seconds area
-		GUI_SetColor(GUI_LIGHTRED);
-		GUI_SetFont(&GUI_Font8x8_1);
+		GUI_SetColor(GUI_WHITE);
+		GUI_SetFont(&GUI_Font24B_ASCII);
 		GUI_DispStringAt(buf,(CLOCK_X + CLOCK_SECND_SHIFT), (CLOCK_Y + 7));
 
 		// Save to local
@@ -205,8 +205,8 @@ void ui_controls_clock_refresh(void)
 		GUI_SetColor(GUI_BLACK);
 		GUI_FillRect((CLOCK_X + CLOCK_HOURS_SHIFT), (CLOCK_Y + 2), (CLOCK_X + CLOCK_HOURS_SHIFT + 38), (CLOCK_Y + 16));	// delete time
 
-		GUI_SetFont(&GUI_Font8x16_1);
-		GUI_SetColor(GUI_LIGHTRED);
+		GUI_SetFont(&GUI_Font24B_ASCII);
+		GUI_SetColor(GUI_WHITE);
 
 		sprintf(buf,"%02d:%02d",stimestructureget.Hours,stimestructureget.Minutes);
 		GUI_DispStringAt(buf,(CLOCK_X + CLOCK_HOURS_SHIFT),(CLOCK_Y + 2));
@@ -224,8 +224,8 @@ void ui_controls_clock_refresh(void)
 		uchar year = sdatestructureget.Year;
 		//printf("year - read: %d\r\n", year);
 
-		GUI_SetFont(&GUI_Font8x16_1);
-		GUI_SetColor(GUI_LIGHTBLUE);
+		GUI_SetFont(&GUI_Font24B_ASCII);
+		GUI_SetColor(GUI_WHITE);
 
 		sprintf(buf,"%02d/%02d/%04d",sdatestructureget.Date,sdatestructureget.Month, (year + 2000));
 		GUI_DispStringAt(buf,(CLOCK_X + CLOCK_DATES_SHIFT), (CLOCK_Y + 2));
@@ -260,39 +260,39 @@ void ui_controls_clock_init(void)
 	//GUI_DrawRect(CLOCK_X, CLOCK_Y, (CLOCK_X + CLOCK_SIZE_X), (CLOCK_Y + CLOCK_SIZE_Y));
 
 	// Time Unit
-	GUI_SetColor(GUI_LIGHTRED);
-	GUI_SetFont(&GUI_Font8x16_1);
-	GUI_DispStringAt("UTC",(CLOCK_X + CLOCK_UNITS_SHIFT), (CLOCK_Y + 2));
+	//GUI_SetColor(GUI_LIGHTRED);
+	GUI_SetFont(&GUI_Font24B_ASCII);
+	//GUI_DispStringAt("UTC",(CLOCK_X + CLOCK_UNITS_SHIFT), (CLOCK_Y + 2));
 
 	// Lock options
-	GUI_SetColor(GUI_LIGHTRED);
-	GUI_SetFont(&GUI_Font8x16_1);
+	//GUI_SetColor(GUI_LIGHTRED);
+	//GUI_SetFont(&GUI_Font8x16_1);
 
-	if(lock_type == 0)
-		GUI_DispStringAt("Lock:RTC", (CLOCK_X + CLOCK_LOCKS_SHIFT), (CLOCK_Y + 2));
-	else
-		GUI_DispStringAt("Lock:NTP", (CLOCK_X + CLOCK_LOCKS_SHIFT), (CLOCK_Y + 2));
+	//if(lock_type == 0)
+	//	GUI_DispStringAt("Lock:RTC", (CLOCK_X + CLOCK_LOCKS_SHIFT), (CLOCK_Y + 2));
+	//else
+	//	GUI_DispStringAt("Lock:NTP", (CLOCK_X + CLOCK_LOCKS_SHIFT), (CLOCK_Y + 2));
 
 	// Create hours/minutes
-	sprintf(buf,"%02d:%02d",stimestructureget.Hours, stimestructureget.Minutes);
-	GUI_SetColor(GUI_LIGHTRED);
+	sprintf(buf,"%02d:%02d:%02dz",stimestructureget.Hours, stimestructureget.Minutes,stimestructureget.Seconds);
+	GUI_SetColor(GUI_WHITE);
 	GUI_DispStringAt(buf,(CLOCK_X + CLOCK_HOURS_SHIFT), (CLOCK_Y + 2));
 
 	// Create seconds area
-	sprintf(buf,"%02d",stimestructureget.Seconds);
-	GUI_SetColor(GUI_LIGHTRED);
-	GUI_SetFont(&GUI_Font8x8_1);
-	GUI_DispStringAt(buf,(CLOCK_X + CLOCK_SECND_SHIFT), (CLOCK_Y + 7));
+	//sprintf(buf,"%02d",stimestructureget.Seconds);
+	//GUI_SetColor(GUI_LIGHTRED);
+	////GUI_SetFont(&GUI_Font8x8_1);
+	//GUI_DispStringAt(buf,(CLOCK_X + CLOCK_SECND_SHIFT), (CLOCK_Y + 7));
 
 	// Create date
 	GUI_SetFont(&GUI_Font8x16_1);
 	GUI_SetColor(GUI_LIGHTBLUE);
 	uchar year = sdatestructureget.Year;
 	sprintf(buf,"%02d/%02d/%04d",sdatestructureget.Date,sdatestructureget.Month, (year + 2000));
-	GUI_DispStringAt(buf,(CLOCK_X + CLOCK_DATES_SHIFT), (CLOCK_Y + 2));
+	//GUI_DispStringAt(buf,(CLOCK_X + CLOCK_DATES_SHIFT), (CLOCK_Y + 2));
 
-	if(year < 21)
-		ui_actions_ipc_msg(1, 6, NULL);	// get UTC
+	//if(year < 21)
+	//	ui_actions_ipc_msg(1, 6, NULL);	// get UTC
 	//else
 	//	printf("== RTC time looks good ==\r\n");
 }
