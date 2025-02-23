@@ -8,8 +8,7 @@
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:                                                                       **
 ************************************************************************************/
 
 #include "mchf_pro_board.h"
@@ -17,7 +16,7 @@
 
 #include "version.h"
 #include "radio_init.h"
-#include "k_rtc.h"
+#include "rtc.h"
 
 #include "bsp.h"
 #include "adc.h"

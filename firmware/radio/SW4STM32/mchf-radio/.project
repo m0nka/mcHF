@@ -112,9 +112,9 @@
 			<locationURI>PARENT-2-PROJECT_LOC/hw/is42s32800j.c</locationURI>
 		</link>
 		<link>
-			<name>hw/k_rtc.c</name>
+			<name>hw/rtc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/k_rtc.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/rtc.c</locationURI>
 		</link>
 		<link>
 			<name>hw/sd_diskio_dma.c</name>

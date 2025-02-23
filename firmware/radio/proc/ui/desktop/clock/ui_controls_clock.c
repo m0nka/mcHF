@@ -23,14 +23,16 @@
 #include "desktop\ui_controls_layout.h"
 
 //#include "stm32h7xx_hal_rtc.h"
-#include "k_rtc.h"
+#include "rtc.h"
 #include "ui_actions.h"
 
-#define CLOCK_UNITS_SHIFT 10
-#define CLOCK_HOURS_SHIFT 40
-#define CLOCK_SECND_SHIFT 83
-#define CLOCK_DATES_SHIFT 155
-#define CLOCK_LOCKS_SHIFT 280
+#define CLOCK_UNITS_SHIFT 	10
+#define CLOCK_HOURS_SHIFT 	0
+#define CLOCK_SECND_SHIFT 	62
+#define CLOCK_DATES_SHIFT 	130
+#define CLOCK_LOCKS_SHIFT 	280
+
+#define CLOCK_COLOR			GUI_LIGHTGRAY
 
 RTC_DateTypeDef sdatestructureget;
 RTC_TimeTypeDef stimestructureget;
@@ -102,6 +104,7 @@ static void ui_controls_clock_reload_time(void)
 	k_GetDate(&sdatestructureget);
 }
 
+#if 0
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_clock_restore
 //* Object              :
@@ -154,6 +157,7 @@ void ui_controls_clock_restore(void)
 	sprintf(buf,"%02d/%02d/%04d",sdatestructureget.Date,sdatestructureget.Month, (year + 2000));
 	GUI_DispStringAt(buf,(CLOCK_X + CLOCK_DATES_SHIFT), (CLOCK_Y + 2));
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       :
@@ -185,14 +189,14 @@ void ui_controls_clock_refresh(void)
 
 		// Clear seconds area
 		GUI_SetColor(GUI_BLACK);
-		GUI_FillRect((CLOCK_X + CLOCK_SECND_SHIFT), (CLOCK_Y + 7), (CLOCK_X + CLOCK_SECND_SHIFT + 14), (CLOCK_Y + 15));
+		GUI_FillRect((CLOCK_X + CLOCK_SECND_SHIFT), (CLOCK_Y + 5), (CLOCK_X + CLOCK_SECND_SHIFT + 22), (CLOCK_Y + 22));
 
 		sprintf(buf,"%02d",stimestructureget.Seconds);
 
 		// Update seconds area
-		GUI_SetColor(GUI_WHITE);
+		GUI_SetColor(CLOCK_COLOR);
 		GUI_SetFont(&GUI_Font24B_ASCII);
-		GUI_DispStringAt(buf,(CLOCK_X + CLOCK_SECND_SHIFT), (CLOCK_Y + 7));
+		GUI_DispStringAt(buf,(CLOCK_X + CLOCK_SECND_SHIFT), (CLOCK_Y + 2));
 
 		// Save to local
 		loc_seconds = stimestructureget.Seconds;
@@ -203,18 +207,18 @@ void ui_controls_clock_refresh(void)
 	{
 		// Clear hour/min area
 		GUI_SetColor(GUI_BLACK);
-		GUI_FillRect((CLOCK_X + CLOCK_HOURS_SHIFT), (CLOCK_Y + 2), (CLOCK_X + CLOCK_HOURS_SHIFT + 38), (CLOCK_Y + 16));	// delete time
+		GUI_FillRect((CLOCK_X + CLOCK_HOURS_SHIFT), (CLOCK_Y + 5), (CLOCK_X + CLOCK_HOURS_SHIFT + 52), (CLOCK_Y + 22));	// delete time
 
 		GUI_SetFont(&GUI_Font24B_ASCII);
-		GUI_SetColor(GUI_WHITE);
+		GUI_SetColor(CLOCK_COLOR);
 
-		sprintf(buf,"%02d:%02d",stimestructureget.Hours,stimestructureget.Minutes);
-		GUI_DispStringAt(buf,(CLOCK_X + CLOCK_HOURS_SHIFT),(CLOCK_Y + 2));
+		sprintf(buf,"%02d:%02d",stimestructureget.Hours, stimestructureget.Minutes);
+		GUI_DispStringAt(buf,(CLOCK_X + CLOCK_HOURS_SHIFT), (CLOCK_Y + 2));
 
 		// Save to local
 		loc_minutes = stimestructureget.Minutes;
 	}
-
+return;
 	if((utc_active_req == 0)&&(!date_shown))
 	{
 		// Clear date area
@@ -225,7 +229,7 @@ void ui_controls_clock_refresh(void)
 		//printf("year - read: %d\r\n", year);
 
 		GUI_SetFont(&GUI_Font24B_ASCII);
-		GUI_SetColor(GUI_WHITE);
+		GUI_SetColor(CLOCK_COLOR);
 
 		sprintf(buf,"%02d/%02d/%04d",sdatestructureget.Date,sdatestructureget.Month, (year + 2000));
 		GUI_DispStringAt(buf,(CLOCK_X + CLOCK_DATES_SHIFT), (CLOCK_Y + 2));
@@ -275,7 +279,7 @@ void ui_controls_clock_init(void)
 
 	// Create hours/minutes
 	sprintf(buf,"%02d:%02d:%02dz",stimestructureget.Hours, stimestructureget.Minutes,stimestructureget.Seconds);
-	GUI_SetColor(GUI_WHITE);
+	GUI_SetColor(CLOCK_COLOR);
 	GUI_DispStringAt(buf,(CLOCK_X + CLOCK_HOURS_SHIFT), (CLOCK_Y + 2));
 
 	// Create seconds area
@@ -285,11 +289,11 @@ void ui_controls_clock_init(void)
 	//GUI_DispStringAt(buf,(CLOCK_X + CLOCK_SECND_SHIFT), (CLOCK_Y + 7));
 
 	// Create date
-	GUI_SetFont(&GUI_Font8x16_1);
-	GUI_SetColor(GUI_LIGHTBLUE);
+	//GUI_SetFont(&GUI_Font8x16_1);
+	//GUI_SetColor(GUI_LIGHTBLUE);
 	uchar year = sdatestructureget.Year;
 	sprintf(buf,"%02d/%02d/%04d",sdatestructureget.Date,sdatestructureget.Month, (year + 2000));
-	//GUI_DispStringAt(buf,(CLOCK_X + CLOCK_DATES_SHIFT), (CLOCK_Y + 2));
+	GUI_DispStringAt(buf,(CLOCK_X + CLOCK_DATES_SHIFT), (CLOCK_Y + 2));
 
 	//if(year < 21)
 	//	ui_actions_ipc_msg(1, 6, NULL);	// get UTC

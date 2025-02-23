@@ -228,7 +228,7 @@ static void ui_controls_draw_needle(void * p)
 		#endif
 
 		// Recover Clock control
-		ui_controls_clock_restore();
+		//--ui_controls_clock_restore();
 
 		#if 0
 		// Debug only
