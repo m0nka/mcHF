@@ -130,7 +130,7 @@ static void ui_proc_add_menu_items(void)
 
 static void ui_proc_cb(void)
 {
-	ui_controls_frequency_refresh(0);
+//!	ui_controls_frequency_refresh(0);
 	//ui_controls_volume_refresh();	// blink on constant refresh , ToDo: restore orig code
 }
 
@@ -489,8 +489,8 @@ static void ui_proc_init_desktop(void)
 	ui_controls_frequency_init(WM_HBKWIN);
 	//ui_controls_smeter_init();
 	ui_controls_filter_init();
-	ui_controls_cpu_stat_init();
-	ui_controls_dsp_stat_init();
+	//ui_controls_cpu_stat_init();
+	//ui_controls_dsp_stat_init();
 	ui_controls_battery_init();
 	ui_controls_tx_stat_init();
 	ui_controls_menu_button_init();
@@ -747,8 +747,8 @@ static void ui_proc_periodic(void)
 	ui_controls_clock_refresh();
 
 	//--ui_controls_volume_refresh();
-	ui_controls_cpu_stat_refresh();
-	ui_controls_dsp_stat_refresh();
+	//ui_controls_cpu_stat_refresh();
+	//ui_controls_dsp_stat_refresh();
 	ui_controls_battery_refresh();
 	ui_controls_filter_refresh();
 	ui_controls_tx_stat_refresh();
@@ -871,7 +871,7 @@ ui_proc_loop:
 				cntr_id = 1;
 				WM_InvalidateWindow(WM_HBKWIN);
 				#else
-				ui_controls_frequency_refresh(0);
+//!				ui_controls_frequency_refresh(0);
 				#endif
 
 				break;

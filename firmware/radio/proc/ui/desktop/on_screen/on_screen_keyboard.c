@@ -58,7 +58,7 @@
 #define ID_BUTTON_SPLIT          	(GUI_ID_USER + 0x67)
 
 #define KEYB_X						130
-#define KEYB_Y						203
+#define KEYB_Y						131
 
 #define KEYB_SIZE_X					595
 #define KEYB_SIZE_Y					250

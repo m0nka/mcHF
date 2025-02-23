@@ -91,7 +91,7 @@ static void ui_controls_tx_stat_repaint(void)
 			GUI_DispStringAt("OFF", TX_STAT_X + 14, TX_STAT_Y + 3);
 			break;
 	}
-
+#if 0
 	GUI_SetColor(GUI_WHITE);
 	GUI_SetFont(&GUI_Font8x13_1);
 	sprintf(buf, "PF %d", tsu.band[tsu.curr_band].power_factor);
@@ -143,7 +143,7 @@ static void ui_controls_tx_stat_repaint(void)
 	GUI_DispStringAt("Dv", TX_STAT_X + 57, TX_STAT_Y + 38);
 	GUI_DispStringAt(buf,  TX_STAT_X + 79, TX_STAT_Y + 38);
 	// ----------------------------------------------------------
-
+#endif
 	// Save
 	ui_power_factor = tsu.band[tsu.curr_band].power_factor;
 	ui_tx_power 	= tsu.band[tsu.curr_band].tx_power;

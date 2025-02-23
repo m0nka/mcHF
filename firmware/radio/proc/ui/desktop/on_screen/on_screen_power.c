@@ -34,7 +34,7 @@
 #define ID_HEADER_0      			(GUI_ID_USER + 0x58)
 
 #define PWR_X						130
-#define PWR_Y						203
+#define PWR_Y						131
 
 #define PWR_SIZE_X					595
 #define PWR_SIZE_Y					250

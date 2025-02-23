@@ -20,10 +20,10 @@
 //#define FREQ_REPAINT_FIRST			0x01
 //#define FREQ_REPAINT_SECOND			0x02
 
-#define FREQ_FONT					GUI_FONT_D24X32
+#define FREQ_FONT					GUI_FONT_D36X48//GUI_FONT_D24X32
 
-#define FREQ_FONT_SIZE_X			24
-#define FREQ_FONT_SIZE_Y			32
+#define FREQ_FONT_SIZE_X			36	//24
+#define FREQ_FONT_SIZE_Y			48	//32
 
 // VFO B decl
 #define FREQ_FONT_SIZE1_X			12
@@ -70,10 +70,11 @@ typedef struct DialFrequency
 } DialFrequency;
 
 //#ifdef CLASSIC_LAYOUT
-#define M_FREQ_X					531 + 54
-#define M_FREQ_Y					440//122
-#define M_FREQ1_X					356	+ 54
-#define M_FREQ1_Y					454//136
+#define M_FREQ_X					450
+#define M_FREQ_Y					420
+
+#define M_FREQ1_X					10
+#define M_FREQ1_Y					30
 //#else
 //#define M_FREQ_X					531
 //#define M_FREQ_Y					350
@@ -83,12 +84,12 @@ typedef struct DialFrequency
 //
 // ----------------------------------------------------------------------------
 // Band control
-#define BAND_X						696 + 54
-#define BAND_Y						413//95
+#define BAND_X						140
+#define BAND_Y						60
 // ----------------------------------------------------------------------------
 // Step
-#define VFO_STEP_X					414 + 54
-#define VFO_STEP_Y					413//95
+#define VFO_STEP_X					80
+#define VFO_STEP_Y					60
 //
 #define VFO_STEP_SIZE_X				52
 #define VFO_STEP_SIZE_Y				20
@@ -99,18 +100,18 @@ typedef struct DialFrequency
 //
 // ----------------------------------------------------------------------------
 // Decoder
-#define DECODER_MODE_X				356 + 54
-#define DECODER_MODE_Y				413//95
+#define DECODER_MODE_X				10
+#define DECODER_MODE_Y				60
 //
 // ----------------------------------------------------------------------------
 // AGC control
-#define AGC_X						473 + 54
-#define AGC_Y						413//95
+#define AGC_X						190
+#define AGC_Y						32
 
 // ----------------------------------------------------------------------------
 // RX/TX indicator
-#define RXTX_X						415 + 54
-#define RXTX_Y						440//122
+#define RXTX_X						80
+#define RXTX_Y						86
 
 // Exports
 void ui_controls_agc_init(void);

@@ -39,7 +39,7 @@
 #define GUI_ID_BTN6 			  	(GUI_ID_USER + 0x59)
 
 #define AUD_X						130
-#define AUD_Y						203
+#define AUD_Y						131
 
 #define AUD_SIZE_X				 	595
 #define AUD_SIZE_Y					250

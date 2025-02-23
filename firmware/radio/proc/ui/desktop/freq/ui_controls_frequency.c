@@ -1091,7 +1091,8 @@ static void ui_controls_frequency_vfo_a_initial_paint(uchar is_init)
 	else
 		GUI_SetColor(GUI_GRAY);
 	GUI_SetFont(&GUI_Font20B_1);
-	GUI_DispStringAt("VFO A",(M_FREQ_X + FREQ_FONT_SIZE_X*4 + 5),(M_FREQ_Y - 27));
+	//GUI_DispStringAt("VFO A",(M_FREQ_X + FREQ_FONT_SIZE_X*9 + 7),(M_FREQ_Y - 20));
+	GUI_DispStringAt("VFO A", 255, 60);
 
 	// Digits colour
 	GUI_SetFont(FREQ_FONT);
@@ -1107,8 +1108,8 @@ static void ui_controls_frequency_vfo_a_initial_paint(uchar is_init)
 		GUI_DispStringAt("___.___.___",(M_FREQ_X + 1),(M_FREQ_Y + 5));
 
 	// Update frequency, but only if not active
-	if(tsu.band[tsu.curr_band].active_vfo == VFO_B)
-		ui_controls_frequency_update_vfo_a(tsu.band[tsu.curr_band].vfo_a);
+//	if(tsu.band[tsu.curr_band].active_vfo == VFO_B)
+//		ui_controls_frequency_update_vfo_a(tsu.band[tsu.curr_band].vfo_a);
 }
 
 //*----------------------------------------------------------------------------
@@ -1382,8 +1383,9 @@ WM_HWIN ui_controls_frequency_init(WM_HWIN hParent)
 	return hFreqDialog;
 	#else
 	ui_controls_frequency_create();
-	return NULL;
 	#endif
+
+	return 0;
 }
 
 void ui_controls_frequency_quit(void)

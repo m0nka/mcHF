@@ -13,3 +13,4 @@
 - USB connector body not connected to GND
 - R13e needs to be 10k(not 1k)
 - add cutout for paddle connector access
+- FWD and REV are swapped

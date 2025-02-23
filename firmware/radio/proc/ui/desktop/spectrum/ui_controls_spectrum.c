@@ -669,7 +669,7 @@ static void ui_controls_update_smooth_control(uchar init)
 //
 static void ui_controls_update_vfo_mode(bool is_init)
 {
-#if 1
+#if 0
 	// Skip needless repaint
 	if((!is_init) && (loc_vfo_mode == tsu.band[tsu.curr_band].fixed_mode))
 		return;
@@ -708,6 +708,8 @@ static void ui_controls_update_vfo_mode(bool is_init)
 
 void ui_controls_update_span(void)
 {
+	return;
+
 	ui_controls_create_header_big();
 	ui_controls_create_bottom_bar();
 }
@@ -743,20 +745,22 @@ static void ui_controls_create_header_big(void)
 						);
 #endif
 
+#if 1
 	// Common labels colour and font
 	GUI_SetFont(&GUI_Font20B_ASCII);
 	GUI_SetColor(GUI_WHITE);
 
-	GUI_SetAlpha(160);
+	GUI_SetAlpha(30);
 	GUI_DispStringAt("BMS",		(sb.x + 18),	(sb.y + 2));						// BMS label
 	GUI_DispStringAt("AUDIO",	(sb.x + 140),	(sb.y + 2));						// AUDIO label
-	GUI_DispStringAt("VFO",		(sb.x + 283),	(sb.y + 2));						// VFO label
+	//GUI_DispStringAt("VFO",		(sb.x + 283),	(sb.y + 2));						// VFO label
 	GUI_DispStringAt("KEYBOARD",((sb.x + SW_FRAME_X_SIZE - 2)/2 - 50),(sb.y + 2));	// KEYBOARD label
 	GUI_DispStringAt("AGC/ATT",	((sb.x + SW_FRAME_X_SIZE - 2)/2 + 90),(sb.y + 2));	// AGC/ATT label
 	GUI_SetAlpha(255);
+#endif
 
-	ui_controls_update_vfo_mode(true);												// CENTER/FIX
-	ui_spectrum_create_span();														// Span  control
+	//ui_controls_update_vfo_mode(true);												// CENTER/FIX
+	//ui_spectrum_create_span();														// Span  control
 
 }
 
@@ -911,10 +915,10 @@ static void ui_controls_create_sw_big(void)
 							SW_FRAME_WIDTH
 						);
 	#else
-	//GUI_DrawHLine((sb.y + 0), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
-	//GUI_DrawHLine((sb.y + 1), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
-	GUI_DrawHLine((sb.y + 3 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
-	GUI_DrawHLine((sb.y + 4 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_DrawHLine((sb.y + 21), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_DrawHLine((sb.y + 22), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
+	//GUI_DrawHLine((sb.y + 3 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
+	//GUI_DrawHLine((sb.y + 4 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
 	#endif
 
 	// Draw header
@@ -970,6 +974,10 @@ static void ui_controls_create_sw_big(void)
 static void ui_controls_create_bottom_bar(void)
 {
 	int i,j,x0,y0,FontSizeY;
+
+
+	return;
+
 
 	// Bottom divider below waterfall
 	GUI_SetColor(GUI_BLACK);
