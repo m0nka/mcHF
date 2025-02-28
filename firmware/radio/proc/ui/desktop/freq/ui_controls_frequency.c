@@ -536,9 +536,9 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		GUI_SetColor(GUI_BLACK);
 		GUI_FillRect((M_FREQ_X + 1 + (FREQ_FONT_SIZE_X * 0)),(M_FREQ_Y + 5),(M_FREQ_X + FREQ_FONT_SIZE_X + 1 + (FREQ_FONT_SIZE_X * 0)),(M_FREQ_Y + 5 + FREQ_FONT_SIZE_Y));
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
-			GUI_SetColor(GUI_WHITE);
+			GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 		else
-			GUI_SetColor(GUI_GRAY);
+			GUI_SetColor(GUI_WHITE);
 		// To string
 		digit[0] = 0x30 + (d_100mhz & 0x0F);
 		// Update segment
@@ -559,7 +559,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_10MHZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -590,7 +590,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_1MHZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -615,7 +615,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_100KHZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -640,7 +640,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_10KHZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -668,7 +668,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_1KHZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -693,7 +693,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_100HZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -718,7 +718,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_10HZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -743,7 +743,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_1HZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -1091,8 +1091,8 @@ static void ui_controls_frequency_vfo_a_initial_paint(uchar is_init)
 	else
 		GUI_SetColor(GUI_GRAY);
 	GUI_SetFont(&GUI_Font20B_1);
-	//GUI_DispStringAt("VFO A",(M_FREQ_X + FREQ_FONT_SIZE_X*9 + 7),(M_FREQ_Y - 20));
-	GUI_DispStringAt("VFO A", 255, 60);
+	GUI_DispStringAt("VFO A",(M_FREQ_X + FREQ_FONT_SIZE_X*9 + 7),(M_FREQ_Y - 20));
+	//GUI_DispStringAt("VFO A", 255, 60);
 
 	// Digits colour
 	GUI_SetFont(FREQ_FONT);

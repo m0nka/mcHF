@@ -857,6 +857,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/ui_menu_module.h</locationURI>
 		</link>
 		<link>
+			<name>proc/ui/ui_lib/ui_cool_progress.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/ui_lib/ui_cool_progress.c</locationURI>
+		</link>
+		<link>
 			<name>proc/ui/ui_state/ui_lora_state.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/ui_state/ui_lora_state.c</locationURI>

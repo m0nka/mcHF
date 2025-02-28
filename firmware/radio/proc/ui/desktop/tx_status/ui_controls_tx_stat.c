@@ -20,6 +20,7 @@
 
 #include "gui.h"
 #include "dialog.h"
+#include "ui_cool_progress.h"
 
 #include "ui_controls_tx_stat.h"
 #include "desktop\ui_controls_layout.h"
@@ -37,6 +38,52 @@ uchar  txs				= 0;
 ushort fwd_volts		= 0;
 ushort f_volts			= 0;
 
+#if 0
+#define COOL_PROG_WIDTH	5
+#define COOL_PROG_SIZE	25
+//
+void ui_controls_tx_stat_prog_bar(int x, int y, ushort val, char *txt)
+{
+	int i, st;
+
+	if(txt == NULL)
+		return;
+
+	if(val > 360)
+		val = 360;
+
+	st = 450 - (90 + val);
+
+	// Background
+	GUI_SetAlpha(80);
+	GUI_SetColor(GUI_DARKGRAY);
+	for(i = 0; i < COOL_PROG_WIDTH; i++)
+		GUI_DrawArc(x, y, (COOL_PROG_SIZE + i), 0, 0, 360);
+
+	// Foreground
+	GUI_SetAlpha(160);
+	GUI_SetColor(GUI_WHITE);
+	for(i = 0; i < COOL_PROG_WIDTH; i++)
+		GUI_DrawArc(x, y, (COOL_PROG_SIZE + i), 0, st, 450);
+
+	// Progress name
+	GUI_SetFont(&GUI_Font8x16_1);
+	GUI_DispStringAt("power", x - 20, y + 30);
+
+	GUI_SetAlpha(255);
+
+	// Clear progress text
+	GUI_SetColor(GUI_BLACK);
+	GUI_FillRect(x - 15, y - 15, x + 16, y + 16);
+
+	// Progress text
+	GUI_SetColor(GUI_WHITE);
+	GUI_SetFont(&GUI_Font32B_ASCII);
+	//sprintf(buf, "%d", val);
+	GUI_DispStringAt(txt, x - 15, y - 15);
+}
+#endif
+
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_tx_stat_repaint
 //* Object              :
@@ -47,50 +94,63 @@ ushort f_volts			= 0;
 //*----------------------------------------------------------------------------
 static void ui_controls_tx_stat_repaint(void)
 {
-	char buf[40];
+	//char buf[40];
 
 	// Clear control
-	GUI_SetColor(GUI_BLACK);
-	GUI_FillRect(TX_STAT_X, TX_STAT_Y,	TX_STAT_X + TX_STAT_SIZE_X, TX_STAT_Y + TX_STAT_SIZE_Y);
+	//GUI_SetColor(GUI_BLACK);
+	//GUI_FillRect(TX_STAT_X, TX_STAT_Y,	TX_STAT_X + TX_STAT_SIZE_X, TX_STAT_Y + TX_STAT_SIZE_Y);
 
 	// Clear dynamic part
-	GUI_SetColor(GUI_WHITE);
-	GUI_FillRect(TX_STAT_X + 53, TX_STAT_Y + 1,	TX_STAT_X + TX_STAT_SIZE_X - 4,	TX_STAT_Y + TX_STAT_SIZE_Y - 1);
+	//GUI_SetColor(GUI_WHITE);
+	//GUI_FillRect(TX_STAT_X + 53, TX_STAT_Y + 1,	TX_STAT_X + TX_STAT_SIZE_X - 4,	TX_STAT_Y + TX_STAT_SIZE_Y - 1);
 
 	// Create frame
-	GUI_SetColor(GUI_GRAY);
-	GUI_DrawRect(TX_STAT_X,		 TX_STAT_Y,      TX_STAT_X + TX_STAT_SIZE_X - 1,  TX_STAT_Y + TX_STAT_SIZE_Y);
-	GUI_DrawRect(TX_STAT_X - 1,	 TX_STAT_Y - 1,  TX_STAT_X + TX_STAT_SIZE_X,  TX_STAT_Y + TX_STAT_SIZE_Y + 1);
-	GUI_FillRect(TX_STAT_X + 50, TX_STAT_Y + 1,	 TX_STAT_X + 53,   TX_STAT_Y + TX_STAT_SIZE_Y - 1);
-	GUI_FillRect(TX_STAT_X + 0,	 TX_STAT_Y + 20, TX_STAT_X +  49,  TX_STAT_Y + TX_STAT_SIZE_Y);
-	GUI_FillRect(TX_STAT_X + 123,TX_STAT_Y - 1,  TX_STAT_X +  TX_STAT_SIZE_X, TX_STAT_Y + TX_STAT_SIZE_Y + 1);
+	//GUI_SetColor(GUI_GRAY);
+	//GUI_DrawRect(TX_STAT_X,		 TX_STAT_Y,      TX_STAT_X + TX_STAT_SIZE_X - 1,  TX_STAT_Y + TX_STAT_SIZE_Y);
+	//GUI_DrawRect(TX_STAT_X - 1,	 TX_STAT_Y - 1,  TX_STAT_X + TX_STAT_SIZE_X,  TX_STAT_Y + TX_STAT_SIZE_Y + 1);
+	//GUI_FillRect(TX_STAT_X + 50, TX_STAT_Y + 1,	 TX_STAT_X + 53,   TX_STAT_Y + TX_STAT_SIZE_Y - 1);
+	//GUI_FillRect(TX_STAT_X + 0,	 TX_STAT_Y + 20, TX_STAT_X +  49,  TX_STAT_Y + TX_STAT_SIZE_Y);
+	//GUI_FillRect(TX_STAT_X + 123,TX_STAT_Y - 1,  TX_STAT_X +  TX_STAT_SIZE_X, TX_STAT_Y + TX_STAT_SIZE_Y + 1);
 
-	GUI_SetFont(&GUI_Font8x16_1);
-	GUI_SetColor(GUI_GREEN);
+	//GUI_SetFont(&GUI_Font8x16_1);
+	//GUI_SetColor(GUI_GREEN);
 	switch(tsu.band[tsu.curr_band].tx_power)
 	{
-		case PA_LEVEL_5W:
-			GUI_DispStringAt("5W", TX_STAT_X + 20, TX_STAT_Y + 3);
-			break;
-		case PA_LEVEL_2W:
-			GUI_DispStringAt("2W", TX_STAT_X + 20, TX_STAT_Y + 3);
-			break;
-		case PA_LEVEL_1W:
-			GUI_DispStringAt("1W", TX_STAT_X + 20, TX_STAT_Y + 3);
-			break;
 		case PA_LEVEL_0_5W:
-			GUI_DispStringAt("0.5W", TX_STAT_X + 8, TX_STAT_Y + 3);
+			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 3, ".5");
 			break;
+
+		case PA_LEVEL_1W:
+			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 5, " 1");
+			break;
+
+		case PA_LEVEL_2W:
+			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 10, " 2");
+			break;
+
+		case PA_LEVEL_5W:
+			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 25, " 5");
+			break;
+
+		case PA_LEVEL_10W:
+			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 50, "10");
+			break;
+
 		case PA_LEVEL_15W:
-			GUI_DispStringAt("15W", TX_STAT_X + 14, TX_STAT_Y + 3);
+			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 75, "15");
 			break;
+
 		case PA_LEVEL_20W:
-			GUI_DispStringAt("20W", TX_STAT_X + 14, TX_STAT_Y + 3);
+			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 100, "20");
 			break;
+
 		default:
-			GUI_DispStringAt("OFF", TX_STAT_X + 14, TX_STAT_Y + 3);
+			//GUI_DispStringAt("OFF", TX_STAT_X + 14, TX_STAT_Y + 3);
+			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 0, "00");
 			break;
 	}
+
+
 #if 0
 	GUI_SetColor(GUI_WHITE);
 	GUI_SetFont(&GUI_Font8x13_1);
@@ -202,6 +262,24 @@ void ui_controls_tx_stat_touch(void)
 //*----------------------------------------------------------------------------
 void ui_controls_tx_stat_refresh(void)
 {
+	// ----------------------------------------------------------
+	// Unit test cool progress bar
+	#if 0
+	char buff[20];
+	static uchar prog = 0;
+	static uchar skip = 0;
+
+	if(skip++ < 5)
+		return;
+	skip = 0;
+
+	sprintf(buff,"%2d", prog);
+	ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, prog++, buff);
+	if(prog == 100) prog = 0;
+	return;
+	#endif
+	// ----------------------------------------------------------
+
 	// Skip needless update
 	if(	(ui_power_factor != tsu.band[tsu.curr_band].power_factor)||\
 		(ui_tx_power != tsu.band[tsu.curr_band].tx_power)||\

@@ -130,7 +130,7 @@ static void ui_proc_add_menu_items(void)
 
 static void ui_proc_cb(void)
 {
-//!	ui_controls_frequency_refresh(0);
+	ui_controls_frequency_refresh(0);
 	//ui_controls_volume_refresh();	// blink on constant refresh , ToDo: restore orig code
 }
 

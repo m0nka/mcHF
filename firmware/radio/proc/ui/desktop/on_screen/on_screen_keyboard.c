@@ -83,7 +83,7 @@ static const GUI_WIDGET_CREATE_INFO KeybDialog[] =
 	{ BUTTON_CreateIndirect, 	"80m",		ID_BUTTON_80M,		210, 	15, 	80, 				45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"60m",		ID_BUTTON_60M,		305, 	15, 	80, 				45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"40m",		ID_BUTTON_40M,		400, 	15, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"TUNE",		ID_BUTTON_DSP,		495, 	15, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"PWR",		ID_BUTTON_DSP,		495, 	15, 	80, 				45, 				0, 		0x0, 	0 },
 
 	// Row 2
 	{ BUTTON_CreateIndirect, 	"CW",		ID_BUTTON_CW,		 20, 	75, 	80, 				45, 				0, 		0x0, 	0 },
@@ -91,7 +91,7 @@ static const GUI_WIDGET_CREATE_INFO KeybDialog[] =
 	{ BUTTON_CreateIndirect, 	"20m",		ID_BUTTON_20M,		210, 	75, 	80, 				45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"17m",		ID_BUTTON_17M,		305, 	75, 	80, 				45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"15m",		ID_BUTTON_15M,		400, 	75, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"PWR",		ID_BUTTON_TXPO,		495, 	75, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"---",		ID_BUTTON_TXPO,		495, 	75, 	80, 				45, 				0, 		0x0, 	0 },
 
 	// Row 3
 	{ BUTTON_CreateIndirect, 	"AM",		ID_BUTTON_AM,		 20, 	135, 	80, 				45, 				0, 		0x0, 	0 },
@@ -172,6 +172,10 @@ static void KH_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			break;
 
 		case ID_BUTTON_TXPO:
+			//ui_actions_change_power_level();
+			break;
+
+		case ID_BUTTON_DSP:
 			ui_actions_change_power_level();
 			break;
 

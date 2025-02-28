@@ -66,6 +66,7 @@
 									<listOptionValue builtIn="false" value="../../../proc/ui/driver/mipi"/>
 									<listOptionValue builtIn="false" value="../../../proc/ui/ui_lib/STemWin/inc"/>
 									<listOptionValue builtIn="false" value="../../../proc/ui/ui_lib/keypad"/>
+									<listOptionValue builtIn="false" value="../../../proc/ui/ui_lib"/>
 									<listOptionValue builtIn="false" value="../../../proc/ui/ui_state"/>
 									<listOptionValue builtIn="false" value="../../../proc/ipc"/>
 									<listOptionValue builtIn="false" value="../../../proc/ipc/hw"/>

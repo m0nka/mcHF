@@ -264,7 +264,7 @@
 //
 // ----------------------------------------------------------------------------
 // Clock control
-#define CLOCK_X						20
+#define CLOCK_X						500
 #define CLOCK_Y						1//145
 //
 #define CLOCK_SIZE_X				350
@@ -286,7 +286,7 @@
 // ----------------------------------------------------------------------------
 // Filter
 #define FILTER_X					357
-#define FILTER_Y					1
+#define FILTER_Y					40
 //
 #define FILTER_SIZE_X				438 - 15
 #define FILTER_SIZE_Y				24

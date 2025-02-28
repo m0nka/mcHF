@@ -33,6 +33,8 @@
 #define VFO_B_SEG_OFF_COLOR			GUI_LIGHTGRAY
 #define VFO_B_SEG_ON_COLOR			GUI_WHITE
 
+#define VFO_A_SEL_DIGIT_COLOR		GUI_GRAY
+
 // Frequency public structure
 typedef struct DialFrequency
 {
@@ -73,8 +75,8 @@ typedef struct DialFrequency
 #define M_FREQ_X					450
 #define M_FREQ_Y					420
 
-#define M_FREQ1_X					10
-#define M_FREQ1_Y					30
+#define M_FREQ1_X					360
+#define M_FREQ1_Y					70
 //#else
 //#define M_FREQ_X					531
 //#define M_FREQ_Y					350
@@ -84,12 +86,12 @@ typedef struct DialFrequency
 //
 // ----------------------------------------------------------------------------
 // Band control
-#define BAND_X						140
-#define BAND_Y						60
+#define BAND_X						(M_FREQ_X + FREQ_FONT_SIZE_X*4 + 7)	// 140
+#define BAND_Y						(M_FREQ_Y - 20)						// 60
 // ----------------------------------------------------------------------------
 // Step
-#define VFO_STEP_X					80
-#define VFO_STEP_Y					60
+#define VFO_STEP_X					(M_FREQ_X + FREQ_FONT_SIZE_X*7 + 12)// 80
+#define VFO_STEP_Y					(M_FREQ_Y - 20)						// 60
 //
 #define VFO_STEP_SIZE_X				52
 #define VFO_STEP_SIZE_Y				20
@@ -100,18 +102,18 @@ typedef struct DialFrequency
 //
 // ----------------------------------------------------------------------------
 // Decoder
-#define DECODER_MODE_X				10
-#define DECODER_MODE_Y				60
+#define DECODER_MODE_X				380	//10
+#define DECODER_MODE_Y				420	//60
 //
 // ----------------------------------------------------------------------------
 // AGC control
-#define AGC_X						190
-#define AGC_Y						32
+#define AGC_X						600
+#define AGC_Y						72
 
 // ----------------------------------------------------------------------------
 // RX/TX indicator
-#define RXTX_X						80
-#define RXTX_Y						86
+#define RXTX_X						(M_FREQ_X + FREQ_FONT_SIZE_X*1 + 12)// 80
+#define RXTX_Y						(M_FREQ_Y - 15)						// 86
 
 // Exports
 void ui_controls_agc_init(void);

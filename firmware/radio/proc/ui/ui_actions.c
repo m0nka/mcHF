@@ -657,9 +657,8 @@ void ui_actions_change_rf_gain(uchar gain)
 //*----------------------------------------------------------------------------
 void ui_actions_change_power_level(void)
 {
-	if(tsu.band[tsu.curr_band].tx_power < PA_LEVEL_MAX_ENTRY)
-		tsu.band[tsu.curr_band].tx_power++;
-	else
+	(tsu.band[tsu.curr_band].tx_power)++;
+	if(tsu.band[tsu.curr_band].tx_power >= PA_LEVEL_MAX_ENTRY)
 		tsu.band[tsu.curr_band].tx_power = PA_LEVEL_0_5W;
 
 	// Notify DSP ?

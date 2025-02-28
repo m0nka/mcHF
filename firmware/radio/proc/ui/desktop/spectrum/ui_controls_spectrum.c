@@ -70,7 +70,7 @@ WM_HTIMER 						hTimerSpec;
 GUI_MEMDEV_Handle hMemSpWf = 0;
 #endif
 
-const ulong waterfall_blue[65] =
+const ulong waterfall_blue[64] =
 {
     0x00002e,
     0x020231,
@@ -135,7 +135,7 @@ const ulong waterfall_blue[65] =
     0x9ba7f5,
     0x9ddaf8,
     0xa0dffb,
-    0xa3e5ff,
+    //0xa3e5ff,
     0xffffff
 };
 
@@ -168,6 +168,25 @@ uchar 		loc_vfo_mode;
 
 uchar 	api_conv_type 	= 1;						// smooth waterfall
 uchar 	sw_light		= 1;						// simplified scope (less resources)
+
+// -------------------------------
+//
+// Use a spare RAM region as backup
+// for quick waterfall restore
+// we don't save waterfall values, but
+// rather compressed pointer indexes
+// to brightness table
+//
+// ToDo: fix it, currently doesn't work!
+//
+//#define USE_WF_BACKUP_BUFFER
+//
+#ifdef USE_WF_BACKUP_BUFFER
+uchar wf_bkp[68747];
+ulong wf_cur = 0xFFFFFFFF;
+#endif
+//
+// -------------------------------
 
 static ushort chk_x(ushort x)
 {
@@ -580,6 +599,34 @@ static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 	ulong		val;
 	ulong 		y_copy_sz = 1;	// only one line at a time seems to only work (driver LCD_Copy problem maybe)
 
+	// Initial fill(from backup table)
+	#ifdef USE_WF_BACKUP_BUFFER
+	if(cb == NULL)
+	{
+		printf("restore from table\r\n");
+		m = 0;
+		for (j = 0; j < WATERFALL_Y_SIZE; j++)
+		{
+			for (i = 0; i < WATERFALL_X_SIZE; i++)
+			{
+				if(m%2 != 0)
+					val = (wf_bkp[m] >> 4) * 4;
+				else
+				{
+					val = (wf_bkp[m] & 4) * 4;
+					m++;
+					if(m >= sizeof(wf_bkp)) m = 0;
+				}
+				val &= 0x3F;
+
+				GUI_SetColor ((0xFF << 24) | waterfall_blue[val]);	// add Alpha value
+				GUI_DrawPixel(((SW_FRAME_X + SW_FRAME_WIDTH) + i), WATERFALL_Y + j);
+			}
+		}
+		return;
+	}
+	#endif
+
 	#if 1
 	// Move down - MIPI AdaptedCommand mode only
 	for (i = WATERFALL_Y_SIZE; i > 0; i -= y_copy_sz)
@@ -605,6 +652,20 @@ static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 	{
 		val  = ui_sw.fft_value[i];
 		val &= 0x3F;
+
+		// Save value to table
+		#ifdef USE_WF_BACKUP_BUFFER
+		if(i%2 == 0)
+			wf_bkp[wf_cur]  = (val/4 & 0xF) << 4;
+		else
+		{
+			wf_bkp[wf_cur] |= (val/4 & 0xF);
+
+			wf_cur++;
+			if(wf_cur >= sizeof(wf_bkp))
+				wf_cur = 0;
+		}
+		#endif
 
 		// ToDo: Fix gradient table addressing
 		GUI_SetColor ((0xFF << 24) | waterfall_blue[val]);	// add Alpha value
@@ -915,10 +976,17 @@ static void ui_controls_create_sw_big(void)
 							SW_FRAME_WIDTH
 						);
 	#else
+	// Top
 	GUI_DrawHLine((sb.y + 21), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
 	GUI_DrawHLine((sb.y + 22), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
-	//GUI_DrawHLine((sb.y + 3 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
-	//GUI_DrawHLine((sb.y + 4 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
+	// Bottom
+	GUI_DrawHLine((sb.y - 14 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_DrawHLine((sb.y - 13 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_SetAlpha(128);
+	GUI_DrawHLine((sb.y - 12 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_SetAlpha(88);
+	GUI_DrawHLine((sb.y - 11 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_SetAlpha(255);
 	#endif
 
 	// Draw header
@@ -1179,6 +1247,19 @@ void ui_controls_spectrum_refresh(FAST_REFRESH *cb)
 //*----------------------------------------------------------------------------
 void ui_controls_spectrum_init(WM_HWIN hParent)
 {
+	int i;
+
+	// Backup table init
+	#ifdef USE_WF_BACKUP_BUFFER
+	if(wf_cur == 0xFFFFFFFF)
+	{
+		printf("table init\r\n");
+		for (i = 0; i < sizeof(wf_bkp); i++)
+			wf_bkp[i] = 0x11;
+	}
+	wf_cur = 0;
+	#endif
+
 	#ifdef SPEC_USE_WM
 	hSpectrumDialog = GUI_CreateDialogBox(SpectrumDialog, GUI_COUNTOF(SpectrumDialog), WDHandler, hParent, sb.x, sb.y);
 	#ifdef USE_MEM_DEVICE

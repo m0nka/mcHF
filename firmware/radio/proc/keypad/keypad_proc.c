@@ -306,11 +306,16 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		{
 			//--tsu.cw_tx_on = !tsu.cw_tx_on;
 
-			printf("DSP\r\n");
+			if(!release)
+			{
+				printf("TX PWR\r\n");
+				ui_actions_change_power_level();
+			}
 		}
 		else
 		{
-			// ..
+			//printf("TX PWR\r\n");
+			//ui_actions_change_power_level();
 		}
 
 		return;
