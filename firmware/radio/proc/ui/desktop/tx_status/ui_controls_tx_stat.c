@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "version.h"
@@ -37,52 +36,6 @@ uchar  txs				= 0;
 
 ushort fwd_volts		= 0;
 ushort f_volts			= 0;
-
-#if 0
-#define COOL_PROG_WIDTH	5
-#define COOL_PROG_SIZE	25
-//
-void ui_controls_tx_stat_prog_bar(int x, int y, ushort val, char *txt)
-{
-	int i, st;
-
-	if(txt == NULL)
-		return;
-
-	if(val > 360)
-		val = 360;
-
-	st = 450 - (90 + val);
-
-	// Background
-	GUI_SetAlpha(80);
-	GUI_SetColor(GUI_DARKGRAY);
-	for(i = 0; i < COOL_PROG_WIDTH; i++)
-		GUI_DrawArc(x, y, (COOL_PROG_SIZE + i), 0, 0, 360);
-
-	// Foreground
-	GUI_SetAlpha(160);
-	GUI_SetColor(GUI_WHITE);
-	for(i = 0; i < COOL_PROG_WIDTH; i++)
-		GUI_DrawArc(x, y, (COOL_PROG_SIZE + i), 0, st, 450);
-
-	// Progress name
-	GUI_SetFont(&GUI_Font8x16_1);
-	GUI_DispStringAt("power", x - 20, y + 30);
-
-	GUI_SetAlpha(255);
-
-	// Clear progress text
-	GUI_SetColor(GUI_BLACK);
-	GUI_FillRect(x - 15, y - 15, x + 16, y + 16);
-
-	// Progress text
-	GUI_SetColor(GUI_WHITE);
-	GUI_SetFont(&GUI_Font32B_ASCII);
-	//sprintf(buf, "%d", val);
-	GUI_DispStringAt(txt, x - 15, y - 15);
-}
-#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_tx_stat_repaint

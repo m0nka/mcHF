@@ -1,7 +1,7 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
@@ -9,10 +9,7 @@
 **  File name:      vfo_cw_gen.c                                                   **
 **  Description:    Two tones CW generator                                         **
 **  Date Created:   25 Aug 2021, The Idle Residence, Thailand                      **
-**  Licence:                                                                       **
-**          The mcHF project is released for radio amateurs experimentation,       **
-**          non-commercial use only. All source files under GPL-3.0, unless        **
-**          third party drivers specifies otherwise. Thank you!                    **
+**  Licence:        GNU GPLv3                                                      **
 ************************************************************************************/
 
 #include "mchf_pro_board.h"

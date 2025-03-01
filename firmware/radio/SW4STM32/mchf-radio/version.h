@@ -8,8 +8,7 @@
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:                                                                       **
 ************************************************************************************/
 #ifndef __VERSION_H
 #define __VERSION_H

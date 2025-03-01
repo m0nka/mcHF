@@ -8,7 +8,7 @@
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:                                                                       **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 
 #include "mchf_pro_board.h"
