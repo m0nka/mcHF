@@ -70,36 +70,35 @@ static void ui_controls_tx_stat_repaint(void)
 	switch(tsu.band[tsu.curr_band].tx_power)
 	{
 		case PA_LEVEL_0_5W:
-			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 3, ".5");
+			ui_cool_progress_tx_pwr(TX_STAT_X, TX_STAT_Y, 3, ".5");
 			break;
 
 		case PA_LEVEL_1W:
-			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 5, " 1");
+			ui_cool_progress_tx_pwr(TX_STAT_X, TX_STAT_Y, 5, " 1");
 			break;
 
 		case PA_LEVEL_2W:
-			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 10, " 2");
+			ui_cool_progress_tx_pwr(TX_STAT_X, TX_STAT_Y, 10, " 2");
 			break;
 
 		case PA_LEVEL_5W:
-			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 25, " 5");
+			ui_cool_progress_tx_pwr(TX_STAT_X, TX_STAT_Y, 25, " 5");
 			break;
 
 		case PA_LEVEL_10W:
-			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 50, "10");
+			ui_cool_progress_tx_pwr(TX_STAT_X, TX_STAT_Y, 50, "10");
 			break;
 
 		case PA_LEVEL_15W:
-			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 75, "15");
+			ui_cool_progress_tx_pwr(TX_STAT_X, TX_STAT_Y, 75, "15");
 			break;
 
 		case PA_LEVEL_20W:
-			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 100, "20");
+			ui_cool_progress_tx_pwr(TX_STAT_X, TX_STAT_Y, 100, "20");
 			break;
 
 		default:
-			//GUI_DispStringAt("OFF", TX_STAT_X + 14, TX_STAT_Y + 3);
-			ui_cool_progress_tx_pwr(TX_STAT_X + 120, TX_STAT_Y + 25, 0, "00");
+			ui_cool_progress_tx_pwr(TX_STAT_X, TX_STAT_Y, 0, "00");
 			break;
 	}
 

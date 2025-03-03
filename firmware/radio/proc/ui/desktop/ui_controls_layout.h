@@ -277,8 +277,8 @@
 //
 // ----------------------------------------------------------------------------
 // Speaker control
-#define SPEAKER_X					20
-#define SPEAKER_Y					410
+#define SPEAKER_X					40
+#define SPEAKER_Y					430
 //
 #define SPEAKER_SIZE_X				62
 #define SPEAKER_SIZE_Y				50
@@ -293,7 +293,7 @@
 //
 // ----------------------------------------------------------------------------
 // Battery icon
-#define BATTERY_X					120
+#define BATTERY_X					220
 #define BATTERY_Y					405
 //
 #define BATTERY_SIZE_X				30
@@ -302,8 +302,8 @@
 // ----------------------------------------------------------------------------
 // TX Status control
 //
-#define TX_STAT_X					200
-#define TX_STAT_Y					405
+#define TX_STAT_X					120
+#define TX_STAT_Y					430
 
 #define TX_STAT_SIZE_X				60
 #define TX_STAT_SIZE_Y				56

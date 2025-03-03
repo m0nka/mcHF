@@ -612,11 +612,11 @@ void radio_init_on_reset(void)
 	tsu.curr_band 						= BAND_MODE_20;
 	//tsu.band[tsu.curr_band].tx_power	= PA_LEVEL_5W;
 	tsu.band[tsu.curr_band].volume 		= 0;
-	tsu.band[tsu.curr_band].vfo_a 		= 14200*1000 + 300;
+	tsu.band[tsu.curr_band].vfo_a 		= 14200*1000 + 000;
 	tsu.band[tsu.curr_band].fixed_mode 	= 0;
 	tsu.band[tsu.curr_band].nco_freq	= 0;
 	tsu.band[tsu.curr_band].demod_mode	= DEMOD_CW;
-	tsu.demo_mode 						= 1;
+	tsu.demo_mode 						= 0;
 	#endif
 
 	// Enforce 80m - test

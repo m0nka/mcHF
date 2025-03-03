@@ -19,6 +19,7 @@
 
 #include "gui.h"
 #include "dialog.h"
+#include "ui_cool_progress.h"
 
 #include "ui_controls_volume.h"
 #include "desktop\ui_controls_layout.h"
@@ -212,19 +213,19 @@ void ui_controls_volume_init(WM_HWIN hParent)
 	char  buff[20];
 	uchar volume;
 
-	if(!mute_flag)
-		GUI_DrawBitmap(&bmtechrubio, (SPEAKER_X + 1), (SPEAKER_Y + 1));
-	else
-		GUI_DrawBitmap(&bmtechrubio_mute, (SPEAKER_X + 1), (SPEAKER_Y + 1));
+	//if(!mute_flag)
+	//	GUI_DrawBitmap(&bmtechrubio, (SPEAKER_X + 1), (SPEAKER_Y + 1));
+	//else
+	//	GUI_DrawBitmap(&bmtechrubio_mute, (SPEAKER_X + 1), (SPEAKER_Y + 1));
 
 	// Frame
-	GUI_SetColor(GUI_ORANGE);
-	GUI_DrawRect((SPEAKER_X + 0),(SPEAKER_Y + 0),(SPEAKER_X + 61),(SPEAKER_Y + 49));
-	GUI_DrawRect((SPEAKER_X + 1),(SPEAKER_Y + 1),(SPEAKER_X + 60),(SPEAKER_Y + 50));
-	GUI_DrawRect((SPEAKER_X + 2),(SPEAKER_Y + 2),(SPEAKER_X + 59),(SPEAKER_Y + 51));
+	//GUI_SetColor(GUI_ORANGE);
+	//GUI_DrawRect((SPEAKER_X + 0),(SPEAKER_Y + 0),(SPEAKER_X + 61),(SPEAKER_Y + 49));
+	//GUI_DrawRect((SPEAKER_X + 1),(SPEAKER_Y + 1),(SPEAKER_X + 60),(SPEAKER_Y + 50));
+	//GUI_DrawRect((SPEAKER_X + 2),(SPEAKER_Y + 2),(SPEAKER_X + 59),(SPEAKER_Y + 51));
 
 	// Extra filler on top
-	GUI_FillRect((SPEAKER_X + 0),(SPEAKER_Y - 5), (SPEAKER_X + 61), (SPEAKER_Y + 0));
+	//GUI_FillRect((SPEAKER_X + 0),(SPEAKER_Y - 5), (SPEAKER_X + 61), (SPEAKER_Y + 0));
 
 	if(tsu.curr_band > BAND_MODE_GEN)
 	{
@@ -242,9 +243,15 @@ void ui_controls_volume_init(WM_HWIN hParent)
 	}
 
 	if(!mute_flag)
+	{
 		sprintf(buff,"%2d",volume);
+		ui_cool_progress_volume(SPEAKER_X, SPEAKER_Y, volume, buff);
+	}
 	else
+	{
 		sprintf(buff,"%2d",mute_saved_vol);
+		ui_cool_progress_volume(SPEAKER_X, SPEAKER_Y, mute_saved_vol, buff);
+	}
 
 	#if 0
 	// Clear area
@@ -255,7 +262,7 @@ void ui_controls_volume_init(WM_HWIN hParent)
 	GUI_SetFont(&GUI_Font8x8_ASCII);
 	GUI_DispStringAt(buff,(SPEAKER_X + 2),(SPEAKER_Y + 38));
 	#endif
-
+/*
 	GUI_SetColor(GUI_BLUE);
 	GUI_SetFont(&GUI_Font8x8_ASCII);
 
@@ -268,7 +275,7 @@ void ui_controls_volume_init(WM_HWIN hParent)
 	// Set a clip rectangle to save performance, otherwise the whole background would be redrawn
 	GUI_SetClipRect(&Rect);
 	GUI_DispStringInRect(buff, &Rect, GUI_TA_HCENTER | GUI_TA_VCENTER);
-	GUI_SetClipRect(NULL);
+	GUI_SetClipRect(NULL);*/
 	#endif
 }
 
@@ -385,12 +392,13 @@ void ui_controls_volume_refresh(void)
 	}
 
 	// Clear area
-	GUI_SetColor(GUI_WHITE);
-	GUI_FillRect((SPEAKER_X + 4),(SPEAKER_Y + 37),(SPEAKER_X + 16),(SPEAKER_Y + 46));
+	//GUI_SetColor(GUI_WHITE);
+	//GUI_FillRect((SPEAKER_X + 4),(SPEAKER_Y + 37),(SPEAKER_X + 16),(SPEAKER_Y + 46));
 
 	sprintf(buff,"%2d",volume);
+	ui_cool_progress_volume(SPEAKER_X, SPEAKER_Y, volume, buff);
 
-	GUI_SetColor(GUI_BLUE);
+/*	GUI_SetColor(GUI_BLUE);
 	GUI_SetFont(&GUI_Font8x8_ASCII);
 
 	#if 0
@@ -404,7 +412,7 @@ void ui_controls_volume_refresh(void)
 	GUI_SetClipRect(&Rect);
 	GUI_DispStringInRect(buff, &Rect, GUI_TA_HCENTER | GUI_TA_VCENTER);
 	GUI_SetClipRect(NULL);
-	#endif
+	#endif*/
 
 	#endif
 }

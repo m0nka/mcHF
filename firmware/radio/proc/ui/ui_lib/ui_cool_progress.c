@@ -76,3 +76,41 @@ void ui_cool_progress_tx_pwr(int x, int y, ushort val, char *txt)
 	GUI_SetFont(&GUI_Font32B_ASCII);
 	GUI_DispStringAt(txt, x - 15, y - 15);
 }
+
+void ui_cool_progress_volume(int x, int y, ushort val, char *txt)
+{
+	ulong 	st;
+
+	if(txt == NULL)
+		return;
+
+	if(val > 16)
+		val = 16;
+
+	val *= 6;
+	if(val) val += 4;
+
+	// To start angle
+	st = (4500 - (0 + val*36))/10;
+
+	// Draw common component
+	ui_cool_progress_create(x, y, st);
+
+	// Progress name
+	GUI_SetColor(GUI_WHITE);
+	GUI_SetFont(&GUI_Font8x16_1);
+	GUI_SetAlpha(88);
+	GUI_DispStringAt("volume", x - 25, y + 32);
+	GUI_SetAlpha(255);
+
+	// Clear progress text
+	GUI_SetColor(GUI_BLACK);
+	GUI_FillRect(x - 15, y - 15, x + 16, y + 16);
+
+	GUI_SetColor(GUI_WHITE);
+
+	// Progress text
+	GUI_SetFont(&GUI_Font32B_ASCII);
+	GUI_DispStringAt(txt, x - 15, y - 15);
+}
+

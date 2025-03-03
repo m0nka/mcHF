@@ -1007,11 +1007,6 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/tx_status/ui_controls_tx_stat.c</locationURI>
 		</link>
 		<link>
-			<name>proc/ui/desktop/volume/techrubio.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/volume/techrubio.c</locationURI>
-		</link>
-		<link>
 			<name>proc/ui/desktop/volume/ui_controls_volume.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/volume/ui_controls_volume.c</locationURI>
