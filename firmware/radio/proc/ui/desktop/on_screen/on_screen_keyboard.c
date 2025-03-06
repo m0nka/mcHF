@@ -15,10 +15,13 @@
 
 #ifdef CONTEXT_VIDEO
 
-#include "on_screen_keyboard.h"
+#include "ui_proc.h"
 #include "ui_actions.h"
-
 #include "radio_init.h"
+#include "spectrum/ui_controls_spectrum.h"
+
+#include "on_screen_keyboard.h"
+
 
 //#define KEYB_IS_TRANPARENT
 
@@ -90,23 +93,23 @@ static const GUI_WIDGET_CREATE_INFO KeybDialog[] =
 	{ BUTTON_CreateIndirect, 	"20m",		ID_BUTTON_20M,		210, 	75, 	80, 				45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"17m",		ID_BUTTON_17M,		305, 	75, 	80, 				45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"15m",		ID_BUTTON_15M,		400, 	75, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"---",		ID_BUTTON_TXPO,		495, 	75, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"STEP",		ID_BUTTON_TXPO,		495, 	75, 	80, 				45, 				0, 		0x0, 	0 },
 
 	// Row 3
 	{ BUTTON_CreateIndirect, 	"AM",		ID_BUTTON_AM,		 20, 	135, 	80, 				45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"12m",		ID_BUTTON_12M,		115, 	135, 	80, 				45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"10m",		ID_BUTTON_10M,		210, 	135, 	80, 				45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"GEN",		ID_BUTTON_GEN,		305, 	135, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"QUIT",		ID_BUTTON_ENTER,	400, 	135, 	80, 			   105, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"STEP",		ID_BUTTON_STEP,		495, 	135, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"MENU",		ID_BUTTON_ENTER,	400, 	135, 	80, 			   105, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"----",		ID_BUTTON_STEP,		495, 	135, 	80, 				45, 				0, 		0x0, 	0 },
 
 	// Row 4
 	{ BUTTON_CreateIndirect, 	"FIX",		ID_BUTTON_FIX,		 20, 	195, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"2200m",	ID_BUTTON_2200M,	115, 	195, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"630m",		ID_BUTTON_630M,		210, 	195, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"Audio",	ID_BUTTON_2200M,	115, 	195, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"AGC",		ID_BUTTON_630M,		210, 	195, 	80, 				45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"SPAN",		ID_BUTTON_SPAN,		305, 	195, 	80, 				45, 				0, 		0x0, 	0 },
 	// NA
-	{ BUTTON_CreateIndirect, 	"SPLIT",	ID_BUTTON_SPLIT,	495, 	195, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"FIX",		ID_BUTTON_SPLIT,	495, 	195, 	80, 				45, 				0, 		0x0, 	0 },
 };
 
 WM_HWIN 	hKeybDialog = 0;
@@ -121,10 +124,10 @@ static void KH_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 	switch(Id)
 	{
 		case ID_BUTTON_2200M:
-			ui_actions_change_band(BAND_MODE_2200, 0);
+			//ui_actions_change_band(BAND_MODE_2200, 0);	// ToDo: need unload and load Audio dialog
 			break;
 		case ID_BUTTON_630M:
-			ui_actions_change_band(BAND_MODE_630, 0);
+			//ui_actions_change_band(BAND_MODE_630, 0);		// ToDo: same but AGC dialog
 			break;
 		case ID_BUTTON_160M:
 			ui_actions_change_band(BAND_MODE_160, 0);
@@ -300,6 +303,12 @@ static void KeybHandler(WM_MESSAGE *pMsg)
 		        	//printf("GUI_KEY_HOME\r\n");
 		        	break;
 		        }
+
+		        case GUI_KEY_ENTER:
+		        {
+		        	GUI_EndDialog(pMsg->hWin, 0);
+		        	break;
+		        }
 			}
 			break;
 		}
@@ -325,9 +334,9 @@ uchar on_screen_keyboard_init(WM_HWIN hParent)
 
 void on_screen_keyboard_quit(void)
 {
+	WM_HideWindow(hKeybDialog);
 	GUI_EndDialog(hKeybDialog, 0);
 	hKeybDialog = 0;
-	//WM_HideWindow(hWiFiDialog);
 }
 
 void on_screen_keyboard_refresh(void)

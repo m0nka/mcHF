@@ -42,7 +42,7 @@
 #include "dsp_stat\ui_controls_dsp_stat.h"
 #include "sd_icon\ui_controls_sd_icon.h"
 #include "battery\ui_controls_battery.h"
-#include "menu_button\ui_controls_menu_button.h"
+//#include "menu_button\ui_controls_menu_button.h"
 #include "on_screen\on_screen_keyboard.h"
 #include "on_screen\on_screen_audio.h"
 #include "on_screen\on_screen_agc_att.h"
@@ -240,6 +240,7 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 			}
 			#endif
 
+			#if 0
 			// Is it top part of screen (above combined control ?)
 			if(TS_State.y < (SW_FRAME_Y - 5))
 			{
@@ -254,10 +255,10 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 					if(!active_control_shown)
 					{
 						#if 1
-						if(*(uchar *)(EEP_BASE + EEP_KEYER_ON))
-						{
-							ui_controls_keyer_quit();
-						}
+						//if(*(uchar *)(EEP_BASE + EEP_KEYER_ON))
+						//{
+						//	ui_controls_keyer_quit();
+						//}
 
 						ui_s.req_state = MODE_MENU;
 						ui_proc_change_mode();
@@ -278,76 +279,77 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 				WM_DefaultProc(pMsg);
 				break;
 			}
+			#endif
 
 			touch_id = ui_controls_spectrum_is_touch(TS_State.x, TS_State.y);
 			switch(touch_id)
 			{
 				// BMS
-				case 1:
-				{
+				//case 1:
+				//{
 					// ----------------------------------------
-					#ifdef CONTEXT_BMS
+					//#ifdef CONTEXT_BMS
 					// Temp show power dialog
-					if(!active_control_shown)
-					{
-						on_screen_power_init(WM_HBKWIN);
-						active_control_shown = 1;
-					}
-					#endif
+					//if(!active_control_shown)
+					//{
+					//	on_screen_power_init(WM_HBKWIN);
+					//	active_control_shown = 1;
+					//}
+					//#endif
 					// ---------------------------------------
 
-					break;
-				}
+					//break;
+				//}
 
 				// AUDIO
-				case 2:
-				{
-					if(!active_control_shown)
-					{
-						on_screen_audio_init(WM_HBKWIN);
-						active_control_shown = 1;
-					}
-					break;
-				}
+				//case 2:
+				//{
+				//	if(!active_control_shown)
+				//	{
+				//		on_screen_audio_init(WM_HBKWIN);
+				//		active_control_shown = 1;
+				//	}
+				//	break;
+				//}
 
 				// VFO
-				case 3:
-				{
-					printf("ToDo: Show VFO dialog\r\n");
-					break;
-				}
+				//case 3:
+				//{
+				//	printf("ToDo: Show VFO dialog\r\n");
+				//	break;
+				//}
 
 				// KEYBOARD
-				case 4:
-				{
-					if(!active_control_shown)
-					{
-						on_screen_keyboard_init(WM_HBKWIN);
-						active_control_shown = 1;
-					}
-					break;
-				}
+				//case 4:
+				//{
+				//	if(!active_control_shown)
+				//	{
+				//		on_screen_keyboard_init(WM_HBKWIN);
+				//		active_control_shown = 1;
+				//	}
+				//	break;
+				//}
 
 				// AGC/ATT
-				case 5:
-				{
-					if(!active_control_shown)
-					{
-						on_screen_agc_att_init(WM_HBKWIN);
-						active_control_shown = 1;
-					}
-					break;
-				}
+				//case 5:
+				//{
+				//	if(!active_control_shown)
+				//	{
+				//		on_screen_agc_att_init(WM_HBKWIN);
+				//		active_control_shown = 1;
+				//	}
+				//	break;
+				//}
 
 				// CENTER/FIX
-				case 6:
-					ui_actions_change_vfo_mode();
-					break;
+				//case 6:
+				//	ui_actions_change_vfo_mode();
+				//	break;
 
 				// SPAN
-				case 7:
-					ui_actions_change_span();
-					break;
+				//case 7:
+				//	ui_actions_change_span();
+				//	break;
 
 				// Band guide reaction
 				case 8:
@@ -380,15 +382,31 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		// Process key messages not supported by ICON_VIEW control
 		case WM_KEY:
 		{
-			printf("GUI_KEY\r\n");
+			//printf("GUI_KEY\r\n");
 
 			switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
 			{
 		        // Return from menu
 		        case GUI_KEY_ENTER:
 		        {
-		        	//printf("GUI_KEY_ENTER\r\n");
-		        	//GUI_EndDialog(pMsg->hWin, 0);
+		        	//--GUI_EndDialog(pMsg->hWin, 0);
+
+		        	if(((WM_KEY_INFO*)(pMsg->Data.p))->PressedCnt == 0)
+		        	{
+		        		//printf("GUI_KEY_ENTER press\r\n");
+		        		break;
+		        	}
+		        	//else
+		        	//	printf("GUI_KEY_ENTER release\r\n");
+
+		        	if(!active_control_shown)
+		        	{
+		        		on_screen_keyboard_init(WM_HBKWIN);
+		        		active_control_shown = 1;
+		        	}
+		        	else
+		        		on_screen_keyboard_quit();
+
 		        	break;
 		        }
 
@@ -434,6 +452,32 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        case 'S':
 		        	ui_actions_change_band(BAND_MODE_15, 0);
 		        	break;
+		        case 'A':
+		        {
+		        	printf("A release\r\n");
+
+					if(!active_control_shown)
+					{
+						on_screen_audio_init(WM_HBKWIN);
+						active_control_shown = 1;
+					}
+					else
+						on_screen_audio_quit();
+		        	break;
+		        }
+		        case 'G':
+		        {
+		        	printf("G release\r\n");
+
+					if(!active_control_shown)
+					{
+						on_screen_agc_att_init(WM_HBKWIN);
+						active_control_shown = 1;
+					}
+					else
+						on_screen_agc_att_quit();
+		        	break;
+		        }
 
 		        //ToDo: The rest....
 			}
@@ -492,7 +536,7 @@ static void ui_proc_init_desktop(void)
 	//ui_controls_dsp_stat_init();
 	ui_controls_battery_init();
 	ui_controls_tx_stat_init();
-	ui_controls_menu_button_init();
+	//--ui_controls_menu_button_init();
 
 	#if 0
 	// Return from Menu, when in CW mode and on screen keyer is enabled
@@ -527,6 +571,10 @@ static void ui_proc_change_mode(void)
 
 	// Do we need update ?
 	if(ui_s.cur_state == state)
+		return;
+
+	// Don't enter Menu if we have virtual dialog shown
+	if((active_control_shown)&&(ui_s.req_state == MODE_MENU))
 		return;
 
 	// Backlight off

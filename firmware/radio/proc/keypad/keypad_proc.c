@@ -36,6 +36,7 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 
 // Process handle
 extern 			TaskHandle_t 			hKbdTask;
+extern 			TaskHandle_t 			hUiTask;
 
 // API Driver messaging
 //extern osMessageQId 					hApiMessage;
@@ -569,33 +570,23 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			printf("Enter\r\n");
+			if(!release)
+			{
+				printf("Enter\r\n");
+				GUI_StoreKeyMsg(GUI_KEY_ENTER, 1);
+			}
+			//else
+			//	GUI_StoreKeyMsg(GUI_KEY_ENTER,0);
 		}
 		else
 		{
-			//if(!ui_s.lock_requests)
 			if(!release)
 			{
-				// Lock yourself out, then only the UI driver can release the lock
-				// after GUI repaint
-				//ui_s.lock_requests = 1;
-
-				// Pass request to UI driver to change mode
-				/*if(ui_s.req_state == MODE_DESKTOP)
-					ui_s.req_state = MODE_MENU;
-				else
-				{
-					if(ui_s.req_state == MODE_MENU)
-						ui_s.req_state = MODE_DESKTOP;
-				}*/
-
 				printf("Enter Hold\r\n");
 
-				// Large debounce
-				//OsDelayMs(500);
+				ui_s.req_state = MODE_MENU;
+				xTaskNotify(hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
 			}
-			//else
-			//	printf("locked\r\n");
 		}
 
 		return;
@@ -666,9 +657,11 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			//tsu.curr_band = BAND_MODE_4;
-
-			printf("4m\r\n");
+			if(!release)
+			{
+				printf("Audio\r\n");
+				GUI_StoreKeyMsg('A', 1);
+			}
 		}
 		else
 		{
@@ -683,9 +676,14 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		if(!hold)
 		{
 			//tsu.curr_band = BAND_MODE_LF;
-			printf("LF\r\n");
 
-			ui_actions_change_band(BAND_MODE_2200, 0);
+			if(!release)
+			{
+				printf("AGC\r\n");
+				GUI_StoreKeyMsg('G', 1);
+			}
+
+			//ui_actions_change_band(BAND_MODE_2200, 0);
 		}
 		else
 		{

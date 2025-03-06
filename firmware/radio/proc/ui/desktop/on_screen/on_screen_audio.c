@@ -497,9 +497,9 @@ uchar on_screen_audio_init(WM_HWIN hParent)
 
 void on_screen_audio_quit(void)
 {
+	WM_HideWindow(hAudDialog);
 	GUI_EndDialog(hAudDialog, 0);
 	hAudDialog = 0;
-	//WM_HideWindow(hAudDialog);
 }
 
 void on_screen_audio_refresh(void)

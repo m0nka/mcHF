@@ -932,16 +932,6 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/keyer/ui_controls_keyer.c</locationURI>
 		</link>
 		<link>
-			<name>proc/ui/desktop/menu_button/settings_menu.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/menu_button/settings_menu.c</locationURI>
-		</link>
-		<link>
-			<name>proc/ui/desktop/menu_button/ui_controls_menu_button.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/menu_button/ui_controls_menu_button.c</locationURI>
-		</link>
-		<link>
 			<name>proc/ui/desktop/on_screen/on_screen_agc_att.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_agc_att.c</locationURI>

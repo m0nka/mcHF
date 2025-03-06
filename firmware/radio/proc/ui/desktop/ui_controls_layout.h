@@ -264,8 +264,8 @@
 //
 // ----------------------------------------------------------------------------
 // Clock control
-#define CLOCK_X						500
-#define CLOCK_Y						1//145
+#define CLOCK_X						605
+#define CLOCK_Y						3
 //
 #define CLOCK_SIZE_X				350
 #define CLOCK_SIZE_Y				20

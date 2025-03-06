@@ -459,9 +459,9 @@ uchar on_screen_agc_att_init(WM_HWIN hParent)
 
 void on_screen_agc_att_quit(void)
 {
+	WM_HideWindow(hAgcDialog);
 	GUI_EndDialog(hAgcDialog, 0);
 	hAgcDialog = 0;
-	//WM_HideWindow(hAgcDialog);
 }
 
 void on_screen_agc_att_refresh(void)

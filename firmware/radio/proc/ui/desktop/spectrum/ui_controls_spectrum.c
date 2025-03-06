@@ -811,11 +811,11 @@ static void ui_controls_create_header_big(void)
 	GUI_SetColor(GUI_WHITE);
 
 	GUI_SetAlpha(30);
-	GUI_DispStringAt("BMS",		(sb.x + 18),	(sb.y + 2));						// BMS label
-	GUI_DispStringAt("AUDIO",	(sb.x + 140),	(sb.y + 2));						// AUDIO label
+	//GUI_DispStringAt("BMS",		(sb.x + 18),	(sb.y + 2));						// BMS label
+	//GUI_DispStringAt("AUDIO",	(sb.x + 140),	(sb.y + 2));						// AUDIO label
 	//GUI_DispStringAt("VFO",		(sb.x + 283),	(sb.y + 2));						// VFO label
-	GUI_DispStringAt("KEYBOARD",((sb.x + SW_FRAME_X_SIZE - 2)/2 - 50),(sb.y + 2));	// KEYBOARD label
-	GUI_DispStringAt("AGC/ATT",	((sb.x + SW_FRAME_X_SIZE - 2)/2 + 90),(sb.y + 2));	// AGC/ATT label
+	//GUI_DispStringAt("KEYBOARD",((sb.x + SW_FRAME_X_SIZE - 2)/2 - 50),(sb.y + 2));	// KEYBOARD label
+	//GUI_DispStringAt("AGC/ATT",	((sb.x + SW_FRAME_X_SIZE - 2)/2 + 90),(sb.y + 2));	// AGC/ATT label
 	GUI_SetAlpha(255);
 #endif
 
@@ -831,66 +831,66 @@ int ui_controls_spectrum_is_touch(int x, int y)
 
 	//-------------------------------------------
 	// BMS position
-	bar_x = (sb.x + 18);
-	bar_y = (sb.y +  2);
+	//bar_x = (sb.x + 18);
+	//bar_y = (sb.y +  2);
 
 	// Is BMS label touched ?
-	if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-		return 1;
+	//if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	//	return 1;
 
 	//-------------------------------------------
 	// AUDIO position
-	bar_x = (sb.x + 135);
-	bar_y = (sb.y +  2);
+	//bar_x = (sb.x + 135);
+	//bar_y = (sb.y +  2);
 
 	// Is AUDIO label touched ?
-	if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-		return 2;
+	//if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	//	return 2;
 
 	//-------------------------------------------
 	// VFO position
-	bar_x = (sb.x + 283);
-	bar_y = (sb.y +  2);
+	//bar_x = (sb.x + 283);
+	//bar_y = (sb.y +  2);
 
 	// Is VFO label touched ?
-	if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-		return 3;
+	//if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	//	return 3;
 
 	//-------------------------------------------
 	// KEYBOARD position
-	bar_x = (sb.x + SW_FRAME_X_SIZE - 2)/2 - 50;
-	bar_y = (sb.y + 2);
+	//bar_x = (sb.x + SW_FRAME_X_SIZE - 2)/2 - 50;
+	//bar_y = (sb.y + 2);
 
 	// Is KEYBOARD label touched ?
-	if((x > bar_x) && (x < (bar_x + 120)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-		return 4;
+	//if((x > bar_x) && (x < (bar_x + 120)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	//	return 4;
 
 	//-------------------------------------------
 	// AGC/ATT position
-	bar_x = (sb.x + SW_FRAME_X_SIZE - 2)/2 + 90;
-	bar_y = (sb.y + 2);
+	//bar_x = (sb.x + SW_FRAME_X_SIZE - 2)/2 + 90;
+	//bar_y = (sb.y + 2);
 
 	// Is AGC/ATT label touched ?
-	if((x > bar_x) && (x < (bar_x + 120)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-		return 5;
+	//if((x > bar_x) && (x < (bar_x + 120)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	//	return 5;
 
 	//-------------------------------------------
 	// Center/Fix position
-	bar_x = CENTER_X;
-	bar_y = CENTER_Y;
+	//bar_x = CENTER_X;
+	//bar_y = CENTER_Y;
 
 	// Is VFO label touched ?
-	if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-		return 6;
+	//if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	//	return 6;
 
 	//-------------------------------------------
 	// SPAN position
-	bar_x = SPAN_X + 55;
-	bar_y = SPAN_Y;
+	//bar_x = SPAN_X + 55;
+	//bar_y = SPAN_Y;
 
 	// Is VFO label touched ?
-	if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-		return 7;
+	//if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	//	return 7;
 
 	// Band guide labels touchable only if visible
 	if(ui_s.show_band_guide)
