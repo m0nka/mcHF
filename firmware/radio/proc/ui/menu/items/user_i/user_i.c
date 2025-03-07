@@ -368,7 +368,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			#endif
 
 			// Doesn't work in menu, maybe create in each individual menu item ?
-			hKeypad = GUI_CreateKeyPad(WM_GetDesktopWindowEx(0));
+			//--hKeypad = GUI_CreateKeyPad(WM_GetDesktopWindowEx(0));
 
 			esp_msg_x.ucProcStatus = TASK_PROC_IDLE;
 			break;

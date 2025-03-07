@@ -419,9 +419,9 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        case '7':
 		        	ui_actions_change_band(BAND_MODE_12, 0);
 		        	break;
-		        case '.':
-		        	ui_actions_change_band(BAND_MODE_2200, 0);
-		        	break;
+		        //case '.':
+		        //	ui_actions_change_band(BAND_MODE_2200, 0);
+		        //	break;
 		        case '2':
 		        	ui_actions_change_band(BAND_MODE_80, 0);
 		        	break;
@@ -431,21 +431,21 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        case '8':
 		        	ui_actions_change_band(BAND_MODE_10, 0);
 		        	break;
-		        case '0':
-		        	ui_actions_change_band(BAND_MODE_630, 0);
-		        	break;
+		        //case '0':
+		        //	ui_actions_change_band(BAND_MODE_630, 0);
+		        //	break;
 		        case '3':
 		        	ui_actions_change_band(BAND_MODE_60, 0);
 		        	break;
 		        case '6':
 		        	ui_actions_change_band(BAND_MODE_17, 0);
 		        	break;
-		        case '9':
-		        	ui_actions_change_band(BAND_MODE_GEN, 0);
-		        	break;
-		        case 'C':
-		        	ui_actions_change_span();
-		        	break;
+		        //case '9':
+		        //	ui_actions_change_band(BAND_MODE_GEN, 0);
+		        //	break;
+		        //case 'C':
+		        //	ui_actions_change_span();
+		        //	break;
 		        case 'M':
 		        	ui_actions_change_band(BAND_MODE_40, 0);
 		        	break;
@@ -454,8 +454,7 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        	break;
 		        case 'A':
 		        {
-		        	printf("A release\r\n");
-
+		        	//printf("A release\r\n");
 					if(!active_control_shown)
 					{
 						on_screen_audio_init(WM_HBKWIN);
@@ -467,8 +466,7 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        }
 		        case 'G':
 		        {
-		        	printf("G release\r\n");
-
+		        	//printf("G release\r\n");
 					if(!active_control_shown)
 					{
 						on_screen_agc_att_init(WM_HBKWIN);

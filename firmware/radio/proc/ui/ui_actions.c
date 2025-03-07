@@ -282,12 +282,18 @@ void ui_actions_change_span(void)
 //* Output Parameters   :
 //* Functions called    : CONTEXT_VIDEO
 //*----------------------------------------------------------------------------
-void ui_actions_change_step(void)
+void ui_actions_change_step(uchar dir)
 {
-	if(tsu.band[tsu.curr_band].step < T_STEP_10MHZ)
-		tsu.band[tsu.curr_band].step *= 10;
+	if(dir)
+	{
+		if(tsu.band[tsu.curr_band].step < T_STEP_10MHZ)
+			tsu.band[tsu.curr_band].step *= 10;
+	}
 	else
-		tsu.band[tsu.curr_band].step = T_STEP_1HZ;
+	{
+		if(tsu.band[tsu.curr_band].step > T_STEP_1HZ)
+			tsu.band[tsu.curr_band].step /= 10;
+	}
 
 	// Repaint UI
 	ui_controls_vfo_step_refresh();

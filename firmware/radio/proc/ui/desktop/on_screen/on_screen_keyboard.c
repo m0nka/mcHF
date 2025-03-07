@@ -28,36 +28,36 @@
 #define ID_WINDOW_KEYB          	(GUI_ID_USER + 0x50)
 
 // Row 1
-#define ID_BUTTON_SSB	          	(GUI_ID_USER + 0x51)
-#define ID_BUTTON_160M	          	(GUI_ID_USER + 0x52)
-#define ID_BUTTON_80M	          	(GUI_ID_USER + 0x53)
-#define ID_BUTTON_60M	          	(GUI_ID_USER + 0x54)
-#define ID_BUTTON_40M	          	(GUI_ID_USER + 0x55)
-#define ID_BUTTON_DSP	          	(GUI_ID_USER + 0x56)
+#define ID_BUTTON_X1Y1	          	(GUI_ID_USER + 0x51)
+#define ID_BUTTON_X2Y1	          	(GUI_ID_USER + 0x52)
+#define ID_BUTTON_X3Y1	          	(GUI_ID_USER + 0x53)
+#define ID_BUTTON_X4Y1	          	(GUI_ID_USER + 0x54)
+#define ID_BUTTON_X5Y1	          	(GUI_ID_USER + 0x55)
+#define ID_BUTTON_X6Y1	          	(GUI_ID_USER + 0x56)
 
 // Row 2
-#define ID_BUTTON_CW	          	(GUI_ID_USER + 0x57)
-#define ID_BUTTON_30M	          	(GUI_ID_USER + 0x58)
-#define ID_BUTTON_20M	          	(GUI_ID_USER + 0x59)
-#define ID_BUTTON_17M	          	(GUI_ID_USER + 0x5A)
-#define ID_BUTTON_15M	          	(GUI_ID_USER + 0x5B)
-#define ID_BUTTON_TXPO	          	(GUI_ID_USER + 0x5C)
+#define ID_BUTTON_X1Y2	          	(GUI_ID_USER + 0x57)
+#define ID_BUTTON_X2Y2	          	(GUI_ID_USER + 0x58)
+#define ID_BUTTON_X3Y2	          	(GUI_ID_USER + 0x59)
+#define ID_BUTTON_X4Y2	          	(GUI_ID_USER + 0x5A)
+#define ID_BUTTON_X5Y2	          	(GUI_ID_USER + 0x5B)
+#define ID_BUTTON_X6Y2	          	(GUI_ID_USER + 0x5C)
 
 // Row 3
-#define ID_BUTTON_AM	          	(GUI_ID_USER + 0x5D)
-#define ID_BUTTON_12M	          	(GUI_ID_USER + 0x5E)
-#define ID_BUTTON_10M	          	(GUI_ID_USER + 0x5F)
-#define ID_BUTTON_GEN	          	(GUI_ID_USER + 0x60)
-#define ID_BUTTON_ENTER          	(GUI_ID_USER + 0x61)
-#define ID_BUTTON_STEP          	(GUI_ID_USER + 0x62)
+#define ID_BUTTON_X1Y3	          	(GUI_ID_USER + 0x5D)
+#define ID_BUTTON_X2Y3	          	(GUI_ID_USER + 0x5E)
+#define ID_BUTTON_X3Y3	          	(GUI_ID_USER + 0x5F)
+#define ID_BUTTON_X4Y3	          	(GUI_ID_USER + 0x60)
+#define ID_BUTTON_X5Y3          	(GUI_ID_USER + 0x61)
+#define ID_BUTTON_X6Y3          	(GUI_ID_USER + 0x62)
 
 // Row 4
-#define ID_BUTTON_FIX	          	(GUI_ID_USER + 0x63)
-#define ID_BUTTON_2200M	          	(GUI_ID_USER + 0x64)
-#define ID_BUTTON_630M	          	(GUI_ID_USER + 0x65)
-#define ID_BUTTON_SPAN	          	(GUI_ID_USER + 0x66)
+#define ID_BUTTON_X1Y4	          	(GUI_ID_USER + 0x63)
+#define ID_BUTTON_X2Y4	          	(GUI_ID_USER + 0x64)
+#define ID_BUTTON_X3Y4	          	(GUI_ID_USER + 0x65)
+#define ID_BUTTON_X4Y4	          	(GUI_ID_USER + 0x66)
 // NA
-#define ID_BUTTON_SPLIT          	(GUI_ID_USER + 0x67)
+#define ID_BUTTON_X6Y4          	(GUI_ID_USER + 0x67)
 
 #define KEYB_X						130
 #define KEYB_Y						131
@@ -80,39 +80,42 @@ static const GUI_WIDGET_CREATE_INFO KeybDialog[] =
 	{ WINDOW_CreateIndirect,	"", 		ID_WINDOW_KEYB,		0,		0,		KEYB_SIZE_X,		KEYB_SIZE_Y, 		0, 		K_CF, 	0 },
 
 	// Row 1
-	{ BUTTON_CreateIndirect, 	"SSB",		ID_BUTTON_SSB,		 20, 	15, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"160m",		ID_BUTTON_160M,		115, 	15, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"80m",		ID_BUTTON_80M,		210, 	15, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"60m",		ID_BUTTON_60M,		305, 	15, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"40m",		ID_BUTTON_40M,		400, 	15, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"PWR",		ID_BUTTON_DSP,		495, 	15, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"SSB",		ID_BUTTON_X1Y1,		 20, 	15, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"160m",		ID_BUTTON_X2Y1,		115, 	15, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"80m",		ID_BUTTON_X3Y1,		210, 	15, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"60m",		ID_BUTTON_X4Y1,		305, 	15, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"40m",		ID_BUTTON_X5Y1,		400, 	15, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"STEP+",	ID_BUTTON_X6Y1,		495, 	15, 	80, 				45, 				0, 		0x0, 	0 },
 
 	// Row 2
-	{ BUTTON_CreateIndirect, 	"CW",		ID_BUTTON_CW,		 20, 	75, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"30m",		ID_BUTTON_30M,		115, 	75, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"20m",		ID_BUTTON_20M,		210, 	75, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"17m",		ID_BUTTON_17M,		305, 	75, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"15m",		ID_BUTTON_15M,		400, 	75, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"STEP",		ID_BUTTON_TXPO,		495, 	75, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"CW",		ID_BUTTON_X1Y2,		 20, 	75, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"30m",		ID_BUTTON_X2Y2,		115, 	75, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"20m",		ID_BUTTON_X3Y2,		210, 	75, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"17m",		ID_BUTTON_X4Y2,		305, 	75, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"15m",		ID_BUTTON_X5Y2,		400, 	75, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"STEP-",	ID_BUTTON_X6Y2,		495, 	75, 	80, 				45, 				0, 		0x0, 	0 },
 
 	// Row 3
-	{ BUTTON_CreateIndirect, 	"AM",		ID_BUTTON_AM,		 20, 	135, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"12m",		ID_BUTTON_12M,		115, 	135, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"10m",		ID_BUTTON_10M,		210, 	135, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"GEN",		ID_BUTTON_GEN,		305, 	135, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"MENU",		ID_BUTTON_ENTER,	400, 	135, 	80, 			   105, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"----",		ID_BUTTON_STEP,		495, 	135, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"AM",		ID_BUTTON_X1Y3,		 20, 	135, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"12m",		ID_BUTTON_X2Y3,		115, 	135, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"10m",		ID_BUTTON_X3Y3,		210, 	135, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"---",		ID_BUTTON_X4Y3,		305, 	135, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"MENU",		ID_BUTTON_X5Y3,		400, 	135, 	80, 			   105, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"FILT",		ID_BUTTON_X6Y3,		495, 	135, 	80, 				45, 				0, 		0x0, 	0 },
 
 	// Row 4
-	{ BUTTON_CreateIndirect, 	"FIX",		ID_BUTTON_FIX,		 20, 	195, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"Audio",	ID_BUTTON_2200M,	115, 	195, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"AGC",		ID_BUTTON_630M,		210, 	195, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"SPAN",		ID_BUTTON_SPAN,		305, 	195, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"FIX",		ID_BUTTON_X1Y4,		 20, 	195, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"Audio",	ID_BUTTON_X2Y4,		115, 	195, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"AGC",		ID_BUTTON_X3Y4,		210, 	195, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"---",		ID_BUTTON_X4Y4,		305, 	195, 	80, 				45, 				0, 		0x0, 	0 },
 	// NA
-	{ BUTTON_CreateIndirect, 	"FIX",		ID_BUTTON_SPLIT,	495, 	195, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"---",		ID_BUTTON_X6Y4,		495, 	195, 	80, 				45, 				0, 		0x0, 	0 },
 };
 
 WM_HWIN 	hKeybDialog = 0;
+
+// Public radio state
+extern struct	TRANSCEIVER_STATE_UI	tsu;
 
 static void KH_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 {
@@ -123,71 +126,77 @@ static void KH_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 
 	switch(Id)
 	{
-		case ID_BUTTON_2200M:
+		case ID_BUTTON_X2Y4:
 			//ui_actions_change_band(BAND_MODE_2200, 0);	// ToDo: need unload and load Audio dialog
 			break;
-		case ID_BUTTON_630M:
+		case ID_BUTTON_X3Y4:
 			//ui_actions_change_band(BAND_MODE_630, 0);		// ToDo: same but AGC dialog
 			break;
-		case ID_BUTTON_160M:
+		case ID_BUTTON_X2Y1:
 			ui_actions_change_band(BAND_MODE_160, 0);
 			break;
-		case ID_BUTTON_80M:
+		case ID_BUTTON_X3Y1:
 			ui_actions_change_band(BAND_MODE_80, 0);
 			break;
-		case ID_BUTTON_60M:
+		case ID_BUTTON_X4Y1:
 			ui_actions_change_band(BAND_MODE_60, 0);
 			break;
-		case ID_BUTTON_40M:
+		case ID_BUTTON_X5Y1:
 			ui_actions_change_band(BAND_MODE_40, 0);
 			break;
-		case ID_BUTTON_30M:
+		case ID_BUTTON_X2Y2:
 			ui_actions_change_band(BAND_MODE_30, 0);
 			break;
-		case ID_BUTTON_20M:
+		case ID_BUTTON_X3Y2:
 			ui_actions_change_band(BAND_MODE_20, 0);
 			break;
-		case ID_BUTTON_17M:
+		case ID_BUTTON_X4Y2:
 			ui_actions_change_band(BAND_MODE_17, 0);
 			break;
-		case ID_BUTTON_15M:
+		case ID_BUTTON_X5Y2:
 			ui_actions_change_band(BAND_MODE_15, 0);
 			break;
-		case ID_BUTTON_12M:
+		case ID_BUTTON_X2Y3:
 			ui_actions_change_band(BAND_MODE_12, 0);
 			break;
-		case ID_BUTTON_10M:
+		case ID_BUTTON_X3Y3:
 			ui_actions_change_band(BAND_MODE_10, 0);
 			break;
-		case ID_BUTTON_GEN:
-			ui_actions_change_band(BAND_MODE_GEN, 0);
+		case ID_BUTTON_X4Y3:
+			//ui_actions_change_band(BAND_MODE_GEN, 0);
 			break;
 
-		case ID_BUTTON_FIX:
+		case ID_BUTTON_X1Y4:
 			ui_actions_change_vfo_mode();
 			break;
-		case ID_BUTTON_SPAN:
+		case ID_BUTTON_X4Y4:
 			ui_actions_change_span();
 			break;
-		case ID_BUTTON_STEP:
-			ui_actions_change_step();
+		case ID_BUTTON_X6Y3:
+		{
+			(tsu.band[tsu.curr_band].filter)++;
+				if(tsu.band[tsu.curr_band].filter > AUDIO_WIDE)
+					tsu.band[tsu.curr_band].filter = AUDIO_300HZ;
+				ui_actions_change_filter(tsu.band[tsu.curr_band].filter);
+			break;
+		}
+
+		case ID_BUTTON_X6Y2:
+			ui_actions_change_step(0);
 			break;
 
-		case ID_BUTTON_TXPO:
+		case ID_BUTTON_X6Y1:
 			//ui_actions_change_power_level();
+			ui_actions_change_step(1);
 			break;
 
-		case ID_BUTTON_DSP:
-			ui_actions_change_power_level();
-			break;
-
-		case ID_BUTTON_SSB:
+		case ID_BUTTON_X1Y1:
 			ui_actions_change_demod_mode(radio_init_default_mode_from_band());
 			break;
-		case ID_BUTTON_CW:
+		case ID_BUTTON_X1Y2:
 			ui_actions_change_demod_mode(DEMOD_CW);
 			break;
-		case ID_BUTTON_AM:
+		case ID_BUTTON_X1Y3:
 			ui_actions_change_demod_mode(DEMOD_AM);
 			break;
 
@@ -195,11 +204,14 @@ static void KH_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 		//	ui_actions_toggle_atten();
 		//	break;
 
-		case ID_BUTTON_SPLIT:
-			ui_actions_change_dsp_core();
-			break;
+		case ID_BUTTON_X6Y4:
+		{
+			//ui_actions_change_dsp_core();
 
-		case ID_BUTTON_ENTER:
+			break;
+		}
+
+		case ID_BUTTON_X5Y3:
 			GUI_EndDialog(pMsg->hWin, 0);
 			break;
 

@@ -13,8 +13,6 @@
 #include "main.h"
 #include "mchf_pro_board.h"
 
-//--#include "ui_driver.h"
-#include "ui_actions.h"
 #include "radio_init.h"
 
 #include "keypad_proc.h"
@@ -190,7 +188,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 
 				printf("SSB - USB/LSB\r\n");
 
-				ui_actions_change_demod_mode(radio_init_default_mode_from_band());
+				//!				ui_actions_change_demod_mode(radio_init_default_mode_from_band());
 			}
 		}
 		else
@@ -205,27 +203,10 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			//tsu.curr_band = BAND_MODE_160;
-
 			if(!release)
 			{
-				#if 0
-				// ------------------------------------------------------------------
-				// Test only
-				printf("bc_mode_toggle: %d\n\r",bc_mode_toggle);
-				api_keypad.usMessageID 		= API_BROADCAST_MODE;
-				api_keypad.ucPayload		= 1;					// payload count
-				api_keypad.ucData[0] 		= bc_mode_toggle;
-				osMessagePut(hApiMessage, (ulong)&api_keypad, osWaitForever);
-				//
-				bc_mode_toggle++;
-				if(bc_mode_toggle > 2) bc_mode_toggle = 0;
-				// ------------------------------------------------------------------
-				#endif
-
 				printf("160m\r\n");
-
-				ui_actions_change_band(BAND_MODE_160, 1);
+				GUI_StoreKeyMsg('1', 1);
 			}
 
 		}
@@ -243,11 +224,8 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		{
 			if(!release)
 			{
-				//tsu.curr_band = BAND_MODE_80;
-
 				printf("80m\r\n");
-
-				ui_actions_change_band(BAND_MODE_80, 1);
+				GUI_StoreKeyMsg('2', 1);
 			}
 		}
 		else
@@ -264,11 +242,8 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		{
 			if(!release)
 			{
-				//tsu.curr_band = BAND_MODE_60;
-
 				printf("60m\r\n");
-
-				ui_actions_change_band(BAND_MODE_60, 1);
+				GUI_StoreKeyMsg('3', 1);
 			}
 		}
 		else
@@ -285,11 +260,8 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		{
 			if(!release)
 			{
-				//tsu.curr_band = BAND_MODE_40;
-
 				printf("40m\r\n");
-
-				ui_actions_change_band(BAND_MODE_40, 1);
+				GUI_StoreKeyMsg('M', 1);
 			}
 		}
 		else
@@ -308,8 +280,8 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 
 			if(!release)
 			{
-				printf("TX PWR\r\n");
-				ui_actions_change_power_level();
+				printf("STEP+\r\n");
+				//!				ui_actions_change_step(1);
 			}
 		}
 		else
@@ -331,7 +303,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 
 				printf("CW\r\n");
 
-				ui_actions_change_demod_mode(DEMOD_CW);
+				//!				ui_actions_change_demod_mode(DEMOD_CW);
 			}
 		}
 		else
@@ -348,11 +320,8 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		{
 			if(!release)
 			{
-				//tsu.curr_band = BAND_MODE_30;
-
 				printf("30m\r\n");
-
-				ui_actions_change_band(BAND_MODE_30, 1);
+				GUI_StoreKeyMsg('4', 1);
 			}
 		}
 		else
@@ -365,19 +334,13 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	// 20m
 	if((x == 3) && (y == 2))
 	{
-
 		if(!hold)
 		{
 			if(!release)
 			{
-				//tsu.curr_band = BAND_MODE_20;
-
 				printf("20m\r\n");
-
-				ui_actions_change_band(BAND_MODE_20, 1);
+				GUI_StoreKeyMsg('5', 1);
 			}
-
-
 		}
 		else
 		{
@@ -396,8 +359,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 				//tsu.curr_band = BAND_MODE_17;
 
 				printf("17m\r\n");
-
-				ui_actions_change_band(BAND_MODE_17, 1);
+				GUI_StoreKeyMsg('6', 1);
 			}
 		}
 		else
@@ -414,11 +376,8 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		{
 			if(!release)
 			{
-				//tsu.curr_band = BAND_MODE_15;
-
 				printf("15m\r\n");
-
-				ui_actions_change_band(BAND_MODE_15, 1);
+				GUI_StoreKeyMsg('S', 1);
 			}
 		}
 		else
@@ -435,38 +394,14 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		{
 			if(!release)
 			{
-				// Toggle 1KHz and 10Khz only
-				//if(tsu.band[tsu.curr_band].step != T_STEP_1KHZ)
-				//	tsu.band[tsu.curr_band].step = T_STEP_1KHZ;
-				//else
-				//	tsu.band[tsu.curr_band].step = T_STEP_10KHZ;
-
-				printf("Step\r\n");
-
-				ui_actions_change_step();
+				printf("Step-\r\n");
+				//!			ui_actions_change_step(0);
 			}
 		}
 		else
 		{
 			if(!release)
-			{/*
-				uchar id;
-
-				// Jump through all possible steps
-				// Scan
-				for(id = 0; id < T_STEP_MAX_STEPS;id++)
-				{
-					if(tune_steps[id] == tsu.band[tsu.curr_band].step)
-						break;
-				}
-
-				if(id < (T_STEP_MAX_STEPS - 1))
-					id++;
-				else
-					id = 0;
-
-				tsu.band[tsu.curr_band].step = tune_steps[id];*/
-
+			{
 				printf("Step Hold\r\n");
 			}
 		}
@@ -503,7 +438,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 
 				printf("AM\r\n");
 
-				ui_actions_change_demod_mode(DEMOD_AM);
+				//!			ui_actions_change_demod_mode(DEMOD_AM);
 			}
 		}
 
@@ -516,11 +451,8 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		{
 			if(!release)
 			{
-				//tsu.curr_band = BAND_MODE_12;
-
 				printf("12m\r\n");
-
-				ui_actions_change_band(BAND_MODE_12, 1);
+				GUI_StoreKeyMsg('7', 1);
 			}
 		}
 		else
@@ -537,10 +469,8 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		{
 			if(!release)
 			{
-				//tsu.curr_band = BAND_MODE_10;
 				printf("10m\r\n");
-
-				ui_actions_change_band(BAND_MODE_10, 1);
+				GUI_StoreKeyMsg('8', 1);
 			}
 		}
 		else
@@ -712,7 +642,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 			//tsu.curr_band = BAND_MODE_MF;
 			printf("MF\r\n");
 
-			ui_actions_change_band(BAND_MODE_630, 0);
+			//!		ui_actions_change_band(BAND_MODE_630, 0);
 		}
 		else
 		{
@@ -746,7 +676,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 
 				printf("VFO\r\n");
 
-				ui_actions_change_vfo_mode();
+//!				ui_actions_change_vfo_mode();
 			}
 		}
 		else

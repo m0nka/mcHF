@@ -964,14 +964,14 @@ static void ui_controls_create_sw_big(void)
 	GUI_MEMDEV_Select(0);
 	#endif
 
-	// Draw orange frame/lines
+	// Draw frame/lines
 	GUI_SetColor(GUI_ORANGE);
-	#if 0
+	#if 1
 	GUI_DrawRoundedFrame(	sb.x,
 							sb.y,
 							(sb.x + SW_FRAME_X_SIZE),
 							(sb.y + SW_FRAME_Y_SIZE),
-							3,	//SW_FRAME_CORNER_R,
+							SW_FRAME_CORNER_R,
 							SW_FRAME_WIDTH
 						);
 	#else

@@ -61,21 +61,21 @@
 #define LCD_WIDTH					854
 //
 #define SW_FRAME_X					0
-#define SW_FRAME_Y					95	//167
+#define SW_FRAME_Y					115
 //
-#define HEADER_Y_SIZE				20
+#define HEADER_Y_SIZE				0
 //
-#define SW_FRAME_WIDTH				0
-#define SW_FRAME_CORNER_R			3
+#define SW_FRAME_WIDTH				2
+#define SW_FRAME_CORNER_R			5
 //
-#define FOOTER_Y_SIZE				16
+#define FOOTER_Y_SIZE				0
 //
 // spectrum only position
 #define SCOPE_X						(SW_FRAME_X + SW_FRAME_WIDTH)
 #define SCOPE_Y						(SW_FRAME_Y + HEADER_Y_SIZE + 2)
 //
 // spectrum only size
-#define SCOPE_X_SIZE				(LCD_WIDTH - 0)	// 850, 796
+#define SCOPE_X_SIZE				(LCD_WIDTH - 4)	// 850, 796
 #define SCOPE_Y_SIZE				112				// ~0x6F
 //
 // waterfall only position

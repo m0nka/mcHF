@@ -28,7 +28,7 @@ Requirements: WindowManager - (x)
 
 #include "c_keypad.h"
 
-#if 1
+#if 0
 
 /*********************************************************************
 *
