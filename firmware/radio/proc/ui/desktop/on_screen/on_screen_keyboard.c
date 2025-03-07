@@ -99,7 +99,7 @@ static const GUI_WIDGET_CREATE_INFO KeybDialog[] =
 	{ BUTTON_CreateIndirect, 	"AM",		ID_BUTTON_X1Y3,		 20, 	135, 	80, 				45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"12m",		ID_BUTTON_X2Y3,		115, 	135, 	80, 				45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"10m",		ID_BUTTON_X3Y3,		210, 	135, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"---",		ID_BUTTON_X4Y3,		305, 	135, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"VFO",		ID_BUTTON_X4Y3,		305, 	135, 	80, 				45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"MENU",		ID_BUTTON_X5Y3,		400, 	135, 	80, 			   105, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"FILT",		ID_BUTTON_X6Y3,		495, 	135, 	80, 				45, 				0, 		0x0, 	0 },
 
@@ -107,9 +107,9 @@ static const GUI_WIDGET_CREATE_INFO KeybDialog[] =
 	{ BUTTON_CreateIndirect, 	"FIX",		ID_BUTTON_X1Y4,		 20, 	195, 	80, 				45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"Audio",	ID_BUTTON_X2Y4,		115, 	195, 	80, 				45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"AGC",		ID_BUTTON_X3Y4,		210, 	195, 	80, 				45, 				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"---",		ID_BUTTON_X4Y4,		305, 	195, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"KEYB",		ID_BUTTON_X4Y4,		305, 	195, 	80, 				45, 				0, 		0x0, 	0 },
 	// NA
-	{ BUTTON_CreateIndirect, 	"---",		ID_BUTTON_X6Y4,		495, 	195, 	80, 				45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"PWR",		ID_BUTTON_X6Y4,		495, 	195, 	80, 				45, 				0, 		0x0, 	0 },
 };
 
 WM_HWIN 	hKeybDialog = 0;
@@ -129,6 +129,7 @@ static void KH_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 		case ID_BUTTON_X2Y4:
 			//ui_actions_change_band(BAND_MODE_2200, 0);	// ToDo: need unload and load Audio dialog
 			break;
+
 		case ID_BUTTON_X3Y4:
 			//ui_actions_change_band(BAND_MODE_630, 0);		// ToDo: same but AGC dialog
 			break;
@@ -141,37 +142,47 @@ static void KH_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 		case ID_BUTTON_X4Y1:
 			ui_actions_change_band(BAND_MODE_60, 0);
 			break;
+
 		case ID_BUTTON_X5Y1:
 			ui_actions_change_band(BAND_MODE_40, 0);
 			break;
+
 		case ID_BUTTON_X2Y2:
 			ui_actions_change_band(BAND_MODE_30, 0);
 			break;
+
 		case ID_BUTTON_X3Y2:
 			ui_actions_change_band(BAND_MODE_20, 0);
 			break;
+
 		case ID_BUTTON_X4Y2:
 			ui_actions_change_band(BAND_MODE_17, 0);
 			break;
+
 		case ID_BUTTON_X5Y2:
 			ui_actions_change_band(BAND_MODE_15, 0);
 			break;
+
 		case ID_BUTTON_X2Y3:
 			ui_actions_change_band(BAND_MODE_12, 0);
 			break;
+
 		case ID_BUTTON_X3Y3:
 			ui_actions_change_band(BAND_MODE_10, 0);
 			break;
+
 		case ID_BUTTON_X4Y3:
-			//ui_actions_change_band(BAND_MODE_GEN, 0);
+			ui_actions_change_active_vfo();
 			break;
 
 		case ID_BUTTON_X1Y4:
 			ui_actions_change_vfo_mode();
 			break;
+
 		case ID_BUTTON_X4Y4:
-			ui_actions_change_span();
+			//ui_actions_change_span();
 			break;
+
 		case ID_BUTTON_X6Y3:
 		{
 			(tsu.band[tsu.curr_band].filter)++;
@@ -186,16 +197,17 @@ static void KH_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			break;
 
 		case ID_BUTTON_X6Y1:
-			//ui_actions_change_power_level();
 			ui_actions_change_step(1);
 			break;
 
 		case ID_BUTTON_X1Y1:
 			ui_actions_change_demod_mode(radio_init_default_mode_from_band());
 			break;
+
 		case ID_BUTTON_X1Y2:
 			ui_actions_change_demod_mode(DEMOD_CW);
 			break;
+
 		case ID_BUTTON_X1Y3:
 			ui_actions_change_demod_mode(DEMOD_AM);
 			break;
@@ -206,8 +218,7 @@ static void KH_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 
 		case ID_BUTTON_X6Y4:
 		{
-			//ui_actions_change_dsp_core();
-
+			ui_actions_change_power_level();
 			break;
 		}
 

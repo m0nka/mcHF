@@ -20,7 +20,10 @@
 //#include "touch_driver.h"
 //#include "hw\rtc\k_rtc.h"
 //#include "hw\dsp_eep\hw_dsp_eep.h"
-//
+
+#include "radio_init.h"
+#include "ui_actions.h"
+
 #include "gui.h"
 #include "dialog.h"
 
@@ -386,19 +389,23 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 
 			switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
 			{
-		        // Return from menu
+				#if 0
 		        case GUI_KEY_ENTER:
 		        {
-		        	//--GUI_EndDialog(pMsg->hWin, 0);
-
 		        	if(((WM_KEY_INFO*)(pMsg->Data.p))->PressedCnt == 0)
 		        	{
-		        		//printf("GUI_KEY_ENTER press\r\n");
+		        		printf("GUI_KEY_ENTER press\r\n");
 		        		break;
 		        	}
-		        	//else
-		        	//	printf("GUI_KEY_ENTER release\r\n");
+		        	else
+		        		printf("GUI_KEY_ENTER release\r\n");
+		        	break;
+		        }
+				#endif
 
+		        case 'K':
+		        {
+		        	//printf("K release\r\n");
 		        	if(!active_control_shown)
 		        	{
 		        		on_screen_keyboard_init(WM_HBKWIN);
@@ -407,6 +414,32 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        	else
 		        		on_screen_keyboard_quit();
 
+		        	break;
+		        }
+
+		        case 'A':
+		        {
+		        	//printf("A release\r\n");
+					if(!active_control_shown)
+					{
+						on_screen_audio_init(WM_HBKWIN);
+						active_control_shown = 1;
+					}
+					else
+						on_screen_audio_quit();
+		        	break;
+		        }
+
+		        case 'G':
+		        {
+		        	//printf("G release\r\n");
+					if(!active_control_shown)
+					{
+						on_screen_agc_att_init(WM_HBKWIN);
+						active_control_shown = 1;
+					}
+					else
+						on_screen_agc_att_quit();
 		        	break;
 		        }
 
@@ -452,30 +485,47 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        case 'S':
 		        	ui_actions_change_band(BAND_MODE_15, 0);
 		        	break;
-		        case 'A':
-		        {
-		        	//printf("A release\r\n");
-					if(!active_control_shown)
-					{
-						on_screen_audio_init(WM_HBKWIN);
-						active_control_shown = 1;
-					}
-					else
-						on_screen_audio_quit();
+
+		        case '+':
+		        	ui_actions_change_step(1);
 		        	break;
-		        }
-		        case 'G':
-		        {
-		        	//printf("G release\r\n");
-					if(!active_control_shown)
-					{
-						on_screen_agc_att_init(WM_HBKWIN);
-						active_control_shown = 1;
-					}
-					else
-						on_screen_agc_att_quit();
+		        case '-':
+		        	ui_actions_change_step(0);
 		        	break;
-		        }
+
+				case 'F':
+				{
+					(tsu.band[tsu.curr_band].filter)++;
+					if(tsu.band[tsu.curr_band].filter > AUDIO_WIDE)
+						tsu.band[tsu.curr_band].filter = AUDIO_300HZ;
+
+					ui_actions_change_filter(tsu.band[tsu.curr_band].filter);
+					break;
+				}
+
+				case 'W':
+					ui_actions_change_power_level();
+					break;
+
+				case 'I':
+					ui_actions_change_vfo_mode();
+					break;
+
+				case 'B':
+					ui_actions_change_demod_mode(radio_init_default_mode_from_band());
+					break;
+
+				case 'C':
+					ui_actions_change_demod_mode(DEMOD_CW);
+					break;
+
+				case 'Q':
+					ui_actions_change_demod_mode(DEMOD_AM);
+					break;
+
+				case 'V':
+					ui_actions_change_active_vfo();
+					break;
 
 		        //ToDo: The rest....
 			}

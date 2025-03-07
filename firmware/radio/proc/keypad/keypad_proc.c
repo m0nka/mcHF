@@ -169,519 +169,335 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	printf("x=%d, y=%d, hld=%d, rel=%d\r\n", x, y, hold, release);
 	#endif
 
-	// SSB - USB/LSB
-	if((x == 1) && (y == 1))
+	if((x == 1) && (y == 1) && (!release))
 	{
 		if(!hold)
 		{
-			if(!release)
-			{/*
-				if(tsu.band[tsu.curr_band].demod_mode > DEMOD_LSB)
-					tsu.band[tsu.curr_band].demod_mode = DEMOD_LSB;
-				else
-				{
-					if(tsu.band[tsu.curr_band].demod_mode == DEMOD_LSB)
-						tsu.band[tsu.curr_band].demod_mode = DEMOD_USB;
-					else
-						tsu.band[tsu.curr_band].demod_mode = DEMOD_LSB;
-				}*/
-
-				printf("SSB - USB/LSB\r\n");
-
-				//!				ui_actions_change_demod_mode(radio_init_default_mode_from_band());
-			}
+			printf("SSB\r\n");
+			GUI_StoreKeyMsg('B', 1);
 		}
 		else
 		{
-			// ..
+			printf("SSB hold\r\n");
 		}
+		return;
+	}
+
+	if((x == 2) && (y == 1) && (!release))
+	{
+		if(!hold)
+		{
+			printf("160m\r\n");
+			GUI_StoreKeyMsg('1', 1);
+		}
+		else
+		{
+			printf("160m hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 3) && (y == 1) && (!release))
+	{
+		if(!hold)
+		{
+			printf("80m\r\n");
+			GUI_StoreKeyMsg('2', 1);
+		}
+		else
+		{
+			printf("80m hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 4) && (y == 1) && (!release))
+	{
+		if(!hold)
+		{
+			printf("60m\r\n");
+			GUI_StoreKeyMsg('3', 1);
+		}
+		else
+		{
+			printf("60m hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 5) && (y == 1) && (!release))
+	{
+		if(!hold)
+		{
+			printf("40m\r\n");
+			GUI_StoreKeyMsg('M', 1);
+		}
+		else
+		{
+			printf("40m hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 6) && (y == 1) && (!release))
+	{
+		if(!hold)
+		{
+			printf("STEP+\r\n");
+			GUI_StoreKeyMsg('+', 1);
+		}
+		else
+		{
+			printf("STEP+ hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 1) && (y == 2) && (!release))
+	{
+		if(!hold)
+		{
+			printf("CW\r\n");
+			GUI_StoreKeyMsg('C', 1);
+		}
+		else
+		{
+			printf("CW hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 2) && (y == 2) && (!release))
+	{
+		if(!hold)
+		{
+			printf("30m\r\n");
+			GUI_StoreKeyMsg('4', 1);
+		}
+		else
+		{
+			printf("30m hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 3) && (y == 2) && (!release))
+	{
+		if(!hold)
+		{
+			printf("20m\r\n");
+			GUI_StoreKeyMsg('5', 1);
+		}
+		else
+		{
+			printf("20m hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 4) && (y == 2) && (!release))
+	{
+		if(!hold)
+		{
+			printf("17m\r\n");
+			GUI_StoreKeyMsg('6', 1);
+		}
+		else
+		{
+			printf("17m hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 5) && (y == 2) && (!release))
+	{
+		if(!hold)
+		{
+			printf("15m\r\n");
+			GUI_StoreKeyMsg('S', 1);
+		}
+		else
+		{
+			printf("15m hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 6) && (y == 2) && (!release))
+	{
+		if(!hold)
+		{
+			printf("Step-\r\n");
+			GUI_StoreKeyMsg('-', 1);
+		}
+		else
+		{
+			printf("Step- hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 1) && (y == 3) && (!release))
+	{
+		if(!hold)
+		{
+			printf("AM\r\n");
+			GUI_StoreKeyMsg('Q', 1);
+		}
+		else
+		{
+			printf("AM hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 2) && (y == 3) && (!release))
+	{
+		if(!hold)
+		{
+			printf("12m\r\n");
+			GUI_StoreKeyMsg('7', 1);
+		}
+		else
+		{
+			printf("12m hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 3) && (y == 3) && (!release))
+	{
+		if(!hold)
+		{
+			printf("10m\r\n");
+			GUI_StoreKeyMsg('8', 1);
+		}
+		else
+		{
+			printf("10m hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 4) && (y == 3) && (!release))
+	{
+		if(!hold)
+		{
+			printf("VFO\r\n");
+			GUI_StoreKeyMsg('V', 1);
+		}
+		else
+		{
+			printf("VFO hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 5) && (y == 3) && (!release))
+	{
+		if(!hold)
+		{
+			printf("Menu\r\n");
+			ui_s.req_state = MODE_MENU;
+			xTaskNotify(hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
+		}
+		else
+		{
+			printf("Enter hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 6) && (y == 3) && (!release))
+	{
+		if(!hold)
+		{
+			printf("Filter\r\n");
+			GUI_StoreKeyMsg('F', 1);
+		}
+		else
+		{
+			printf("Filter hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 1) && (y == 4) && (!release))
+	{
+		if(!hold)
+		{
+			printf("Fix/Centre\r\n");
+			GUI_StoreKeyMsg('I', 1);
+		}
+		else
+		{
+			printf("Fix/Centre hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 2) && (y == 4) && (!release))
+	{
+		if(!hold)
+		{
+			printf("Audio\r\n");
+			GUI_StoreKeyMsg('A', 1);
+		}
+		else
+		{
+			printf("Audio hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 3) && (y == 4) && (!release))
+	{
+		if(!hold)
+		{
+			printf("AGC\r\n");
+			GUI_StoreKeyMsg('G', 1);
+		}
+		else
+		{
+			printf("AGC hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 4) && (y == 4) && (!release))
+	{
+		if(!hold)
+		{
+			printf("KEYB\r\n");
+			GUI_StoreKeyMsg('K', 1);
+		}
+		else
+		{
+			printf("KEYB hold\r\n");
+		}
+		return;
+	}
+
+	if((x == 5) && (y == 4) && (!release))
+	{
+		if(!hold)
+			printf("Record/Mute\r\n");
+		else
+			printf("Record/Mute hold\r\n");
 
 		return;
 	}
-	// 160m
-	if((x == 2) && (y == 1))
+
+	if((x == 6) && (y == 4) && (!release))
 	{
 		if(!hold)
 		{
-			if(!release)
-			{
-				printf("160m\r\n");
-				GUI_StoreKeyMsg('1', 1);
-			}
-
+			printf("PWR\r\n");
+			GUI_StoreKeyMsg('W', 1);
 		}
 		else
 		{
-			// ..
-		}
-
-		return;
-	}
-	// 80m
-	if((x == 3) && (y == 1))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{
-				printf("80m\r\n");
-				GUI_StoreKeyMsg('2', 1);
-			}
-		}
-		else
-		{
-			// ..
-		}
-
-		return;
-	}
-	// 60m
-	if((x == 4) && (y == 1))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{
-				printf("60m\r\n");
-				GUI_StoreKeyMsg('3', 1);
-			}
-		}
-		else
-		{
-			// ..
-		}
-
-		return;
-	}
-	// 40m
-	if((x == 5) && (y == 1))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{
-				printf("40m\r\n");
-				GUI_StoreKeyMsg('M', 1);
-			}
-		}
-		else
-		{
-			// ..
-		}
-
-		return;
-	}
-	// DSP
-	if((x == 6) && (y == 1))
-	{
-		if(!hold)
-		{
-			//--tsu.cw_tx_on = !tsu.cw_tx_on;
-
-			if(!release)
-			{
-				printf("STEP+\r\n");
-				//!				ui_actions_change_step(1);
-			}
-		}
-		else
-		{
-			//printf("TX PWR\r\n");
-			//ui_actions_change_power_level();
-		}
-
-		return;
-	}
-	// CW
-	if((x == 1) && (y == 2))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{
-				//tsu.band[tsu.curr_band].demod_mode = DEMOD_CW;
-
-				printf("CW\r\n");
-
-				//!				ui_actions_change_demod_mode(DEMOD_CW);
-			}
-		}
-		else
-		{
-			// ..
-		}
-
-		return;
-	}
-	// 30m
-	if((x == 2) && (y == 2))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{
-				printf("30m\r\n");
-				GUI_StoreKeyMsg('4', 1);
-			}
-		}
-		else
-		{
-			// ..
-		}
-
-		return;
-	}
-	// 20m
-	if((x == 3) && (y == 2))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{
-				printf("20m\r\n");
-				GUI_StoreKeyMsg('5', 1);
-			}
-		}
-		else
-		{
-			// ..
-		}
-
-		return;
-	}
-	// 17m
-	if((x == 4) && (y == 2))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{
-				//tsu.curr_band = BAND_MODE_17;
-
-				printf("17m\r\n");
-				GUI_StoreKeyMsg('6', 1);
-			}
-		}
-		else
-		{
-			// ..
-		}
-
-		return;
-	}
-	// 15m
-	if((x == 5) && (y == 2))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{
-				printf("15m\r\n");
-				GUI_StoreKeyMsg('S', 1);
-			}
-		}
-		else
-		{
-			// ..
-		}
-
-		return;
-	}
-	// Step
-	if((x == 6) && (y == 2))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{
-				printf("Step-\r\n");
-				//!			ui_actions_change_step(0);
-			}
-		}
-		else
-		{
-			if(!release)
-			{
-				printf("Step Hold\r\n");
-			}
-		}
-
-		return;
-	}
-	// AM
-	if((x == 1) && (y == 3))
-	{
-		if(!hold)
-		{
-			if(!release) tsu.band[tsu.curr_band].demod_mode = DEMOD_AM;
-		}
-		else
-		{
-			if(!release)
-			{
-				// Maybe toggle different digi modes here ?
-				// Default - FT8
-				//
-				// Stay in USB ? Force DSP to digi mode ??
-				//
-				//
-				//tsu.band[tsu.curr_band].demod_mode = DEMOD_DIGI;
-
-				// Pass request to UI driver to change mode
-				//if(ui_s.req_state == MODE_DESKTOP)
-				//	ui_s.req_state = MODE_DESKTOP_FT8;
-				//else
-				//{
-				//	if(ui_s.req_state == MODE_DESKTOP_FT8)
-				//		ui_s.req_state = MODE_DESKTOP;
-				//}
-
-				printf("AM\r\n");
-
-				//!			ui_actions_change_demod_mode(DEMOD_AM);
-			}
-		}
-
-		return;
-	}
-	// 12m
-	if((x == 2) && (y == 3))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{
-				printf("12m\r\n");
-				GUI_StoreKeyMsg('7', 1);
-			}
-		}
-		else
-		{
-			// ..
-		}
-
-		return;
-	}
-	// 10m
-	if((x == 3) && (y == 3))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{
-				printf("10m\r\n");
-				GUI_StoreKeyMsg('8', 1);
-			}
-		}
-		else
-		{
-			// ..
-		}
-
-		return;
-	}
-	// 6m
-	if((x == 4) && (y == 3))
-	{
-		if(!hold)
-		{
-			//tsu.curr_band = BAND_MODE_6;
-			printf("6m\r\n");
-		}
-		else
-		{
-			// ..
-		}
-
-		return;
-	}
-	// Enter(MENU)
-	if((x == 5) && (y == 3))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{
-				printf("Enter\r\n");
-				GUI_StoreKeyMsg(GUI_KEY_ENTER, 1);
-			}
-			//else
-			//	GUI_StoreKeyMsg(GUI_KEY_ENTER,0);
-		}
-		else
-		{
-			if(!release)
-			{
-				printf("Enter Hold\r\n");
-
-				ui_s.req_state = MODE_MENU;
-				xTaskNotify(hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
-			}
-		}
-
-		return;
-	}
-	// Filter
-	if((x == 6) && (y == 3))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{
-				//tsu.band[tsu.curr_band].filter++;
-				//if(tsu.band[tsu.curr_band].filter > AUDIO_WIDE)
-				//	tsu.band[tsu.curr_band].filter = AUDIO_300HZ;
-
-				//printf("keypad filter: %d\r\n",tsu.curr_filter);
-
-				printf("Filter\r\n");
-			}
-		}
-		else
-		{
-			// ..
-		}
-
-		return;
-	}
-	// Toggle Fix/Centre VFO mode
-	if((x == 1) && (y == 4))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{/*
-				uchar loc_osc_mode = tsu.band[tsu.curr_band].fixed_mode;
-
-				loc_osc_mode = !loc_osc_mode;
-
-				// If back to centre mode, reset NCO freq
-				if(!loc_osc_mode)
-				{
-					tsu.band[tsu.curr_band].nco_freq = 0;
-
-					// Set request to DSP as well
-//!					tsu.update_nco_dsp_req = 1;
-				}
-
-				// Toggle key LED
-				//if(!loc_osc_mode)
-				//	keypad_driver_change_led_state(KEY_LED_FIX,KEY_LED_OFF_LIGHT);
-				//else
-				//	keypad_driver_change_led_state(KEY_LED_FIX,KEY_LED_MID_LIGHT);
-
-				tsu.band[tsu.curr_band].fixed_mode = loc_osc_mode;*/
-
-				printf("Fix/Centre\r\n");
-			}
-		}
-		else
-		{
-			// ..
-		}
-
-		return;
-	}
-	// 4m
-	if((x == 2) && (y == 4))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{
-				printf("Audio\r\n");
-				GUI_StoreKeyMsg('A', 1);
-			}
-		}
-		else
-		{
-			// ..
-		}
-
-		return;
-	}
-	// LF
-	if((x == 3) && (y == 4))
-	{
-		if(!hold)
-		{
-			//tsu.curr_band = BAND_MODE_LF;
-
-			if(!release)
-			{
-				printf("AGC\r\n");
-				GUI_StoreKeyMsg('G', 1);
-			}
-
-			//ui_actions_change_band(BAND_MODE_2200, 0);
-		}
-		else
-		{
-			if(!release)
-			{
-				// Pass request to UI driver to change mode
-				//if(ui_s.req_state == MODE_DESKTOP)
-				//	ui_s.req_state = MODE_QUICK_LOG;
-				//else
-				//{
-					//if(ui_s.req_state == MODE_QUICK_LOG)
-					//	ui_s.req_state = MODE_DESKTOP;
-				//}
-
-				printf("LF Hold\r\n");
-			}
-		}
-
-		return;
-	}
-	// MF
-	if((x == 4) && (y == 4))
-	{
-		if(!hold)
-		{
-			//tsu.curr_band = BAND_MODE_MF;
-			printf("MF\r\n");
-
-			//!		ui_actions_change_band(BAND_MODE_630, 0);
-		}
-		else
-		{
-			// ..
-		}
-
-		return;
-	}
-	// No button connected
-	if((x == 5) && (y == 4))
-	{
-		// NA
-
-		printf("Record/Mute ?\r\n");
-	}
-	// VFO A/B, SPLIT
-	if((x == 6) && (y == 4))
-	{
-		if(!hold)
-		{
-			if(!release)
-			{
-				// Toggle active
-				//tsu.band[tsu.curr_band].active_vfo = !tsu.band[tsu.curr_band].active_vfo;
-
-				// Toggle key LED
-//				if(!tsu.band[tsu.curr_band].active_vfo)
-//					keypad_driver_change_led_state(KEY_LED_SPLIT,KEY_LED_OFF_LIGHT);
-//				else
-//					keypad_driver_change_led_state(KEY_LED_SPLIT,KEY_LED_MID_LIGHT);
-
-				printf("VFO\r\n");
-
-//!				ui_actions_change_vfo_mode();
-			}
-		}
-		else
-		{
-			// ..
+			printf("PWR hold\r\n");
 		}
 	}
 }

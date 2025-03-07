@@ -1,18 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA 2012-2020                      **
-**                            mail: djchrismarc@gmail.com                          **
-**                                 twitter: @bph_co                                **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:                                                                       **
-**          The mcHF project is released for radio amateurs experimentation,       **
-**          non-commercial use only. All source files under GPL-3.0, unless        **
-**          third party drivers specifies otherwise. Thank you!                    **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #ifndef __UI_ACTIONS
 #define __UI_ACTIONS
@@ -21,6 +17,7 @@ uchar ui_actions_ipc_msg(uchar send, uchar msg, uchar *in_buff);
 
 void ui_actions_change_band(uchar band, uchar skip_destop_upd);
 void ui_actions_change_vfo_mode(void);
+void ui_actions_change_active_vfo(void);
 void ui_actions_change_span(void);
 void ui_actions_change_step(uchar dir);
 void ui_actions_change_demod_mode(uchar mode);

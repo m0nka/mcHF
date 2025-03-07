@@ -257,6 +257,33 @@ void ui_actions_change_vfo_mode(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : ui_actions_change_active_vfo
+//* Object              :
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    : CONTEXT_VIDEO
+//*----------------------------------------------------------------------------
+void ui_actions_change_active_vfo(void)
+{
+	if(hIccTask == NULL)
+	{
+		printf("not all drivers running, can't change VFO mode\r\n");
+		return;
+	}
+
+	if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
+		tsu.band[tsu.curr_band].active_vfo = VFO_B;
+	else
+		tsu.band[tsu.curr_band].active_vfo = VFO_A;
+
+	// Notify ICC dispatcher
+	xTaskNotify(hIccTask, UI_ICC_NCO_FREQ, eSetValueWithOverwrite);	// Update NCO frequency(DSP)
+
+	// Change '0' to center frequency in Fixed mode
+	//--ui_controls_update_span();
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : ui_actions_change_span
 //* Object              :
 //* Input Parameters    :
