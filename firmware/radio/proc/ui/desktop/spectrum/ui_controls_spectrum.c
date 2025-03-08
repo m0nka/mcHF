@@ -176,12 +176,17 @@ uchar 	sw_light		= 1;						// simplified scope (less resources)
 // rather compressed pointer indexes
 // to brightness table
 //
-// ToDo: fix it, currently doesn't work!
 //
-//#define USE_WF_BACKUP_BUFFER
+#define USE_WF_BACKUP_BUFFER
 //
 #ifdef USE_WF_BACKUP_BUFFER
-uchar wf_bkp[68747];
+//
+// Around (WATERFALL_Y_SIZE * WATERFALL_X_SIZE) bytes(reserved 140k), as 790kB used by GUIConf.c as emWin heap!
+// Note: Using the #defines as count result in smaller buffer(compiler bug)
+//
+#define WF_BKP_SIZE			136850
+//
+__attribute__((section(".STemWinMemPool"))) __attribute__ ((aligned (32))) uchar wf_bkp[WF_BKP_SIZE];
 ulong wf_cur = 0xFFFFFFFF;
 #endif
 //
@@ -602,26 +607,22 @@ static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 	#ifdef USE_WF_BACKUP_BUFFER
 	if(cb == NULL)
 	{
-		printf("restore from table\r\n");
+		//
+		// ToDo: Need to swap the backup order !!!!
+		//
+
+		//printf("restore from table cnt %d\r\n", (int)wf_cur);
 		m = 0;
 		for (j = 0; j < WATERFALL_Y_SIZE; j++)
 		{
 			for (i = 0; i < WATERFALL_X_SIZE; i++)
 			{
-				if(m%2 != 0)
-					val = (wf_bkp[m] >> 4) * 4;
-				else
-				{
-					val = (wf_bkp[m] & 4) * 4;
-					m++;
-					if(m >= sizeof(wf_bkp)) m = 0;
-				}
-				val &= 0x3F;
-
+				val = wf_bkp[m++];
 				GUI_SetColor ((0xFF << 24) | waterfall_blue[val]);	// add Alpha value
 				GUI_DrawPixel(((SW_FRAME_X + SW_FRAME_WIDTH) + i), WATERFALL_Y + j);
 			}
 		}
+		//wf_cur = 0;
 		return;
 	}
 	#endif
@@ -652,18 +653,10 @@ static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 		val  = ui_sw.fft_value[i];
 		val &= 0x3F;
 
-		// Save value to table
+		// Save line
 		#ifdef USE_WF_BACKUP_BUFFER
-		if(i%2 == 0)
-			wf_bkp[wf_cur]  = (val/4 & 0xF) << 4;
-		else
-		{
-			wf_bkp[wf_cur] |= (val/4 & 0xF);
-
-			wf_cur++;
-			if(wf_cur >= sizeof(wf_bkp))
-				wf_cur = 0;
-		}
+		if((wf_cur + i) < WF_BKP_SIZE)
+			wf_bkp[wf_cur + i] = val;
 		#endif
 
 		// ToDo: Fix gradient table addressing
@@ -678,6 +671,16 @@ static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 			//GUI_MEMDEV_Select(hMemSpWf);
 		}
 	}
+
+	// Increase line counter
+	#ifdef USE_WF_BACKUP_BUFFER
+	wf_cur += WATERFALL_X_SIZE;
+	if(wf_cur >= WF_BKP_SIZE)
+	{
+		//printf("overflow cnt %d\r\n",(int)wf_cur);
+		wf_cur = 0;
+	}
+	#endif
 }
 
 static void ui_controls_update_smooth_control(uchar init)
@@ -1252,11 +1255,12 @@ void ui_controls_spectrum_init(WM_HWIN hParent)
 	#ifdef USE_WF_BACKUP_BUFFER
 	if(wf_cur == 0xFFFFFFFF)
 	{
-		printf("table init\r\n");
 		for (i = 0; i < sizeof(wf_bkp); i++)
 			wf_bkp[i] = 0x11;
+
+		wf_cur = 0;
+		//printf("table init, cnt %d\r\n", wf_cur);
 	}
-	wf_cur = 0;
 	#endif
 
 	#ifdef SPEC_USE_WM

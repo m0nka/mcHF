@@ -57,7 +57,8 @@ Purpose     : Display controller initialization
 
 /* Define the available number of bytes available for the GUI */
 
-#define GUI_NUMBYTES  (890 * 1024)
+//#define GUI_NUMBYTES  (890 * 1024)
+#define GUI_NUMBYTES  (750 * 1024)
 
 // Use top of VIDEO RAM, 890kB, 2 kB as guard gap on the bottom
 // For detailed map, check LCDConf.h
