@@ -187,7 +187,7 @@ uchar 	sw_light		= 1;						// simplified scope (less resources)
 #define WF_BKP_SIZE			136850
 //
 __attribute__((section(".STemWinMemPool"))) __attribute__ ((aligned (32))) uchar wf_bkp[WF_BKP_SIZE];
-ulong wf_cur = 0xFFFFFFFF;
+uchar wf_init = 0;
 #endif
 //
 // -------------------------------
@@ -599,55 +599,60 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 //*----------------------------------------------------------------------------
 static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 {
-	ulong 		i,j,m;
-	ulong		val;
-	ulong 		y_copy_sz = 1;	// only one line at a time seems to only work (driver LCD_Copy problem maybe)
+	ulong 		i, j, m, val;
 
 	// Initial fill(from backup table)
 	#ifdef USE_WF_BACKUP_BUFFER
 	if(cb == NULL)
 	{
-		//
-		// ToDo: Need to swap the backup order !!!!
-		//
-
-		//printf("restore from table cnt %d\r\n", (int)wf_cur);
 		m = 0;
 		for (j = 0; j < WATERFALL_Y_SIZE; j++)
 		{
 			for (i = 0; i < WATERFALL_X_SIZE; i++)
 			{
-				val = wf_bkp[m++];
+				val = wf_bkp[m++] & 0x3F;
 				GUI_SetColor ((0xFF << 24) | waterfall_blue[val]);	// add Alpha value
 				GUI_DrawPixel(((SW_FRAME_X + SW_FRAME_WIDTH) + i), WATERFALL_Y + j);
 			}
 		}
-		//wf_cur = 0;
 		return;
 	}
 	#endif
 
-	#if 1
-	// Move down - MIPI AdaptedCommand mode only
-	for (i = WATERFALL_Y_SIZE; i > 0; i -= y_copy_sz)
-		GUI_CopyRect((SW_FRAME_X + SW_FRAME_WIDTH),WATERFALL_Y-y_copy_sz+i,(SW_FRAME_X + SW_FRAME_WIDTH),WATERFALL_Y+i,WATERFALL_X_SIZE,y_copy_sz);
-	#endif
-
-	#if 0	// ToDo: fix this!
+	#if 0
+	// Move down - single line
+	for (i = WATERFALL_Y_SIZE; i > 0; i -= 1)
+	{
+		GUI_CopyRect(SW_FRAME_X + SW_FRAME_WIDTH,
+					 WATERFALL_Y - 1 + i,
+					 SW_FRAME_X + SW_FRAME_WIDTH,
+					 WATERFALL_Y + i,
+					 WATERFALL_X_SIZE,
+					 1);
+	}
+	#else
 	// -----------------------------------------------------------------------------------------------------------
-	// Move waterfall down
-	// Our screen is swapped (LCD_LL_CopyRect() in lcd.c reflects that), that is why weird x and y positions!
-	//
-	GUI_CopyRect(	((SW_FRAME_X + SW_FRAME_WIDTH) + WATERFALL_X_SIZE +  0),		// Upper left X-position of the source rectangle.
-					(WATERFALL_Y + WATERFALL_Y_SIZE +  0),		// Upper left Y-position of the source rectangle.
-					((SW_FRAME_X + SW_FRAME_WIDTH) + WATERFALL_X_SIZE +  0),		// Upper left X-position of the destination rectangle.
-					(WATERFALL_Y + WATERFALL_Y_SIZE +  1),		// Upper left Y-position of the destination rectangle.
-					(WATERFALL_X_SIZE				+  4),		// X-size of the rectangle.
-					(WATERFALL_Y_SIZE				+  0)		// Y-size of the rectangle.
-				);
+	// Move waterfall down - rect copy
+	GUI_CopyRect(SW_FRAME_X + SW_FRAME_WIDTH,	// Upper left X-position of the source rectangle.
+				 WATERFALL_Y,					// Upper left Y-position of the source rectangle.
+				 SW_FRAME_X + SW_FRAME_WIDTH,	// Upper left X-position of the destination rectangle.
+				 WATERFALL_Y + 1,				// Upper left Y-position of the destination rectangle.
+				 WATERFALL_X_SIZE,				// X-size of the rectangle.
+				 WATERFALL_Y_SIZE - 1);			// Y-size of the rectangle.
+
 	#endif
 
-	// Update current line
+	// Move backup memory
+	#ifdef USE_WF_BACKUP_BUFFER
+	for(int i = 0; i < (WATERFALL_Y_SIZE - 1); i++)
+	{
+		memcpy( wf_bkp + ((WATERFALL_Y_SIZE - i - 1)*WATERFALL_X_SIZE),
+				wf_bkp + ((WATERFALL_Y_SIZE - i - 2)*WATERFALL_X_SIZE),
+				WATERFALL_X_SIZE);
+	}
+	#endif
+
+	// Update top line
 	for (i = 0; i < WATERFALL_X_SIZE; i++)
 	{
 		val  = ui_sw.fft_value[i];
@@ -655,8 +660,7 @@ static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 
 		// Save line
 		#ifdef USE_WF_BACKUP_BUFFER
-		if((wf_cur + i) < WF_BKP_SIZE)
-			wf_bkp[wf_cur + i] = val;
+		wf_bkp[i] = val;
 		#endif
 
 		// ToDo: Fix gradient table addressing
@@ -671,16 +675,6 @@ static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 			//GUI_MEMDEV_Select(hMemSpWf);
 		}
 	}
-
-	// Increase line counter
-	#ifdef USE_WF_BACKUP_BUFFER
-	wf_cur += WATERFALL_X_SIZE;
-	if(wf_cur >= WF_BKP_SIZE)
-	{
-		//printf("overflow cnt %d\r\n",(int)wf_cur);
-		wf_cur = 0;
-	}
-	#endif
 }
 
 static void ui_controls_update_smooth_control(uchar init)
@@ -1253,13 +1247,12 @@ void ui_controls_spectrum_init(WM_HWIN hParent)
 
 	// Backup table init
 	#ifdef USE_WF_BACKUP_BUFFER
-	if(wf_cur == 0xFFFFFFFF)
+	if(!wf_init)
 	{
 		for (i = 0; i < sizeof(wf_bkp); i++)
-			wf_bkp[i] = 0x11;
+			wf_bkp[i] = 0;
 
-		wf_cur = 0;
-		//printf("table init, cnt %d\r\n", wf_cur);
+		wf_init = 1;
 	}
 	#endif
 

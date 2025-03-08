@@ -32,8 +32,8 @@
 #define ID_PROGBAR_0 				(GUI_ID_USER + 0x53)
 #define ID_HEADER_0      			(GUI_ID_USER + 0x58)
 
-#define PWR_X						130
-#define PWR_Y						131
+#define PWR_X						254
+#define PWR_Y						138
 
 #define PWR_SIZE_X					595
 #define PWR_SIZE_Y					250
