@@ -36,6 +36,7 @@
 #define GUI_ID_BTN4 			  	(GUI_ID_USER + 0x57)
 #define GUI_ID_BTN5 			  	(GUI_ID_USER + 0x58)
 #define GUI_ID_BTN6 			  	(GUI_ID_USER + 0x59)
+#define GUI_ID_BTN7 			  	(GUI_ID_USER + 0x60)
 
 #define AUD_X						254
 #define AUD_Y						138
@@ -79,6 +80,7 @@ static const GUI_WIDGET_CREATE_INFO AudDialog[] =
 	{ BUTTON_CreateIndirect, 	"2.3kHz",		GUI_ID_BTN4,		220, 	200, 	60, 		40,				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"3.6kHz",		GUI_ID_BTN5,		290, 	200, 	60, 		40,				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"10kHz",		GUI_ID_BTN6,		360, 	200, 	60, 		40,				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"BT",			GUI_ID_BTN7,		360, 	155, 	60, 		40,				0, 		0x0, 	0 },
 };
 
 // Public radio state
@@ -273,6 +275,15 @@ static void AU_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 		{
 			if(NCode == WM_NOTIFICATION_RELEASED)
 				ui_actions_change_filter(AUDIO_WIDE);
+
+			on_screen_audio_default_focus(pMsg);
+			break;
+		}
+
+		case GUI_ID_BTN7:
+		{
+			if(NCode == WM_NOTIFICATION_RELEASED)
+				HAL_GPIO_TogglePin(RFM_DIO2_PORT, RFM_DIO2);
 
 			on_screen_audio_default_focus(pMsg);
 			break;
