@@ -578,7 +578,7 @@ static void ui_proc_init_desktop(void)
 	ui_controls_clock_init();
 	ui_controls_spectrum_init (WM_HBKWIN);
 	ui_controls_frequency_init(WM_HBKWIN);
-	//ui_controls_smeter_init();
+	ui_controls_smeter_init();
 	ui_controls_filter_init();
 	//ui_controls_cpu_stat_init();
 	//ui_controls_dsp_stat_init();
@@ -841,7 +841,7 @@ static void ui_proc_periodic(void)
 	ui_controls_frequency_refresh(0);
 	ui_controls_clock_refresh();
 
-	//--ui_controls_volume_refresh();
+	ui_controls_volume_refresh();
 	//ui_controls_cpu_stat_refresh();
 	//ui_controls_dsp_stat_refresh();
 	ui_controls_battery_refresh();

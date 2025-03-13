@@ -17,6 +17,14 @@
 
 #include "ui_cool_progress.h"
 
+//*----------------------------------------------------------------------------
+//* Function Name       : ui_cool_progress_create
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_VIDEO
+//*----------------------------------------------------------------------------
 static void ui_cool_progress_create(int x, int y, ushort val)
 {
 	uchar i;
@@ -39,6 +47,14 @@ static void ui_cool_progress_create(int x, int y, ushort val)
 	GUI_SetAlpha(255);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : ui_cool_progress_tx_pwr
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_VIDEO
+//*----------------------------------------------------------------------------
 void ui_cool_progress_tx_pwr(int x, int y, ushort val, char *txt)
 {
 	ulong 	st;
@@ -77,6 +93,14 @@ void ui_cool_progress_tx_pwr(int x, int y, ushort val, char *txt)
 	GUI_DispStringAt(txt, x - 15, y - 15);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : ui_cool_progress_volume
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_VIDEO
+//*----------------------------------------------------------------------------
 void ui_cool_progress_volume(int x, int y, ushort val, char *txt)
 {
 	ulong 	st;
@@ -113,4 +137,49 @@ void ui_cool_progress_volume(int x, int y, ushort val, char *txt)
 	GUI_SetFont(&GUI_Font32B_ASCII);
 	GUI_DispStringAt(txt, x - 15, y - 15);
 }
+
+//*----------------------------------------------------------------------------
+//* Function Name       : ui_cool_progress_gain
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_VIDEO
+//*----------------------------------------------------------------------------
+void ui_cool_progress_gain(int x, int y, ushort val, char *txt)
+{
+	ulong 	st;
+
+	if(txt == NULL)
+		return;
+
+	if(val > 50)
+		val = 50;
+
+	val *= 2;
+
+	// To start angle
+	st = (4500 - (0 + val*36))/10;
+
+	// Draw common component
+	ui_cool_progress_create(x, y, st);
+
+	// Progress name
+	GUI_SetColor(GUI_WHITE);
+	GUI_SetFont(&GUI_Font8x16_1);
+	GUI_SetAlpha(88);
+	GUI_DispStringAt("gain", x - 15, y + 32);
+	GUI_SetAlpha(255);
+
+	// Clear progress text
+	GUI_SetColor(GUI_BLACK);
+	GUI_FillRect(x - 15, y - 15, x + 16, y + 16);
+
+	GUI_SetColor(GUI_WHITE);
+
+	// Progress text
+	GUI_SetFont(&GUI_Font32B_ASCII);
+	GUI_DispStringAt(txt, x - 15, y - 15);
+}
+
 

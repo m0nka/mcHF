@@ -6,5 +6,6 @@
 
 void ui_cool_progress_tx_pwr(int x, int y, ushort val, char *txt);
 void ui_cool_progress_volume(int x, int y, ushort val, char *txt);
+void ui_cool_progress_gain(int x, int y, ushort val, char *txt);
 
 #endif

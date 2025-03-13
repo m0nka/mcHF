@@ -17,6 +17,7 @@
 
 #include "gui.h"
 #include "dialog.h"
+#include "ui_cool_progress.h"
 
 #include "desktop\ui_controls_layout.h"
 #include "radio_init.h"
@@ -69,7 +70,7 @@ uchar loc_demod_mode = 0;
 static void ui_controls_repaint_state(void)
 {
 	char  		buff[20];
-
+#if 0
 	// Clear AGC gain part of control
 	GUI_SetColor(GUI_WHITE);
 	GUI_FillRoundedRect((AGC_X + 43),(AGC_Y + 2),(AGC_X + 100),(AGC_Y + 17),2);
@@ -97,15 +98,16 @@ static void ui_controls_repaint_state(void)
 		default:
 			break;
 	}
-
+#endif
 	sprintf(buff,"%2d",tsu.rf_gain);
 
 	// Clean area first ?
 	// ...
 
 	// Display RF gain
-	GUI_SetColor(GUI_WHITE);
-	GUI_DispStringAt(buff,(AGC_X + 105),(AGC_Y + 0));
+	//GUI_SetColor(GUI_WHITE);
+	//GUI_DispStringAt(buff,(AGC_X + 105),(AGC_Y + 0));
+	ui_cool_progress_gain(RF_GAIN_X, RF_GAIN_Y, tsu.rf_gain, buff);
 }
 
 //*----------------------------------------------------------------------------
@@ -119,11 +121,11 @@ static void ui_controls_repaint_state(void)
 void ui_controls_agc_init(void)
 {
 	// Create control
-	GUI_SetColor(GUI_GRAY);
-	GUI_FillRoundedRect((AGC_X + 0),(AGC_Y + 0),(AGC_X + 128),(AGC_Y + 19),2);
-	GUI_SetFont(&GUI_Font20_1);
-	GUI_SetColor(GUI_WHITE);
-	GUI_DispStringAt("AGC",(AGC_X + 2),(AGC_Y + 0));
+	//GUI_SetColor(GUI_GRAY);
+	//GUI_FillRoundedRect((AGC_X + 0),(AGC_Y + 0),(AGC_X + 128),(AGC_Y + 19),2);
+	//GUI_SetFont(&GUI_Font20_1);
+	//GUI_SetColor(GUI_WHITE);
+	//GUI_DispStringAt("AGC",(AGC_X + 2),(AGC_Y + 0));
 
 	// Initial paint
 	ui_controls_repaint_state();
@@ -140,7 +142,7 @@ static void ui_controls_demod_change_screen_demod_mode(uchar on_init)
 	}
 
 	GUI_SetColor(GUI_BLUE);
-	GUI_FillRoundedRect((DECODER_MODE_X + 2),(DECODER_MODE_Y + 2),(DECODER_MODE_X + 50),(DECODER_MODE_Y + 18),2);
+	GUI_FillRoundedRect((DECODER_MODE_X + 2),(DECODER_MODE_Y + 2),(DECODER_MODE_X + 50),(DECODER_MODE_Y + 20), 2);
 
 	GUI_SetColor(GUI_WHITE);
 	GUI_SetFont(&GUI_Font20_1);
@@ -148,26 +150,26 @@ static void ui_controls_demod_change_screen_demod_mode(uchar on_init)
 	switch(demod)
 	{
 		case DEMOD_USB:
-			GUI_DispStringAt("USB",(DECODER_MODE_X + 8),(DECODER_MODE_Y + 1));
+			GUI_DispStringAt("USB",(DECODER_MODE_X + 8),(DECODER_MODE_Y + 3));
 			break;
 		case DEMOD_LSB:
-			GUI_DispStringAt("LSB",(DECODER_MODE_X + 10),(DECODER_MODE_Y + 1));
+			GUI_DispStringAt("LSB",(DECODER_MODE_X + 10),(DECODER_MODE_Y + 3));
 			break;
 		case DEMOD_CW:
 		{
 			if(tsu.keyer_mode == CW_MODE_IAM_B)
-				GUI_DispStringAt("CWb",(DECODER_MODE_X + 8),(DECODER_MODE_Y + 1));
+				GUI_DispStringAt("CWb",(DECODER_MODE_X + 8),(DECODER_MODE_Y + 3));
 			else if(tsu.keyer_mode == CW_MODE_IAM_A)
-				GUI_DispStringAt("CWa",(DECODER_MODE_X + 8),(DECODER_MODE_Y + 1));
+				GUI_DispStringAt("CWa",(DECODER_MODE_X + 8),(DECODER_MODE_Y + 3));
 			else
-				GUI_DispStringAt("CWs",(DECODER_MODE_X + 8),(DECODER_MODE_Y + 1));
+				GUI_DispStringAt("CWs",(DECODER_MODE_X + 8),(DECODER_MODE_Y + 3));
 			break;
 		}
 		case DEMOD_AM:
-			GUI_DispStringAt("AM",(DECODER_MODE_X + 14),(DECODER_MODE_Y + 1));
+			GUI_DispStringAt("AM",(DECODER_MODE_X + 14),(DECODER_MODE_Y + 3));
 			break;
 		case DEMOD_FM:
-			GUI_DispStringAt("FM",(DECODER_MODE_X + 14),(DECODER_MODE_Y + 1));
+			GUI_DispStringAt("FM",(DECODER_MODE_X + 14),(DECODER_MODE_Y + 3));
 			break;
 		//case DEMOD_DIGI:	- no point really, as we are going to repaint entirely different Desktop
 		//	GUI_DispStringAt("FT8",(DECODER_MODE_X + 10),(DECODER_MODE_Y + 1));
@@ -190,10 +192,10 @@ static void ui_controls_demod_change_screen_demod_mode(uchar on_init)
 void ui_controls_demod_init(void)
 {
 	GUI_SetColor(GUI_GRAY);
-	GUI_DrawRoundedRect((DECODER_MODE_X + 0),(DECODER_MODE_Y + 0),(DECODER_MODE_X + 52),(DECODER_MODE_Y + 20),2);
-	GUI_DrawRoundedRect((DECODER_MODE_X + 1),(DECODER_MODE_Y + 1),(DECODER_MODE_X + 51),(DECODER_MODE_Y + 19),2);
+	GUI_DrawRoundedRect((DECODER_MODE_X + 0),(DECODER_MODE_Y + 0),(DECODER_MODE_X + 52),(DECODER_MODE_Y + 24),2);
+	GUI_DrawRoundedRect((DECODER_MODE_X + 1),(DECODER_MODE_Y + 1),(DECODER_MODE_X + 51),(DECODER_MODE_Y + 23),2);
 	GUI_SetColor(GUI_BLUE);
-	GUI_FillRoundedRect((DECODER_MODE_X + 2),(DECODER_MODE_Y + 2),(DECODER_MODE_X + 50),(DECODER_MODE_Y + 18),2);
+	GUI_FillRoundedRect((DECODER_MODE_X + 2),(DECODER_MODE_Y + 2),(DECODER_MODE_X + 50),(DECODER_MODE_Y + 22),2);
 	GUI_SetColor(GUI_WHITE);
 	GUI_SetFont(&GUI_Font20_1);
 

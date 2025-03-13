@@ -397,6 +397,7 @@ static void ui_controls_smeter_set_needle(uchar pos)
 //*----------------------------------------------------------------------------
 void ui_controls_smeter_init(void)
 {
+#if 0
 	PARAM       Param;      // Parameters for drawing routine
 	int         Cnt;
 	int         tDiff = 0;
@@ -436,6 +437,30 @@ void ui_controls_smeter_init(void)
 
 	// Debug
 	sm.repaints = 0;
+#endif
+
+	GUI_SetColor(GUI_WHITE);
+
+	// Frame
+	GUI_DrawRoundedFrame(	S_METER_X,
+							S_METER_Y,
+							(S_METER_X + S_METER_SIZE_X),
+							(S_METER_Y + S_METER_SIZE_Y),
+							5,
+							SW_FRAME_WIDTH
+						);
+
+	GUI_SetColor(GUI_DARKGRAY);
+
+	// Top/Bottom background
+	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + 410), (S_METER_Y + 37), 2);
+	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 60),(S_METER_X + 410), (S_METER_Y + 67), 2);
+
+	GUI_SetColor(GUI_LIGHTGREEN);
+
+	// Top/Bottom active part
+	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + 130), (S_METER_Y + 37), 2);
+	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 60),(S_METER_X + 50),  (S_METER_Y + 67), 2);
 
 	// Ready to refresh
 	sm.init_done = 1;

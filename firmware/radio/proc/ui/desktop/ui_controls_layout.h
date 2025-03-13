@@ -50,8 +50,8 @@
 #define S_METER_FRAME_WIDTH			3
 #define S_METER_FRAME_CURVE			0	// corner radius actually
 
-#define S_METER_SIZE_X 				(349 + S_METER_FRAME_WIDTH)
-#define S_METER_SIZE_Y 				(140 + S_METER_FRAME_WIDTH)
+#define S_METER_SIZE_X 				420//(349 + S_METER_FRAME_WIDTH)
+#define S_METER_SIZE_Y 				100//(140 + S_METER_FRAME_WIDTH)
 //
 // ----------------------------------------------------------------------------
 // Combined waterfall/spectrum scope control
@@ -61,7 +61,7 @@
 #define LCD_WIDTH					854
 //
 #define SW_FRAME_X					0
-#define SW_FRAME_Y					115
+#define SW_FRAME_Y					112
 //
 #define HEADER_Y_SIZE				0
 //
@@ -282,14 +282,17 @@
 //
 #define SPEAKER_SIZE_X				62
 #define SPEAKER_SIZE_Y				50
+
+#define RF_GAIN_X					120
+#define RF_GAIN_Y					430
 //
 // ----------------------------------------------------------------------------
 // Filter
-#define FILTER_X					357
-#define FILTER_Y					40
+#define FILTER_X					265
+#define FILTER_Y					416
 //
-#define FILTER_SIZE_X				438 - 15
-#define FILTER_SIZE_Y				24
+#define FILTER_SIZE_X				110
+#define FILTER_SIZE_Y				22
 //
 // ----------------------------------------------------------------------------
 // Battery icon
@@ -302,7 +305,7 @@
 // ----------------------------------------------------------------------------
 // TX Status control
 //
-#define TX_STAT_X					120
+#define TX_STAT_X					200
 #define TX_STAT_Y					430
 
 #define TX_STAT_SIZE_X				60

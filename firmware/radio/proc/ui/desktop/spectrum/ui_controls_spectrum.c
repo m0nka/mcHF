@@ -962,7 +962,7 @@ static void ui_controls_create_sw_big(void)
 	#endif
 
 	// Draw frame/lines
-	GUI_SetColor(GUI_ORANGE);
+	GUI_SetColor(HOT_PINK);
 	#if 1
 	GUI_DrawRoundedFrame(	sb.x,
 							sb.y,

@@ -103,12 +103,12 @@ typedef struct DialFrequency
 // ----------------------------------------------------------------------------
 // Decoder
 #define DECODER_MODE_X				385
-#define DECODER_MODE_Y				420
+#define DECODER_MODE_Y				416
 //
 // ----------------------------------------------------------------------------
 // AGC control
-#define AGC_X						357
-#define AGC_Y						72
+//#define AGC_X						357
+//#define AGC_Y						72
 
 // ----------------------------------------------------------------------------
 // RX/TX indicator

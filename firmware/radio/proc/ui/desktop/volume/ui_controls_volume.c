@@ -25,8 +25,8 @@
 #include "desktop\ui_controls_layout.h"
 
 // Speaker icon in C file as binary resource
-extern GUI_CONST_STORAGE GUI_BITMAP bmtechrubio;
-extern GUI_CONST_STORAGE GUI_BITMAP bmtechrubio_mute;
+//extern GUI_CONST_STORAGE GUI_BITMAP bmtechrubio;
+//extern GUI_CONST_STORAGE GUI_BITMAP bmtechrubio_mute;
 
 extern TaskHandle_t hTouchTask;
 

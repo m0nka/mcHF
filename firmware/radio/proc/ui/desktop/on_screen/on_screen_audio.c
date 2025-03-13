@@ -18,6 +18,9 @@
 #include "on_screen_audio.h"
 #include "ui_actions.h"
 
+#include "spectrum/ui_controls_spectrum.h"
+#include "ui_proc.h"
+
 #include "radio_init.h"
 #include "codec_hw.h"
 
