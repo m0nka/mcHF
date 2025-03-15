@@ -42,6 +42,8 @@
 #define S_METER_X					2
 #define S_METER_Y					1
 //
+#define S_METER_MAX					330
+//
 #define S_METER_FRAME_LEFT			1
 #define S_METER_FRAME_RIGHT			0
 #define S_METER_FRAME_TOP			1
@@ -50,8 +52,8 @@
 #define S_METER_FRAME_WIDTH			3
 #define S_METER_FRAME_CURVE			0	// corner radius actually
 
-#define S_METER_SIZE_X 				420//(349 + S_METER_FRAME_WIDTH)
-#define S_METER_SIZE_Y 				100//(140 + S_METER_FRAME_WIDTH)
+#define S_METER_SIZE_X 				(S_METER_MAX + 26)
+#define S_METER_SIZE_Y 				100
 //
 // ----------------------------------------------------------------------------
 // Combined waterfall/spectrum scope control

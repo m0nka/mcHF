@@ -453,14 +453,14 @@ void ui_controls_smeter_init(void)
 	GUI_SetColor(GUI_DARKGRAY);
 
 	// Top/Bottom background
-	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + 410), (S_METER_Y + 37), 2);
-	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 60),(S_METER_X + 410), (S_METER_Y + 67), 2);
+	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 37), 2);
+	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 60),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 67), 2);
 
 	GUI_SetColor(GUI_LIGHTGREEN);
 
 	// Top/Bottom active part
-	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + 130), (S_METER_Y + 37), 2);
-	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 60),(S_METER_X + 50),  (S_METER_Y + 67), 2);
+	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 30),(S_METER_X + 10), (S_METER_Y + 37), 2);
+	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 60),(S_METER_X + 10), (S_METER_Y + 67), 2);
 
 	// Ready to refresh
 	sm.init_done = 1;
@@ -475,10 +475,10 @@ void ui_controls_smeter_init(void)
 //*----------------------------------------------------------------------------
 void ui_controls_smeter_quit(void)
 {
-	#ifndef USE_SPRITE
-	GUI_MEMDEV_DeleteAuto(&AutoDev);
-	GUI_ClearRect(0, 70, 319, 239);
-	#endif
+	//#ifndef USE_SPRITE
+	//GUI_MEMDEV_DeleteAuto(&AutoDev);
+	//GUI_ClearRect(0, 70, 319, 239);
+	//#endif
 
 	sm.init_done = 0;
 }
@@ -503,7 +503,7 @@ void ui_controls_smeter_touch(void)
 
 	//smet_disabled = !smet_disabled;
 	//use_bmp = !use_bmp;
-	sm.is_peak = !(sm.is_peak);
+	//sm.is_peak = !(sm.is_peak);
 }
 
 //*----------------------------------------------------------------------------
@@ -515,15 +515,15 @@ void ui_controls_smeter_touch(void)
 //*----------------------------------------------------------------------------
 void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 {
-	ushort 		i,curr,diff,step,some_val,expanded,bandw,centre_freq,aver,peak;
-	uchar		is_up;
+	ushort 		i,curr;//,diff,step,some_val,expanded,bandw,centre_freq,aver,peak;
+	//uchar		is_up;
 
 	// Control ready ?
-	if((!(sm.init_done)) || (sm.smet_disabled) || (sm.rotary_block))
-	{
-		ui_controls_smeter_block_on();
-		return;
-	}
+	//if((!(sm.init_done)) || (sm.smet_disabled) || (sm.rotary_block))
+	//{
+	//	ui_controls_smeter_block_on();
+	//	return;
+	//}
 
 	#ifdef USE_SIDE_ENC_FOR_S_METER
 	if(s_met_pos != s_met_pos_loc)
@@ -535,7 +535,7 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 	#endif
 
 	// Debug
-	sm.repaints = 0;
+	//sm.repaints = 0;
 
 	#if 0
 	// Already calculated by spectrum repaint routines
@@ -575,6 +575,15 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 		return;
 	#endif
 
+	ushort s_val = curr * 10;
+
+	GUI_SetColor(GUI_DARKGRAY);
+	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 37), 2);
+
+	GUI_SetColor(GUI_LIGHTGREEN);
+	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + (10 + s_val)), (S_METER_Y + 37), 2);
+
+
 	#if 0
 	// old and nearby values
 	if(
@@ -593,7 +602,7 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 
 	// Remove noise floor
 	//if(curr < 25) curr = 0;
-
+#if 0
 	// Expand scale
 	expanded = curr*SMETER_EXPAND_VALUE;
 
@@ -627,10 +636,10 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 	printf("repaints = %d\r\n",repaints);
 	printf("now loop...\r\n");
 	#endif
-
+#endif
 	#if 1
 	// Repaint direct
-	ui_controls_smeter_draw_via_rotate(expanded);
+	//ui_controls_smeter_draw_via_rotate(expanded);
 	#else
 	// Repaint in steps
 	for(i = 0; i < diff; i += step)

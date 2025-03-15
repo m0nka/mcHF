@@ -841,7 +841,7 @@ static void ui_proc_periodic(void)
 	ui_controls_frequency_refresh(0);
 	ui_controls_clock_refresh();
 
-	ui_controls_volume_refresh();
+	//--ui_controls_volume_refresh();
 	//ui_controls_cpu_stat_refresh();
 	//ui_controls_dsp_stat_refresh();
 	ui_controls_battery_refresh();
@@ -855,7 +855,7 @@ static void ui_proc_periodic(void)
 		return;
 
 	ui_controls_spectrum_refresh(ui_proc_cb);
-	//ui_controls_smeter_refresh  (ui_proc_cb_sm);
+	ui_controls_smeter_refresh  (ui_proc_cb_sm);
 
 	#ifdef CONTEXT_BMS
 	on_screen_power_refresh();
