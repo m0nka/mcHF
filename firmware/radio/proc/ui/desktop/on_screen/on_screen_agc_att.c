@@ -34,6 +34,7 @@
 #define GUI_ID_BTN2 			  	(GUI_ID_USER + 0x55)
 #define GUI_ID_BTN3 			  	(GUI_ID_USER + 0x56)
 #define GUI_ID_BTN4 			  	(GUI_ID_USER + 0x57)
+#define GUI_ID_BTN5 			  	(GUI_ID_USER + 0x58)
 
 #define AUD_X						254
 #define AUD_Y						138
@@ -71,10 +72,11 @@ static const GUI_WIDGET_CREATE_INFO AgcDialog[] =
 	{ TEXT_CreateIndirect, 		"AGC Mode",		ID_TEXT_LIST_2,		440,	10,		140, 		20,  			0, 		0x0,	0 	},
 	{ LISTBOX_CreateIndirect, 	"", 			ID_LISTBOX_2, 		440, 	28, 	140, 		150, 			0, 		0x0, 	0 	},
 
-	{ BUTTON_CreateIndirect, 	"ATT OFF",		GUI_ID_BTN1,		10, 	200, 	90, 		40,				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"ATT 6 dB",		GUI_ID_BTN2,		115, 	200, 	90, 		40,				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"ATT 12 dB",	GUI_ID_BTN3,		225, 	200, 	90, 		40,				0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"ATT 18 dB",	GUI_ID_BTN4,		330, 	200, 	90, 		40,				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"ATT OFF",		GUI_ID_BTN1,		10, 	200, 	70, 		40,				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"ATT 4 dB",		GUI_ID_BTN2,		95, 	200, 	70, 		40,				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"ATT 8 dB",		GUI_ID_BTN3,		180, 	200, 	70, 		40,				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"ATT 16 dB",	GUI_ID_BTN4,		265, 	200, 	70, 		40,				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"ATT 32 dB",	GUI_ID_BTN5,		350, 	200, 	70, 		40,				0, 		0x0, 	0 },
 };
 
 // Public radio state
@@ -211,7 +213,7 @@ static void AU_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 		case GUI_ID_BTN2:
 		{
 			if(NCode == WM_NOTIFICATION_RELEASED)
-				ui_actions_change_atten(ATTEN_6DB);
+				ui_actions_change_atten(ATTEN_4DB);
 
 			on_screen_audio_default_focus(pMsg);
 			break;
@@ -220,7 +222,7 @@ static void AU_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 		case GUI_ID_BTN3:
 		{
 			if(NCode == WM_NOTIFICATION_RELEASED)
-				ui_actions_change_atten(ATTEN_12DB);
+				ui_actions_change_atten(ATTEN_8DB);
 
 			on_screen_audio_default_focus(pMsg);
 			break;
@@ -229,7 +231,16 @@ static void AU_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 		case GUI_ID_BTN4:
 		{
 			if(NCode == WM_NOTIFICATION_RELEASED)
-				ui_actions_change_atten(ATTEN_18DB);
+				ui_actions_change_atten(ATTEN_16DB);
+
+			on_screen_audio_default_focus(pMsg);
+			break;
+		}
+
+		case GUI_ID_BTN5:
+		{
+			if(NCode == WM_NOTIFICATION_RELEASED)
+				ui_actions_change_atten(ATTEN_32DB);
 
 			on_screen_audio_default_focus(pMsg);
 			break;

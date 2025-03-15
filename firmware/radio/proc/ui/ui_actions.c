@@ -20,6 +20,8 @@
 #include "keyer\ui_controls_keyer.h"
 #include "tx_status\ui_controls_tx_stat.h"
 
+#include "att.h"
+
 #include "ui_actions.h"
 
 // Public radio state
@@ -521,43 +523,38 @@ void ui_actions_toggle_atten(void)
 //*----------------------------------------------------------------------------
 void ui_actions_change_atten(uchar val)
 {
-	uchar old = tsu.band[tsu.curr_band].atten;
-
-	//if(tsu.band[tsu.curr_band].atten < (ATTEN_MAX - 1))
-	//	tsu.band[tsu.curr_band].atten++;
-	//else
-	//	tsu.band[tsu.curr_band].atten = ATTEN_0DB;
-
 	tsu.band[tsu.curr_band].atten = val;
 	//printf("updated=%d\r\n", tsu.band[tsu.curr_band].atten);
 
-	// ToDo: Fix messaging between tasks!
-	uchar s_r = ui_actions_ipc_msg(1, 7, NULL);
-	vTaskDelay(100);
-	uchar w_r = ui_actions_ipc_msg(0, 7, NULL);
-
-	if((s_r == 0)&&(w_r == 0))
+	// Direct HW access
+	//
+	// ToDo: separate process ??
+	//
+	switch(tsu.band[tsu.curr_band].atten)
 	{
-		switch(tsu.band[tsu.curr_band].atten)
-		{
-		case 0:
-			printf("ATT OFF\r\n");
+		case ATTEN_0DB:
+			//printf("ATT OFF\r\n");
+			att_new_value(0);
 			break;
-		case 1:
-			printf("ATT 6dB\r\n");
+		case ATTEN_4DB:
+			//printf("ATT 4dB\r\n");
+			att_new_value(8);
 			break;
-		case 2:
-			printf("ATT 12dB\r\n");
+		case ATTEN_8DB:
+			//printf("ATT 8dB\r\n");
+			att_new_value(16);
 			break;
-		case 3:
-			printf("ATT 18dB\r\n");
+		case ATTEN_16DB:
+			//printf("ATT 16dB\r\n");
+			att_new_value(32);
 			break;
-		}
-		return;
+		case ATTEN_32DB:
+			//printf("ATT 32dB\r\n");
+			att_new_value(63);
+			break;
+		default:
+			break;
 	}
-
-	// restore public
-	tsu.band[tsu.curr_band].atten = old;
 }
 
 //*----------------------------------------------------------------------------

@@ -105,8 +105,8 @@
 #define BST_EN		               		GPIO_PIN_1
 #define BST_EN_PORT         			GPIOB
 
-// PB2			ATT_CLK -> ToDo: Attenuator
-#define ATT_CLK               			GPIO_PIN_2
+// PB2			ATT_CLK, Attenuator
+#define ATT_CLK               			LL_GPIO_PIN_2
 #define ATT_CLK_PORT         			GPIOB
 
 // PB3			RFM_SCK_SPI1 -> ToDo: Lora driver
@@ -141,8 +141,8 @@
 #define CODEC_SDA_I2C4_PORT          	GPIOB
 #define CODEC_SDA_I2C4_AF            	GPIO_AF6_I2C4
 
-// PB10			ATT_LE -> ToDo: Attenuator
-#define ATT_LE							GPIO_PIN_10
+// PB10			ATT_LE, latch enable, Attenuator
+#define ATT_LE							LL_GPIO_PIN_10
 #define ATT_LE_PORT            			GPIOB
 
 // PB11			DSI_TE - reserved, future use
@@ -266,8 +266,8 @@
 //
 //
 
-// PD11			ATT_DATA -> ToDo: Attenuator
-#define ATT_DATA                   		GPIO_PIN_11
+// PD11			ATT_DATA, Attenuator
+#define ATT_DATA                   		LL_GPIO_PIN_11
 #define ATT_DATA_PORT              		GPIOD
 
 // PD12			BMS_SCL

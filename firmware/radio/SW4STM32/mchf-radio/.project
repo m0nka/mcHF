@@ -102,6 +102,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/hw/adc.c</locationURI>
 		</link>
 		<link>
+			<name>hw/att.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/att.c</locationURI>
+		</link>
+		<link>
 			<name>hw/bsp.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/hw/bsp.c</locationURI>

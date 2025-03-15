@@ -20,6 +20,7 @@
 
 #include "bsp.h"
 #include "adc.h"
+#include "att.h"
 #include "WM.h"
 
 #include "ipc_proc.h"
@@ -504,6 +505,9 @@ int main(void)
     // Init ADC HW
     if(adc_init() != 0)
     	goto stall_radio;
+
+    // Attenuator
+    att_hw_init();
 
     // Define running processes
     if(start_proc())
