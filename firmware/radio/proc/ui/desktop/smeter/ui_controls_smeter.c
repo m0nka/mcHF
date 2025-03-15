@@ -442,6 +442,7 @@ void ui_controls_smeter_init(void)
 	GUI_SetColor(GUI_WHITE);
 
 	// Frame
+#if 0
 	GUI_DrawRoundedFrame(	S_METER_X,
 							S_METER_Y,
 							(S_METER_X + S_METER_SIZE_X),
@@ -449,6 +450,7 @@ void ui_controls_smeter_init(void)
 							5,
 							SW_FRAME_WIDTH
 						);
+#endif
 
 	GUI_SetColor(GUI_DARKGRAY);
 
@@ -459,8 +461,13 @@ void ui_controls_smeter_init(void)
 	GUI_SetColor(GUI_LIGHTGREEN);
 
 	// Top/Bottom active part
-	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 30),(S_METER_X + 10), (S_METER_Y + 37), 2);
-	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 60),(S_METER_X + 10), (S_METER_Y + 67), 2);
+	//GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 30),(S_METER_X + 10), (S_METER_Y + 37), 2);
+	//GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 60),(S_METER_X + 10), (S_METER_Y + 67), 2);
+
+	GUI_SetColor(GUI_LIGHTGRAY);
+	GUI_SetFont(&GUI_Font8x16_1);
+
+	GUI_DispStringAt("1   3   5   7   9",S_METER_X + 20, S_METER_Y + 10);
 
 	// Ready to refresh
 	sm.init_done = 1;
@@ -576,12 +583,14 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 	#endif
 
 	ushort s_val = curr * 10;
+	//ushort s_sta = (curr * 10) - 20;	// moving dot
+	ushort s_sta = 0;					// progress bar
 
 	GUI_SetColor(GUI_DARKGRAY);
 	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 37), 2);
 
 	GUI_SetColor(GUI_LIGHTGREEN);
-	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + (10 + s_val)), (S_METER_Y + 37), 2);
+	GUI_FillRoundedRect((S_METER_X + 10 + s_sta),  (S_METER_Y + 30),(S_METER_X + (10 + s_val)), (S_METER_Y + 37), 2);
 
 
 	#if 0
