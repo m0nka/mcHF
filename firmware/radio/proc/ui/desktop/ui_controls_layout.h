@@ -290,8 +290,8 @@
 //
 // ----------------------------------------------------------------------------
 // Filter
-#define FILTER_X					265
-#define FILTER_Y					416
+#define FILTER_X					251
+#define FILTER_Y					425
 //
 #define FILTER_SIZE_X				110
 #define FILTER_SIZE_Y				22

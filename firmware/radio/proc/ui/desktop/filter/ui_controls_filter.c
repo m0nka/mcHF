@@ -104,6 +104,10 @@ static void ui_controls_filter_select(void)
 			break;
 	}
 
+	// Repaint frame - temp fix here, need to fix _init() call!
+	GUI_SetColor(FIL_BKG_COLOR);
+	GUI_DrawRoundedRect(FILTER_X,FILTER_Y,(FILTER_X + FILTER_SIZE_X),(FILTER_Y + FILTER_SIZE_Y),2);
+
 	// Save state
 	loc_filter = filter;
 
@@ -125,9 +129,9 @@ void ui_controls_filter_init(void)
 	// Fill full control
 	GUI_SetColor(FIL_BKG_COLOR);
 	GUI_FillRoundedRect(FILTER_X,FILTER_Y,(FILTER_X + FILTER_SIZE_X),(FILTER_Y + FILTER_SIZE_Y),2);
-	GUI_SetColor(GUI_WHITE);
 
 	// White frame
+	GUI_SetColor(GUI_WHITE);
 	GUI_DrawRoundedRect(FILTER_X,FILTER_Y,(FILTER_X + FILTER_SIZE_X),(FILTER_Y + FILTER_SIZE_Y),2);
 	GUI_DrawRoundedRect(FILTER_X - 1,FILTER_Y - 1,(FILTER_X + FILTER_SIZE_X + 1),(FILTER_Y + FILTER_SIZE_Y + 1),2);
 

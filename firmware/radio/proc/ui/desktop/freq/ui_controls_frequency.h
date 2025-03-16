@@ -75,8 +75,10 @@ typedef struct DialFrequency
 #define M_FREQ_X					450
 #define M_FREQ_Y					420
 
-#define M_FREQ1_X					265
-#define M_FREQ1_Y					450
+#define M_FREQ1_X					250
+#define M_FREQ1_Y					452
+//
+#define M_FREQ1_X_SZ				188
 //#else
 //#define M_FREQ_X					531
 //#define M_FREQ_Y					350
@@ -98,17 +100,19 @@ typedef struct DialFrequency
 // ----------------------------------------------------------------------------
 // RX/TX
 #define RADIO_MODE1_X				360 + 54
-#define RADIO_MODE1_Y				440//122
+#define RADIO_MODE1_Y				440
 //
 // ----------------------------------------------------------------------------
 // Decoder
-#define DECODER_MODE_X				385
-#define DECODER_MODE_Y				416
+#define DECODER_MODE_X				365
+#define DECODER_MODE_Y				424
+//
+#define DEC_MODE_X_SZ				72
 //
 // ----------------------------------------------------------------------------
 // AGC control
-//#define AGC_X						357
-//#define AGC_Y						72
+#define AGC_X						250
+#define AGC_Y						399
 
 // ----------------------------------------------------------------------------
 // RX/TX indicator

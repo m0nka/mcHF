@@ -555,6 +555,9 @@ void ui_actions_change_atten(uchar val)
 		default:
 			break;
 	}
+
+	// UI repaint
+	ui_controls_agc_init();
 }
 
 //*----------------------------------------------------------------------------
