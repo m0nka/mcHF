@@ -16,6 +16,7 @@
 #include "mchf_pro_board.h"
 #include "version.h"
 #include "mchf_icc_def.h"
+#include "adc.h"
 
 #ifdef CONTEXT_VIDEO
 
@@ -442,7 +443,7 @@ void ui_controls_smeter_init(void)
 	GUI_SetColor(GUI_WHITE);
 
 	// Frame
-#if 0
+	#if 0
 	GUI_DrawRoundedFrame(	S_METER_X,
 							S_METER_Y,
 							(S_METER_X + S_METER_SIZE_X),
@@ -450,7 +451,7 @@ void ui_controls_smeter_init(void)
 							5,
 							SW_FRAME_WIDTH
 						);
-#endif
+	#endif
 
 	GUI_SetColor(GUI_DARKGRAY);
 
@@ -467,6 +468,9 @@ void ui_controls_smeter_init(void)
 	GUI_SetColor(GUI_LIGHTGRAY);
 	GUI_SetFont(&GUI_Font8x16_1);
 
+	//if(tsu.rxtx)
+	//	GUI_DispStringAt("1   3   5   7   9",S_METER_X + 20, S_METER_Y + 10);
+	//else
 	GUI_DispStringAt("1   3   5   7   9",S_METER_X + 20, S_METER_Y + 10);
 
 	// Ready to refresh
@@ -524,6 +528,75 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 {
 	ushort 		i,curr;//,diff,step,some_val,expanded,bandw,centre_freq,aver,peak;
 	//uchar		is_up;
+
+	static uchar loc_tx_state = 10;
+
+	// Handle TX
+	if(loc_tx_state != tsu.rxtx)
+	{
+		GUI_SetColor(GUI_BLACK);
+
+		// Clear top text line
+		GUI_FillRect((S_METER_X + 10), (S_METER_Y + 10),(S_METER_X + 340), (S_METER_Y + 24));
+
+		// Clear top text line
+		GUI_FillRect((S_METER_X + 10), (S_METER_Y + 75),(S_METER_X + 340), (S_METER_Y + 89));
+
+		GUI_SetColor(GUI_LIGHTGRAY);
+		GUI_SetFont(&GUI_Font8x16_1);
+
+		if(tsu.rxtx)
+		{
+			GUI_DispStringAt("P  1   2   5       10         15   20   W", S_METER_X + 12, S_METER_Y + 10);
+		}
+		else
+		{
+			GUI_DispStringAt("S  1   3   5   7   9   +20   +40  +60  dB", S_METER_X + 12, S_METER_Y + 10);
+			GUI_SetColor(GUI_DARKGRAY);
+		}
+
+		GUI_DispStringAt("SWR 1  3   5       10         30         ", S_METER_X + 12, S_METER_Y + 75);
+
+		if(loc_tx_state == 10)
+			loc_tx_state = tsu.rxtx;
+		else
+			loc_tx_state = tsu.rxtx;
+
+		ushort t_val = 0;
+		ushort f_volts = 0;
+		ushort r_volts = 0;
+
+		// Forward voltage on the bridge
+		f_volts = adc_read_fwd_power();
+		if(f_volts == 0xFFFF)
+			{}//sprintf(buf, "FWD %d.%dV", 0, 0);
+		else
+		{
+			//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
+			printf("%4dmV(fwd) \r\n", f_volts);
+		}
+
+		// Forward voltage on the bridge
+		r_volts = adc_read_ref_power();
+		if(r_volts == 0xFFFF)
+			{}//sprintf(buf, "FWD %d.%dV", 0, 0);
+		else
+		{
+			//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
+			printf("%4dmV(ref) \r\n", r_volts);
+		}
+
+		// ToDo: finish it off...
+
+		GUI_SetColor(GUI_DARKGRAY);
+		GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 37), 2);
+
+		GUI_SetColor(GUI_LIGHTGREEN);
+		GUI_FillRoundedRect((S_METER_X + 10 + 0),  (S_METER_Y + 30),(S_METER_X + (10 + t_val)), (S_METER_Y + 37), 2);
+
+
+		return;
+	}
 
 	// Control ready ?
 	//if((!(sm.init_done)) || (sm.smet_disabled) || (sm.rotary_block))
