@@ -17,7 +17,7 @@
 #define	FIL_BKG_COLOR			GUI_LIGHTBLUE
 
 #define FIL_BTN_X				40
-#define FIL_BTN_SHFT			66
+#define FIL_BTN_SHFT			70
 
 // Exports
 void ui_controls_filter_init(void);

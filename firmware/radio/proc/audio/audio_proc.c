@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "main.h"
 #include "mchf_pro_board.h"
@@ -170,6 +169,10 @@ static void btm_proc_task(void *arg)
 		new_bt_state = HAL_GPIO_ReadPin(BT_CONNECT_STATUS_PORT, BT_CONNECT_STATUS);
 		if(new_bt_state != old_bt_state)
 		{
+			//
+			// ToDo: Send MUTE message to audio task, instead of hardware access here
+			// so we can syncronize manual mute with automatic from BT module!
+			//
 			if(new_bt_state)
 			{
 				printf("== bt connected ==\r\n");
@@ -182,6 +185,9 @@ static void btm_proc_task(void *arg)
 			}
 			old_bt_state = new_bt_state;
 		}
+
+		// Yield execution
+		vTaskDelay(200);
 	}
 }
 

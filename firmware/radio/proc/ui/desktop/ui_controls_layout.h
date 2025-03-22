@@ -42,6 +42,8 @@
 #define S_METER_X					2
 #define S_METER_Y					1
 //
+#define S_METER_MAX					330
+//
 #define S_METER_FRAME_LEFT			1
 #define S_METER_FRAME_RIGHT			0
 #define S_METER_FRAME_TOP			1
@@ -50,8 +52,8 @@
 #define S_METER_FRAME_WIDTH			3
 #define S_METER_FRAME_CURVE			0	// corner radius actually
 
-#define S_METER_SIZE_X 				(349 + S_METER_FRAME_WIDTH)
-#define S_METER_SIZE_Y 				(140 + S_METER_FRAME_WIDTH)
+#define S_METER_SIZE_X 				(S_METER_MAX + 26)
+#define S_METER_SIZE_Y 				100
 //
 // ----------------------------------------------------------------------------
 // Combined waterfall/spectrum scope control
@@ -61,21 +63,21 @@
 #define LCD_WIDTH					854
 //
 #define SW_FRAME_X					0
-#define SW_FRAME_Y					167	//171
+#define SW_FRAME_Y					112
 //
-#define HEADER_Y_SIZE				20
+#define HEADER_Y_SIZE				0
 //
-#define SW_FRAME_WIDTH				0
-#define SW_FRAME_CORNER_R			3
+#define SW_FRAME_WIDTH				2
+#define SW_FRAME_CORNER_R			5
 //
-#define FOOTER_Y_SIZE				16
+#define FOOTER_Y_SIZE				0
 //
 // spectrum only position
 #define SCOPE_X						(SW_FRAME_X + SW_FRAME_WIDTH)
 #define SCOPE_Y						(SW_FRAME_Y + HEADER_Y_SIZE + 2)
 //
 // spectrum only size
-#define SCOPE_X_SIZE				(LCD_WIDTH - 0)	// 850, 796
+#define SCOPE_X_SIZE				(LCD_WIDTH - 4)	// 850, 796
 #define SCOPE_Y_SIZE				112				// ~0x6F
 //
 // waterfall only position
@@ -251,21 +253,21 @@
 // ----------------------------------------------------------------------------
 // CPU Load control
 //
-#define CPU_L_X						357
+#define CPU_L_X						572
 #define CPU_L_Y						33
 //
 // ----------------------------------------------------------------------------
 // DSP alive control
-#define DSP_POS_X					356
-#define DSP_POS_Y					96
+#define DSP_POS_X					300//356
+#define DSP_POS_Y					30//96
 //
 #define DSP_POS_SIZE_X				48
 #define DSP_POS_SIZE_Y				64
 //
 // ----------------------------------------------------------------------------
 // Clock control
-#define CLOCK_X						1
-#define CLOCK_Y						145
+#define CLOCK_X						605
+#define CLOCK_Y						3
 //
 #define CLOCK_SIZE_X				350
 #define CLOCK_SIZE_Y				20
@@ -277,43 +279,39 @@
 //
 // ----------------------------------------------------------------------------
 // Speaker control
-#define SPEAKER_X					682
-#define SPEAKER_Y					37
+#define SPEAKER_X					40
+#define SPEAKER_Y					430
 //
 #define SPEAKER_SIZE_X				62
 #define SPEAKER_SIZE_Y				50
+
+#define RF_GAIN_X					120
+#define RF_GAIN_Y					430
 //
 // ----------------------------------------------------------------------------
 // Filter
-#define FILTER_X					357
-#define FILTER_Y					1
+#define FILTER_X					251
+#define FILTER_Y					425
 //
-#define FILTER_SIZE_X				438 - 15
-#define FILTER_SIZE_Y				24
+#define FILTER_SIZE_X				110
+#define FILTER_SIZE_Y				22
 //
 // ----------------------------------------------------------------------------
 // Battery icon
-#define BATTERY_X					750
-#define BATTERY_Y					32
+#define BATTERY_X					812
+#define BATTERY_Y					40
 //
 #define BATTERY_SIZE_X				30
 #define BATTERY_SIZE_Y				54
 //
 // ----------------------------------------------------------------------------
-// Speaker control
-#define WIFI_X						468
-#define WIFI_Y						32
-//
-#define WIFI_SIZE_X					210
-#define WIFI_SIZE_Y					56
-//
-// ----------------------------------------------------------------------------
 // TX Status control
 //
-#define TX_STAT_X					412 - 55
-#define TX_STAT_Y					53
+#define TX_STAT_X					200
+#define TX_STAT_Y					430
 
-#define TX_STAT_SIZE_Y				34
+#define TX_STAT_SIZE_X				60
+#define TX_STAT_SIZE_Y				56
 //
 // ----------------------------------------------------------------------------
 // Filter

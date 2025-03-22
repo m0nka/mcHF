@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
@@ -21,7 +20,10 @@
 //#include "touch_driver.h"
 //#include "hw\rtc\k_rtc.h"
 //#include "hw\dsp_eep\hw_dsp_eep.h"
-//
+
+#include "radio_init.h"
+#include "ui_actions.h"
+
 #include "gui.h"
 #include "dialog.h"
 
@@ -42,9 +44,8 @@
 #include "cpu_stat\ui_controls_cpu_stat.h"
 #include "dsp_stat\ui_controls_dsp_stat.h"
 #include "sd_icon\ui_controls_sd_icon.h"
-#include "wifi_stat\ui_controls_wifi.h"
 #include "battery\ui_controls_battery.h"
-#include "menu_button\ui_controls_menu_button.h"
+//#include "menu_button\ui_controls_menu_button.h"
 #include "on_screen\on_screen_keyboard.h"
 #include "on_screen\on_screen_audio.h"
 #include "on_screen\on_screen_agc_att.h"
@@ -242,6 +243,7 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 			}
 			#endif
 
+			#if 0
 			// Is it top part of screen (above combined control ?)
 			if(TS_State.y < (SW_FRAME_Y - 5))
 			{
@@ -256,10 +258,10 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 					if(!active_control_shown)
 					{
 						#if 1
-						if(*(uchar *)(EEP_BASE + EEP_KEYER_ON))
-						{
-							ui_controls_keyer_quit();
-						}
+						//if(*(uchar *)(EEP_BASE + EEP_KEYER_ON))
+						//{
+						//	ui_controls_keyer_quit();
+						//}
 
 						ui_s.req_state = MODE_MENU;
 						ui_proc_change_mode();
@@ -280,76 +282,77 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 				WM_DefaultProc(pMsg);
 				break;
 			}
+			#endif
 
 			touch_id = ui_controls_spectrum_is_touch(TS_State.x, TS_State.y);
 			switch(touch_id)
 			{
 				// BMS
-				case 1:
-				{
+				//case 1:
+				//{
 					// ----------------------------------------
-					#ifdef CONTEXT_BMS
+					//#ifdef CONTEXT_BMS
 					// Temp show power dialog
-					if(!active_control_shown)
-					{
-						on_screen_power_init(WM_HBKWIN);
-						active_control_shown = 1;
-					}
-					#endif
+					//if(!active_control_shown)
+					//{
+					//	on_screen_power_init(WM_HBKWIN);
+					//	active_control_shown = 1;
+					//}
+					//#endif
 					// ---------------------------------------
 
-					break;
-				}
+					//break;
+				//}
 
 				// AUDIO
-				case 2:
-				{
-					if(!active_control_shown)
-					{
-						on_screen_audio_init(WM_HBKWIN);
-						active_control_shown = 1;
-					}
-					break;
-				}
+				//case 2:
+				//{
+				//	if(!active_control_shown)
+				//	{
+				//		on_screen_audio_init(WM_HBKWIN);
+				//		active_control_shown = 1;
+				//	}
+				//	break;
+				//}
 
 				// VFO
-				case 3:
-				{
-					printf("ToDo: Show VFO dialog\r\n");
-					break;
-				}
+				//case 3:
+				//{
+				//	printf("ToDo: Show VFO dialog\r\n");
+				//	break;
+				//}
 
 				// KEYBOARD
-				case 4:
-				{
-					if(!active_control_shown)
-					{
-						on_screen_keyboard_init(WM_HBKWIN);
-						active_control_shown = 1;
-					}
-					break;
-				}
+				//case 4:
+				//{
+				//	if(!active_control_shown)
+				//	{
+				//		on_screen_keyboard_init(WM_HBKWIN);
+				//		active_control_shown = 1;
+				//	}
+				//	break;
+				//}
 
 				// AGC/ATT
-				case 5:
-				{
-					if(!active_control_shown)
-					{
-						on_screen_agc_att_init(WM_HBKWIN);
-						active_control_shown = 1;
-					}
-					break;
-				}
+				//case 5:
+				//{
+				//	if(!active_control_shown)
+				//	{
+				//		on_screen_agc_att_init(WM_HBKWIN);
+				//		active_control_shown = 1;
+				//	}
+				//	break;
+				//}
 
 				// CENTER/FIX
-				case 6:
-					ui_actions_change_vfo_mode();
-					break;
+				//case 6:
+				//	ui_actions_change_vfo_mode();
+				//	break;
 
 				// SPAN
-				case 7:
-					ui_actions_change_span();
-					break;
+				//case 7:
+				//	ui_actions_change_span();
+				//	break;
 
 				// Band guide reaction
 				case 8:
@@ -382,15 +385,61 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		// Process key messages not supported by ICON_VIEW control
 		case WM_KEY:
 		{
-			printf("GUI_KEY\r\n");
+			//printf("GUI_KEY\r\n");
 
 			switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
 			{
-		        // Return from menu
+				#if 0
 		        case GUI_KEY_ENTER:
 		        {
-		        	//printf("GUI_KEY_ENTER\r\n");
-		        	//GUI_EndDialog(pMsg->hWin, 0);
+		        	if(((WM_KEY_INFO*)(pMsg->Data.p))->PressedCnt == 0)
+		        	{
+		        		printf("GUI_KEY_ENTER press\r\n");
+		        		break;
+		        	}
+		        	else
+		        		printf("GUI_KEY_ENTER release\r\n");
+		        	break;
+		        }
+				#endif
+
+		        case 'K':
+		        {
+		        	//printf("K release\r\n");
+		        	if(!active_control_shown)
+		        	{
+		        		on_screen_keyboard_init(WM_HBKWIN);
+		        		active_control_shown = 1;
+		        	}
+		        	else
+		        		on_screen_keyboard_quit();
+
+		        	break;
+		        }
+
+		        case 'A':
+		        {
+		        	//printf("A release\r\n");
+					if(!active_control_shown)
+					{
+						on_screen_audio_init(WM_HBKWIN);
+						active_control_shown = 1;
+					}
+					else
+						on_screen_audio_quit();
+		        	break;
+		        }
+
+		        case 'G':
+		        {
+		        	//printf("G release\r\n");
+					if(!active_control_shown)
+					{
+						on_screen_agc_att_init(WM_HBKWIN);
+						active_control_shown = 1;
+					}
+					else
+						on_screen_agc_att_quit();
 		        	break;
 		        }
 
@@ -403,9 +452,9 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        case '7':
 		        	ui_actions_change_band(BAND_MODE_12, 0);
 		        	break;
-		        case '.':
-		        	ui_actions_change_band(BAND_MODE_2200, 0);
-		        	break;
+		        //case '.':
+		        //	ui_actions_change_band(BAND_MODE_2200, 0);
+		        //	break;
 		        case '2':
 		        	ui_actions_change_band(BAND_MODE_80, 0);
 		        	break;
@@ -415,27 +464,68 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        case '8':
 		        	ui_actions_change_band(BAND_MODE_10, 0);
 		        	break;
-		        case '0':
-		        	ui_actions_change_band(BAND_MODE_630, 0);
-		        	break;
+		        //case '0':
+		        //	ui_actions_change_band(BAND_MODE_630, 0);
+		        //	break;
 		        case '3':
 		        	ui_actions_change_band(BAND_MODE_60, 0);
 		        	break;
 		        case '6':
 		        	ui_actions_change_band(BAND_MODE_17, 0);
 		        	break;
-		        case '9':
-		        	ui_actions_change_band(BAND_MODE_GEN, 0);
-		        	break;
-		        case 'C':
-		        	ui_actions_change_span();
-		        	break;
+		        //case '9':
+		        //	ui_actions_change_band(BAND_MODE_GEN, 0);
+		        //	break;
+		        //case 'C':
+		        //	ui_actions_change_span();
+		        //	break;
 		        case 'M':
 		        	ui_actions_change_band(BAND_MODE_40, 0);
 		        	break;
 		        case 'S':
 		        	ui_actions_change_band(BAND_MODE_15, 0);
 		        	break;
+
+		        case '+':
+		        	ui_actions_change_step(1);
+		        	break;
+		        case '-':
+		        	ui_actions_change_step(0);
+		        	break;
+
+				case 'F':
+				{
+					(tsu.band[tsu.curr_band].filter)++;
+					if(tsu.band[tsu.curr_band].filter > AUDIO_WIDE)
+						tsu.band[tsu.curr_band].filter = AUDIO_300HZ;
+
+					ui_actions_change_filter(tsu.band[tsu.curr_band].filter);
+					break;
+				}
+
+				case 'W':
+					ui_actions_change_power_level();
+					break;
+
+				case 'I':
+					ui_actions_change_vfo_mode();
+					break;
+
+				case 'B':
+					ui_actions_change_demod_mode(radio_init_default_mode_from_band());
+					break;
+
+				case 'C':
+					ui_actions_change_demod_mode(DEMOD_CW);
+					break;
+
+				case 'Q':
+					ui_actions_change_demod_mode(DEMOD_AM);
+					break;
+
+				case 'V':
+					ui_actions_change_active_vfo();
+					break;
 
 		        //ToDo: The rest....
 			}
@@ -490,12 +580,11 @@ static void ui_proc_init_desktop(void)
 	ui_controls_frequency_init(WM_HBKWIN);
 	ui_controls_smeter_init();
 	ui_controls_filter_init();
-	ui_controls_cpu_stat_init();
-	ui_controls_dsp_stat_init();
+	//ui_controls_cpu_stat_init();
+	//ui_controls_dsp_stat_init();
 	ui_controls_battery_init();
 	ui_controls_tx_stat_init();
-	ui_controls_menu_button_init();
-	ui_controls_wifi_init();
+	//--ui_controls_menu_button_init();
 
 	#if 0
 	// Return from Menu, when in CW mode and on screen keyer is enabled
@@ -532,6 +621,10 @@ static void ui_proc_change_mode(void)
 	if(ui_s.cur_state == state)
 		return;
 
+	// Don't enter Menu if we have virtual dialog shown
+	if((active_control_shown)&&(ui_s.req_state == MODE_MENU))
+		return;
+
 	// Backlight off
 	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
 
@@ -544,7 +637,6 @@ static void ui_proc_change_mode(void)
 
 			// Destroy desktop controls
 			ui_controls_volume_quit();
-			ui_controls_wifi_quit();
 			ui_controls_clock_quit();
 			ui_controls_spectrum_quit();
 			ui_controls_frequency_quit();
@@ -750,11 +842,10 @@ static void ui_proc_periodic(void)
 	ui_controls_clock_refresh();
 
 	//--ui_controls_volume_refresh();
-	ui_controls_cpu_stat_refresh();
-	ui_controls_dsp_stat_refresh();
+	//ui_controls_cpu_stat_refresh();
+	//ui_controls_dsp_stat_refresh();
 	ui_controls_battery_refresh();
 	ui_controls_filter_refresh();
-	ui_controls_wifi_refresh();
 	ui_controls_tx_stat_refresh();
 
 	//--on_screen_keyboard_refresh();	// will not allow transparent dialog with moving background
@@ -875,7 +966,7 @@ ui_proc_loop:
 				cntr_id = 1;
 				WM_InvalidateWindow(WM_HBKWIN);
 				#else
-				ui_controls_frequency_refresh(0);
+//!				ui_controls_frequency_refresh(0);
 				#endif
 
 				break;
@@ -907,7 +998,7 @@ ui_proc_loop:
 
 		// test
 		//WM_InvalidateWindow(WM_HBKWIN);
-		GUI_Delay(UI_PROC_SLEEP_TIME);
+		GUI_Delay(UI_REFRESH_100HZ);
 		GUI_Exec();
 	}
 	#endif

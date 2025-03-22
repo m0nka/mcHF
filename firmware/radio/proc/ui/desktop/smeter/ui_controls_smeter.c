@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include <math.h>
 
@@ -17,6 +16,7 @@
 #include "mchf_pro_board.h"
 #include "version.h"
 #include "mchf_icc_def.h"
+#include "adc.h"
 
 #ifdef CONTEXT_VIDEO
 
@@ -228,7 +228,7 @@ static void ui_controls_draw_needle(void * p)
 		#endif
 
 		// Recover Clock control
-		ui_controls_clock_restore();
+		//--ui_controls_clock_restore();
 
 		#if 0
 		// Debug only
@@ -398,6 +398,7 @@ static void ui_controls_smeter_set_needle(uchar pos)
 //*----------------------------------------------------------------------------
 void ui_controls_smeter_init(void)
 {
+#if 0
 	PARAM       Param;      // Parameters for drawing routine
 	int         Cnt;
 	int         tDiff = 0;
@@ -437,6 +438,40 @@ void ui_controls_smeter_init(void)
 
 	// Debug
 	sm.repaints = 0;
+#endif
+
+	GUI_SetColor(GUI_WHITE);
+
+	// Frame
+	#if 0
+	GUI_DrawRoundedFrame(	S_METER_X,
+							S_METER_Y,
+							(S_METER_X + S_METER_SIZE_X),
+							(S_METER_Y + S_METER_SIZE_Y),
+							5,
+							SW_FRAME_WIDTH
+						);
+	#endif
+
+	GUI_SetColor(GUI_DARKGRAY);
+
+	// Top/Bottom background
+	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 37), 2);
+	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 60),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 67), 2);
+
+	GUI_SetColor(GUI_LIGHTGREEN);
+
+	// Top/Bottom active part
+	//GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 30),(S_METER_X + 10), (S_METER_Y + 37), 2);
+	//GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 60),(S_METER_X + 10), (S_METER_Y + 67), 2);
+
+	GUI_SetColor(GUI_LIGHTGRAY);
+	GUI_SetFont(&GUI_Font8x16_1);
+
+	//if(tsu.rxtx)
+	//	GUI_DispStringAt("1   3   5   7   9",S_METER_X + 20, S_METER_Y + 10);
+	//else
+	GUI_DispStringAt("1   3   5   7   9",S_METER_X + 20, S_METER_Y + 10);
 
 	// Ready to refresh
 	sm.init_done = 1;
@@ -451,10 +486,10 @@ void ui_controls_smeter_init(void)
 //*----------------------------------------------------------------------------
 void ui_controls_smeter_quit(void)
 {
-	#ifndef USE_SPRITE
-	GUI_MEMDEV_DeleteAuto(&AutoDev);
-	GUI_ClearRect(0, 70, 319, 239);
-	#endif
+	//#ifndef USE_SPRITE
+	//GUI_MEMDEV_DeleteAuto(&AutoDev);
+	//GUI_ClearRect(0, 70, 319, 239);
+	//#endif
 
 	sm.init_done = 0;
 }
@@ -479,7 +514,7 @@ void ui_controls_smeter_touch(void)
 
 	//smet_disabled = !smet_disabled;
 	//use_bmp = !use_bmp;
-	sm.is_peak = !(sm.is_peak);
+	//sm.is_peak = !(sm.is_peak);
 }
 
 //*----------------------------------------------------------------------------
@@ -491,15 +526,86 @@ void ui_controls_smeter_touch(void)
 //*----------------------------------------------------------------------------
 void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 {
-	ushort 		i,curr,diff,step,some_val,expanded,bandw,centre_freq,aver,peak;
-	uchar		is_up;
+	ushort 		i,curr;//,diff,step,some_val,expanded,bandw,centre_freq,aver,peak;
+	//uchar		is_up;
 
-	// Control ready ?
-	if((!(sm.init_done)) || (sm.smet_disabled) || (sm.rotary_block))
+	static uchar loc_tx_state = 10;
+
+	// Handle TX
+	if(loc_tx_state != tsu.rxtx)
 	{
-		ui_controls_smeter_block_on();
+		GUI_SetColor(GUI_BLACK);
+
+		// Clear top text line
+		GUI_FillRect((S_METER_X + 10), (S_METER_Y + 10),(S_METER_X + 340), (S_METER_Y + 24));
+
+		// Clear top text line
+		GUI_FillRect((S_METER_X + 10), (S_METER_Y + 75),(S_METER_X + 340), (S_METER_Y + 89));
+
+		GUI_SetColor(GUI_LIGHTGRAY);
+		GUI_SetFont(&GUI_Font8x16_1);
+
+		if(tsu.rxtx)
+		{
+			GUI_DispStringAt("P  1   2   5       10         15   20   W", S_METER_X + 12, S_METER_Y + 10);
+		}
+		else
+		{
+			GUI_DispStringAt("S  1   3   5   7   9   +20   +40  +60  dB", S_METER_X + 12, S_METER_Y + 10);
+			GUI_SetColor(GUI_DARKGRAY);
+		}
+
+		GUI_DispStringAt("SWR 1  3   5       10         30         ", S_METER_X + 12, S_METER_Y + 75);
+
+		if(loc_tx_state == 10)
+			loc_tx_state = tsu.rxtx;
+		else
+			loc_tx_state = tsu.rxtx;
+
+		if(tsu.rxtx)
+		{
+			ushort t_val = 0;
+			ushort f_volts = 0;
+			ushort r_volts = 0;
+
+			// Forward voltage on the bridge
+			f_volts = adc_read_fwd_power();
+			if(f_volts == 0xFFFF)
+				{}//sprintf(buf, "FWD %d.%dV", 0, 0);
+			else
+			{
+				//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
+				printf("%4dmV(fwd) \r\n", f_volts);
+			}
+
+			// Forward voltage on the bridge
+			r_volts = adc_read_ref_power();
+			if(r_volts == 0xFFFF)
+			{}//sprintf(buf, "FWD %d.%dV", 0, 0);
+			else
+			{
+				//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
+				printf("%4dmV(ref) \r\n", r_volts);
+			}
+
+			// ToDo: finish it off...
+
+			GUI_SetColor(GUI_DARKGRAY);
+			GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 37), 2);
+
+			GUI_SetColor(GUI_LIGHTGREEN);
+			GUI_FillRoundedRect((S_METER_X + 10 + 0),  (S_METER_Y + 30),(S_METER_X + (10 + t_val)), (S_METER_Y + 37), 2);
+		}
+
 		return;
 	}
+
+	// Control ready ?
+	//if((!(sm.init_done)) || (sm.smet_disabled) || (sm.rotary_block))
+	//{
+	//	ui_controls_smeter_block_on();
+	//	return;
+	//}
 
 	#ifdef USE_SIDE_ENC_FOR_S_METER
 	if(s_met_pos != s_met_pos_loc)
@@ -511,7 +617,7 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 	#endif
 
 	// Debug
-	sm.repaints = 0;
+	//sm.repaints = 0;
 
 	#if 0
 	// Already calculated by spectrum repaint routines
@@ -551,6 +657,17 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 		return;
 	#endif
 
+	ushort s_val = curr * 10;
+	//ushort s_sta = (curr * 10) - 20;	// moving dot
+	ushort s_sta = 0;					// progress bar
+
+	GUI_SetColor(GUI_DARKGRAY);
+	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 37), 2);
+
+	GUI_SetColor(GUI_LIGHTGREEN);
+	GUI_FillRoundedRect((S_METER_X + 10 + s_sta),  (S_METER_Y + 30),(S_METER_X + (10 + s_val)), (S_METER_Y + 37), 2);
+
+
 	#if 0
 	// old and nearby values
 	if(
@@ -569,7 +686,7 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 
 	// Remove noise floor
 	//if(curr < 25) curr = 0;
-
+#if 0
 	// Expand scale
 	expanded = curr*SMETER_EXPAND_VALUE;
 
@@ -603,10 +720,10 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 	printf("repaints = %d\r\n",repaints);
 	printf("now loop...\r\n");
 	#endif
-
+#endif
 	#if 1
 	// Repaint direct
-	ui_controls_smeter_draw_via_rotate(expanded);
+	//ui_controls_smeter_draw_via_rotate(expanded);
 	#else
 	// Repaint in steps
 	for(i = 0; i < diff; i += step)

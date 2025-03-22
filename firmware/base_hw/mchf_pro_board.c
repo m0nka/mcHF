@@ -283,6 +283,24 @@ void SystemClock_Config(void)
 	HAL_EnableCompensationCell();
 }
 
+void PeriphCommonClock_Config(void)
+{
+	LL_RCC_PLL2P_Enable();
+	LL_RCC_PLL2_SetVCOInputRange(LL_RCC_PLLINPUTRANGE_8_16);
+	LL_RCC_PLL2_SetVCOOutputRange(LL_RCC_PLLVCORANGE_MEDIUM);
+	LL_RCC_PLL2_SetM(2);
+	LL_RCC_PLL2_SetN(12);
+	LL_RCC_PLL2_SetP(2);
+	LL_RCC_PLL2_SetQ(2);
+	LL_RCC_PLL2_SetR(2);
+	LL_RCC_PLL2_Enable();
+
+	// Wait till PLL is ready
+	while(LL_RCC_PLL2_IsReady() != 1)
+	{
+	}
+}
+
 #if 0
 /**
   * @brief  System Clock Configuration

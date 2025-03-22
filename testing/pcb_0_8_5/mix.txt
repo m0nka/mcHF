@@ -1,0 +1,6 @@
+- J2MIX footprint needs extended pads for easier hand soldering
+- mark Q2 as DNI on the schematics
+- R15 needs to be 100Ohm
+- RFC3 connected to wrong NET(needs to go to mixer/pa only, not main 5V supply)
+- optional high side switch for the RX power rail
+- add damping resistors on the attenuator data lines

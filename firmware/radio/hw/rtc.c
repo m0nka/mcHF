@@ -1,24 +1,18 @@
-/**
-  ******************************************************************************
-  * @file    k_rtc.c
-  * @author  MCD Application Team
-  * @brief   This file provides the kernel rtc functions 
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
-  *
-  ******************************************************************************
-  */
+/************************************************************************************
+**                                                                                 **
+**                             mcHF Pro QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                                                                 **
+**---------------------------------------------------------------------------------**
+**                                                                                 **
+**  File name:                                                                     **
+**  Description:                                                                   **
+**  Last Modified:                                                                 **
+**  Licence:               GNU GPLv3                                               **
+************************************************************************************/
+#include "main.h"
 
-/* Includes ------------------------------------------------------------------*/
-#include "k_rtc.h"
+#include "rtc.h"
 
 /* External variables --------------------------------------------------------*/
 static k_AlarmCallback AlarmCallback;
@@ -77,9 +71,9 @@ void check_date_sanity(void)
 	k_GetTime(&stimestructureget);
 	k_GetDate(&sdatestructureget);
 
-	if(sdatestructureget.Year < 21)
+	if(sdatestructureget.Year < 25)
 	{
-		sdatestructureget.Year = 21;		// Can't be travelling back in time, can we ?
+		sdatestructureget.Year = 25;		// Can't be travelling back in time, can we ?
 	}
 	else if(sdatestructureget.Year > 31)
 		sdatestructureget.Year = 31;		// Am i still alive to update this code, yay! Open the JD!

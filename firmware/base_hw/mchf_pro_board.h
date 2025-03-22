@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2021                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:                                                                       **
 ************************************************************************************/
 #ifndef __MCHF_PRO_BOARD_H
 #define __MCHF_PRO_BOARD_H
@@ -82,6 +81,7 @@
 //
 #define		UI_REFRESH_25HZ			(1000/25)
 #define		UI_REFRESH_60HZ			(1000/60)
+#define		UI_REFRESH_100HZ		(1000/100)
 
 //#define 	LCD_LANE_CLK			62500
 #define 	LCD_LANE_CLK			58750				// 58750
@@ -519,6 +519,7 @@ void 	mchf_pro_board_sensitive_hw_init(void);
 
 void 	SystemClockChange_Handler(void);
 void 	SystemClock_Config(void);
+void 	PeriphCommonClock_Config(void);
 void 	MPU_Config(void);
 void 	CPU_CACHE_Enable(void);
 
@@ -529,6 +530,6 @@ void 	printf_init(uchar is_shared);
 void 	print_hex_array(uchar *pArray, ushort aSize);
 
 // bsp.c
-void power_off(void);
+void bsp_power_off(void);
 void power_off_a(void);
 #endif

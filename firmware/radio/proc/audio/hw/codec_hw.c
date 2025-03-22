@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "main.h"
 #include "mchf_pro_board.h"
@@ -361,7 +360,7 @@ static void codec_hw_set_sampling_rate(void)
 	{
 		codec_hw_update_register(CS4245_MCLK_FREQ, false, 0x44);
 	}
-	printf("sampling rate set to: %d Hz\r\n", ts.samp_rate);
+	//printf("sampling rate set to: %d Hz\r\n", ts.samp_rate);
 }
 
 void codec_hw_set_audio_route(uchar route_id)
@@ -485,6 +484,14 @@ void codec_hw_init(void)
 	// Keep in reset
 	HAL_GPIO_WritePin(CODEC_RESET_PORT, CODEC_RESET, GPIO_PIN_RESET);
 
+	// BT Power Control
+	gpio_init_structure.Pin   = RFM_DIO2;
+	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	HAL_GPIO_Init(RFM_DIO2_PORT, &gpio_init_structure);
+
+	// Power off
+	HAL_GPIO_WritePin(RFM_DIO2_PORT, RFM_DIO2, GPIO_PIN_SET);
+
 	// 5V on is PG10 - done in bsp.c
 	//gpio_init_structure.Pin   = GPIO_PIN_10;
 	//HAL_GPIO_Init(GPIOG, &gpio_init_structure);
@@ -561,7 +568,7 @@ void codec_task_init(void)
 		printf("i2c init err 2!\r\n");
 		return;
 	}
-	printf("chip id: %02x, chip rev: %02x\r\n", val & CS4245_CHIP_PART_MASK, val & CS4245_CHIP_REV_MASK);
+	//printf("chip id: %02x, chip rev: %02x\r\n", val & CS4245_CHIP_PART_MASK, val & CS4245_CHIP_REV_MASK);
 
 	// Debug
 	//--codec_hw_show_registers("cs4245 registers on reset \r\n");

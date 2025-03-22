@@ -97,14 +97,19 @@
 			<locationURI>PARENT-2-PROJECT_LOC/config/stm32h7xx_hal_conf.h</locationURI>
 		</link>
 		<link>
+			<name>hw/adc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/adc.c</locationURI>
+		</link>
+		<link>
+			<name>hw/att.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/att.c</locationURI>
+		</link>
+		<link>
 			<name>hw/bsp.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/hw/bsp.c</locationURI>
-		</link>
-		<link>
-			<name>hw/bsp.h</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/bsp.h</locationURI>
 		</link>
 		<link>
 			<name>hw/is42s32800j.c</name>
@@ -112,24 +117,9 @@
 			<locationURI>PARENT-2-PROJECT_LOC/hw/is42s32800j.c</locationURI>
 		</link>
 		<link>
-			<name>hw/k_rtc.c</name>
+			<name>hw/rtc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/k_rtc.c</locationURI>
-		</link>
-		<link>
-			<name>hw/k_rtc.h</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Projects/STM32H747I-DISCO/Demonstrations/STemWin/Core/Inc/k_rtc.h</locationURI>
-		</link>
-		<link>
-			<name>hw/main.h</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/main.h</locationURI>
-		</link>
-		<link>
-			<name>hw/sd_diskio.h</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/sd_diskio.h</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/rtc.c</locationURI>
 		</link>
 		<link>
 			<name>hw/sd_diskio_dma.c</name>
@@ -165,11 +155,6 @@
 			<name>hw/storage.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/hw/storage.c</locationURI>
-		</link>
-		<link>
-			<name>hw/storage.h</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/storage.h</locationURI>
 		</link>
 		<link>
 			<name>startup/startup_stm32h747xx_CM7.s</name>
@@ -597,6 +582,16 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ipc/ipc_proc.c</locationURI>
 		</link>
 		<link>
+			<name>proc/keypad/keypad_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/keypad/keypad_proc.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/lora_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/lora/lora_proc.c</locationURI>
+		</link>
+		<link>
 			<name>proc/pwm/pwm_proc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/pwm/pwm_proc.c</locationURI>
@@ -797,6 +792,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ipc/hw/prog_uart.c</locationURI>
 		</link>
 		<link>
+			<name>proc/lora/hw/lora_spi.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/lora/hw/lora_spi.c</locationURI>
+		</link>
+		<link>
 			<name>proc/touch/hw/calibration.h</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/touch/hw/calibration.h</locationURI>
@@ -872,6 +872,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/ui_menu_module.h</locationURI>
 		</link>
 		<link>
+			<name>proc/ui/ui_lib/ui_cool_progress.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/ui_lib/ui_cool_progress.c</locationURI>
+		</link>
+		<link>
 			<name>proc/ui/ui_state/ui_lora_state.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/ui_state/ui_lora_state.c</locationURI>
@@ -942,16 +947,6 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/keyer/ui_controls_keyer.c</locationURI>
 		</link>
 		<link>
-			<name>proc/ui/desktop/menu_button/settings_menu.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/menu_button/settings_menu.c</locationURI>
-		</link>
-		<link>
-			<name>proc/ui/desktop/menu_button/ui_controls_menu_button.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/menu_button/ui_controls_menu_button.c</locationURI>
-		</link>
-		<link>
 			<name>proc/ui/desktop/on_screen/on_screen_agc_att.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_agc_att.c</locationURI>
@@ -1017,19 +1012,9 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/tx_status/ui_controls_tx_stat.c</locationURI>
 		</link>
 		<link>
-			<name>proc/ui/desktop/volume/techrubio.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/volume/techrubio.c</locationURI>
-		</link>
-		<link>
 			<name>proc/ui/desktop/volume/ui_controls_volume.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/volume/ui_controls_volume.c</locationURI>
-		</link>
-		<link>
-			<name>proc/ui/desktop/wifi_stat/ui_controls_wifi.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/wifi_stat/ui_controls_wifi.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/driver/mipi/otm8009a.c</name>

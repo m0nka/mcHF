@@ -41,6 +41,8 @@ extern struct 	UI_LORA_STATE 			uls;
 //*----------------------------------------------------------------------------
 void ui_controls_wifi_init(void)
 {
+	return;
+
 	// State on start
 	loc_esp32_status = 0;
 	loc_wifi_on      = 0;
@@ -53,6 +55,9 @@ void ui_controls_wifi_init(void)
 	GUI_SetColor(GUI_WHITE);
 	GUI_DrawRect(WIFI_X, WIFI_Y, WIFI_X + WIFI_SIZE_X, WIFI_Y + WIFI_SIZE_Y);
 	GUI_DrawRect(WIFI_X + 1, WIFI_Y + 1, WIFI_X + WIFI_SIZE_X - 1, WIFI_Y + WIFI_SIZE_Y - 1);
+
+	//return;
+
 
 	// Control separators
 	GUI_SetColor(GUI_WHITE);
@@ -171,6 +176,8 @@ void ui_controls_wifi_touch(void)
 //*----------------------------------------------------------------------------
 void ui_controls_wifi_refresh(void)
 {
+	return;
+
 	// Update co-processor status
 	if(loc_esp32_status != tsu.esp32_alive)
 	{

@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
@@ -18,6 +17,9 @@
 
 #include "on_screen_audio.h"
 #include "ui_actions.h"
+
+#include "spectrum/ui_controls_spectrum.h"
+#include "ui_proc.h"
 
 #include "radio_init.h"
 #include "codec_hw.h"
@@ -37,9 +39,10 @@
 #define GUI_ID_BTN4 			  	(GUI_ID_USER + 0x57)
 #define GUI_ID_BTN5 			  	(GUI_ID_USER + 0x58)
 #define GUI_ID_BTN6 			  	(GUI_ID_USER + 0x59)
+#define GUI_ID_BTN7 			  	(GUI_ID_USER + 0x60)
 
-#define AUD_X						130
-#define AUD_Y						203
+#define AUD_X						254
+#define AUD_Y						138
 
 #define AUD_SIZE_X				 	595
 #define AUD_SIZE_Y					250
@@ -80,6 +83,7 @@ static const GUI_WIDGET_CREATE_INFO AudDialog[] =
 	{ BUTTON_CreateIndirect, 	"2.3kHz",		GUI_ID_BTN4,		220, 	200, 	60, 		40,				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"3.6kHz",		GUI_ID_BTN5,		290, 	200, 	60, 		40,				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"10kHz",		GUI_ID_BTN6,		360, 	200, 	60, 		40,				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"BT",			GUI_ID_BTN7,		360, 	155, 	60, 		40,				0, 		0x0, 	0 },
 };
 
 // Public radio state
@@ -274,6 +278,15 @@ static void AU_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 		{
 			if(NCode == WM_NOTIFICATION_RELEASED)
 				ui_actions_change_filter(AUDIO_WIDE);
+
+			on_screen_audio_default_focus(pMsg);
+			break;
+		}
+
+		case GUI_ID_BTN7:
+		{
+			if(NCode == WM_NOTIFICATION_RELEASED)
+				HAL_GPIO_TogglePin(RFM_DIO2_PORT, RFM_DIO2);
 
 			on_screen_audio_default_focus(pMsg);
 			break;
@@ -498,9 +511,9 @@ uchar on_screen_audio_init(WM_HWIN hParent)
 
 void on_screen_audio_quit(void)
 {
+	WM_HideWindow(hAudDialog);
 	GUI_EndDialog(hAudDialog, 0);
 	hAudDialog = 0;
-	//WM_HideWindow(hAudDialog);
 }
 
 void on_screen_audio_refresh(void)

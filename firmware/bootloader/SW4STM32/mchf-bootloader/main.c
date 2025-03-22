@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
@@ -607,7 +606,7 @@ static void jump_to_fw(uint32_t SubDemoAddress)
 	SCB_DisableDCache();
 	SCB_CleanInvalidateDCache();
 
-	HAL_Delay(50);
+	//HAL_Delay(50);
 
 	//printf("reset\r\n");
 	HAL_NVIC_SystemReset();
@@ -818,12 +817,12 @@ void bare_lcd_init(void)
 	//draw_atlas_ui();
 
 	// Right side info bar
-	//lcd_low_DrawRect(1, 345, 479, 134, lcd_low_COLOR_WHITE);							// rect outline
+	lcd_low_DrawRect(1, 345, 479, 134, lcd_low_COLOR_WHITE);							// rect outline
 	//
 	//lcd_low_SetBackColor(lcd_low_COLOR_WHITE);
-	//lcd_low_SetTextColor(lcd_low_COLOR_BLACK);
-	//lcd_low_DisplayStringAt(LINE(0) + 1, 335, (uint8_t *)"boot version", LEFT_MODE);	// label
-	//lcd_low_DisplayStringAt(LINE(2) + 1, 335, (uint8_t *)"coop version", LEFT_MODE);	// label
+	lcd_low_SetTextColor(lcd_low_COLOR_BLACK);
+	lcd_low_DisplayStringAt(LINE(0) + 1, 335, (uint8_t *)"boot version", LEFT_MODE);	// label
+	lcd_low_DisplayStringAt(LINE(2) + 1, 335, (uint8_t *)"coop version", LEFT_MODE);	// label
 }
 
 #if 0
@@ -1101,10 +1100,6 @@ dsp_upd_clean_up:
 #endif
 
 #if 0
-HAL_StatusTypeDef HAL_CRCEx_Polynomial_Set(CRC_HandleTypeDef *hcrc, uint32_t Pol, uint32_t PolyLength)
-{
-	return HAL_OK;
-}
 #endif
 
 
@@ -1404,7 +1399,7 @@ void gpio_clocks_on(void)
 void boot_process(void)
 {
 	char 	buff[200];
-	int 	line = 10;
+	int 	line = 1;
 
 	// Init LCD
     bare_lcd_init();
@@ -1417,20 +1412,24 @@ void boot_process(void)
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	sprintf(buff, "%s", DEVICE_STRING);
-//!	lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)buff, LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)buff, LEFT_MODE);
 	line += 2;
 	sprintf(buff, "%d.%d.%d.%d", MCHF_L_VER_MAJOR, MCHF_L_VER_MINOR, MCHF_L_VER_RELEASE, MCHF_L_VER_BUILD);
-//|!	lcd_low_DisplayStringAt(LINE(1) + 1, 350, (uint8_t *)buff, LEFT_MODE);	// label
+	lcd_low_DisplayStringAt(LINE(1) + 1, 350, (uint8_t *)buff, LEFT_MODE);	// label
 
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	// Test for general boot error (clocks, lcd, etc)
-//!	lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing BOOT err...", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing BOOT err...", LEFT_MODE);
 
 	if(gen_boot_reason_err == 0)
+	{
+		//HAL_Delay(500);
 		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing BOOT err...PASS", LEFT_MODE);
+	}
 	else
 	{
+		HAL_Delay(500);
 		sprintf(buff, "Update Firmware....FAIL(%d)", gen_boot_reason_err);
 		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)buff, LEFT_MODE);
 	}
@@ -1476,10 +1475,13 @@ void boot_process(void)
 
 	if(sdram_test() != 0)
 	{
+		HAL_Delay(500);
 		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SDRAM......FAIL.", LEFT_MODE);
+		goto stall;
 	}
 	else
 	{
+		//HAL_Delay(500);
 		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SDRAM......PASS", LEFT_MODE);
 	}
 	line++;
@@ -1491,18 +1493,24 @@ void boot_process(void)
 
 	if(test_sd_card() == 0)
 	{
+		//HAL_Delay(500);
 		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SD Card....PASS", LEFT_MODE);
 		line++;
 
 		if(reset_reason == RESET_UPDATE_FW)
 		{
+			//HAL_Delay(500);
 			lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Update Firmware....", LEFT_MODE);
 
 			uchar res = update_radio();
 			if(res == 0)
+			{
+				//HAL_Delay(500);
 				lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Update Firmware....PASS", LEFT_MODE);
+			}
 			else
 			{
+				//HAL_Delay(500);
 				sprintf(buff, "Update Firmware....FAIL(%d)", res);
 				lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)buff, LEFT_MODE);
 			}
@@ -1527,6 +1535,7 @@ void boot_process(void)
 	}
 	else
 	{
+		//HAL_Delay(500);
 		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SD Card....FAIL", LEFT_MODE);
 		line++;
 	}
@@ -1538,15 +1547,18 @@ void boot_process(void)
 
 	if(is_firmware_valid() == 0)
 	{
+		//HAL_Delay(500);
 		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing Firmware...PASS", LEFT_MODE);
 		line++;
 
-		//HAL_Delay(1000);
+		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Booting to radio...", LEFT_MODE);
+		//HAL_Delay(2000);
 
 		// Jump
 		jump_to_fw(RADIO_FIRM_ADDR);
 	}
 
+	HAL_Delay(500);
 	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing Firmware...FAIL", LEFT_MODE);
 	line++;
 
@@ -1561,7 +1573,8 @@ void boot_process(void)
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	// Stall, and power off eventually
-	#if 0
+stall:
+
 	ulong pc = 0;
 	while(1)
 	{
@@ -1578,7 +1591,6 @@ void boot_process(void)
 			power_off_x(0);
 		}
 	}
-	#endif
 }
 
 int main(void)

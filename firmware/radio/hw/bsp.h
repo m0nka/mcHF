@@ -40,7 +40,8 @@
 /* Exported functions ------------------------------------------------------- */
  void LCD_LL_Reset(void);
  void bsp_gpio_clocks_on(void);
- uint8_t BSP_Config(void);
+
+uchar bsp_config(void);
 uint8_t BSP_SuspendCPU2( void );
 uint8_t BSP_ResumeCPU2( void );
 uint8_t BSP_TouchUpdate(void);
@@ -50,6 +51,7 @@ int BSP_FlashProgram(WM_HWIN hItem, FIL * pResFile, uint32_t Address);
 int BSP_FlashUpdate(uint32_t Address, uint8_t *pData, uint32_t Size);
 
 void bsp_hold_power(void);
+
 
 #ifdef __cplusplus
 }

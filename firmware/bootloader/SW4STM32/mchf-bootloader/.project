@@ -72,6 +72,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/startup_stm32h747xx_CM7.s</locationURI>
 		</link>
 		<link>
+			<name>startup/syscalls.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/syscalls.c</locationURI>
+		</link>
+		<link>
 			<name>startup/system_stm32h7xx_dualcore_bootcm7_cm4gated.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/system_stm32h7xx_dualcore_bootcm7_cm4gated.c</locationURI>

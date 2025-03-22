@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "mchf_pro_board.h"
 
@@ -70,7 +69,7 @@ WM_HTIMER 						hTimerSpec;
 GUI_MEMDEV_Handle hMemSpWf = 0;
 #endif
 
-const ulong waterfall_blue[65] =
+const ulong waterfall_blue[64] =
 {
     0x00002e,
     0x020231,
@@ -135,7 +134,7 @@ const ulong waterfall_blue[65] =
     0x9ba7f5,
     0x9ddaf8,
     0xa0dffb,
-    0xa3e5ff,
+    //0xa3e5ff,
     0xffffff
 };
 
@@ -168,6 +167,30 @@ uchar 		loc_vfo_mode;
 
 uchar 	api_conv_type 	= 1;						// smooth waterfall
 uchar 	sw_light		= 1;						// simplified scope (less resources)
+
+// -------------------------------
+//
+// Use a spare RAM region as backup
+// for quick waterfall restore
+// we don't save waterfall values, but
+// rather compressed pointer indexes
+// to brightness table
+//
+//
+#define USE_WF_BACKUP_BUFFER
+//
+#ifdef USE_WF_BACKUP_BUFFER
+//
+// Around (WATERFALL_Y_SIZE * WATERFALL_X_SIZE) bytes(reserved 140k), as 790kB used by GUIConf.c as emWin heap!
+// Note: Using the #defines as count result in smaller buffer(compiler bug)
+//
+#define WF_BKP_SIZE			136850
+//
+__attribute__((section(".STemWinMemPool"))) __attribute__ ((aligned (32))) uchar wf_bkp[WF_BKP_SIZE];
+uchar wf_init = 0;
+#endif
+//
+// -------------------------------
 
 static ushort chk_x(ushort x)
 {
@@ -383,7 +406,7 @@ static void ui_controls_spectrum_show_band_strip(void)
 		Rect.y0 = SCOPE_Y;
 		Rect.y1 = SCOPE_Y + SCOPE_Y_SIZE;
 		GUI_SetClipRect(&Rect);
-		GUI_SetColor(GUI_LIGHTBLUE);	//0xd99100
+		GUI_SetColor(GUI_LIGHTGRAY);	//0xd99100
 		GUI_SetAlpha(88);		// Alpha is inverted!!!
 		GUI_FillRoundedRect((SW_FRAME_X + SW_FRAME_WIDTH) + 4, SCOPE_Y, (SW_FRAME_X + SW_FRAME_WIDTH) + SCOPE_X_SIZE, SCOPE_Y + SCOPE_Y_SIZE, 4);
 		GUI_SetClipRect(NULL);
@@ -478,7 +501,7 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 				);
 
 	// Draw horizontal grid lines
-	#if 1
+	#if 0
 	GUI_SetColor(GUI_DARKGRAY);
 	for (i = 0; i < 7; i++)
 		GUI_DrawHLine(((SCOPE_Y + SCOPE_Y_SIZE - 2) - (i * 16)),(sb.x + SW_FRAME_WIDTH),(sb.x + SW_FRAME_X_SIZE - 2));
@@ -486,7 +509,7 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 	#endif
 
 	// Draw vertical grid lines
-	#if 1
+	#if 0
 	GUI_SetColor(GUI_DARKGRAY);
 	for (i = 0; i < 7; i++)
 	    GUI_DrawVLine((43 + i*128), SCOPE_Y, (SCOPE_Y + SCOPE_Y_SIZE - 2));
@@ -509,8 +532,8 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 		// Alpha is inverted!!!
 		#if 1
 		// Print vertical line for each point, transparent, to fill the spectrum
-		GUI_SetColor(GUI_LIGHTGREEN);
-		GUI_SetAlpha(88);
+		GUI_SetColor(GUI_WHITE);
+		GUI_SetAlpha(128);
 		GUI_DrawVLine(new_x, new_y, chk_y(SCOPE_Y + SCOPE_Y_SIZE));
 		GUI_SetAlpha(255);
 		#endif
@@ -576,35 +599,69 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 //*----------------------------------------------------------------------------
 static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 {
-	ulong 		i,j,m;
-	ulong		val;
-	ulong 		y_copy_sz = 1;	// only one line at a time seems to only work (driver LCD_Copy problem maybe)
+	ulong 		i, j, m, val;
 
-	#if 1
-	// Move down - MIPI AdaptedCommand mode only
-	for (i = WATERFALL_Y_SIZE; i > 0; i -= y_copy_sz)
-		GUI_CopyRect((SW_FRAME_X + SW_FRAME_WIDTH),WATERFALL_Y-y_copy_sz+i,(SW_FRAME_X + SW_FRAME_WIDTH),WATERFALL_Y+i,WATERFALL_X_SIZE,y_copy_sz);
+	// Initial fill(from backup table)
+	#ifdef USE_WF_BACKUP_BUFFER
+	if(cb == NULL)
+	{
+		m = 0;
+		for (j = 0; j < WATERFALL_Y_SIZE; j++)
+		{
+			for (i = 0; i < WATERFALL_X_SIZE; i++)
+			{
+				val = wf_bkp[m++] & 0x3F;
+				GUI_SetColor ((0xFF << 24) | waterfall_blue[val]);	// add Alpha value
+				GUI_DrawPixel(((SW_FRAME_X + SW_FRAME_WIDTH) + i), WATERFALL_Y + j);
+			}
+		}
+		return;
+	}
 	#endif
 
-	#if 0	// ToDo: fix this!
+	#if 0
+	// Move down - single line
+	for (i = WATERFALL_Y_SIZE; i > 0; i -= 1)
+	{
+		GUI_CopyRect(SW_FRAME_X + SW_FRAME_WIDTH,
+					 WATERFALL_Y - 1 + i,
+					 SW_FRAME_X + SW_FRAME_WIDTH,
+					 WATERFALL_Y + i,
+					 WATERFALL_X_SIZE,
+					 1);
+	}
+	#else
 	// -----------------------------------------------------------------------------------------------------------
-	// Move waterfall down
-	// Our screen is swapped (LCD_LL_CopyRect() in lcd.c reflects that), that is why weird x and y positions!
-	//
-	GUI_CopyRect(	((SW_FRAME_X + SW_FRAME_WIDTH) + WATERFALL_X_SIZE +  0),		// Upper left X-position of the source rectangle.
-					(WATERFALL_Y + WATERFALL_Y_SIZE +  0),		// Upper left Y-position of the source rectangle.
-					((SW_FRAME_X + SW_FRAME_WIDTH) + WATERFALL_X_SIZE +  0),		// Upper left X-position of the destination rectangle.
-					(WATERFALL_Y + WATERFALL_Y_SIZE +  1),		// Upper left Y-position of the destination rectangle.
-					(WATERFALL_X_SIZE				+  4),		// X-size of the rectangle.
-					(WATERFALL_Y_SIZE				+  0)		// Y-size of the rectangle.
-				);
+	// Move waterfall down - rect copy
+	GUI_CopyRect(SW_FRAME_X + SW_FRAME_WIDTH,	// Upper left X-position of the source rectangle.
+				 WATERFALL_Y,					// Upper left Y-position of the source rectangle.
+				 SW_FRAME_X + SW_FRAME_WIDTH,	// Upper left X-position of the destination rectangle.
+				 WATERFALL_Y + 1,				// Upper left Y-position of the destination rectangle.
+				 WATERFALL_X_SIZE,				// X-size of the rectangle.
+				 WATERFALL_Y_SIZE - 1);			// Y-size of the rectangle.
+
 	#endif
 
-	// Update current line
+	// Move backup memory
+	#ifdef USE_WF_BACKUP_BUFFER
+	for(int i = 0; i < (WATERFALL_Y_SIZE - 1); i++)
+	{
+		memcpy( wf_bkp + ((WATERFALL_Y_SIZE - i - 1)*WATERFALL_X_SIZE),
+				wf_bkp + ((WATERFALL_Y_SIZE - i - 2)*WATERFALL_X_SIZE),
+				WATERFALL_X_SIZE);
+	}
+	#endif
+
+	// Update top line
 	for (i = 0; i < WATERFALL_X_SIZE; i++)
 	{
 		val  = ui_sw.fft_value[i];
 		val &= 0x3F;
+
+		// Save line
+		#ifdef USE_WF_BACKUP_BUFFER
+		wf_bkp[i] = val;
+		#endif
 
 		// ToDo: Fix gradient table addressing
 		GUI_SetColor ((0xFF << 24) | waterfall_blue[val]);	// add Alpha value
@@ -669,7 +726,7 @@ static void ui_controls_update_smooth_control(uchar init)
 //
 static void ui_controls_update_vfo_mode(bool is_init)
 {
-#if 1
+#if 0
 	// Skip needless repaint
 	if((!is_init) && (loc_vfo_mode == tsu.band[tsu.curr_band].fixed_mode))
 		return;
@@ -708,6 +765,8 @@ static void ui_controls_update_vfo_mode(bool is_init)
 
 void ui_controls_update_span(void)
 {
+	return;
+
 	ui_controls_create_header_big();
 	ui_controls_create_bottom_bar();
 }
@@ -723,6 +782,7 @@ static void ui_spectrum_create_span(void)
 
 static void ui_controls_create_header_big(void)
 {
+#if 0
 	// Left part
 	GUI_DrawGradientH(	(sb.x + SW_FRAME_WIDTH),
 						(sb.y + 2),
@@ -740,21 +800,24 @@ static void ui_controls_create_header_big(void)
 						GUI_GRAY,
 						GUI_DARKGRAY
 						);
+#endif
 
+#if 1
 	// Common labels colour and font
 	GUI_SetFont(&GUI_Font20B_ASCII);
 	GUI_SetColor(GUI_WHITE);
 
-	GUI_SetAlpha(160);
-	GUI_DispStringAt("BMS",		(sb.x + 18),	(sb.y + 2));						// BMS label
-	GUI_DispStringAt("AUDIO",	(sb.x + 140),	(sb.y + 2));						// AUDIO label
-	GUI_DispStringAt("VFO",		(sb.x + 283),	(sb.y + 2));						// VFO label
-	GUI_DispStringAt("KEYBOARD",((sb.x + SW_FRAME_X_SIZE - 2)/2 - 50),(sb.y + 2));	// KEYBOARD label
-	GUI_DispStringAt("AGC/ATT",	((sb.x + SW_FRAME_X_SIZE - 2)/2 + 90),(sb.y + 2));	// AGC/ATT label
+	GUI_SetAlpha(30);
+	//GUI_DispStringAt("BMS",		(sb.x + 18),	(sb.y + 2));						// BMS label
+	//GUI_DispStringAt("AUDIO",	(sb.x + 140),	(sb.y + 2));						// AUDIO label
+	//GUI_DispStringAt("VFO",		(sb.x + 283),	(sb.y + 2));						// VFO label
+	//GUI_DispStringAt("KEYBOARD",((sb.x + SW_FRAME_X_SIZE - 2)/2 - 50),(sb.y + 2));	// KEYBOARD label
+	//GUI_DispStringAt("AGC/ATT",	((sb.x + SW_FRAME_X_SIZE - 2)/2 + 90),(sb.y + 2));	// AGC/ATT label
 	GUI_SetAlpha(255);
+#endif
 
-	ui_controls_update_vfo_mode(true);												// CENTER/FIX
-	ui_spectrum_create_span();														// Span  control
+	//ui_controls_update_vfo_mode(true);												// CENTER/FIX
+	//ui_spectrum_create_span();														// Span  control
 
 }
 
@@ -765,66 +828,66 @@ int ui_controls_spectrum_is_touch(int x, int y)
 
 	//-------------------------------------------
 	// BMS position
-	bar_x = (sb.x + 18);
-	bar_y = (sb.y +  2);
+	//bar_x = (sb.x + 18);
+	//bar_y = (sb.y +  2);
 
 	// Is BMS label touched ?
-	if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-		return 1;
+	//if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	//	return 1;
 
 	//-------------------------------------------
 	// AUDIO position
-	bar_x = (sb.x + 135);
-	bar_y = (sb.y +  2);
+	//bar_x = (sb.x + 135);
+	//bar_y = (sb.y +  2);
 
 	// Is AUDIO label touched ?
-	if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-		return 2;
+	//if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	//	return 2;
 
 	//-------------------------------------------
 	// VFO position
-	bar_x = (sb.x + 283);
-	bar_y = (sb.y +  2);
+	//bar_x = (sb.x + 283);
+	//bar_y = (sb.y +  2);
 
 	// Is VFO label touched ?
-	if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-		return 3;
+	//if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	//	return 3;
 
 	//-------------------------------------------
 	// KEYBOARD position
-	bar_x = (sb.x + SW_FRAME_X_SIZE - 2)/2 - 50;
-	bar_y = (sb.y + 2);
+	//bar_x = (sb.x + SW_FRAME_X_SIZE - 2)/2 - 50;
+	//bar_y = (sb.y + 2);
 
 	// Is KEYBOARD label touched ?
-	if((x > bar_x) && (x < (bar_x + 120)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-		return 4;
+	//if((x > bar_x) && (x < (bar_x + 120)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	//	return 4;
 
 	//-------------------------------------------
 	// AGC/ATT position
-	bar_x = (sb.x + SW_FRAME_X_SIZE - 2)/2 + 90;
-	bar_y = (sb.y + 2);
+	//bar_x = (sb.x + SW_FRAME_X_SIZE - 2)/2 + 90;
+	//bar_y = (sb.y + 2);
 
 	// Is AGC/ATT label touched ?
-	if((x > bar_x) && (x < (bar_x + 120)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-		return 5;
+	//if((x > bar_x) && (x < (bar_x + 120)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	//	return 5;
 
 	//-------------------------------------------
 	// Center/Fix position
-	bar_x = CENTER_X;
-	bar_y = CENTER_Y;
+	//bar_x = CENTER_X;
+	//bar_y = CENTER_Y;
 
 	// Is VFO label touched ?
-	if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-		return 6;
+	//if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	//	return 6;
 
 	//-------------------------------------------
 	// SPAN position
-	bar_x = SPAN_X + 55;
-	bar_y = SPAN_Y;
+	//bar_x = SPAN_X + 55;
+	//bar_y = SPAN_Y;
 
 	// Is VFO label touched ?
-	if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-		return 7;
+	//if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	//	return 7;
 
 	// Band guide labels touchable only if visible
 	if(ui_s.show_band_guide)
@@ -898,21 +961,28 @@ static void ui_controls_create_sw_big(void)
 	GUI_MEMDEV_Select(0);
 	#endif
 
-	// Draw orange frame/lines
-	GUI_SetColor(GUI_ORANGE);
-	#if 0
+	// Draw frame/lines
+	GUI_SetColor(HOT_PINK);
+	#if 1
 	GUI_DrawRoundedFrame(	sb.x,
 							sb.y,
 							(sb.x + SW_FRAME_X_SIZE),
 							(sb.y + SW_FRAME_Y_SIZE),
-							3,	//SW_FRAME_CORNER_R,
+							SW_FRAME_CORNER_R,
 							SW_FRAME_WIDTH
 						);
 	#else
-	GUI_DrawHLine((sb.y + 0), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
-	GUI_DrawHLine((sb.y + 1), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
-	//GUI_DrawHLine((sb.y + 3 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
-	//GUI_DrawHLine((sb.y + 4 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
+	// Top
+	GUI_DrawHLine((sb.y + 21), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_DrawHLine((sb.y + 22), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
+	// Bottom
+	GUI_DrawHLine((sb.y - 14 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_DrawHLine((sb.y - 13 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_SetAlpha(128);
+	GUI_DrawHLine((sb.y - 12 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_SetAlpha(88);
+	GUI_DrawHLine((sb.y - 11 + SW_FRAME_Y_SIZE), sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_SetAlpha(255);
 	#endif
 
 	// Draw header
@@ -969,8 +1039,12 @@ static void ui_controls_create_bottom_bar(void)
 {
 	int i,j,x0,y0,FontSizeY;
 
+
+	return;
+
+
 	// Bottom divider below waterfall
-	GUI_SetColor(GUI_DARKGRAY);
+	GUI_SetColor(GUI_BLACK);
 	//GUI_DrawHLine((WATERFALL_Y + WATERFALL_Y_SIZE), ((SW_FRAME_X + SW_FRAME_WIDTH) + SW_FRAME_WIDTH),((SW_FRAME_X + SW_FRAME_WIDTH) + WATERFALL_X_SIZE - SW_FRAME_WIDTH));
 	GUI_FillRect((SW_FRAME_X + SW_FRAME_WIDTH),
 				 (WATERFALL_Y + WATERFALL_Y_SIZE),
@@ -979,7 +1053,7 @@ static void ui_controls_create_bottom_bar(void)
 
 	// Bottom Frequency Span markers
 	GUI_SetFont(&GUI_Font8x16_1);
-	GUI_SetColor(GUI_ORANGE);
+	GUI_SetColor(GUI_GRAY);
 	FontSizeY = GUI_GetFontSizeY();
 
 	int sm;
@@ -1169,6 +1243,19 @@ void ui_controls_spectrum_refresh(FAST_REFRESH *cb)
 //*----------------------------------------------------------------------------
 void ui_controls_spectrum_init(WM_HWIN hParent)
 {
+	int i;
+
+	// Backup table init
+	#ifdef USE_WF_BACKUP_BUFFER
+	if(!wf_init)
+	{
+		for (i = 0; i < sizeof(wf_bkp); i++)
+			wf_bkp[i] = 0;
+
+		wf_init = 1;
+	}
+	#endif
+
 	#ifdef SPEC_USE_WM
 	hSpectrumDialog = GUI_CreateDialogBox(SpectrumDialog, GUI_COUNTOF(SpectrumDialog), WDHandler, hParent, sb.x, sb.y);
 	#ifdef USE_MEM_DEVICE

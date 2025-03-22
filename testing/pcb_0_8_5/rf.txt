@@ -12,3 +12,5 @@
 - RFC4 under heatsink not optimal! Also touches speaker terminal pad(needs new location!)
 - USB connector body not connected to GND
 - R13e needs to be 10k(not 1k)
+- add cutout for paddle connector access
+- FWD and REV are swapped

@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
@@ -18,6 +17,7 @@
 
 #include "gui.h"
 #include "dialog.h"
+#include "ui_cool_progress.h"
 
 #include "desktop\ui_controls_layout.h"
 #include "radio_init.h"
@@ -73,7 +73,8 @@ static void ui_controls_repaint_state(void)
 
 	// Clear AGC gain part of control
 	GUI_SetColor(GUI_WHITE);
-	GUI_FillRoundedRect((AGC_X + 43),(AGC_Y + 2),(AGC_X + 100),(AGC_Y + 17),2);
+	GUI_FillRoundedRect((AGC_X + 43),(AGC_Y + 2),(AGC_X + 100),(AGC_Y + 19), 2);
+
 	GUI_SetColor(GUI_GRAY);
 	GUI_SetFont(&GUI_Font20_1);
 
@@ -81,32 +82,62 @@ static void ui_controls_repaint_state(void)
 	switch(tsu.agc_mode)
 	{
 		case AGC_SLOW:
-			GUI_DispStringAt("SLOW",	(AGC_X + 45),(AGC_Y + 0));
+			GUI_DispStringAt("SLOW",	(AGC_X + 45),(AGC_Y + 2));
 			break;
 		case AGC_MED:
-			GUI_DispStringAt("MED",		(AGC_X + 54),(AGC_Y + 0));
+			GUI_DispStringAt("MED",		(AGC_X + 54),(AGC_Y + 2));
 			break;
 		case AGC_FAST:
-			GUI_DispStringAt("FAST",	(AGC_X + 50),(AGC_Y + 0));
+			GUI_DispStringAt("FAST",	(AGC_X + 50),(AGC_Y + 2));
 			break;
 		case AGC_CUSTOM:
-			GUI_DispStringAt("CUST",	(AGC_X + 47),(AGC_Y + 0));
+			GUI_DispStringAt("CUST",	(AGC_X + 47),(AGC_Y + 2));
 			break;
 		case AGC_OFF:
-			GUI_DispStringAt("OFF",		(AGC_X + 55),(AGC_Y + 0));
+			GUI_DispStringAt("OFF",		(AGC_X + 55),(AGC_Y + 2));
 			break;
 		default:
 			break;
 	}
 
-	sprintf(buff,"%2d",tsu.rf_gain);
 
-	// Clean area first ?
-	// ...
+	// Clear ATT part of control
+	GUI_SetColor(GUI_BLACK);
+	GUI_FillRoundedRect((AGC_X + 140), (AGC_Y + 2), (AGC_X + 185), (AGC_Y + 19), 2);
 
-	// Display RF gain
 	GUI_SetColor(GUI_WHITE);
-	GUI_DispStringAt(buff,(AGC_X + 105),(AGC_Y + 0));
+	GUI_DispStringAt("ATT", (AGC_X + 103), (AGC_Y + 2));
+
+	// RF attenuator value
+	switch(tsu.band[tsu.curr_band].atten)
+	{
+		case ATTEN_0DB:
+			GUI_SetColor(GUI_GRAY);
+			GUI_DispStringAt("OFF ", (AGC_X + 145), (AGC_Y + 2));
+			break;
+		case ATTEN_4DB:
+			GUI_SetColor(GUI_WHITE);
+			GUI_DispStringAt("4dB ", (AGC_X + 147), (AGC_Y + 2));
+			break;
+		case ATTEN_8DB:
+			GUI_SetColor(GUI_WHITE);
+			GUI_DispStringAt("8dB ", (AGC_X + 147), (AGC_Y + 2));
+			break;
+		case ATTEN_16DB:
+			GUI_SetColor(GUI_RED);
+			GUI_DispStringAt("16dB", (AGC_X + 142), (AGC_Y + 2));
+			break;
+		case ATTEN_32DB:
+			GUI_SetColor(GUI_RED);
+			GUI_DispStringAt("32dB", (AGC_X + 142), (AGC_Y + 2));
+			break;
+		default:
+			break;
+	}
+
+	// Display RF gain, as cool progress bar
+	sprintf(buff,"%2d",tsu.rf_gain);
+	ui_cool_progress_gain(RF_GAIN_X, RF_GAIN_Y, tsu.rf_gain, buff);
 }
 
 //*----------------------------------------------------------------------------
@@ -121,10 +152,10 @@ void ui_controls_agc_init(void)
 {
 	// Create control
 	GUI_SetColor(GUI_GRAY);
-	GUI_FillRoundedRect((AGC_X + 0),(AGC_Y + 0),(AGC_X + 128),(AGC_Y + 19),2);
+	GUI_FillRoundedRect((AGC_X + 0), (AGC_Y + 0), (AGC_X + 190), (AGC_Y + 21), 2);
 	GUI_SetFont(&GUI_Font20_1);
 	GUI_SetColor(GUI_WHITE);
-	GUI_DispStringAt("AGC",(AGC_X + 2),(AGC_Y + 0));
+	GUI_DispStringAt("AGC",(AGC_X + 2),(AGC_Y + 2));
 
 	// Initial paint
 	ui_controls_repaint_state();
@@ -141,7 +172,7 @@ static void ui_controls_demod_change_screen_demod_mode(uchar on_init)
 	}
 
 	GUI_SetColor(GUI_BLUE);
-	GUI_FillRoundedRect((DECODER_MODE_X + 2),(DECODER_MODE_Y + 2),(DECODER_MODE_X + 50),(DECODER_MODE_Y + 18),2);
+	GUI_FillRoundedRect((DECODER_MODE_X + 2),(DECODER_MODE_Y + 2),(DECODER_MODE_X + DEC_MODE_X_SZ),(DECODER_MODE_Y + 20), 2);
 
 	GUI_SetColor(GUI_WHITE);
 	GUI_SetFont(&GUI_Font20_1);
@@ -149,26 +180,26 @@ static void ui_controls_demod_change_screen_demod_mode(uchar on_init)
 	switch(demod)
 	{
 		case DEMOD_USB:
-			GUI_DispStringAt("USB",(DECODER_MODE_X + 8),(DECODER_MODE_Y + 1));
+			GUI_DispStringAt("USB",(DECODER_MODE_X + 18),(DECODER_MODE_Y + 3));
 			break;
 		case DEMOD_LSB:
-			GUI_DispStringAt("LSB",(DECODER_MODE_X + 10),(DECODER_MODE_Y + 1));
+			GUI_DispStringAt("LSB",(DECODER_MODE_X + 20),(DECODER_MODE_Y + 3));
 			break;
 		case DEMOD_CW:
 		{
 			if(tsu.keyer_mode == CW_MODE_IAM_B)
-				GUI_DispStringAt("CWb",(DECODER_MODE_X + 8),(DECODER_MODE_Y + 1));
+				GUI_DispStringAt("CWb",(DECODER_MODE_X + 18),(DECODER_MODE_Y + 3));
 			else if(tsu.keyer_mode == CW_MODE_IAM_A)
-				GUI_DispStringAt("CWa",(DECODER_MODE_X + 8),(DECODER_MODE_Y + 1));
+				GUI_DispStringAt("CWa",(DECODER_MODE_X + 18),(DECODER_MODE_Y + 3));
 			else
-				GUI_DispStringAt("CWs",(DECODER_MODE_X + 8),(DECODER_MODE_Y + 1));
+				GUI_DispStringAt("CWs",(DECODER_MODE_X + 18),(DECODER_MODE_Y + 3));
 			break;
 		}
 		case DEMOD_AM:
-			GUI_DispStringAt("AM",(DECODER_MODE_X + 14),(DECODER_MODE_Y + 1));
+			GUI_DispStringAt("AM",(DECODER_MODE_X + 24),(DECODER_MODE_Y + 3));
 			break;
 		case DEMOD_FM:
-			GUI_DispStringAt("FM",(DECODER_MODE_X + 14),(DECODER_MODE_Y + 1));
+			GUI_DispStringAt("FM",(DECODER_MODE_X + 24),(DECODER_MODE_Y + 3));
 			break;
 		//case DEMOD_DIGI:	- no point really, as we are going to repaint entirely different Desktop
 		//	GUI_DispStringAt("FT8",(DECODER_MODE_X + 10),(DECODER_MODE_Y + 1));
@@ -191,10 +222,10 @@ static void ui_controls_demod_change_screen_demod_mode(uchar on_init)
 void ui_controls_demod_init(void)
 {
 	GUI_SetColor(GUI_GRAY);
-	GUI_DrawRoundedRect((DECODER_MODE_X + 0),(DECODER_MODE_Y + 0),(DECODER_MODE_X + 52),(DECODER_MODE_Y + 20),2);
-	GUI_DrawRoundedRect((DECODER_MODE_X + 1),(DECODER_MODE_Y + 1),(DECODER_MODE_X + 51),(DECODER_MODE_Y + 19),2);
+	GUI_DrawRoundedRect((DECODER_MODE_X + 0),(DECODER_MODE_Y + 0),(DECODER_MODE_X + DEC_MODE_X_SZ + 2),(DECODER_MODE_Y + 24),2);
+	GUI_DrawRoundedRect((DECODER_MODE_X + 1),(DECODER_MODE_Y + 1),(DECODER_MODE_X + DEC_MODE_X_SZ + 1),(DECODER_MODE_Y + 23),2);
 	GUI_SetColor(GUI_BLUE);
-	GUI_FillRoundedRect((DECODER_MODE_X + 2),(DECODER_MODE_Y + 2),(DECODER_MODE_X + 50),(DECODER_MODE_Y + 18),2);
+	GUI_FillRoundedRect((DECODER_MODE_X + 2),(DECODER_MODE_Y + 2),(DECODER_MODE_X + DEC_MODE_X_SZ),(DECODER_MODE_Y + 22),2);
 	GUI_SetColor(GUI_WHITE);
 	GUI_SetFont(&GUI_Font20_1);
 
@@ -536,9 +567,9 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		GUI_SetColor(GUI_BLACK);
 		GUI_FillRect((M_FREQ_X + 1 + (FREQ_FONT_SIZE_X * 0)),(M_FREQ_Y + 5),(M_FREQ_X + FREQ_FONT_SIZE_X + 1 + (FREQ_FONT_SIZE_X * 0)),(M_FREQ_Y + 5 + FREQ_FONT_SIZE_Y));
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
-			GUI_SetColor(GUI_WHITE);
+			GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 		else
-			GUI_SetColor(GUI_GRAY);
+			GUI_SetColor(GUI_WHITE);
 		// To string
 		digit[0] = 0x30 + (d_100mhz & 0x0F);
 		// Update segment
@@ -559,7 +590,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_10MHZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -590,7 +621,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_1MHZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -615,7 +646,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_100KHZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -640,7 +671,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_10KHZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -668,7 +699,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_1KHZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -693,7 +724,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_100HZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -718,7 +749,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_10HZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -743,7 +774,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
 			if(tsu.band[tsu.curr_band].step == T_STEP_1HZ)
-				GUI_SetColor(GUI_LIGHTGRAY);
+				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
 		}
@@ -1091,7 +1122,8 @@ static void ui_controls_frequency_vfo_a_initial_paint(uchar is_init)
 	else
 		GUI_SetColor(GUI_GRAY);
 	GUI_SetFont(&GUI_Font20B_1);
-	GUI_DispStringAt("VFO A",(M_FREQ_X + FREQ_FONT_SIZE_X*4 + 5),(M_FREQ_Y - 27));
+	GUI_DispStringAt("VFO A",(M_FREQ_X + FREQ_FONT_SIZE_X*9 + 7),(M_FREQ_Y - 20));
+	//GUI_DispStringAt("VFO A", 255, 60);
 
 	// Digits colour
 	GUI_SetFont(FREQ_FONT);
@@ -1107,8 +1139,8 @@ static void ui_controls_frequency_vfo_a_initial_paint(uchar is_init)
 		GUI_DispStringAt("___.___.___",(M_FREQ_X + 1),(M_FREQ_Y + 5));
 
 	// Update frequency, but only if not active
-	if(tsu.band[tsu.curr_band].active_vfo == VFO_B)
-		ui_controls_frequency_update_vfo_a(tsu.band[tsu.curr_band].vfo_a);
+//	if(tsu.band[tsu.curr_band].active_vfo == VFO_B)
+//		ui_controls_frequency_update_vfo_a(tsu.band[tsu.curr_band].vfo_a);
 }
 
 //*----------------------------------------------------------------------------
@@ -1139,12 +1171,12 @@ static void ui_controls_frequency_vfo_b_initial_paint(uchar is_init)
 
 	// Frame
 	GUI_SetColor(GUI_GRAY);
-	GUI_FillRoundedRect((M_FREQ1_X + 46),(M_FREQ1_Y + 0),(M_FREQ1_X + 170),(M_FREQ1_Y + 24),2);
+	GUI_FillRoundedRect((M_FREQ1_X + 46),(M_FREQ1_Y + 0),(M_FREQ1_X + M_FREQ1_X_SZ),(M_FREQ1_Y + 24),2);
 	if(tsu.band[tsu.curr_band].active_vfo == VFO_B)
 		GUI_SetColor(GUI_WHITE);
 	else
 		GUI_SetColor(GUI_LIGHTGRAY);
-	GUI_DrawRoundedRect((M_FREQ1_X + 0),(M_FREQ1_Y + 0),(M_FREQ1_X + 170),(M_FREQ1_Y + 24),2);
+	GUI_DrawRoundedRect((M_FREQ1_X + 0),(M_FREQ1_Y + 0),(M_FREQ1_X + M_FREQ1_X_SZ),(M_FREQ1_Y + 24),2);
 
 	// Leading text background
 	if(tsu.band[tsu.curr_band].active_vfo == VFO_B)
@@ -1382,8 +1414,9 @@ WM_HWIN ui_controls_frequency_init(WM_HWIN hParent)
 	return hFreqDialog;
 	#else
 	ui_controls_frequency_create();
-	return NULL;
 	#endif
+
+	return 0;
 }
 
 void ui_controls_frequency_quit(void)

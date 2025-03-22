@@ -1,7 +1,7 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
@@ -12,9 +12,10 @@
 **                  4. DSP core is awaken by M7 process                            **
 **                     == any offset mismatch here will crash the core             **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:        GNU GPLv3                                                      **
+**                                                                                 **
 ************************************************************************************/
+
 #if 0
   .syntax unified
   .cpu cortex-m7

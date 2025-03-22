@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "main.h"
 #include "mchf_pro_board.h"
@@ -518,7 +517,7 @@ static void _cbSettingsControl(WM_MESSAGE * pMsg, int Id, int NCode)
 					printf("...power off\r\n");
 					vTaskDelay(300);
 
-					power_off();
+					bsp_power_off();
 					break;
 				}
 			}

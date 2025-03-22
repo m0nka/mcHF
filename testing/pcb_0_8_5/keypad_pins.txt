@@ -1,0 +1,16 @@
+X1 - pd3
+X2 - pd7
+X3 - pg12, M28
+X4 - pg13, M29
+X5 - pb5
+X6 - pi8
+
+Y1 - pd6, M12
+Y2 - pg9, M33
+Y3 - pg14
+Y4 - pi11
+-------------------------
+swap M12/M29 (Y1 and X4)
+swap M33/M28 (Y2 and X3)
+so can dedicate EXTI15_10_IRQHandler for
+the keyboard driver

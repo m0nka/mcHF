@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
@@ -47,12 +46,12 @@ static void ui_controls_filter_select(void)
 	GUI_SetColor(GUI_WHITE);
 
 	// De-selected filters text
-	GUI_DispStringAt("300Hz",  (FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*0), (FILTER_Y + 3));
-	GUI_DispStringAt("500Hz",  (FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*1), (FILTER_Y + 3));
-	GUI_DispStringAt("1.8kHz", (FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*2), (FILTER_Y + 3));
-	GUI_DispStringAt("2.3kHz", (FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*3), (FILTER_Y + 3));
-	GUI_DispStringAt("3.6kHz", (FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*4), (FILTER_Y + 3));
-	GUI_DispStringAt("10kHz",  (FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*5), (FILTER_Y + 3));
+	//GUI_DispStringAt("300Hz",  (FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*0), (FILTER_Y + 3));
+	//GUI_DispStringAt("500Hz",  (FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*1), (FILTER_Y + 3));
+	//GUI_DispStringAt("1.8kHz", (FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*2), (FILTER_Y + 3));
+	//GUI_DispStringAt("2.3kHz", (FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*3), (FILTER_Y + 3));
+	//GUI_DispStringAt("3.6kHz", (FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*4), (FILTER_Y + 3));
+	//GUI_DispStringAt("10kHz",  (FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*5), (FILTER_Y + 3));
 
 	//printf("dsp filter: %d\r\n",tsu.dsp_filter);
 
@@ -61,49 +60,53 @@ static void ui_controls_filter_select(void)
 	{
 		case AUDIO_300HZ:
 			GUI_SetColor(GUI_WHITE);
-			GUI_FillRect((FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*0 - 2),FILTER_Y,(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*1 - 13),(FILTER_Y + FILTER_SIZE_Y));
+			GUI_FillRect((FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*0 - 2),FILTER_Y,(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*1 - 8),(FILTER_Y + FILTER_SIZE_Y));
 			GUI_SetColor(GUI_LIGHTBLUE);
 			GUI_DispStringAt("300Hz",(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*0), (FILTER_Y + 3));
 			break;
 
 		case AUDIO_500HZ:
 			GUI_SetColor(GUI_WHITE);
-			GUI_FillRect((FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*1 - 2),FILTER_Y,(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*2 - 13),(FILTER_Y + FILTER_SIZE_Y));
+			GUI_FillRect((FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*0 - 2),FILTER_Y,(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*1 - 8),(FILTER_Y + FILTER_SIZE_Y));
 			GUI_SetColor(GUI_LIGHTBLUE);
-			GUI_DispStringAt("500Hz",(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*1), (FILTER_Y + 3));
+			GUI_DispStringAt("500Hz",(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*0), (FILTER_Y + 3));
 			break;
 
 		case AUDIO_1P8KHZ:
 			GUI_SetColor(GUI_WHITE);
-			GUI_FillRect((FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*2 - 2),FILTER_Y,(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*3 - 8),(FILTER_Y + FILTER_SIZE_Y));
+			GUI_FillRect((FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*0 - 2),FILTER_Y,(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*1 - 8),(FILTER_Y + FILTER_SIZE_Y));
 			GUI_SetColor(GUI_LIGHTBLUE);
-			GUI_DispStringAt("1.8kHz",(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*2), (FILTER_Y + 3));
+			GUI_DispStringAt("1.8kHz",(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*0), (FILTER_Y + 3));
 			break;
 
 		case AUDIO_2P3KHZ:
 			GUI_SetColor(GUI_WHITE);
-			GUI_FillRect((FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*3 - 2),FILTER_Y,(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*4 - 8),(FILTER_Y + FILTER_SIZE_Y));
+			GUI_FillRect((FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*0 - 2),FILTER_Y,(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*1 - 8),(FILTER_Y + FILTER_SIZE_Y));
 			GUI_SetColor(GUI_LIGHTBLUE);
-			GUI_DispStringAt("2.3kHz",(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*3), (FILTER_Y + 3));
+			GUI_DispStringAt("2.3kHz",(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*0), (FILTER_Y + 3));
 			break;
 
 		case AUDIO_3P6KHZ:
 			GUI_SetColor(GUI_WHITE);
-			GUI_FillRect((FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*4 - 2),FILTER_Y,(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*5 - 8),(FILTER_Y + FILTER_SIZE_Y));
+			GUI_FillRect((FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*0 - 2),FILTER_Y,(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*1 - 8),(FILTER_Y + FILTER_SIZE_Y));
 			GUI_SetColor(GUI_LIGHTBLUE);
-			GUI_DispStringAt("3.6kHz",(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*4), (FILTER_Y + 3));
+			GUI_DispStringAt("3.6kHz",(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*0), (FILTER_Y + 3));
 			break;
 
 		case AUDIO_WIDE:
 			GUI_SetColor(GUI_WHITE);
-			GUI_FillRect((FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*5 - 2),FILTER_Y,(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*6 - 13),(FILTER_Y + FILTER_SIZE_Y));
+			GUI_FillRect((FILTER_X + FIL_BTN_X + FIL_BTN_SHFT* 0- 2),FILTER_Y,(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*1 - 8),(FILTER_Y + FILTER_SIZE_Y));
 			GUI_SetColor(GUI_LIGHTBLUE);
-			GUI_DispStringAt("10kHz",(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*5), (FILTER_Y + 3));
+			GUI_DispStringAt("10kHz",(FILTER_X + FIL_BTN_X + FIL_BTN_SHFT*0), (FILTER_Y + 3));
 			break;
 
 		default:
 			break;
 	}
+
+	// Repaint frame - temp fix here, need to fix _init() call!
+	GUI_SetColor(FIL_BKG_COLOR);
+	GUI_DrawRoundedRect(FILTER_X,FILTER_Y,(FILTER_X + FILTER_SIZE_X),(FILTER_Y + FILTER_SIZE_Y),2);
 
 	// Save state
 	loc_filter = filter;
@@ -126,9 +129,9 @@ void ui_controls_filter_init(void)
 	// Fill full control
 	GUI_SetColor(FIL_BKG_COLOR);
 	GUI_FillRoundedRect(FILTER_X,FILTER_Y,(FILTER_X + FILTER_SIZE_X),(FILTER_Y + FILTER_SIZE_Y),2);
-	GUI_SetColor(GUI_WHITE);
 
 	// White frame
+	GUI_SetColor(GUI_WHITE);
 	GUI_DrawRoundedRect(FILTER_X,FILTER_Y,(FILTER_X + FILTER_SIZE_X),(FILTER_Y + FILTER_SIZE_Y),2);
 	GUI_DrawRoundedRect(FILTER_X - 1,FILTER_Y - 1,(FILTER_X + FILTER_SIZE_X + 1),(FILTER_Y + FILTER_SIZE_Y + 1),2);
 

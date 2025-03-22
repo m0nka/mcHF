@@ -1,18 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA 2012-2020                      **
-**                            mail: djchrismarc@gmail.com                          **
-**                                 twitter: @bph_co                                **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
 **  Licence:                                                                       **
-**          The mcHF project is released for radio amateurs experimentation,       **
-**          non-commercial use only. All source files under GPL-3.0, unless        **
-**          third party drivers specifies otherwise. Thank you!                    **
 ************************************************************************************/
 #ifndef __VFO_PROC_H
 #define __VFO_PROC_H

@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2021                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:                                                                       **
 ************************************************************************************/
 #ifndef __MCHF_ICC_DEF_H
 #define __MCHF_ICC_DEF_H
@@ -188,9 +187,10 @@ enum	{
 
 enum	{
 	ATTEN_0DB = 0,
-	ATTEN_6DB,
-	ATTEN_12DB,
-	ATTEN_18DB,
+	ATTEN_4DB,
+	ATTEN_8DB,
+	ATTEN_16DB,
+	ATTEN_32DB,
 	ATTEN_MAX,
 };
 

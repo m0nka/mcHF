@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 
 #include "mchf_pro_board.h"
@@ -17,9 +16,11 @@
 
 #include "version.h"
 #include "radio_init.h"
-#include "k_rtc.h"
+#include "rtc.h"
 
 #include "bsp.h"
+#include "adc.h"
+#include "att.h"
 #include "WM.h"
 
 #include "ipc_proc.h"
@@ -32,6 +33,8 @@
 #include "vfo_proc.h"
 #include "band_proc.h"
 #include "trx_proc.h"
+#include "keypad_proc.h"
+#include "lora_proc.h"
 
 #if configAPPLICATION_ALLOCATED_HEAP == 1
 __attribute__((section("heap_mem"))) uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
@@ -53,6 +56,8 @@ TaskHandle_t 							hVfoTask	= NULL;
 TaskHandle_t 							hAudioTask	= NULL;
 TaskHandle_t 							hBandTask	= NULL;
 TaskHandle_t 							hTrxTask	= NULL;
+TaskHandle_t 							hKbdTask	= NULL;
+TaskHandle_t 							hLraTask	= NULL;
 
 QueueHandle_t 							hEspMessage;
 
@@ -102,6 +107,142 @@ void SysTick_Handler(void)
 {
 	osSystickHandler();
 }
+
+#ifdef CONTEXT_TOUCH
+//*----------------------------------------------------------------------------
+//* Function Name       : EXTI9_5_IRQHandler
+//* Object              :
+//* Notes    			: Handle touch events
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void EXTI9_5_IRQHandler(void)
+{
+	if (__HAL_GPIO_EXTI_GET_IT(TS_INT_PIN) != 0x00U)
+	{
+	    touch_proc_irq();
+	    __HAL_GPIO_EXTI_CLEAR_IT(TS_INT_PIN);
+	}
+}
+#endif
+
+#ifdef CONTEXT_KEYPAD
+//*----------------------------------------------------------------------------
+//* Function Name       : EXTI15_10_IRQHandler
+//* Object              :
+//* Notes    			: Handle keyboard events
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void EXTI15_10_IRQHandler(void)
+{
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_11) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_11);
+		keypad_proc_irq(4);
+	}
+	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_12) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_12);
+		keypad_proc_irq(2);
+	}
+	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_13) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_13);
+		keypad_proc_irq(1);
+	}
+	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
+		keypad_proc_irq(3);
+	}
+}
+#endif
+
+#ifdef LL_ADC_USE_IRQ
+void ADC3_IRQHandler(void)
+{
+	if(LL_ADC_IsActiveFlag_EOC(ADC3) != 0)
+	{
+		LL_ADC_ClearFlag_EOC(ADC3);
+		adc_callback();
+	}
+
+	if(LL_ADC_IsActiveFlag_EOSMP(ADC3) != 0)
+	{
+
+		LL_ADC_ClearFlag_EOSMP(ADC3);
+		adc_callback();
+	}
+
+	if(LL_ADC_IsActiveFlag_OVR(ADC3) != 0)
+	{
+		LL_ADC_ClearFlag_OVR(ADC3);
+		adc_callback();
+	}
+}
+#endif
+
+#ifdef LL_ADC_USE_BDMA
+void BDMA_Channel0_IRQHandler(void)
+{
+	if(LL_BDMA_IsActiveFlag_TC0(BDMA) != 0)
+	{
+		adc_callback();
+		LL_BDMA_ClearFlag_TC0(BDMA);
+	}
+
+	if(LL_BDMA_IsActiveFlag_HT0(BDMA) != 0)
+	{
+		adc_callback();
+		LL_BDMA_ClearFlag_HT0(BDMA);
+	}
+
+	if(LL_BDMA_IsActiveFlag_TE0(BDMA) != 0)
+	{
+		adc_callback();
+		LL_BDMA_ClearFlag_TE0(BDMA);
+	}
+}
+#endif
+
+#ifdef CONTEXT_LORA
+//*----------------------------------------------------------------------------
+//* Function Name       : SPI1_IRQHandler
+//* Object              :
+//* Notes    			: LORA SPI irq handler
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void SPI1_IRQHandler(void)
+{
+    if(LL_SPI_IsActiveFlag_OVR(SPI1) || LL_SPI_IsActiveFlag_UDR(SPI1))
+    {
+    	lora_spi_err_callback();
+    }
+
+    if(LL_SPI_IsActiveFlag_RXP(SPI1) && LL_SPI_IsEnabledIT_RXP(SPI1))
+    {
+    	lora_spi_rx_callback();
+    	return;
+    }
+
+    if((LL_SPI_IsActiveFlag_TXP(SPI1) && LL_SPI_IsEnabledIT_TXP(SPI1)))
+    {
+    	lora_spi_tx_callback();
+    	return;
+    }
+
+    if(LL_SPI_IsActiveFlag_EOT(SPI1) && LL_SPI_IsEnabledIT_EOT(SPI1))
+    {
+    	lora_spi_eot_callback();
+    	return;
+    }
+}
+#endif
 
 void Error_Handler(int err)
 {
@@ -334,6 +475,36 @@ static int start_proc(void)
     }
 	#endif
 
+	#ifdef CONTEXT_KEYPAD
+    res = xTaskCreate(	(TaskFunction_t)keypad_proc_task,\
+						"kbd_proc",\
+						KEYPAD_PROC_STACK_SIZE,\
+						NULL,\
+						KEYPAD_PROC_PRIORITY,\
+						&hKbdTask);
+
+    if(res != pdPASS)
+    {
+    	printf("unable to create kbd process\r\n");
+    	return 7;
+    }
+	#endif
+
+	#ifdef CONTEXT_LORA
+    res = xTaskCreate(	(TaskFunction_t)lora_proc_task,\
+						"lora_proc",\
+						LORA_PROC_STACK_SIZE,\
+						NULL,\
+						LORA_PROC_PRIORITY,\
+						&hLraTask);
+
+    if(res != pdPASS)
+    {
+    	printf("unable to create lora process\r\n");
+    	return 7;
+    }
+	#endif
+
     return 0;
 }
 
@@ -347,8 +518,11 @@ static int start_proc(void)
 //*----------------------------------------------------------------------------
 int main(void)
 {
-	bsp_gpio_clocks_on();
+	// Hold power line
 	bsp_hold_power();
+
+	// All GPIO clocks
+	bsp_gpio_clocks_on();
 
 	// Disable FMC Bank1 to avoid speculative/cache accesses
 	FMC_Bank1_R->BTCR[0] &= ~FMC_BCRx_MBKEN;
@@ -365,8 +539,11 @@ int main(void)
     // HAL init
     HAL_Init();
 
-    // Configure the system clock to 400 MHz
+    // Configure the system clock to 480 MHz
     SystemClock_Config();
+
+	// ADC3 clock from PLL2
+	PeriphCommonClock_Config();
 
     // RTC init
     k_CalendarBkupInit();
@@ -375,8 +552,15 @@ int main(void)
     radio_init_on_reset();
 
     // HW init
-    if(BSP_Config() != 0)
+    if(bsp_config() != 0)
     	goto stall_radio;
+
+    // Init ADC HW
+    if(adc_init() != 0)
+    	goto stall_radio;
+
+    // Attenuator
+    att_hw_init();
 
     // Define running processes
     if(start_proc())
@@ -390,5 +574,7 @@ int main(void)
     osKernelStart();
 
 stall_radio:
+// ToDo: Handle critical errors
+//
     while(1);
 }

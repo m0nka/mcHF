@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "main.h"
 #include "mchf_pro_board.h"
@@ -33,19 +32,16 @@ uchar tp_init_done = 0;
 //typedef void (* BSP_EXTI_LineCallback) (void);
 EXTI_HandleTypeDef hts_exti_[2] = {0};
 
-void EXTI9_5_IRQHandler(void)
+void touch_proc_irq(void)
 {
-	if (__HAL_GPIO_EXTI_GET_IT(TS_INT_PIN) != 0x00U)
-	{
-	    if(tp_init_done)
-	    {
-	    	BaseType_t xHigherPriorityTaskWoken;
-	    	xHigherPriorityTaskWoken = pdFALSE;
-	    	xTaskNotifyFromISR(hTouchTask, 0x01, eSetBits, &xHigherPriorityTaskWoken );
-	    	portYIELD_FROM_ISR(xHigherPriorityTaskWoken );
-	    }
-	    __HAL_GPIO_EXTI_CLEAR_IT(TS_INT_PIN);
-	 }
+	BaseType_t xHigherPriorityTaskWoken;
+
+	if(!tp_init_done)
+		return;
+
+	xHigherPriorityTaskWoken = pdFALSE;
+	xTaskNotifyFromISR(hTouchTask, 0x01, eSetBits, &xHigherPriorityTaskWoken );
+	portYIELD_FROM_ISR(xHigherPriorityTaskWoken );
 }
 
 static void touch_proc_irq_setup(void)

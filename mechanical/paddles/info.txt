@@ -1,0 +1,2 @@
+Notes: As we don't have solidworks files for both files from the original author, we kinda
+reuse them as it is, and made the right panel enclosure accomodate the existing design.

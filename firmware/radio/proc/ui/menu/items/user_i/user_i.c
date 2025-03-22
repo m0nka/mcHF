@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "mchf_pro_board.h"
 
@@ -369,7 +368,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			#endif
 
 			// Doesn't work in menu, maybe create in each individual menu item ?
-			hKeypad = GUI_CreateKeyPad(WM_GetDesktopWindowEx(0));
+			//--hKeypad = GUI_CreateKeyPad(WM_GetDesktopWindowEx(0));
 
 			esp_msg_x.ucProcStatus = TASK_PROC_IDLE;
 			break;

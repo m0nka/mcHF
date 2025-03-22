@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
@@ -19,7 +18,7 @@
 
 // In this file it might be little bit confusing what function in what context
 // executes, is it actually the ICC task process or HSEM IRQ call chaining into
-// a callback. Putthing a wrong call here and there really messes things up
+// a callback. Putting a wrong call here and there really messes things up
 
 #include "icc_proc.h"
 //#include "mchf_icc_def.h"

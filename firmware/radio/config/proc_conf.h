@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2021                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:                                                                       **
 ************************************************************************************/
 #ifndef __PROC_CONF_H
 #define __PROC_CONF_H
@@ -96,6 +95,18 @@
 //
 #define CONTEXT_TRX
 //
+// -----------------------------------------------------------------------------------------------
+// Physical keyboard
+//
+//
+#define CONTEXT_KEYPAD
+//
+// -----------------------------------------------------------------------------------------------
+// Lora transceiver - wip
+//
+//
+//#define CONTEXT_LORA
+//
 
 // -------------------------------------------------------------------------------------------
 // Process parameters template
@@ -175,5 +186,16 @@
 #define TRX_PROC_PRIORITY				osPriorityNormal
 #define TRX_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 4)
 
+// Keypad process parameters
+#define KEYPAD_PROC_START_DELAY			2000
+#define KEYPAD_PROC_SLEEP_TIME			portMAX_DELAY
+#define KEYPAD_PROC_PRIORITY			osPriorityNormal
+#define KEYPAD_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 4)
+
+// Keypad process parameters
+#define LORA_PROC_START_DELAY			2000
+#define LORA_PROC_SLEEP_TIME			portMAX_DELAY
+#define LORA_PROC_PRIORITY				osPriorityNormal
+#define LORA_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 4)
 
 #endif

@@ -1,16 +1,16 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
+
 #include "main.h"
 #include "mchf_pro_board.h"
 #include "mchf_icc_def.h"
@@ -612,18 +612,19 @@ void radio_init_on_reset(void)
 	tsu.curr_band 						= BAND_MODE_20;
 	//tsu.band[tsu.curr_band].tx_power	= PA_LEVEL_5W;
 	tsu.band[tsu.curr_band].volume 		= 0;
-	tsu.band[tsu.curr_band].vfo_a 		= 14200*1000 + 300;
+	tsu.band[tsu.curr_band].active_vfo  = VFO_A;
+	tsu.band[tsu.curr_band].vfo_a 		= 14074*1000 + 000;
 	tsu.band[tsu.curr_band].fixed_mode 	= 0;
 	tsu.band[tsu.curr_band].nco_freq	= 0;
-	tsu.band[tsu.curr_band].demod_mode	= DEMOD_CW;
-	tsu.demo_mode 						= 1;
+	tsu.band[tsu.curr_band].demod_mode	= DEMOD_USB;
+	tsu.demo_mode 						= 0;
 	#endif
 
 	// Enforce 80m - test
 	#if 0
 	tsu.curr_band 						= BAND_MODE_80;
-	tsu.band[tsu.curr_band].volume 		= 8;
-	tsu.band[tsu.curr_band].vfo_a 		= 3721*1000;
+	tsu.band[tsu.curr_band].volume 		= 10;
+	tsu.band[tsu.curr_band].vfo_a 		= 3697*1000;
 	tsu.band[tsu.curr_band].fixed_mode 	= 0;
 	tsu.band[tsu.curr_band].nco_freq	= 0;
 	tsu.band[tsu.curr_band].demod_mode	= DEMOD_LSB;
@@ -633,8 +634,8 @@ void radio_init_on_reset(void)
 	// Enforce 40m - test
 	#if 0
 	tsu.curr_band 						= BAND_MODE_40;
-	tsu.band[tsu.curr_band].volume 		= 14;
-	tsu.band[tsu.curr_band].vfo_a 		= 7129*1000;
+	tsu.band[tsu.curr_band].volume 		= 11;
+	tsu.band[tsu.curr_band].vfo_a 		= 7147*1000;
 	tsu.band[tsu.curr_band].fixed_mode 	= 0;
 	tsu.band[tsu.curr_band].nco_freq	= 0;
 	tsu.band[tsu.curr_band].demod_mode	= DEMOD_LSB;

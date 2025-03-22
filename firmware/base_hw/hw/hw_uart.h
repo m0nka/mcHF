@@ -36,9 +36,9 @@
 #define USARTx_RELEASE_RESET()           __HAL_RCC_USART2_RELEASE_RESET()
 #define USARTx_CLK_ENABLE()              __HAL_RCC_USART2_CLK_ENABLE();
 #define USARTx_TX_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOD_CLK_ENABLE()
-#define USARTx_TX_PIN                    GPIO_PIN_5
-#define USARTx_TX_GPIO_PORT              GPIOD
-#define USARTx_TX_AF                     GPIO_AF7_USART2
+//#define USARTx_TX_PIN                    GPIO_PIN_5
+//#define USARTx_TX_GPIO_PORT              GPIOD
+//#define USARTx_TX_AF                     GPIO_AF7_USART2
 #endif
 
 #define RTC_CLOCK_SOURCE_LSI

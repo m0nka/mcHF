@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2024                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "main.h"
 #include "mchf_pro_board.h"
@@ -1271,7 +1270,7 @@ static void bms_proc_low_voltage_protection(void)
 		//HAL_GPIO_WritePin(GPIOE,GPIO_PIN_10, 0); 	// led off
 		//HAL_GPIO_WritePin(GPIOD,GPIO_PIN_8,  1);	// Power off
 
-		power_off();
+		bsp_power_off();
 	}
 	else
 		power_off_count = 0; // reset accumulator
@@ -1317,7 +1316,7 @@ static void bms_proc_power_off(void)
    			vTaskDelay(200);
 
    			// Power off process
-   			power_off();
+   			bsp_power_off();
    		}
    	}
 }
