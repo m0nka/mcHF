@@ -587,6 +587,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/keypad/keypad_proc.c</locationURI>
 		</link>
 		<link>
+			<name>proc/lora/lora_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/lora/lora_proc.c</locationURI>
+		</link>
+		<link>
 			<name>proc/pwm/pwm_proc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/pwm/pwm_proc.c</locationURI>
@@ -785,6 +790,11 @@
 			<name>proc/ipc/hw/prog_uart.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ipc/hw/prog_uart.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/hw/lora_spi.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/lora/hw/lora_spi.c</locationURI>
 		</link>
 		<link>
 			<name>proc/touch/hw/calibration.h</name>

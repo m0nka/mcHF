@@ -34,6 +34,7 @@
 #include "band_proc.h"
 #include "trx_proc.h"
 #include "keypad_proc.h"
+#include "lora_proc.h"
 
 #if configAPPLICATION_ALLOCATED_HEAP == 1
 __attribute__((section("heap_mem"))) uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
@@ -56,6 +57,7 @@ TaskHandle_t 							hAudioTask	= NULL;
 TaskHandle_t 							hBandTask	= NULL;
 TaskHandle_t 							hTrxTask	= NULL;
 TaskHandle_t 							hKbdTask	= NULL;
+TaskHandle_t 							hLraTask	= NULL;
 
 QueueHandle_t 							hEspMessage;
 
@@ -203,6 +205,42 @@ void BDMA_Channel0_IRQHandler(void)
 		adc_callback();
 		LL_BDMA_ClearFlag_TE0(BDMA);
 	}
+}
+#endif
+
+#ifdef CONTEXT_LORA
+//*----------------------------------------------------------------------------
+//* Function Name       : SPI1_IRQHandler
+//* Object              :
+//* Notes    			: LORA SPI irq handler
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void SPI1_IRQHandler(void)
+{
+    if(LL_SPI_IsActiveFlag_OVR(SPI1) || LL_SPI_IsActiveFlag_UDR(SPI1))
+    {
+    	lora_spi_err_callback();
+    }
+
+    if(LL_SPI_IsActiveFlag_RXP(SPI1) && LL_SPI_IsEnabledIT_RXP(SPI1))
+    {
+    	lora_spi_rx_callback();
+    	return;
+    }
+
+    if((LL_SPI_IsActiveFlag_TXP(SPI1) && LL_SPI_IsEnabledIT_TXP(SPI1)))
+    {
+    	lora_spi_tx_callback();
+    	return;
+    }
+
+    if(LL_SPI_IsActiveFlag_EOT(SPI1) && LL_SPI_IsEnabledIT_EOT(SPI1))
+    {
+    	lora_spi_eot_callback();
+    	return;
+    }
 }
 #endif
 
@@ -448,6 +486,21 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create kbd process\r\n");
+    	return 7;
+    }
+	#endif
+
+	#ifdef CONTEXT_LORA
+    res = xTaskCreate(	(TaskFunction_t)lora_proc_task,\
+						"lora_proc",\
+						LORA_PROC_STACK_SIZE,\
+						NULL,\
+						LORA_PROC_PRIORITY,\
+						&hLraTask);
+
+    if(res != pdPASS)
+    {
+    	printf("unable to create lora process\r\n");
     	return 7;
     }
 	#endif

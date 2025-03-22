@@ -562,38 +562,40 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 		else
 			loc_tx_state = tsu.rxtx;
 
-		ushort t_val = 0;
-		ushort f_volts = 0;
-		ushort r_volts = 0;
-
-		// Forward voltage on the bridge
-		f_volts = adc_read_fwd_power();
-		if(f_volts == 0xFFFF)
-			{}//sprintf(buf, "FWD %d.%dV", 0, 0);
-		else
+		if(tsu.rxtx)
 		{
-			//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
-			printf("%4dmV(fwd) \r\n", f_volts);
-		}
+			ushort t_val = 0;
+			ushort f_volts = 0;
+			ushort r_volts = 0;
 
-		// Forward voltage on the bridge
-		r_volts = adc_read_ref_power();
-		if(r_volts == 0xFFFF)
+			// Forward voltage on the bridge
+			f_volts = adc_read_fwd_power();
+			if(f_volts == 0xFFFF)
+				{}//sprintf(buf, "FWD %d.%dV", 0, 0);
+			else
+			{
+				//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
+				printf("%4dmV(fwd) \r\n", f_volts);
+			}
+
+			// Forward voltage on the bridge
+			r_volts = adc_read_ref_power();
+			if(r_volts == 0xFFFF)
 			{}//sprintf(buf, "FWD %d.%dV", 0, 0);
-		else
-		{
-			//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
-			printf("%4dmV(ref) \r\n", r_volts);
+			else
+			{
+				//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
+				printf("%4dmV(ref) \r\n", r_volts);
+			}
+
+			// ToDo: finish it off...
+
+			GUI_SetColor(GUI_DARKGRAY);
+			GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 37), 2);
+
+			GUI_SetColor(GUI_LIGHTGREEN);
+			GUI_FillRoundedRect((S_METER_X + 10 + 0),  (S_METER_Y + 30),(S_METER_X + (10 + t_val)), (S_METER_Y + 37), 2);
 		}
-
-		// ToDo: finish it off...
-
-		GUI_SetColor(GUI_DARKGRAY);
-		GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 37), 2);
-
-		GUI_SetColor(GUI_LIGHTGREEN);
-		GUI_FillRoundedRect((S_METER_X + 10 + 0),  (S_METER_Y + 30),(S_METER_X + (10 + t_val)), (S_METER_Y + 37), 2);
-
 
 		return;
 	}

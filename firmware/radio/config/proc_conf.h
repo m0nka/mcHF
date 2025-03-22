@@ -101,6 +101,12 @@
 //
 #define CONTEXT_KEYPAD
 //
+// -----------------------------------------------------------------------------------------------
+// Lora transceiver - wip
+//
+//
+//#define CONTEXT_LORA
+//
 
 // -------------------------------------------------------------------------------------------
 // Process parameters template
@@ -186,5 +192,10 @@
 #define KEYPAD_PROC_PRIORITY			osPriorityNormal
 #define KEYPAD_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 4)
 
+// Keypad process parameters
+#define LORA_PROC_START_DELAY			2000
+#define LORA_PROC_SLEEP_TIME			portMAX_DELAY
+#define LORA_PROC_PRIORITY				osPriorityNormal
+#define LORA_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 4)
 
 #endif

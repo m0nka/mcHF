@@ -38,19 +38,19 @@
 // ----------------------------------------------------
 // PortA
 
-// PA0			RFM_RST -> ToDo: Lora driver
-#define RFM_RST							GPIO_PIN_0
+// PA0			RFM_RST, Lora driver
+#define RFM_RST							LL_GPIO_PIN_0
 #define RFM_RST_PORT					GPIOA
 
 // PA1			ENC1_I
 #define ENC1_I							GPIO_PIN_1
 #define ENC1_I_PORT						GPIOA
 
-// PA2			LORA_POWER -> ToDo: Lora driver
-#define LORA_POWER						GPIO_PIN_2
+// PA2			LORA_POWER, Lora driver
+#define LORA_POWER						LL_GPIO_PIN_2
 #define LORA_POWER_PORT					GPIOA
 
-// PA3			RFM_DIO2 -> ToDo: Lora driver
+// PA3			RFM_DIO2, was Lora driver, now BT module power control
 #define RFM_DIO2						GPIO_PIN_3
 #define RFM_DIO2_PORT					GPIOA
 
@@ -61,12 +61,12 @@
 // PA5			DAC1_OUT2
 #define DAC1_OUT2						GPIO_PIN_5
 
-// PA6			RFM_MISO_SPI1 -> ToDo: Lora driver
-#define RFM_MISO_SPI1					GPIO_PIN_6
+// PA6			RFM_MISO_SPI1, Lora driver
+#define RFM_MISO_SPI1					LL_GPIO_PIN_6
 #define RFM_MISO_SPI1_PORT				GPIOA
 
-// PA7			RFM_MOSI_SPI1 -> ToDo: Lora driver
-#define RFM_MOSI_SPI1					GPIO_PIN_7
+// PA7			RFM_MOSI_SPI1, Lora driver
+#define RFM_MOSI_SPI1					LL_GPIO_PIN_7
 #define RFM_MOSI_SPI1_PORT				GPIOA
 
 // PA8			BMS_PWM -> ToDo: BMS CC control
@@ -109,8 +109,8 @@
 #define ATT_CLK               			LL_GPIO_PIN_2
 #define ATT_CLK_PORT         			GPIOB
 
-// PB3			RFM_SCK_SPI1 -> ToDo: Lora driver
-#define RFM_SCK_SPI1               		GPIO_PIN_3
+// PB3			RFM_SCK_SPI1, Lora driver
+#define RFM_SCK_SPI1               		LL_GPIO_PIN_3
 #define RFM_SCK_SPI1_PORT         		GPIOB
 
 // PB4			ENC2_I
@@ -169,8 +169,8 @@
 //
 //
 
-// PC1			RFM_NSS -> ToDo: Lora driver
-#define RFM_NSS							GPIO_PIN_1
+// PC1			RFM_NSS, Lora driver
+#define RFM_NSS							LL_GPIO_PIN_1
 #define RFM_NSS_PORT           			GPIOC
 
 // PC2			MUTE
@@ -181,12 +181,12 @@
 #define ADC3_INP1						LL_GPIO_PIN_3
 #define ADC3_INP1_PORT           		GPIOC
 
-// PC4			RFM_DIO1 -> ToDo: Lora driver
-#define RFM_DIO1						GPIO_PIN_4
+// PC4			RFM_DIO1, Lora driver
+#define RFM_DIO1						LL_GPIO_PIN_4
 #define RFM_DIO1_PORT           		GPIOC
 
-// PC5			RFM_DIO0 -> ToDo: Lora driver
-#define RFM_DIO0						GPIO_PIN_5
+// PC5			RFM_DIO0, Lora driver
+#define RFM_DIO0						LL_GPIO_PIN_5
 #define RFM_DIO0_PORT           		GPIOC
 
 // PC6			BAND0
