@@ -6,7 +6,7 @@
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
-**  Description:                                                                   **
+**  Description:           clone https://github.com/kgoba/ft8_lib first!           **
 **  Last Modified:                                                                 **
 **  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
@@ -17,8 +17,8 @@
 
 #include "dsp_proc.h"
 
-#include "digi\ft8_lib-master\gen_ft8.h"
-#include "digi\ft8_lib-master\decode_ft8.h"
+//#include "digi\ft8_lib-master\gen_ft8.h"
+//#include "digi\ft8_lib-master\decode_ft8.h"
 
 // Driver communication
 extern 			osMessageQId 			hDspMessage;
@@ -71,7 +71,7 @@ static void dsp_proc_msg_parser(void)
 
 			// ToDo: strxxx checks on passed buffer ??
 
-			encode_ft8_message(dsp_msg->cData,1);
+//!			encode_ft8_message(dsp_msg->cData,1);
 
 			// Signal UI driver
 			dsp_msg->ucProcessDone = 1;

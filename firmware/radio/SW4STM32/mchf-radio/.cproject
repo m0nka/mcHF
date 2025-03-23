@@ -86,6 +86,8 @@
 									<listOptionValue builtIn="false" value="../../../proc/keypad"/>
 									<listOptionValue builtIn="false" value="../../../proc/lora"/>
 									<listOptionValue builtIn="false" value="../../../proc/lora/hw"/>
+									<listOptionValue builtIn="false" value="../../../proc/dsp"/>
+									<listOptionValue builtIn="false" value="../../../proc/dsp/digi/ft8_lib/"/>
 									<listOptionValue builtIn="false" value="../../../../"/>
 									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/CMSIS/Device/ST/STM32H7xx/Include"/>
 									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/STM32H7xx_HAL_Driver/Inc"/>

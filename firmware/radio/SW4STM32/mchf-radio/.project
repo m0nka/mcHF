@@ -1047,6 +1047,66 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/ui_lib/keypad/c_keypad.c</locationURI>
 		</link>
 		<link>
+			<name>proc/dsp/digi/ft8_lib/common/audio.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/common/audio.c</locationURI>
+		</link>
+		<link>
+			<name>proc/dsp/digi/ft8_lib/common/monitor.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/common/monitor.c</locationURI>
+		</link>
+		<link>
+			<name>proc/dsp/digi/ft8_lib/common/wave.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/common/wave.c</locationURI>
+		</link>
+		<link>
+			<name>proc/dsp/digi/ft8_lib/fft/kiss_fft.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/fft/kiss_fft.c</locationURI>
+		</link>
+		<link>
+			<name>proc/dsp/digi/ft8_lib/fft/kiss_fftr.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/fft/kiss_fftr.c</locationURI>
+		</link>
+		<link>
+			<name>proc/dsp/digi/ft8_lib/ft8/constants.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/constants.c</locationURI>
+		</link>
+		<link>
+			<name>proc/dsp/digi/ft8_lib/ft8/crc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/crc.c</locationURI>
+		</link>
+		<link>
+			<name>proc/dsp/digi/ft8_lib/ft8/decode.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/decode.c</locationURI>
+		</link>
+		<link>
+			<name>proc/dsp/digi/ft8_lib/ft8/encode.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/encode.c</locationURI>
+		</link>
+		<link>
+			<name>proc/dsp/digi/ft8_lib/ft8/ldpc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/ldpc.c</locationURI>
+		</link>
+		<link>
+			<name>proc/dsp/digi/ft8_lib/ft8/message.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/message.c</locationURI>
+		</link>
+		<link>
+			<name>proc/dsp/digi/ft8_lib/ft8/text.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/text.c</locationURI>
+		</link>
+		<link>
 			<name>proc/ui/menu/items/batt/menu_batt.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/batt/menu_batt.c</locationURI>
