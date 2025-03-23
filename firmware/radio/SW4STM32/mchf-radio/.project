@@ -912,16 +912,6 @@
 			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/system/generic/generic_io.c</locationURI>
 		</link>
 		<link>
-			<name>proc/dsp/digi/ft8_lib-master/decode_ft8.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib-master/decode_ft8.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib-master/gen_ft8.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib-master/gen_ft8.c</locationURI>
-		</link>
-		<link>
 			<name>proc/ui/desktop/battery/ui_controls_battery.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/battery/ui_controls_battery.c</locationURI>
@@ -1055,56 +1045,6 @@
 			<name>proc/ui/ui_lib/keypad/c_keypad.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/ui_lib/keypad/c_keypad.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib-master/common/wave.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib-master/common/wave.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib-master/fft/kiss_fft.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib-master/fft/kiss_fft.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib-master/fft/kiss_fftr.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib-master/fft/kiss_fftr.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib-master/ft8/decode.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib-master/ft8/decode.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib-master/ft8/encode_v2.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib-master/ft8/encode_v2.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib-master/ft8/ft8_constants.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib-master/ft8/ft8_constants.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib-master/ft8/ldpc.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib-master/ft8/ldpc.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib-master/ft8/pack_v2.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib-master/ft8/pack_v2.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib-master/ft8/text.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib-master/ft8/text.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib-master/ft8/unpack_v2.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib-master/ft8/unpack_v2.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/batt/menu_batt.c</name>

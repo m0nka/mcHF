@@ -15,7 +15,7 @@
 
 #ifdef CONTEXT_DSP
 
-#include "dsp_driver.h"
+#include "dsp_proc.h"
 
 #include "digi\ft8_lib-master\gen_ft8.h"
 #include "digi\ft8_lib-master\decode_ft8.h"
@@ -37,14 +37,14 @@ static void dsp_proc_hw_init(void)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : dsp_driver_worker
+//* Function Name       : dsp_proc_msg_parser
 //* Object              :
 //* Notes    			:
 //* Notes   			:
 //* Notes    			:
 //* Context    			: CONTEXT_DSP
 //*----------------------------------------------------------------------------
-static void dsp_driver_worker(void)
+static void dsp_proc_msg_parser(void)
 {
 	osEvent 			event;
 	struct DSPMessage 	*dsp_msg;
@@ -87,7 +87,7 @@ static void dsp_driver_worker(void)
 
 			//printf("menu 1 called\r\n");
 
-			decode_ft8_message(buf);
+//!			decode_ft8_message(buf);
 			//printf("decoded: %s\r\n",buf);
 
 			// unsafe strcpy...
@@ -116,19 +116,14 @@ static void dsp_driver_worker(void)
 //*----------------------------------------------------------------------------
 void dsp_proc_task(void const * argument)
 {
-	// Delay start, so UI can paint properly
-	OsDelayMs(5000);
-
+	vTaskDelay(5000);
 	printf("dsp proc start\r\n");
 
 	dsp_proc_hw_init();
 
-dsp_driver_loop:
-	//--printf("dsp loop\r\n");
-	// process requests
-	dsp_driver_worker();
-	//--OsDelayMs(150);					osMessageGet will stall the driver anyway, so no need to idle here!
-	goto dsp_driver_loop;
+dsp_proc_loop:
+	dsp_proc_msg_parser();
+	goto dsp_proc_loop;
 }
 
 #endif
