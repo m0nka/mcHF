@@ -177,7 +177,7 @@ static void adc_configure(void)
 	LL_ADC_EnableIT_OVR(ADC3);
 	#endif
 
-	printf("adc conf \r\n");
+	//printf("adc conf \r\n");
 }
 #endif
 
@@ -211,7 +211,7 @@ static void adc_activate(void)
 		LL_ADC_Enable(ADC3);
 		while(LL_ADC_IsActiveFlag_ADRDY(ADC3) == 0);
 
-		printf("adc activated \r\n");
+		//printf("adc activated \r\n");
 	}
 }
 
@@ -243,7 +243,7 @@ static void adc_switch_channel(uchar id)
 static void adc_proc_task(void *arg)
 {
 	vTaskDelay(4000);
-	printf("adc sampling start \r\n");
+	//printf("adc sampling start \r\n");
 
 	#ifdef LL_ADC_USE_IRQ
 	NVIC_EnableIRQ	(ADC3_IRQn);
