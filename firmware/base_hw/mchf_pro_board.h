@@ -226,12 +226,14 @@ struct APIMessage {
 	uchar 	ucData[API_MAX_PAYLOAD];
 
 } APIMessage;
+#endif
+
 // -----------------------------------------------------------------------------
 // calls to DPS driver
 //
 #define DSP_MAX_PAYLOAD					50
 //
-struct DSPMessage {
+__attribute__((__common__)) struct DSPMessage {
 
 	uchar 	ucMessageID;
 	uchar	ucProcessDone;
@@ -239,7 +241,7 @@ struct DSPMessage {
 	char 	cData[DSP_MAX_PAYLOAD];
 
 } DSPMessage;
-#endif
+
 
 #define	TASK_PROC_IDLE				0
 #define	TASK_PROC_WORK				1

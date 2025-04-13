@@ -108,6 +108,9 @@
 //#define CONTEXT_LORA
 //
 
+// test
+#define CONTEXT_DSP
+
 // -------------------------------------------------------------------------------------------
 // Process parameters template
 //xx_PROC_START_DELAY					We can delay the startup of the process, to prevent

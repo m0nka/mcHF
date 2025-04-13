@@ -61,6 +61,10 @@ TaskHandle_t 							hLraTask	= NULL;
 
 QueueHandle_t 							hEspMessage;
 
+#ifdef CONTEXT_DSP
+osMessageQId 							hDspMessage;
+#endif
+
 #if defined(USE_USB_FS) || defined(USE_USB_HS)
 extern HCD_HandleTypeDef hhcd;
 #endif /* USE_USB_FS | USE_USB_HS */
@@ -325,6 +329,11 @@ static int start_proc(void)
 	BaseType_t res;
 
 	hEspMessage = xQueueCreate(5, sizeof(struct ESPMessage *));
+
+	#ifdef CONTEXT_DSP
+	osMessageQDef(dsp_queue, 5, sizeof(struct DSPMessage *));
+	hDspMessage = osMessageCreate (osMessageQ(dsp_queue), NULL);
+	#endif
 
 	#ifdef CONTEXT_VIDEO
 	res = xTaskCreate(	(TaskFunction_t)ui_proc_task,\
