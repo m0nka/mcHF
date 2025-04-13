@@ -318,9 +318,10 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
     hlcd_dma2d.Instance = DMA2D;
     hdsi.Instance = DSI;
 
-    if(MX_DSIHOST_DSI_Init(&hdsi, Width, Height, dsi_pixel_format) != HAL_OK)
+    ret = MX_DSIHOST_DSI_Init(&hdsi, Width, Height, dsi_pixel_format);
+    if(ret != HAL_OK)
     {
-    	printf("== error 2 ==\r\n");
+    	printf("== error 2(%d) ==\r\n", ret);
       ret = BSP_ERROR_PERIPH_FAILURE;
     }
     else if(MX_LTDC_ClockConfig(&hltdc) != HAL_OK)
@@ -394,9 +395,10 @@ __weak HAL_StatusTypeDef MX_DSIHOST_DSI_Init(DSI_HandleTypeDef *hdsi, uint32_t W
   PLLInit.PLLNDIV 						= 100;
   PLLInit.PLLIDF 						= DSI_PLL_IN_DIV5;
   PLLInit.PLLODF 						= DSI_PLL_OUT_DIV1;
+
   if (HAL_DSI_Init(hdsi, &PLLInit) != HAL_OK)
   {
-    return HAL_ERROR;
+    return 1;//HAL_ERROR;
   }
 
   /* Timing parameters for all Video modes */
@@ -438,7 +440,7 @@ __weak HAL_StatusTypeDef MX_DSIHOST_DSI_Init(DSI_HandleTypeDef *hdsi, uint32_t W
 
   if (HAL_DSI_ConfigVideoMode(hdsi, &VidCfg) != HAL_OK)
   {
-    return HAL_ERROR;
+    return 2;//HAL_ERROR;
   }
 
   return HAL_OK;
