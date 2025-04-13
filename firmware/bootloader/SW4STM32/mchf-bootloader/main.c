@@ -550,6 +550,21 @@ static void early_backup_domain_init(void)
 	__HAL_RCC_BKPRAM_CLK_ENABLE();
 }
 
+static void bt_hw_power(void)
+{
+	GPIO_InitTypeDef  gpio_init_structure;
+
+	gpio_init_structure.Pull  = GPIO_NOPULL;
+
+	// BT Power Control
+	gpio_init_structure.Pin   = RFM_DIO2;
+	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	HAL_GPIO_Init(RFM_DIO2_PORT, &gpio_init_structure);
+
+	// Power off
+	HAL_GPIO_WritePin(RFM_DIO2_PORT, RFM_DIO2, GPIO_PIN_SET);
+}
+
 static void bsp_config(void)
 {
 	// Use sharing, as DSP core might be running after reset
@@ -561,6 +576,7 @@ static void bsp_config(void)
 	// Initialise the screen
 	hw_lcd_gpio_init();
 	hw_lcd_reset();
+	bt_hw_power();
 
 	#ifdef CONTEXT_IPC_PROC
 	ipc_proc_init();
@@ -1548,17 +1564,17 @@ void boot_process(void)
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	// Firmware test
-	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing Firmware...", LEFT_MODE);
+//!	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing Firmware...", LEFT_MODE);
 
 run_radio:
 
 	if(is_firmware_valid() == 0)
 	{
 		//HAL_Delay(500);
-		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing Firmware...PASS", LEFT_MODE);
+//!		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing Firmware...PASS", LEFT_MODE);
 		line++;
 
-		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Booting to radio...", LEFT_MODE);
+//!		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Booting to radio...", LEFT_MODE);
 		//HAL_Delay(2000);
 
 		// Jump
