@@ -298,11 +298,11 @@
 //
 // ----------------------------------------------------------------------------
 // Battery icon
-#define BATTERY_X					812
+#define BATTERY_X					774
 #define BATTERY_Y					40
 //
-#define BATTERY_SIZE_X				30
-#define BATTERY_SIZE_Y				54
+#define BATTERY_SIZE_X				70
+#define BATTERY_SIZE_Y				50
 //
 // ----------------------------------------------------------------------------
 // TX Status control
