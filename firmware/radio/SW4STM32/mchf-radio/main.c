@@ -80,8 +80,13 @@ void HardFault_Handler(void)
 	printf( "=     %s     =\r\n", pcTaskGetName(NULL));
 	printf( "====================\r\n");
 
-	//NVIC_SystemReset();
-	while(1);
+	//--NVIC_SystemReset();
+	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+
+	while(1)
+	{
+		LL_GPIO_ResetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
+	}
 }
 
 void MemManage_Handler(void)
