@@ -1331,7 +1331,19 @@ static void bms_proc_power_off(void)
 //*----------------------------------------------------------------------------
 static void bms_proc_worker(void)
 {
+	static uchar bms_read_skip = 0;
+
 	bms_proc_power_off();
+
+	if(bms_read_skip == 0)
+	{
+		bmss.perc = bq40z80_read_soc();
+		bmss.mins = bq40z80_read_runtime();
+	}
+
+	bms_read_skip++;
+	if(bms_read_skip > 50)
+		bms_read_skip = 0;
 
 	#ifndef USE_DMA
 #if 0
@@ -1412,7 +1424,7 @@ static void bms_proc_worker(void)
 void bms_proc_task(void const *arg)
 {
 	vTaskDelay(BMS_PROC_START_DELAY);
-	//printf("bms process start\r\n");
+	printf("bms process start\r\n");
 
 	// Clear calibration
 	for(int i = 0; i < 10; i++)
@@ -1482,7 +1494,7 @@ void bms_proc_task(void const *arg)
 	}
 	#endif
 
-	//bq40z80_init();
+	bq40z80_init();
 
 bms_proc_loop:
 

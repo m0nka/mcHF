@@ -43,7 +43,7 @@ static void ui_controls_battery_progress(uchar val)
 	GUI_SetColor(GUI_WHITE);
 	GUI_FillRoundedRect((BATTERY_X + 2),(BATTERY_Y + 5),(BATTERY_X + BATTERY_SIZE_X - 1),(BATTERY_Y + BATTERY_SIZE_Y - 0),2);
 
-	int y0 = BATTERY_Y + BATTERY_SIZE_Y + 5 - val/2;	// top
+	int y0 = BATTERY_Y + BATTERY_SIZE_Y + 5 - 50;//val/2;	// top
 	int y1 = BATTERY_Y + BATTERY_SIZE_Y - 0;			// bottom
 
 	//if(bmss.run_on_dc)
@@ -51,12 +51,12 @@ static void ui_controls_battery_progress(uchar val)
 	//else if(val < 25)
 	//	GUI_SetColor(GUI_LIGHTRED);
 	//else
-		GUI_SetColor(GUI_DARKBLUE);
+		GUI_SetColor(GUI_LIGHTBLUE);
 
 	// Update
 	GUI_FillRect((BATTERY_X + 2), y0,(BATTERY_X + BATTERY_SIZE_X - 1), y1);
 
-	sprintf(buf, "%d", val);
+	sprintf(buf, "%d%%", val);
 	int x  = BATTERY_X + BATTERY_SIZE_X/2 - 10;
 
 	if(val < 10)
@@ -67,8 +67,10 @@ static void ui_controls_battery_progress(uchar val)
 	// Text
 	GUI_SetColor(GUI_WHITE);
 	GUI_SetFont(&GUI_Font8x15B_1);
-	GUI_DispStringAt(buf,   x, BATTERY_Y + BATTERY_SIZE_Y - 18);
-	GUI_DispStringAt("90m", x, BATTERY_Y + BATTERY_SIZE_Y - 42);
+	GUI_DispStringAt(buf, x - 5,  BATTERY_Y + BATTERY_SIZE_Y - 18);
+
+	sprintf(buf, "%dh%dm", bmss.mins/60, bmss.mins%60);
+	GUI_DispStringAt(buf, x - 20, BATTERY_Y + BATTERY_SIZE_Y - 42);
 }
 
 //*----------------------------------------------------------------------------

@@ -159,6 +159,7 @@ __attribute__((__common__)) struct BMSState {
 	//uchar lac;		// filter lenght
 
 	uchar perc;			// % value of SOC left
+	ushort mins;
 
 	uchar charger_on;
 	uchar h_prot_on;

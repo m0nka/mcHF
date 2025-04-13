@@ -342,14 +342,9 @@ static void I2C1_MspInit(I2C_HandleTypeDef *phi2c)
 	gpio_init_structure.Alternate = BUS_I2C1_SDA_AF;
 	HAL_GPIO_Init(BUS_I2C1_SDA_GPIO_PORT, &gpio_init_structure);
 
-	/*** Configure the I2C peripheral ***/
-	/* Enable I2C clock */
+	// Configure the I2C peripheral
 	BUS_I2C1_CLK_ENABLE();
-
-	/* Force the I2C peripheral clock reset */
 	BUS_I2C1_FORCE_RESET();
-
-	/* Release the I2C peripheral clock reset */
 	BUS_I2C1_RELEASE_RESET();
 }
 
@@ -431,6 +426,76 @@ int32_t shared_i2c_init(void)
   return ret;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : shared_i2c_change_pins
+//* Object              :
+//* Notes    			: PCB rev 0.8.5 has separate pins for codec and bms!
+//* Notes   			:
+//* Notes    			:
+//* Context    			: codec proc or bms
+//*----------------------------------------------------------------------------
+static void shared_i2c_change_pins(uchar addr)
+{
+	static uchar 		addr_in_use = 0;
+	GPIO_InitTypeDef  	gpio_init_structure;
+
+	if(addr_in_use == addr)
+		return;
+
+	printf("change pins for addr 0x%x\r\n", addr);
+
+	// Disable I2C
+	CLEAR_BIT(I2C4->CR1, I2C_CR1_PE);
+
+	if(addr == 0x98)	// codec
+	{
+		// De-init old
+		gpio_init_structure.Pin       = BMS_SCL_PIN;
+		HAL_GPIO_Init(BMS_SCL_PORT, &gpio_init_structure);
+		//
+		gpio_init_structure.Pin       = BMS_SDA_PIN;
+		HAL_GPIO_Init(BMS_SDA_PORT, &gpio_init_structure);
+
+		// As I2C
+		gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
+		gpio_init_structure.Mode      = GPIO_MODE_AF_OD;
+
+		gpio_init_structure.Pin       = BUS_I2C1_SCL_PIN;
+		gpio_init_structure.Alternate = BUS_I2C1_SCL_AF;
+		HAL_GPIO_Init(BUS_I2C1_SCL_GPIO_PORT, &gpio_init_structure);
+		//
+		gpio_init_structure.Pin       = BUS_I2C1_SDA_PIN;
+		gpio_init_structure.Alternate = BUS_I2C1_SDA_AF;
+		HAL_GPIO_Init(BUS_I2C1_SDA_GPIO_PORT, &gpio_init_structure);
+	}
+	else	// bms
+	{
+		// De-init old
+		gpio_init_structure.Pin       = BUS_I2C1_SCL_PIN;
+		HAL_GPIO_Init(BUS_I2C1_SCL_GPIO_PORT, &gpio_init_structure);
+		//
+		gpio_init_structure.Pin       = BUS_I2C1_SDA_PIN;
+		HAL_GPIO_Init(BUS_I2C1_SDA_GPIO_PORT, &gpio_init_structure);
+
+		// As I2C
+		gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
+		gpio_init_structure.Mode      = GPIO_MODE_AF_OD;
+
+		gpio_init_structure.Pin       = BMS_SCL_PIN;
+		gpio_init_structure.Alternate = GPIO_AF4_I2C4;
+		HAL_GPIO_Init(BMS_SCL_PORT, &gpio_init_structure);
+
+		gpio_init_structure.Pin       = BMS_SDA_PIN;
+		gpio_init_structure.Alternate = GPIO_AF4_I2C4;
+		HAL_GPIO_Init(BMS_SDA_PORT, &gpio_init_structure);
+	}
+
+	// Enable I2C
+	SET_BIT(I2C4->CR1, I2C_CR1_PE);
+
+	addr_in_use = addr;
+}
+
 //
 // ToDo: Do we need to call before power off ?
 //
@@ -467,6 +532,8 @@ int32_t shared_i2c_write_reg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uin
 	if(xSemaphoreTake(dI2CSemaphore, (TickType_t)0) != pdTRUE)
 		return BSP_ERROR_PERIPH_FAILURE;
 
+	shared_i2c_change_pins(DevAddr);
+
 	if(I2C1_WriteReg(DevAddr, Reg, I2C_MEMADD_SIZE_8BIT, pData, Length) == 0)
 	{
 		ret = BSP_ERROR_NONE;
@@ -500,6 +567,8 @@ int32_t shared_i2c_read_reg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint
 		return BSP_ERROR_PERIPH_FAILURE;
 	}
 
+	shared_i2c_change_pins(DevAddr);
+
 	//printf( "shared i2c read from %s \r\n", pcTaskGetName(NULL));
 
 	if(I2C1_ReadReg(DevAddr, Reg, I2C_MEMADD_SIZE_8BIT, pData, Length) == 0)
@@ -521,6 +590,30 @@ int32_t shared_i2c_read_reg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint
 	xSemaphoreGive(dI2CSemaphore);
 	return ret;
 }
+
+#if 1
+int32_t shared_i2c_is_ready(uint16_t DevAddr, uint32_t Trials)
+{
+	int32_t ret = BSP_ERROR_NONE;
+
+	if(dI2CSemaphore == NULL)
+		return BSP_ERROR_PERIPH_FAILURE;
+
+	if(xSemaphoreTake(dI2CSemaphore, (TickType_t)50) != pdTRUE)
+		return BSP_ERROR_PERIPH_FAILURE;
+
+	shared_i2c_change_pins(DevAddr);
+
+	if(HAL_I2C_IsDeviceReady(&hbus_i2c1, DevAddr, Trials, 1000) != HAL_OK)
+	{
+		ret = BSP_ERROR_BUSY;
+	}
+
+	xSemaphoreGive(dI2CSemaphore);
+	return ret;
+}
+#endif
+
 #if 0
 
 int32_t BSP_I2C1_WriteReg16(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length)
@@ -569,27 +662,6 @@ int32_t BSP_I2C1_ReadReg16(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint1
   }
 
   return ret;
-}
-#endif
-
-#if 1
-int32_t shared_i2c_is_ready(uint16_t DevAddr, uint32_t Trials)
-{
-	int32_t ret = BSP_ERROR_NONE;
-
-	if(dI2CSemaphore == NULL)
-		return BSP_ERROR_PERIPH_FAILURE;
-
-	if(xSemaphoreTake(dI2CSemaphore, (TickType_t)50) != pdTRUE)
-		return BSP_ERROR_PERIPH_FAILURE;
-
-	if(HAL_I2C_IsDeviceReady(&hbus_i2c1, DevAddr, Trials, 1000) != HAL_OK)
-	{
-		ret = BSP_ERROR_BUSY;
-	}
-
-	xSemaphoreGive(dI2CSemaphore);
-	return ret;
 }
 #endif
 

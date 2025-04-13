@@ -95,7 +95,7 @@ void att_hw_init(void)
 	//LL_GPIO_SetPinSpeed(ATT_DATA_PORT, 	ATT_DATA, 	LL_GPIO_SPEED_FREQ_LOW);
 	//LL_GPIO_SetPinSpeed(ATT_CLK_PORT, 	ATT_CLK, 	LL_GPIO_SPEED_FREQ_LOW);
 
-	printf("ATT init\r\n");
+	//printf("ATT init\r\n");
 
 	att_init_done = 1;
 }
