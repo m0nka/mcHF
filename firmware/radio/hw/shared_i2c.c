@@ -442,7 +442,7 @@ static void shared_i2c_change_pins(uchar addr)
 	if(addr_in_use == addr)
 		return;
 
-	printf("change pins for addr 0x%x\r\n", addr);
+	//printf("change pins for addr 0x%x\r\n", addr);
 
 	// Disable I2C
 	CLEAR_BIT(I2C4->CR1, I2C_CR1_PE);
