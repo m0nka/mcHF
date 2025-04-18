@@ -68,13 +68,23 @@ static void ui_controls_battery_progress(uchar val)
 	// Text
 	GUI_SetColor(GUI_BLACK);
 	GUI_SetFont(&GUI_Font20_ASCII);
+
+	#ifdef CONTEXT_BMS
 	GUI_DispStringAt(buf, x - 8,  BATTERY_Y + BATTERY_SIZE_Y - 18);
 
 	if(bmss.mins)
+	{
+		if(bmss.mins > 36000)
+			bmss.mins = 36000;
+
 		sprintf(buf, "%dh%dm", bmss.mins/60, bmss.mins%60);
+		GUI_DispStringAt(buf, x - 26, BATTERY_Y + BATTERY_SIZE_Y - 42);
+	}
 	else
-		sprintf(buf, "NA");
-	GUI_DispStringAt(buf, x - 26, BATTERY_Y + BATTERY_SIZE_Y - 42);
+		GUI_DispStringAt("NA", x - 6, BATTERY_Y + BATTERY_SIZE_Y - 42);
+	#else
+	GUI_DispStringAt("offline", x - 12, BATTERY_Y + BATTERY_SIZE_Y - 33);
+	#endif
 }
 
 //*----------------------------------------------------------------------------

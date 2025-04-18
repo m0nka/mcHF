@@ -14,3 +14,4 @@
 - R13e needs to be 10k(not 1k)
 - add cutout for paddle connector access
 - FWD and REV are swapped
+- Q6 overheats after few minutes, cause TS4 alarm and shutdown(on batteries only)

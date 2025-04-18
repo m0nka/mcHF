@@ -791,6 +791,7 @@ static uchar icc_proc_dsp_off(void)
 	//CLEAR_BIT(RCC->GCR, RCC_BOOT_C2) ;
 }
 
+#if 0
 //*----------------------------------------------------------------------------
 //* Function Name       : icc_proc_dsp_core_reload
 //* Object              :
@@ -801,7 +802,6 @@ static uchar icc_proc_dsp_off(void)
 //*----------------------------------------------------------------------------
 static uchar icc_proc_dsp_core_reload(void)
 {
-#if 0
 // Test toggle between two cores on SD card
 static uchar curr_core = 0;
 WRITE_REG(BKP_REG_DSP_ID, curr_core);
@@ -846,11 +846,11 @@ curr_core = !curr_core;
 
 	if(timeout < 0)
 		printf("timeouyt\r\n");
-#endif
 
 	//memcpy((void *)D2_AXISRAM_BASE, (void *)0x081D0000, 0x30000);
 	return 0;
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : icc_proc_task
