@@ -35,10 +35,16 @@ Both, hardware and firmware is designed by combining the great work of many hams
 You can download various release files from [here](http://www.m0nka.co.uk) \
 For older HW versions, firmware repository  [here](https://github.com/df8oe/UHSDR) \
 Crash course into the project and features  [here](https://github.com/df8oe/UHSDR/wiki)
-# PCB Files
+# Altium PCB Project Files
 
- * [`latest`, `mcHF`, `0.8.4` *(pcb/mchf)*](./pcb/mchf)
+ * [`latest`, `mcHF`, `0.8.5` *(pcb/mchf)*](./pcb/mchf)
  * [`legacy`, `mcHF`, `0.6.3` *(pcb/__legacy/v6)*](./pcb/__legacy/v6)
+ 
+ # PCB Gerbers
+
+ * [`rev6`, `mcHF`, `0.6.3` *(pcb/__legacy/bin/v6)*](./pcb/__legacy/bin/v6)
+ * [`rev7`, `mcHF`, `0.7.0` *(pcb/__legacy/bin/v7)*](./pcb/__legacy/bin/v7)
+ * [`rev8`, `mcHF`, `0.8.5` *(testing/gerbers/0.8.5)*](./testing/gerbers/0.8.5)
 
 # License
 
