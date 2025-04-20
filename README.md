@@ -44,7 +44,7 @@ Crash course into the project and features  [here](https://github.com/df8oe/UHSD
 
  * [`rev6`, `mcHF`, `0.6.3` *(pcb/__legacy/bin/v6)*](./pcb/__legacy/bin/v6)
  * [`rev7`, `mcHF`, `0.7.0` *(pcb/__legacy/bin/v7)*](./pcb/__legacy/bin/v7)
- * [`rev8`, `mcHF`, `0.8.5` *(testing/gerbers/0.8.5)*](./testing/gerbers/0.8.5)
+ * [`rev8`, `mcHF`, `0.8.5` *(testing/gerbers/0_8_5)*](./testing/gerbers/0_8_5)
 
 # License
 
