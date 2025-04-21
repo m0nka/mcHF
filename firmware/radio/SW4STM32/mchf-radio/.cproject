@@ -61,6 +61,7 @@
 									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/info"/>
 									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/reset"/>
 									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/clock"/>
+									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/logbook"/>
 									<listOptionValue builtIn="false" value="../../../proc/ui/desktop"/>
 									<listOptionValue builtIn="false" value="../../../proc/ui/desktop_ft8"/>
 									<listOptionValue builtIn="false" value="../../../proc/ui/driver"/>

@@ -103,7 +103,7 @@ extern K_ModuleItem_Typedef  	user_i;				// User Interface
 extern K_ModuleItem_Typedef  	clock;				// Clock Settings
 extern K_ModuleItem_Typedef  	reset;				// Factory Reset
 //extern K_ModuleItem_Typedef  	wsjt;				// WSJT-X Tools
-//extern K_ModuleItem_Typedef  	logbook;			// Logbook
+extern K_ModuleItem_Typedef  	logbook;			// Logbook
 extern K_ModuleItem_Typedef  	menu_batt;			// Battery
 extern K_ModuleItem_Typedef  	info;				// System Information
 extern K_ModuleItem_Typedef  	lora;				// System Information
@@ -127,7 +127,7 @@ static void ui_proc_add_menu_items(void)
 	k_ModuleAdd(&menu_batt);			// Battery
 	k_ModuleAdd(&reset);				// Factory Reset
 	//k_ModuleAdd(&wsjt);				// WSJT-X Tools
-	//k_ModuleAdd(&logbook);			// Logbook
+	k_ModuleAdd(&logbook);				// Logbook
 	k_ModuleAdd(&lora);					// Lora
 	k_ModuleAdd(&esp32);				// ESP32
 	k_ModuleAdd(&info);					// About
