@@ -495,9 +495,12 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	if((x == 5) && (y == 4) && (!release))
 	{
 		if(!hold)
-			printf("Record/Mute\r\n");
+		{
+			printf("QuickLog\r\n");
+			GUI_StoreKeyMsg('L', 1);
+		}
 		else
-			printf("Record/Mute hold\r\n");
+			printf("Record/Mute\r\n");
 
 		return;
 	}

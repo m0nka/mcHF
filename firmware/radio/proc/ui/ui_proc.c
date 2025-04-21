@@ -46,10 +46,13 @@
 #include "sd_icon\ui_controls_sd_icon.h"
 #include "battery\ui_controls_battery.h"
 //#include "menu_button\ui_controls_menu_button.h"
+
 #include "on_screen\on_screen_keyboard.h"
 #include "on_screen\on_screen_audio.h"
 #include "on_screen\on_screen_agc_att.h"
 #include "on_screen\on_screen_power.h"
+#include "on_screen\on_screen_quick_log.h"
+
 #include "tx_status\ui_controls_tx_stat.h"
 
 // -----------------------------------------------------------------------------------------------
@@ -440,6 +443,19 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 					}
 					else
 						on_screen_agc_att_quit();
+		        	break;
+		        }
+
+		        case 'L':
+		        {
+		        	printf("L release\r\n");
+					if(!active_control_shown)
+					{
+						on_screen_quick_log_create(WM_HBKWIN);
+						active_control_shown = 1;
+					}
+					else
+						on_screen_quick_log_destroy();
 		        	break;
 		        }
 

@@ -15,13 +15,12 @@
 
 #ifdef CONTEXT_VIDEO
 
-#include "ui_desktop_ft8.h"
-
 #include "gui.h"
 #include "dialog.h"
-//!	#include "ST_GUI_Addons.h"
-
+#include "ui_proc.h"
 #include "rtc.h"
+
+#include "ui_desktop_ft8.h"
 
 #define ID_WINDOW_0               	(GUI_ID_USER + 0x00)
 
@@ -210,13 +209,12 @@ static void _cbCallback(WM_MESSAGE * pMsg)
 	{
     	case WM_INIT_DIALOG:
     	{
-#if 1
     		hFT8TimerTime = WM_CreateTimer(pMsg->hWin, 0, 1000, 0);
 
 			// Init Listbox
     		hText = WM_GetDialogItem(pMsg->hWin, ID_TEXT_LIST1);
 			TEXT_SetFont(hText,&GUI_Font8x16_1);									// use proportional font
-//!			TEXT_SetBkColor(hText,GUI_STCOLOR_DARKBLUE);
+			TEXT_SetBkColor(hText,GUI_STCOLOR_DARKBLUE);
 			TEXT_SetTextColor(hText,GUI_WHITE);
 			TEXT_SetTextAlign(hText,TEXT_CF_LEFT|TEXT_CF_VCENTER);
 			//
@@ -242,7 +240,7 @@ static void _cbCallback(WM_MESSAGE * pMsg)
 			// Init Listbox
     		hText = WM_GetDialogItem(pMsg->hWin, ID_TEXT_LIST2);
 			TEXT_SetFont(hText,&GUI_Font8x16_1);									// use proportional font
-//!			TEXT_SetBkColor(hText,GUI_STCOLOR_DARKBLUE);
+			TEXT_SetBkColor(hText,GUI_STCOLOR_DARKBLUE);
 			TEXT_SetTextColor(hText,GUI_WHITE);
 			TEXT_SetTextAlign(hText,TEXT_CF_LEFT|TEXT_CF_VCENTER);
 			//
@@ -259,27 +257,27 @@ static void _cbCallback(WM_MESSAGE * pMsg)
 
 			// Time Edit box
 			hEdit = WM_GetDialogItem(hDlg, ID_EDIT1);
-//!			EDIT_SetFont(hEdit,&GUI_FontAvantGarde20B);
+			EDIT_SetFont(hEdit,&GUI_Font20_1);
 			EDIT_SetBkColor(hEdit,EDIT_CI_ENABLED,GUI_BLACK);
 			EDIT_SetTextColor(hEdit,EDIT_CI_ENABLED,GUI_YELLOW);
 			EDIT_SetTextAlign(hEdit,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
 			// Date Edit box
 			hEdit = WM_GetDialogItem(hDlg, ID_EDIT2);
-//!			EDIT_SetFont(hEdit,&GUI_FontAvantGarde16B);
+			EDIT_SetFont(hEdit,&GUI_Font16B_1);
 			EDIT_SetBkColor(hEdit,EDIT_CI_ENABLED,GUI_BLACK);
 			EDIT_SetTextColor(hEdit,EDIT_CI_ENABLED,GUI_YELLOW);
 			EDIT_SetTextAlign(hEdit,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
 			EDIT_SetMaxLen(hEdit,16);												// default 8 char limit is not enough
 			// Band Edit box
 			hEdit = WM_GetDialogItem(hDlg, ID_EDIT3);
-//!			EDIT_SetFont(hEdit,&GUI_FontAvantGarde16B);
+			EDIT_SetFont(hEdit,&GUI_Font16B_1);
 			EDIT_SetBkColor(hEdit,EDIT_CI_ENABLED,GUI_BLACK);
 			EDIT_SetTextColor(hEdit,EDIT_CI_ENABLED,GUI_GREEN);
 			EDIT_SetTextAlign(hEdit,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
 			EDIT_SetText(hEdit,"20m");
 			// Frequency Edit box
 			hEdit = WM_GetDialogItem(hDlg, ID_EDIT4);
-//!			EDIT_SetFont(hEdit,&GUI_FontAvantGarde20B);
+			EDIT_SetFont(hEdit,&GUI_Font20_1);
 			EDIT_SetBkColor(hEdit,EDIT_CI_ENABLED,GUI_BLACK);
 			EDIT_SetTextColor(hEdit,EDIT_CI_ENABLED,GUI_GREEN);
 			EDIT_SetTextAlign(hEdit,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
@@ -288,7 +286,7 @@ static void _cbCallback(WM_MESSAGE * pMsg)
 
 			// Show clock
 			ui_desktop_ft8_show_clock(pMsg,1);
-#endif
+
     		break;
     	}
 
@@ -344,13 +342,13 @@ static void ui_desktop_ft8_set_profile(void)
 {
 	WINDOW_SetDefaultBkColor(GUI_LIGHTGRAY);	// looks better than white background
 
-//!	LISTBOX_SetDefaultBkColor(LISTBOX_CI_UNSEL,GUI_STCOLOR_LIGHTBLUE);
+	LISTBOX_SetDefaultBkColor(LISTBOX_CI_UNSEL,GUI_STCOLOR_LIGHTBLUE);
 //!	LISTBOX_SetDefaultScrollMode(LISTBOX_CF_AUTOSCROLLBAR_V);
 
-//!	TEXT_SetDefaultTextColor(GUI_STCOLOR_LIGHTBLUE);
-//!	TEXT_SetDefaultFont(&GUI_FontLubalGraph20);
+	TEXT_SetDefaultTextColor(GUI_STCOLOR_LIGHTBLUE);
+	TEXT_SetDefaultFont(&GUI_Font20_1);
 
-//!	SCROLLBAR_SetDefaultColor(GUI_STCOLOR_LIGHTBLUE, SCROLLBAR_CI_THUMB|SCROLLBAR_CI_SHAFT|SCROLLBAR_CI_ARROW);
+	SCROLLBAR_SetDefaultColor(GUI_STCOLOR_LIGHTBLUE, SCROLLBAR_CI_THUMB|SCROLLBAR_CI_SHAFT|SCROLLBAR_CI_ARROW);
 	SCROLLBAR_SetDefaultWidth(30);
 }
 
@@ -363,7 +361,7 @@ static void ui_desktop_ft8_set_profile(void)
 //*----------------------------------------------------------------------------
 void ui_desktop_ft8_create(void)
 {
-	printf("enter ft8 desktop\n\r");
+	//printf("enter ft8 desktop\n\r");
 
 	ui_desktop_ft8_set_profile();
 
@@ -371,10 +369,12 @@ void ui_desktop_ft8_create(void)
 	hDesktopFT8 = GUI_CreateDialogBox(_aDialogCreate, GUI_COUNTOF(_aDialogCreate), &_cbCallback, 0, 0, 0);
 
 	// Ask DSP to switch mode
-//!	api_ft8_desktop.usMessageID 	= API_BROADCAST_MODE;
-//!	api_ft8_desktop.ucPayload		= 1;	// cnt
-//!	api_ft8_desktop.ucData[0] 		= 2;	// mode
-//!	osMessagePut(hApiMessage, (ulong)&api_ft8_desktop, osWaitForever);
+	#if 0
+	api_ft8_desktop.usMessageID 	= API_BROADCAST_MODE;
+	api_ft8_desktop.ucPayload		= 1;	// cnt
+	api_ft8_desktop.ucData[0] 		= 2;	// mode
+	osMessagePut(hApiMessage, (ulong)&api_ft8_desktop, osWaitForever);
+	#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -399,10 +399,12 @@ void ui_desktop_ft8_destroy(void)
 	LISTBOX_SetDefaultBkColor(LISTBOX_CI_UNSEL,GUI_WHITE);
 
 	// Restore DSP mode
-//!	api_ft8_desktop.usMessageID 	= API_BROADCAST_MODE;
-//!	api_ft8_desktop.ucPayload		= 1;	// cnt
-//!	api_ft8_desktop.ucData[0] 		= 1;	// mode
-//!	osMessagePut(hApiMessage, (ulong)&api_ft8_desktop, osWaitForever);
+	#if 0
+	api_ft8_desktop.usMessageID 	= API_BROADCAST_MODE;
+	api_ft8_desktop.ucPayload		= 1;	// cnt
+	api_ft8_desktop.ucData[0] 		= 1;	// mode
+	osMessagePut(hApiMessage, (ulong)&api_ft8_desktop, osWaitForever);
+	#endif
 }
 
 #endif

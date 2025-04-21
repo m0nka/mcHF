@@ -977,6 +977,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_power.c</locationURI>
 		</link>
 		<link>
+			<name>proc/ui/desktop/on_screen/on_screen_quick_log.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_quick_log.c</locationURI>
+		</link>
+		<link>
 			<name>proc/ui/desktop/sd_icon/sd_small.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/sd_icon/sd_small.c</locationURI>
