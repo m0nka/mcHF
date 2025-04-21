@@ -60,7 +60,7 @@
 //#include "quick_log_entry\ui_quick_log.h"
 // -----------------------------------------------------------------------------------------------
 // FT8 Desktop
-//#include "desktop_ft8\ui_desktop_ft8.h"
+#include "desktop_ft8\ui_desktop_ft8.h"
 // -----------------------------------------------------------------------------------------------
 // Menu Mode
 #include "menu\ui_menu_module.h"
@@ -686,15 +686,23 @@ static void ui_proc_change_mode(void)
 			break;
 		}
 #endif
-#if 0
+#if 1
 		// Switch to FT8 mode
 		case MODE_DESKTOP_FT8:
 		{
 			printf("Entering FT8 mode...\r\n");
 
 			// Destroy desktop controls
+			ui_controls_volume_quit();
+			ui_controls_clock_quit();
+			ui_controls_spectrum_quit();
+			ui_controls_frequency_quit();
+
 			ui_controls_smeter_quit();
 			ui_controls_spectrum_quit();
+
+			WM_SetCallback		(WM_HBKWIN, 0);
+			WM_InvalidateWindow	(WM_HBKWIN);
 
 			// Clear screen
 			GUI_SetBkColor(GUI_BLACK);
@@ -739,7 +747,7 @@ static void ui_proc_change_mode(void)
 			// Destroy any Window Manager items
 			ui_menu_destroy();
 //!			ui_side_enc_menu_destroy();
-//!			ui_desktop_ft8_destroy();
+			ui_desktop_ft8_destroy();
 //!			ui_quick_log_destroy();
 
 			#ifdef PROC_USE_WM
@@ -986,7 +994,7 @@ ui_proc_loop:
 	GUI_Exec();
 	GUI_Delay(UI_PROC_SLEEP_TIME);
 	#else
-	if(ui_s.cur_state == MODE_MENU)
+	if((ui_s.cur_state == MODE_MENU)||(ui_s.cur_state == MODE_DESKTOP_FT8))
 	{
 		GUI_Exec();
 		GUI_Delay(UI_PROC_SLEEP_TIME);

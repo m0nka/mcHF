@@ -468,8 +468,22 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
+			#if 0
 			printf("KEYB\r\n");
 			GUI_StoreKeyMsg('K', 1);
+			#else
+			if(ui_s.cur_state != MODE_DESKTOP_FT8)
+			{
+				printf("enter FT8\r\n");
+				ui_s.req_state = MODE_DESKTOP_FT8;
+			}
+			else
+			{
+				printf("exit FT8\r\n");
+				ui_s.req_state = MODE_DESKTOP;
+			}
+			xTaskNotify(hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
+#endif
 		}
 		else
 		{
@@ -1283,6 +1297,7 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 		// -------------------------------------------------
 		// Main radio desktop
 		case MODE_DESKTOP:
+		case MODE_DESKTOP_FT8:	// so can exit via button
 			keypad_cmd_processor_desktop(x,y,hold,release);
 			break;
 
@@ -1290,7 +1305,6 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 		// Route Keypad input to emWin Window Manager
 		case MODE_MENU:
 		case MODE_QUICK_LOG:
-		case MODE_DESKTOP_FT8:
 		case MODE_SIDE_ENC_MENU:
 			keypad_cmd_processor_wm(x,y,hold,release);
 			break;
@@ -1379,7 +1393,7 @@ static void keypad_scan_a(void)
 {
 	uchar i, j, id;
 
-	//--printf("proc %d \r\n", ks.irq_id);
+	//printf("proc %d \r\n", ks.irq_id);
 
 	(ks.tap_cnt)++;											// Increase multi-tap counter
 	if(ks.tap_cnt > 20) ks.tap_id = 0;						// Reset multi-tap char id

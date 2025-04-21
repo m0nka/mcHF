@@ -837,6 +837,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/touch/hw/touch_i2c.h</locationURI>
 		</link>
 		<link>
+			<name>proc/ui/desktop_ft8/ui_desktop_ft8.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop_ft8/ui_desktop_ft8.c</locationURI>
+		</link>
+		<link>
 			<name>proc/ui/driver/GUIConf.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/driver/GUIConf.c</locationURI>
