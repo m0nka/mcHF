@@ -62,6 +62,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/config/stm32h7xx_hal_conf.h</locationURI>
 		</link>
 		<link>
+			<name>hw/bq40z80.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/bq40z80.c</locationURI>
+		</link>
+		<link>
 			<name>hw/mchf_pro_board.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/hw/mchf_pro_board.c</locationURI>
@@ -70,6 +75,11 @@
 			<name>hw/sd_diskio.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/hw/sd_diskio.c</locationURI>
+		</link>
+		<link>
+			<name>hw/shared_i2c.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/shared_i2c.c</locationURI>
 		</link>
 		<link>
 			<name>startup/startup_stm32h747xx_CM7.s</name>

@@ -1,35 +1,32 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                         Krassi Atanassov - M0NKA, 2013-2021                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:       The mcHF project is released for radio amateurs experimentation **
+**               and non-commercial use only.Check 3rd party drivers for licensing **
 ************************************************************************************/
-#include "mchf_pro_board.h"
-#include "main.h"
+#ifndef __BQ40Z80_H
+#define __BQ40Z80_H
 
-#include "shared_i2c.h"
-#include "bq40z80.h"
+uchar bq40z80_mac_read_block(ushort cmd, uchar *buf, uchar len);
 
-#include "bms_proc.h"
+uchar bq40z80_write_16bit_reg(uchar reg, ushort val);
+uchar bq40z80_read_16bit_reg(uchar reg, ushort *val);
 
-ushort batt_status = 0;
+uchar bq40z80_read_fw_ver(void);
 
-void bms_proc_init(void)
-{
-	bq40z80_init();
+uchar bq40z80_read_soc(void);
+ushort bq40z80_read_runtime(void);
+ushort bq40z80_read_status(void);
 
-	//uchar soc = bq40z80_read_soc();
-	//if(soc != 0xFF)
-	//	printf("soc: %d%% \r\n", soc);
+void  bq40z80_init(void);
 
-	batt_status = bq40z80_read_status();
+#endif
 
-	//if(batt_status != 0xFFFF)
-	//	printf("sta: %04x \r\n", batt_status);
-}
+

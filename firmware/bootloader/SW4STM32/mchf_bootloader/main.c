@@ -457,12 +457,16 @@ int main(void)
     // Proc init
     bsp_config();
 
+    bms_proc_init();
+
     // Actual bootloader sequencing
     boot_process();
 
     while(1)
     {
-    	HAL_Delay(300);
+    	HAL_Delay(1000);
     	HAL_GPIO_TogglePin(POWER_LED_PORT, POWER_LED);
+
+    	ui_proc_show_bms_flags();
     }
 }

@@ -40,6 +40,7 @@ extern LTDC_HandleTypeDef hltdc;
 
 extern ulong reset_reason;
 extern uchar gen_boot_reason_err;
+extern ushort batt_status;
 
 static void draw_atlas_circle(ushort c2x,ushort c2y, uchar dir)
 {
@@ -131,6 +132,88 @@ uchar bare_lcd_init(void)
 	return 0;
 }
 
+void ui_proc_show_bms_flags(void)
+{
+	ushort i, stat, line = 16;
+	char 	buff[50];
+
+	// Skip paint on error
+	if((batt_status == 0xFFFF)||(batt_status == 0))
+		return;
+
+	printf("sta: %04x \r\n", batt_status);
+
+    // Text attributes
+	lcd_low_SetBackColor(lcd_low_COLOR_BLACK);
+	lcd_low_SetFont(&Font16);
+
+	for(i = 0, stat = batt_status; i < 12; i++)
+	{
+		if((stat & 0x8000) == 0x8000)
+			lcd_low_SetTextColor(lcd_low_COLOR_LIGHTGREEN);
+		else
+			lcd_low_SetTextColor(lcd_low_COLOR_DARKGRAY);
+
+		switch(i)
+		{
+			case 0:
+				lcd_low_DisplayStringAt(LINE(line), 360,  (uchar *)"OCA", LEFT_MODE);
+				break;
+			case 1:
+				lcd_low_DisplayStringAt(LINE(line), 410,  (uchar *)"TCA", LEFT_MODE);
+				break;
+			case 2:
+				lcd_low_DisplayStringAt(LINE(line), 360,  (uchar *)"RCV", LEFT_MODE);
+				break;
+			case 3:
+				lcd_low_DisplayStringAt(LINE(line), 410,  (uchar *)"OTA", LEFT_MODE);
+				break;
+			case 4:
+				lcd_low_DisplayStringAt(LINE(line), 360,  (uchar *)"TDA", LEFT_MODE);
+				break;
+			case 5:
+				lcd_low_DisplayStringAt(LINE(line), 410,  (uchar *)"RSV", LEFT_MODE);
+				break;
+			case 6:
+				lcd_low_DisplayStringAt(LINE(line), 360,  (uchar *)"RCA", LEFT_MODE);
+				break;
+			case 7:
+				lcd_low_DisplayStringAt(LINE(line), 410,  (uchar *)"RTA", LEFT_MODE);
+				break;
+			case 8:
+				lcd_low_DisplayStringAt(LINE(line), 360,  (uchar *)"INIT", LEFT_MODE);
+				break;
+			case 9:
+				lcd_low_DisplayStringAt(LINE(line), 410,  (uchar *)"DSG", LEFT_MODE);
+				break;
+			case 10:
+				lcd_low_DisplayStringAt(LINE(line), 360,  (uchar *)"FC", LEFT_MODE);
+				break;
+			case 11:
+				lcd_low_DisplayStringAt(LINE(line), 410,  (uchar *)"FD", LEFT_MODE);
+				break;
+		}
+
+		// Next row
+		if((i)&&(i%2 != 0)) line += 2;
+
+		// Next bit
+		stat = stat << 1;
+	}
+
+	stat = batt_status & 4;
+	if(stat)
+	{
+		lcd_low_SetTextColor(lcd_low_COLOR_LIGHTGREEN);
+	}
+	else
+		lcd_low_SetTextColor(lcd_low_COLOR_DARKGRAY);
+
+	lcd_low_DisplayStringAt(LINE(line), 360,  (uchar *)"EC = ", LEFT_MODE);
+	sprintf(buff, "%d", stat);
+	lcd_low_DisplayStringAt(LINE(line), 410,  (uchar *)buff, LEFT_MODE);
+}
+
 void boot_process(void)
 {
 	char 	buff[200];
@@ -155,15 +238,23 @@ void boot_process(void)
 	sprintf(buff, "%d.%d.%d.%d", MCHF_L_VER_MAJOR, MCHF_L_VER_MINOR, MCHF_L_VER_RELEASE, MCHF_L_VER_BUILD);
 	lcd_low_DisplayStringAt(LINE(1) + 1, 350, (uint8_t *)buff, LEFT_MODE);	// label
 
+	// Show bms flags in the right panel
+	ui_proc_show_bms_flags();
+
+    // Text attributes
+	lcd_low_SetBackColor(lcd_low_COLOR_BLACK);
+	lcd_low_SetTextColor(lcd_low_COLOR_WHITE);
+	lcd_low_SetFont(&Font16);
+
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	// Test for general boot error (clocks, lcd, etc)
-	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing BOOT err...", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing BOOT UP....", LEFT_MODE);
 
 	if(gen_boot_reason_err == 0)
 	{
 		//HAL_Delay(500);
-		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing BOOT err...PASS", LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing BOOT UP....PASS", LEFT_MODE);
 	}
 	else
 	{
@@ -175,36 +266,21 @@ void boot_process(void)
 
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
-	// Test if ESP32 alive
-	#ifdef CONTEXT_IPC_PROC
-	lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing Baseband...", LEFT_MODE);
+	// Test BMS
+	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing BMS........", LEFT_MODE);
 
-	if(ipc_proc_establish_link(buff) == 0)
+	if((batt_status != 0xFFFF)&&(batt_status != 0))
 	{
-		lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing Baseband...PASS", LEFT_MODE);
-		line++;
-
-		lcd_low_DisplayStringAt(LINE(3) + 1, 350, (uint8_t *)buff, LEFT_MODE);
+		//HAL_Delay(500);
+		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing BMS........PASS", LEFT_MODE);
 	}
 	else
 	{
-		lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing Baseband...FAIL", LEFT_MODE);
-		line++;
+		HAL_Delay(500);
+		sprintf(buff, "Testing BMS........FAIL(%04x)", batt_status);
+		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)buff, LEFT_MODE);
 	}
-	#endif
-
-#if 0
-	// -----------------------------------------------------------------------------------------------
-	// -----------------------------------------------------------------------------------------------
-	// DSP test(already done on reset, so just showing result)
-	lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing DSP core...", LEFT_MODE);
-
-	if(dsp_core_stat != 0)
-		lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing DSP core...FAIL", LEFT_MODE);
-	else
-		lcd_low_DisplayStringAt(LINE(line), 10, (uchar *)"Testing DSP core...PASS", LEFT_MODE);
 	line++;
-#endif
 
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
@@ -285,6 +361,8 @@ void boot_process(void)
 
 run_radio:
 
+	return;
+
 	if(is_firmware_valid() == 0)
 	{
 		//HAL_Delay(500);
@@ -295,7 +373,7 @@ run_radio:
 		//HAL_Delay(2000);
 
 		// Jump
-//!		jump_to_fw(RADIO_FIRM_ADDR);
+		jump_to_fw(RADIO_FIRM_ADDR);
 	}
 
 	HAL_Delay(500);
