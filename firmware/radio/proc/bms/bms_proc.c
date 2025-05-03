@@ -1308,6 +1308,9 @@ static void bms_proc_power_off(void)
 	// Check for power off
    	if(HAL_GPIO_ReadPin(POWER_BUTTON_PORT, POWER_BUTTON))
    	{
+   		// ToDo: Use power button hold as power off
+   		//       click as Mute...
+   		//
    		vTaskDelay(200);
 
    		if(HAL_GPIO_ReadPin(POWER_BUTTON_PORT, POWER_BUTTON))
