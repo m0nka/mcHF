@@ -62,6 +62,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/config/stm32h7xx_hal_conf.h</locationURI>
 		</link>
 		<link>
+			<name>hw/mchf_pro_board.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/mchf_pro_board.c</locationURI>
+		</link>
+		<link>
 			<name>hw/sd_diskio.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/hw/sd_diskio.c</locationURI>
@@ -510,6 +515,16 @@
 			<name>proc/ipc/lwrb.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ipc/lwrb.c</locationURI>
+		</link>
+		<link>
+			<name>proc/selftest/selftest_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/selftest/selftest_proc.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ui/ui_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/ui_proc.c</locationURI>
 		</link>
 		<link>
 			<name>Middlewares/FatFs/Core/diskio.c</name>

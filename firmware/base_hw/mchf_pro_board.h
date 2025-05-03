@@ -534,4 +534,10 @@ void 	print_hex_array(uchar *pArray, ushort aSize);
 // bsp.c
 void bsp_power_off(void);
 void power_off_a(void);
+
+// bootloader
+void power_off_x(uchar reset_reason);
+void jump_to_fw(ulong SubDemoAddress);
+uchar update_radio(void);
+
 #endif

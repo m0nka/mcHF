@@ -1,7 +1,7 @@
 /************************************************************************************
 **                                                                                 **
 **                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2021                     **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
@@ -16,9 +16,10 @@ ENTRY(Reset_Handler)
 
 /* Highest address of the user mode stack */
 _estack = 0x10000;    /* end of RAM */
+
 /* Generate a link error if heap and stack don't fit into RAM */
-_Min_Heap_Size  = 0x8000  /* 1 Kb */;      /* required amount of heap  */
-_Min_Stack_Size = 0x8000  /* 1 Kb */; /* required amount of stack */
+_Min_Heap_Size  = 0x8000  /* 1 Kb */;      	/* required amount of heap  */
+_Min_Stack_Size = 0x8000  /* 1 Kb */; 		/* required amount of stack */
 
 /* Specify the memory areas */
 MEMORY
