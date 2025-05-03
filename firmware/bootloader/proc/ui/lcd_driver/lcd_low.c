@@ -383,6 +383,143 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
   return ret;
 }
 
+// -------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------
+//
+//
+// HAL V1.8.0 / 14-February-2020
+//
+#define DSI_TIMEOUT_VALUE ((uint32_t)1000U)
+HAL_StatusTypeDef HAL_DSI_InitA(DSI_HandleTypeDef *hdsi, DSI_PLLInitTypeDef *PLLInit)
+{
+  uint32_t tickstart;
+  uint32_t unitIntervalx4;
+  uint32_t tempIDF;
+
+  /* Check the DSI handle allocation */
+  if (hdsi == NULL)
+  {
+    return HAL_ERROR;
+  }
+
+  /* Check function parameters */
+  assert_param(IS_DSI_PLL_NDIV(PLLInit->PLLNDIV));
+  assert_param(IS_DSI_PLL_IDF(PLLInit->PLLIDF));
+  assert_param(IS_DSI_PLL_ODF(PLLInit->PLLODF));
+  assert_param(IS_DSI_AUTO_CLKLANE_CONTROL(hdsi->Init.AutomaticClockLaneControl));
+  assert_param(IS_DSI_NUMBER_OF_LANES(hdsi->Init.NumberOfLanes));
+
+#if (USE_HAL_DSI_REGISTER_CALLBACKS == 1)
+  if (hdsi->State == HAL_DSI_STATE_RESET)
+  {
+    /* Reset the DSI callback to the legacy weak callbacks */
+    hdsi->TearingEffectCallback = HAL_DSI_TearingEffectCallback; /* Legacy weak TearingEffectCallback */
+    hdsi->EndOfRefreshCallback  = HAL_DSI_EndOfRefreshCallback;  /* Legacy weak EndOfRefreshCallback  */
+    hdsi->ErrorCallback         = HAL_DSI_ErrorCallback;         /* Legacy weak ErrorCallback         */
+
+    if (hdsi->MspInitCallback == NULL)
+    {
+      hdsi->MspInitCallback = HAL_DSI_MspInit;
+    }
+    /* Initialize the low level hardware */
+    hdsi->MspInitCallback(hdsi);
+  }
+#else
+  if (hdsi->State == HAL_DSI_STATE_RESET)
+  {
+    /* Initialize the low level hardware */
+    HAL_DSI_MspInit(hdsi);
+  }
+#endif /* USE_HAL_DSI_REGISTER_CALLBACKS */
+
+  /* Change DSI peripheral state */
+  hdsi->State = HAL_DSI_STATE_BUSY;
+
+  /**************** Turn on the regulator and enable the DSI PLL ****************/
+
+  /* Enable the regulator */
+  __HAL_DSI_REG_ENABLE(hdsi);
+
+  /* Get tick */
+  tickstart = HAL_GetTick();
+
+  /* Wait until the regulator is ready */
+  while (__HAL_DSI_GET_FLAG(hdsi, DSI_FLAG_RRS) == 0U)
+  {
+    /* Check for the Timeout */
+    if ((HAL_GetTick() - tickstart) > DSI_TIMEOUT_VALUE)
+    {
+      return HAL_TIMEOUT;
+    }
+  }
+
+  /* Set the PLL division factors */
+  hdsi->Instance->WRPCR &= ~(DSI_WRPCR_PLL_NDIV | DSI_WRPCR_PLL_IDF | DSI_WRPCR_PLL_ODF);
+  hdsi->Instance->WRPCR |= (((PLLInit->PLLNDIV) << 2U) | ((PLLInit->PLLIDF) << 11U) | ((PLLInit->PLLODF) << 16U));
+
+  /* Enable the DSI PLL */
+  __HAL_DSI_PLL_ENABLE(hdsi);
+
+  /* Get tick */
+  tickstart = HAL_GetTick();
+
+  /* Wait for the lock of the PLL */
+  while (__HAL_DSI_GET_FLAG(hdsi, DSI_FLAG_PLLLS) == 0U)
+  {
+    /* Check for the Timeout */
+    if ((HAL_GetTick() - tickstart) > DSI_TIMEOUT_VALUE)
+    {
+      return HAL_TIMEOUT;
+    }
+  }
+
+  /*************************** Set the PHY parameters ***************************/
+
+  /* D-PHY clock and digital enable*/
+  hdsi->Instance->PCTLR |= (DSI_PCTLR_CKE | DSI_PCTLR_DEN);
+
+  /* Clock lane configuration */
+  hdsi->Instance->CLCR &= ~(DSI_CLCR_DPCC | DSI_CLCR_ACR);
+  hdsi->Instance->CLCR |= (DSI_CLCR_DPCC | hdsi->Init.AutomaticClockLaneControl);
+
+  /* Configure the number of active data lanes */
+  hdsi->Instance->PCONFR &= ~DSI_PCONFR_NL;
+  hdsi->Instance->PCONFR |= hdsi->Init.NumberOfLanes;
+
+  /************************ Set the DSI clock parameters ************************/
+
+  /* Set the TX escape clock division factor */
+  hdsi->Instance->CCR &= ~DSI_CCR_TXECKDIV;
+  hdsi->Instance->CCR |= hdsi->Init.TXEscapeCkdiv;
+
+  /* Calculate the bit period in high-speed mode in unit of 0.25 ns (UIX4) */
+  /* The equation is : UIX4 = IntegerPart( (1000/F_PHY_Mhz) * 4 )          */
+  /* Where : F_PHY_Mhz = (NDIV * HSE_Mhz) / (IDF * ODF)                    */
+  tempIDF = (PLLInit->PLLIDF > 0U) ? PLLInit->PLLIDF : 1U;
+  unitIntervalx4 = (4000000U * tempIDF * ((1UL << (0x3U & PLLInit->PLLODF)))) / ((HSE_VALUE / 1000U) * PLLInit->PLLNDIV);
+
+  /* Set the bit period in high-speed mode */
+  hdsi->Instance->WPCR[0U] &= ~DSI_WPCR0_UIX4;
+  hdsi->Instance->WPCR[0U] |= unitIntervalx4;
+
+  /****************************** Error management *****************************/
+
+  /* Disable all error interrupts and reset the Error Mask */
+  hdsi->Instance->IER[0U] = 0U;
+  hdsi->Instance->IER[1U] = 0U;
+  hdsi->ErrorMsk = 0U;
+
+  /* Initialise the error code */
+  hdsi->ErrorCode = HAL_DSI_ERROR_NONE;
+
+  /* Initialize the DSI state*/
+  hdsi->State = HAL_DSI_STATE_READY;
+
+  return HAL_OK;
+}
+//
+// -------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------
 __weak HAL_StatusTypeDef MX_DSIHOST_DSI_Init(DSI_HandleTypeDef *hdsi, uint32_t Width, uint32_t Height, uint32_t PixelFormat)
 {
   DSI_PLLInitTypeDef PLLInit;
@@ -396,7 +533,11 @@ __weak HAL_StatusTypeDef MX_DSIHOST_DSI_Init(DSI_HandleTypeDef *hdsi, uint32_t W
   PLLInit.PLLIDF 						= DSI_PLL_IN_DIV5;
   PLLInit.PLLODF 						= DSI_PLL_OUT_DIV1;
 
-  if (HAL_DSI_Init(hdsi, &PLLInit) != HAL_OK)
+  //
+  // Note: use local implementation from older hal release, as the latest rewrite of
+  //       of this function fails ;(
+  //
+  if (HAL_DSI_InitA(hdsi, &PLLInit) != HAL_OK)
   {
     return 1;//HAL_ERROR;
   }
