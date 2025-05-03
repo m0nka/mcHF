@@ -12,7 +12,7 @@
 :: Main Board
 @SET MAIN_BOARD=-DISCO
 :: Hex filename
-@SET HEX_FILE="Debug_CM7/mchf-bootloader_CM7.elf"
+@SET HEX_FILE="Debug_CM7/mchf_bootloader_CM7.elf"
 @IF NOT EXIST "%HEX_FILE%" @ECHO %HEX_FILE% Does not exist !! && GOTO goError
 
 :: Board ID

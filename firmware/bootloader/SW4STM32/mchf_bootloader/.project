@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>mchf-bootloader</name>
+	<name>mchf_bootloader</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -575,7 +575,7 @@
 	<variableList>
 		<variable>
 			<name>copy_PARENT</name>
-			<value>$%7BPARENT-2-ECLIPSE_HOME%7D/Projects/mcHFpro/firmware/mchf-bootloader/SW4STM32</value>
+			<value>$%7BPARENT-2-ECLIPSE_HOME%7D/Projects/mcHFpro/firmware/mchf_bootloader/SW4STM32</value>
 		</variable>
 		<variable>
 			<name>copy_PARENT1</name>
@@ -583,7 +583,7 @@
 		</variable>
 		<variable>
 			<name>copy_PARENT12</name>
-			<value>$%7Bcopy_PARENT1%7D/mchf-bootloader</value>
+			<value>$%7Bcopy_PARENT1%7D/mchf_bootloader</value>
 		</variable>
 		<variable>
 			<name>copy_PARENT123</name>
