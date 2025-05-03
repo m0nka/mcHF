@@ -13,9 +13,9 @@
 #include "mchf_pro_board.h"
 #include "main.h"
 
-#include "ipc_proc.h"
 #include "ui_proc.h"
 #include "selftest_proc.h"
+#include "bms_proc.h"
 
 #include "hw_sdram.h"
 

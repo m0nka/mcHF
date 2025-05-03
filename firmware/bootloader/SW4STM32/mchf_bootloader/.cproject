@@ -50,7 +50,7 @@
 									<listOptionValue builtIn="false" value="../../../proc"/>
 									<listOptionValue builtIn="false" value="../../../proc/ui"/>
 									<listOptionValue builtIn="false" value="../../../proc/ui/lcd_driver"/>
-									<listOptionValue builtIn="false" value="../../../proc/ipc"/>
+									<listOptionValue builtIn="false" value="../../../proc/bms"/>
 									<listOptionValue builtIn="false" value="../../../proc/selftest"/>
 									<listOptionValue builtIn="false" value="../../../../"/>
 									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/CMSIS/Device/ST/STM32H7xx/Include"/>

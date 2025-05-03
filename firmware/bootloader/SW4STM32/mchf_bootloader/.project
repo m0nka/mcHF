@@ -507,14 +507,9 @@
 			<locationURI>PARENT-3-PROJECT_LOC/base_hw/hw/hw_uart.c</locationURI>
 		</link>
 		<link>
-			<name>proc/ipc/ipc_proc.c</name>
+			<name>proc/bms/bms_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ipc/ipc_proc.c</locationURI>
-		</link>
-		<link>
-			<name>proc/ipc/lwrb.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ipc/lwrb.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/bms/bms_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/selftest/selftest_proc.c</name>
