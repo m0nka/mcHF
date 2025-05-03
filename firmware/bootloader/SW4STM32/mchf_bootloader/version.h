@@ -21,8 +21,11 @@
 #define	AUTHOR_STRING				"Krassi Atanassov,M0NKA 2013-2025"
 //
 #define	MCHF_L_VER_MAJOR			0
+//
 #define	MCHF_L_VER_MINOR			0
+//
 #define	MCHF_L_VER_RELEASE			1
-#define	MCHF_L_VER_BUILD			49
+//
+#define	MCHF_L_VER_BUILD			50
 // -----------------------------------------------------------------------------
 #endif

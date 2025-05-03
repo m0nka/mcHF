@@ -12,25 +12,12 @@
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
-#include "version.h"
 
 #include "ipc_proc.h"
 #include "ui_proc.h"
 #include "selftest_proc.h"
 
-#include "lcd_low.h"
-#include "lcd_high.h"
-
-#include "hw_lcd.h"
 #include "hw_sdram.h"
-
-#include "hw_sd.h"
-#include "ff_gen_drv.h"
-#include "sd_diskio.h"
-
-#include "hw_flash.h"
-
-uint32_t 	thirdPartyAdress = 0;
 
 int 	dsp_core_stat;
 ulong	reset_reason;
@@ -411,160 +398,6 @@ void Error_Handler(int err)
 	gen_boot_reason_err = err;
 }
 
-static void early_backup_domain_init(void)
-{
-	/* Enable Back up SRAM */
-	/* Enable write access to Backup domain */
-	PWR->CR1 |= PWR_CR1_DBP;
-	while((PWR->CR1 & PWR_CR1_DBP) == RESET)
-	{
-		__asm("nop");
-	}
-
-	// Enable BKPRAM clock
-	__HAL_RCC_BKPRAM_CLK_ENABLE();
-}
-
-static void bt_hw_power(void)
-{
-	GPIO_InitTypeDef  gpio_init_structure;
-
-	gpio_init_structure.Pull  = GPIO_NOPULL;
-
-	// BT Power Control
-	gpio_init_structure.Pin   = RFM_DIO2;
-	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
-	HAL_GPIO_Init(RFM_DIO2_PORT, &gpio_init_structure);
-
-	// Power off
-	HAL_GPIO_WritePin(RFM_DIO2_PORT, RFM_DIO2, GPIO_PIN_SET);
-}
-
-static void bsp_config(void)
-{
-	// Use sharing, as DSP core might be running after reset
-	printf_init(1);
-	printf("..........................................................\r\n");
-	printf("..........................................................\r\n");
-	printf("-->%s v: %d.%d  \r\n", DEVICE_STRING, MCHF_L_VER_RELEASE, MCHF_L_VER_BUILD);
-
-	// Initialise the screen
-	hw_lcd_gpio_init();
-	hw_lcd_reset();
-	bt_hw_power();
-
-	#ifdef CONTEXT_IPC_PROC
-	ipc_proc_init();
-	#endif
-
-	// Seems to be important
-	early_backup_domain_init();
-}
-
-// Critical HW init on start
-//
-// - missing pullups or pulldowns ? Well, deal with it here
-//
-static void critical_hw_init_and_run_fw(void)
-{
-	GPIO_InitTypeDef  GPIO_InitStruct;
-
-	// Enable RTC back-up registers access
-	__HAL_RCC_RTC_ENABLE();
-	__HAL_RCC_RTC_CLK_ENABLE();
-	HAL_PWR_EnableBkUpAccess();
-
-    reset_reason = READ_REG(BKP_REG_RESET_REASON);
-	WRITE_REG(BKP_REG_RESET_REASON, RESET_CLEAR);
-
-	// PG11 is power hold
-	GPIO_InitStruct.Pin   = POWER_HOLD;
-	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull  = GPIO_PULLDOWN;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(POWER_HOLD_PORT, &GPIO_InitStruct);
-
-	// Power off request from firmware
-	if(reset_reason == RESET_POWER_OFF)
-	{
-		printf("power off request from radio...\r\n");
-		HAL_Delay(300);
-		power_off_x(RESET_POWER_OFF);
-	}
-
-	// PF6 is LED - ack boot up, in firmware should be ambient sensor, not GPIO!
-	GPIO_InitStruct.Pin   = POWER_LED;
-	HAL_GPIO_Init(POWER_LED_PORT, &GPIO_InitStruct);
-
-	// Hold power
-	HAL_GPIO_WritePin(POWER_LED_PORT,POWER_LED, 1);		// led on
-	HAL_GPIO_WritePin(POWER_HOLD_PORT,POWER_HOLD, 1);	// hold power, high
-
-	// Change DSP code
-	#if 0
-	if(reset_reason == RESET_DSP_RELOAD)
-	{
-		printf("dsp reload request from radio...\r\n");
-
-		if(test_sd_card() == 0)
-		{
-			printf("sd card detected\r\n");
-			if(load_default_dsp_core(0) == 0)
-			{
-				printf("dsp core loaded to D2 RAM\r\n");
-
-				// Reinitialize the Stack pointer
-				__set_MSP(*(__IO uint32_t*) RADIO_FIRM_ADDR);
-
-				// Jump to application address
-				((pFunc) (*(__IO uint32_t*) (RADIO_FIRM_ADDR + 4)))();
-			}
-		}
-	}
-	#endif
-
-	// 5V control via logic high
-	//  - using isolation MOSFET to prevent idle leak battery->regulator inhibit->CPU gpio
-	GPIO_InitStruct.Pin   = VCC_5V_ON;
-	HAL_GPIO_Init(VCC_5V_ON_PORT, &GPIO_InitStruct);
-	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, 1);
-
-	// Disable charger
-	#if 0
-	GPIO_InitStruct.Pin   = CHGR_ON;
-	HAL_GPIO_Init(CHGR_ON_PORT, &GPIO_InitStruct);
-	//
-	GPIO_InitStruct.Pin   = CC_CV;
-	HAL_GPIO_Init(CC_CV_PORT, &GPIO_InitStruct);
-	//
-	HAL_GPIO_WritePin(CHGR_ON_PORT, CHGR_ON, 0);
-	HAL_GPIO_WritePin(CC_CV_PORT,   CC_CV,   0);
-	#endif
-
-	// Test only
-	#if 0
-	// Power is PI11
-	__HAL_RCC_GPIOI_CLK_ENABLE();
-	GPIO_InitStruct.Pin   = ESP_POWER;
-	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
-	HAL_GPIO_Init(ESP_POWER_PORT, &GPIO_InitStruct);
-
-	// Power on
-	HAL_GPIO_WritePin(ESP_POWER_PORT, ESP_POWER, GPIO_PIN_RESET);
-	#endif
-
-	//HAL_PWR_DisableBkUpAccess();
-
-	if(reset_reason == RESET_JUMP_TO_FW)
-	{
-		// Reinitialize the Stack pointer
-		__set_MSP(*(__IO uint32_t*) RADIO_FIRM_ADDR);
-
-		// Jump to application address
-		((pFunc) (*(__IO uint32_t*) (RADIO_FIRM_ADDR + 4)))();
-	}
-}
-
 void gpio_clocks_on(void)
 {
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -583,6 +416,7 @@ int main(void)
 	// Disable FMC Bank1 to avoid speculative/cache accesses
 	FMC_Bank1_R->BTCR[0] &= ~FMC_BCRx_MBKEN;
 
+#if 0
 	int32_t timeout;
 
 	  /* Wait until CPU2 boots and enters in stop mode or timeout*/
@@ -595,6 +429,7 @@ int main(void)
 
 	// Remap M4 core boot address (overwrites fuses)
 	//----HAL_SYSCFG_CM4BootAddConfig(SYSCFG_BOOT_ADDR0, D2_AXISRAM_BASE);
+#endif
 
 	// All GPIOs ready
     gpio_clocks_on();

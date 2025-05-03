@@ -539,5 +539,9 @@ void power_off_a(void);
 void power_off_x(uchar reset_reason);
 void jump_to_fw(ulong SubDemoAddress);
 uchar update_radio(void);
+void early_backup_domain_init(void);
+void bt_hw_power(void);
+void bsp_config(void);
+void critical_hw_init_and_run_fw(void);
 
 #endif
