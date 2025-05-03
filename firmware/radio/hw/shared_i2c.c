@@ -442,7 +442,7 @@ static void shared_i2c_change_pins(uchar addr)
 	if(addr_in_use == addr)
 		return;
 
-	printf("change pins for addr 0x%x\r\n", addr);
+	//printf("change pins for addr 0x%x\r\n", addr);
 
 	// Disable I2C
 	CLEAR_BIT(I2C4->CR1, I2C_CR1_PE);
@@ -450,11 +450,13 @@ static void shared_i2c_change_pins(uchar addr)
 	if(addr == 0x98)	// codec
 	{
 		// De-init old
+		#ifdef CONTEXT_BMS
 		gpio_init_structure.Pin       = BMS_SCL_PIN;
 		HAL_GPIO_Init(BMS_SCL_PORT, &gpio_init_structure);
 		//
 		gpio_init_structure.Pin       = BMS_SDA_PIN;
 		HAL_GPIO_Init(BMS_SDA_PORT, &gpio_init_structure);
+		#endif
 
 		// As I2C
 		gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;

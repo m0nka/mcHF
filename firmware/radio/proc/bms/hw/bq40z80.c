@@ -168,6 +168,9 @@ ushort bq40z80_read_runtime(void)
 	if(bq40z80_read_16bit_reg(0x11, &val) == 0)
 		return val;
 
+	if(val > 65000)
+		return 0;
+
 	return 0xFFFF;
 }
 
@@ -186,12 +189,12 @@ void bq40z80_init(void)
 		return;
 
 	bms_loc_init = 1;
-	printf("== bms ready ==\r\n");
+	//printf("== bms ready ==\r\n");
 
 	// Read battery status: 0x0040 - no cells
 	//
-	if(bq40z80_read_16bit_reg(0x16, &val) == 0)
-		printf("stat: %04x \r\n", val);
+	//if(bq40z80_read_16bit_reg(0x16, &val) == 0)
+	//	printf("stat: %04x \r\n", val);
 
 	//if(bq40z80_read_16bit_reg(0x18, &val) == 0)
 	//	printf("dsgn capa: %04x \r\n", val);
@@ -201,15 +204,15 @@ void bq40z80_init(void)
 	//if(bq40z80_read_16bit_reg(0x08, &val) == 0)
 	//	printf("temp: %d deg C(0x%04x)\r\n", (val/10 - 273), val);
 
-	if(bq40z80_read_16bit_reg(0x09, &val) == 0)
-		printf("volt: %dmV \r\n", val);
+	//if(bq40z80_read_16bit_reg(0x09, &val) == 0)
+	//	printf("volt: %dmV \r\n", val);
 
-	printf("soc:  %d%% \r\n", bq40z80_read_soc());
+	//printf("soc:  %d%% \r\n", bq40z80_read_soc());
 
 	// Runtime to empty(0x11, 0x12)
-	val = bq40z80_read_runtime();
-	if(val != 0xFFFF)
-		printf("runt: %dh%dm \r\n", val/60, val%60);
+	//val = bq40z80_read_runtime();
+	//if(val != 0xFFFF)
+	//	printf("runt: %dh%dm \r\n", val/60, val%60);
 
 	//uchar buf[100];
 	//if(bq40z80_mac_read_block(0x0075, buf, 24) == 0)

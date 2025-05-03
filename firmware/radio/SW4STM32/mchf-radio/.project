@@ -837,6 +837,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/touch/hw/touch_i2c.h</locationURI>
 		</link>
 		<link>
+			<name>proc/ui/desktop_ft8/ui_desktop_ft8.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop_ft8/ui_desktop_ft8.c</locationURI>
+		</link>
+		<link>
 			<name>proc/ui/driver/GUIConf.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/driver/GUIConf.c</locationURI>
@@ -970,6 +975,11 @@
 			<name>proc/ui/desktop/on_screen/on_screen_power.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_power.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ui/desktop/on_screen/on_screen_quick_log.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_quick_log.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/sd_icon/sd_small.c</name>
@@ -1160,6 +1170,16 @@
 			<name>proc/ui/menu/items/info/info_res.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/info/info_res.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ui/menu/items/logbook/logbook.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/logbook/logbook.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ui/menu/items/logbook/logbook_res.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/logbook/logbook_res.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/lora/lora.c</name>

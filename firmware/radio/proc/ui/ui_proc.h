@@ -24,6 +24,9 @@
 // Bambu Basic Hot Pink (10204) - #F5547C
 #define HOT_PINK		GUI_MAKE_COLOR(0x007C54F5)
 
+#define GUI_STCOLOR_LIGHTBLUE   		0x00DCA939
+#define GUI_STCOLOR_DARKBLUE    		0x00522000
+
 // Disable individual controls
 #define 	SPECTRUM_WATERFALL
 #define 	VFO_BOTH

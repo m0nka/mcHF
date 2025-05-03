@@ -46,10 +46,13 @@
 #include "sd_icon\ui_controls_sd_icon.h"
 #include "battery\ui_controls_battery.h"
 //#include "menu_button\ui_controls_menu_button.h"
+
 #include "on_screen\on_screen_keyboard.h"
 #include "on_screen\on_screen_audio.h"
 #include "on_screen\on_screen_agc_att.h"
 #include "on_screen\on_screen_power.h"
+#include "on_screen\on_screen_quick_log.h"
+
 #include "tx_status\ui_controls_tx_stat.h"
 
 // -----------------------------------------------------------------------------------------------
@@ -60,7 +63,7 @@
 //#include "quick_log_entry\ui_quick_log.h"
 // -----------------------------------------------------------------------------------------------
 // FT8 Desktop
-//#include "desktop_ft8\ui_desktop_ft8.h"
+#include "desktop_ft8\ui_desktop_ft8.h"
 // -----------------------------------------------------------------------------------------------
 // Menu Mode
 #include "menu\ui_menu_module.h"
@@ -100,7 +103,7 @@ extern K_ModuleItem_Typedef  	user_i;				// User Interface
 extern K_ModuleItem_Typedef  	clock;				// Clock Settings
 extern K_ModuleItem_Typedef  	reset;				// Factory Reset
 //extern K_ModuleItem_Typedef  	wsjt;				// WSJT-X Tools
-//extern K_ModuleItem_Typedef  	logbook;			// Logbook
+extern K_ModuleItem_Typedef  	logbook;			// Logbook
 extern K_ModuleItem_Typedef  	menu_batt;			// Battery
 extern K_ModuleItem_Typedef  	info;				// System Information
 extern K_ModuleItem_Typedef  	lora;				// System Information
@@ -124,7 +127,7 @@ static void ui_proc_add_menu_items(void)
 	k_ModuleAdd(&menu_batt);			// Battery
 	k_ModuleAdd(&reset);				// Factory Reset
 	//k_ModuleAdd(&wsjt);				// WSJT-X Tools
-	//k_ModuleAdd(&logbook);			// Logbook
+	k_ModuleAdd(&logbook);				// Logbook
 	k_ModuleAdd(&lora);					// Lora
 	k_ModuleAdd(&esp32);				// ESP32
 	k_ModuleAdd(&info);					// About
@@ -443,6 +446,19 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        	break;
 		        }
 
+		        case 'L':
+		        {
+		        	printf("L release\r\n");
+					if(!active_control_shown)
+					{
+						on_screen_quick_log_create(WM_HBKWIN);
+						active_control_shown = 1;
+					}
+					else
+						on_screen_quick_log_destroy();
+		        	break;
+		        }
+
 		        case '1':
 		        	ui_actions_change_band(BAND_MODE_160, 0);
 		        	break;
@@ -686,15 +702,23 @@ static void ui_proc_change_mode(void)
 			break;
 		}
 #endif
-#if 0
+#if 1
 		// Switch to FT8 mode
 		case MODE_DESKTOP_FT8:
 		{
 			printf("Entering FT8 mode...\r\n");
 
 			// Destroy desktop controls
+			ui_controls_volume_quit();
+			ui_controls_clock_quit();
+			ui_controls_spectrum_quit();
+			ui_controls_frequency_quit();
+
 			ui_controls_smeter_quit();
 			ui_controls_spectrum_quit();
+
+			WM_SetCallback		(WM_HBKWIN, 0);
+			WM_InvalidateWindow	(WM_HBKWIN);
 
 			// Clear screen
 			GUI_SetBkColor(GUI_BLACK);
@@ -739,7 +763,7 @@ static void ui_proc_change_mode(void)
 			// Destroy any Window Manager items
 			ui_menu_destroy();
 //!			ui_side_enc_menu_destroy();
-//!			ui_desktop_ft8_destroy();
+			ui_desktop_ft8_destroy();
 //!			ui_quick_log_destroy();
 
 			#ifdef PROC_USE_WM
@@ -986,7 +1010,7 @@ ui_proc_loop:
 	GUI_Exec();
 	GUI_Delay(UI_PROC_SLEEP_TIME);
 	#else
-	if(ui_s.cur_state == MODE_MENU)
+	if((ui_s.cur_state == MODE_MENU)||(ui_s.cur_state == MODE_DESKTOP_FT8))
 	{
 		GUI_Exec();
 		GUI_Delay(UI_PROC_SLEEP_TIME);
