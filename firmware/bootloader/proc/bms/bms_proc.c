@@ -21,6 +21,8 @@
 ushort 	batt_status = 0;
 uchar 	soc 		= 0;
 uchar	charge_mode = 0;
+short	pack_curr	= 0;
+ushort  pack_volt	= 0;
 
 void bms_proc_periodic(void)
 {
@@ -31,15 +33,16 @@ void bms_proc_hw_init(void)
 {
 	GPIO_InitTypeDef  gpio_init_structure;
 
-	gpio_init_structure.Pull  = GPIO_NOPULL;
-
-	// BT Power Control
 	gpio_init_structure.Pin   = BMS_PWM_PIN;
+	gpio_init_structure.Pull  = GPIO_NOPULL;
 	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
 	HAL_GPIO_Init(BMS_PWM_PORT, &gpio_init_structure);
 
-	// Power off
+	// Full charge allowed
 	HAL_GPIO_WritePin(BMS_PWM_PORT, BMS_PWM_PIN, GPIO_PIN_RESET);
+
+	// Disable charge FET
+	//HAL_GPIO_WritePin(BMS_PWM_PORT, BMS_PWM_PIN, GPIO_PIN_SET);
 }
 
 void bms_proc_is_charging(void)
@@ -48,7 +51,9 @@ void bms_proc_is_charging(void)
 	if((batt_status == 0xFFFF)||(batt_status == 0))
 		return;
 
-	if((batt_status & 0x40) != 0x40)
+	short curr = bq40z80_read_current();
+
+	if(((batt_status & 0x40) != 0x40)&&(curr > 0))
 		charge_mode = 1;
 	else
 		charge_mode = 0;
@@ -64,8 +69,9 @@ void bms_proc(void)
 	// Update charge status
 	bms_proc_is_charging();
 
-	//if(charge_mode)
-	//bq40z80_read_current();
+	// Get charge data
+	pack_curr = bq40z80_read_current();
+	pack_volt = bq40z80_read_pack_voltage();
 
 	// Update SOC
 	if(soc_skip++ > 20)

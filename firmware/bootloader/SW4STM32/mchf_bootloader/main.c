@@ -463,7 +463,7 @@ int main(void)
     {
     	bms_proc();
     	ui_proc();
- //   	selftest_proc();
+    	selftest_proc();
 
     	HAL_Delay(500);
     	HAL_GPIO_TogglePin(POWER_LED_PORT, POWER_LED);

@@ -202,8 +202,24 @@ short bq40z80_read_current(void)
 		// Add calib factor
 		curr -= 250;
 
-		printf("curr: %dmA \r\n", curr);
+		//printf("curr: %dmA \r\n", curr);
 		return curr;
+	}
+
+	return 0;
+}
+
+ushort bq40z80_read_pack_voltage(void)
+{
+	ushort volt;
+
+	if(!bms_loc_init)
+		return 0;
+
+	if(bq40z80_read_16bit_reg(0x09, &volt) == 0)
+	{
+		//printf("pack: %dmV \r\n", volt);
+		return volt;
 	}
 
 	return 0;
@@ -224,7 +240,7 @@ void bq40z80_init(void)
 		return;
 
 	bms_loc_init = 1;
-	printf("== bms ready ==\r\n");
+	//printf("== bms ready ==\r\n");
 
 	// Read battery status: 0x0040 - no cells
 	//
@@ -239,8 +255,8 @@ void bq40z80_init(void)
 	//if(bq40z80_read_16bit_reg(0x08, &val) == 0)
 	//	printf("temp: %d deg C(0x%04x)\r\n", (val/10 - 273), val);
 
-	if(bq40z80_read_16bit_reg(0x09, &val) == 0)
-		printf("batt: %dmV \r\n", val);
+	//if(bq40z80_read_16bit_reg(0x09, &val) == 0)
+	//	printf("batt: %dmV \r\n", val);
 
 	//printf("soc:  %d%% \r\n", bq40z80_read_soc());
 

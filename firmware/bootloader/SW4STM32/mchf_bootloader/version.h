@@ -26,6 +26,6 @@
 //
 #define	MCHF_L_VER_RELEASE			1
 //
-#define	MCHF_L_VER_BUILD			51
+#define	MCHF_L_VER_BUILD			52
 // -----------------------------------------------------------------------------
 #endif

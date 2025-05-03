@@ -41,6 +41,8 @@ extern uchar	gen_boot_reason_err;
 extern ushort 	batt_status;
 extern uchar  	charge_mode;
 extern uchar 	soc;
+extern short	pack_curr;
+extern ushort  	pack_volt;
 
 static void draw_atlas_circle(ushort c2x,ushort c2y, uchar dir)
 {
@@ -225,7 +227,7 @@ void ui_proc_show_charge_msg(void)
 	else
 		lcd_low_SetTextColor(lcd_low_COLOR_BLACK);
 
-	lcd_low_DisplayStringAt(LINE(28), 90,  (uchar *)"== Charging ==", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(29), 40,  (uchar *)"[Charging]", LEFT_MODE);
 }
 
 void ui_proc_show_soc(void)
@@ -247,6 +249,25 @@ void ui_proc_show_soc(void)
 	lcd_low_DisplayStringAt(LINE(14), BMS_FLAGS_X1,  (uchar *)"SOC:", LEFT_MODE);
 	sprintf(buff, "%d%%", soc);
 	lcd_low_DisplayStringAt(LINE(14), BMS_FLAGS_X2,  (uchar *)buff, LEFT_MODE);
+}
+
+void ui_proc_show_charge_data(void)
+{
+	char 	buff[50];
+
+    // Text attributes
+	lcd_low_SetBackColor(lcd_low_COLOR_BLACK);
+	lcd_low_SetTextColor(lcd_low_COLOR_WHITE);
+	lcd_low_SetFont(&Font16);
+
+	lcd_low_DisplayStringAt(LINE(26), 10,  (uchar *)"Pack:", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(27), 10,  (uchar *)"Curr:", LEFT_MODE);
+
+	sprintf(buff, "%dmV", pack_volt);
+	lcd_low_DisplayStringAt(LINE(26), 100,  (uchar *)buff, LEFT_MODE);
+
+	sprintf(buff, "%dmA", pack_curr);
+	lcd_low_DisplayStringAt(LINE(27), 100,  (uchar *)buff, LEFT_MODE);
 }
 
 void ui_proc_bootup(void)
@@ -456,6 +477,7 @@ void ui_proc(void)
 	ui_proc_show_bms_flags();
 	ui_proc_show_charge_msg();
 	ui_proc_show_soc();
+	ui_proc_show_charge_data();
 }
 
 void ui_proc_init(void)
