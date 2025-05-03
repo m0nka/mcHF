@@ -22,6 +22,26 @@ ushort 	batt_status = 0;
 uchar 	soc 		= 0;
 uchar	charge_mode = 0;
 
+void bms_proc_periodic(void)
+{
+	//HAL_GPIO_TogglePin(BMS_PWM_PORT, BMS_PWM_PIN);
+}
+
+void bms_proc_hw_init(void)
+{
+	GPIO_InitTypeDef  gpio_init_structure;
+
+	gpio_init_structure.Pull  = GPIO_NOPULL;
+
+	// BT Power Control
+	gpio_init_structure.Pin   = BMS_PWM_PIN;
+	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	HAL_GPIO_Init(BMS_PWM_PORT, &gpio_init_structure);
+
+	// Power off
+	HAL_GPIO_WritePin(BMS_PWM_PORT, BMS_PWM_PIN, GPIO_PIN_RESET);
+}
+
 void bms_proc_is_charging(void)
 {
 	// Need at least the init bit on
@@ -44,6 +64,9 @@ void bms_proc(void)
 	// Update charge status
 	bms_proc_is_charging();
 
+	//if(charge_mode)
+	//bq40z80_read_current();
+
 	// Update SOC
 	if(soc_skip++ > 20)
 	{
@@ -57,6 +80,10 @@ void bms_proc(void)
 
 void bms_proc_init(void)
 {
+	// Charge pins
+	bms_proc_hw_init();
+
+	// I2C init
 	bq40z80_init();
 
 	// Status on start

@@ -55,6 +55,7 @@ void DebugMon_Handler(void)
 
 void SysTick_Handler(void)
 {
+	bms_proc_periodic();
 	HAL_IncTick();
 }
 
@@ -462,7 +463,7 @@ int main(void)
     {
     	bms_proc();
     	ui_proc();
-    	selftest_proc();
+ //   	selftest_proc();
 
     	HAL_Delay(500);
     	HAL_GPIO_TogglePin(POWER_LED_PORT, POWER_LED);

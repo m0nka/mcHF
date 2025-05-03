@@ -187,10 +187,26 @@ ushort bq40z80_read_status(void)
 	if(bq40z80_read_16bit_reg(0x16, &val) == 0)
 		return val;
 
-	if(val > 65000)
+	return 0xFFFF;
+}
+
+short bq40z80_read_current(void)
+{
+	short curr;
+
+	if(!bms_loc_init)
 		return 0;
 
-	return 0xFFFF;
+	if(bq40z80_read_16bit_reg(0x0B, &curr) == 0)
+	{
+		// Add calib factor
+		curr -= 250;
+
+		printf("curr: %dmA \r\n", curr);
+		return curr;
+	}
+
+	return 0;
 }
 
 void bq40z80_init(void)
