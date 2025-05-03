@@ -29,8 +29,6 @@
 
 #include "selftest_proc.h"
 
-
-
 #include "ui_proc.h"
 
 static uint32_t LCD_X_Size = 0;
@@ -38,9 +36,11 @@ static uint32_t LCD_Y_Size = 0;
 
 extern LTDC_HandleTypeDef hltdc;
 
-extern ulong reset_reason;
-extern uchar gen_boot_reason_err;
-extern ushort batt_status;
+extern ulong 	reset_reason;
+extern uchar	gen_boot_reason_err;
+extern ushort 	batt_status;
+extern uchar  	charge_mode;
+extern uchar 	soc;
 
 static void draw_atlas_circle(ushort c2x,ushort c2y, uchar dir)
 {
@@ -141,7 +141,7 @@ void ui_proc_show_bms_flags(void)
 	if((batt_status == 0xFFFF)||(batt_status == 0))
 		return;
 
-	printf("sta: %04x \r\n", batt_status);
+	//printf("sta: %04x \r\n", batt_status);
 
     // Text attributes
 	lcd_low_SetBackColor(lcd_low_COLOR_BLACK);
@@ -157,40 +157,40 @@ void ui_proc_show_bms_flags(void)
 		switch(i)
 		{
 			case 0:
-				lcd_low_DisplayStringAt(LINE(line), 360,  (uchar *)"OCA", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X1,  (uchar *)"OCA", LEFT_MODE);
 				break;
 			case 1:
-				lcd_low_DisplayStringAt(LINE(line), 410,  (uchar *)"TCA", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X2,  (uchar *)"TCA", LEFT_MODE);
 				break;
 			case 2:
-				lcd_low_DisplayStringAt(LINE(line), 360,  (uchar *)"RCV", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X1,  (uchar *)"RCV", LEFT_MODE);
 				break;
 			case 3:
-				lcd_low_DisplayStringAt(LINE(line), 410,  (uchar *)"OTA", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X2,  (uchar *)"OTA", LEFT_MODE);
 				break;
 			case 4:
-				lcd_low_DisplayStringAt(LINE(line), 360,  (uchar *)"TDA", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X1,  (uchar *)"TDA", LEFT_MODE);
 				break;
 			case 5:
-				lcd_low_DisplayStringAt(LINE(line), 410,  (uchar *)"RSV", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X2,  (uchar *)"RSV", LEFT_MODE);
 				break;
 			case 6:
-				lcd_low_DisplayStringAt(LINE(line), 360,  (uchar *)"RCA", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X1,  (uchar *)"RCA", LEFT_MODE);
 				break;
 			case 7:
-				lcd_low_DisplayStringAt(LINE(line), 410,  (uchar *)"RTA", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X2,  (uchar *)"RTA", LEFT_MODE);
 				break;
 			case 8:
-				lcd_low_DisplayStringAt(LINE(line), 360,  (uchar *)"INIT", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X1,  (uchar *)"INIT", LEFT_MODE);
 				break;
 			case 9:
-				lcd_low_DisplayStringAt(LINE(line), 410,  (uchar *)"DSG", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X2,  (uchar *)"DSG", LEFT_MODE);
 				break;
 			case 10:
-				lcd_low_DisplayStringAt(LINE(line), 360,  (uchar *)"FC", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X1,  (uchar *)"FC", LEFT_MODE);
 				break;
 			case 11:
-				lcd_low_DisplayStringAt(LINE(line), 410,  (uchar *)"FD", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X2,  (uchar *)"FD", LEFT_MODE);
 				break;
 		}
 
@@ -209,12 +209,47 @@ void ui_proc_show_bms_flags(void)
 	else
 		lcd_low_SetTextColor(lcd_low_COLOR_DARKGRAY);
 
-	lcd_low_DisplayStringAt(LINE(line), 360,  (uchar *)"EC = ", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X1,  (uchar *)"EC = ", LEFT_MODE);
 	sprintf(buff, "%d", stat);
-	lcd_low_DisplayStringAt(LINE(line), 410,  (uchar *)buff, LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X2,  (uchar *)buff, LEFT_MODE);
 }
 
-void boot_process(void)
+void ui_proc_show_charge_msg(void)
+{
+    // Text attributes
+	lcd_low_SetBackColor(lcd_low_COLOR_BLACK);
+	lcd_low_SetFont(&Font16);
+
+	if(charge_mode)
+		lcd_low_SetTextColor(lcd_low_COLOR_RED);
+	else
+		lcd_low_SetTextColor(lcd_low_COLOR_BLACK);
+
+	lcd_low_DisplayStringAt(LINE(28), 90,  (uchar *)"== Charging ==", LEFT_MODE);
+}
+
+void ui_proc_show_soc(void)
+{
+	char 	buff[50];
+
+	if(soc == 0xFF)
+		return;
+
+    // Text attributes
+	lcd_low_SetBackColor(lcd_low_COLOR_BLACK);
+	lcd_low_SetFont(&Font16);
+
+	if(charge_mode)
+		lcd_low_SetTextColor(lcd_low_COLOR_RED);
+	else
+		lcd_low_SetTextColor(lcd_low_COLOR_WHITE);
+
+	lcd_low_DisplayStringAt(LINE(14), BMS_FLAGS_X1,  (uchar *)"SOC:", LEFT_MODE);
+	sprintf(buff, "%d%%", soc);
+	lcd_low_DisplayStringAt(LINE(14), BMS_FLAGS_X2,  (uchar *)buff, LEFT_MODE);
+}
+
+void ui_proc_bootup(void)
 {
 	char 	buff[200];
 	int 	line = 1;
@@ -258,7 +293,7 @@ void boot_process(void)
 	}
 	else
 	{
-		HAL_Delay(500);
+		//HAL_Delay(500);
 		sprintf(buff, "Update Firmware....FAIL(%d)", gen_boot_reason_err);
 		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)buff, LEFT_MODE);
 	}
@@ -276,7 +311,7 @@ void boot_process(void)
 	}
 	else
 	{
-		HAL_Delay(500);
+		//HAL_Delay(500);
 		sprintf(buff, "Testing BMS........FAIL(%04x)", batt_status);
 		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)buff, LEFT_MODE);
 	}
@@ -289,7 +324,7 @@ void boot_process(void)
 
 	if(sdram_test() != 0)
 	{
-		HAL_Delay(500);
+		//HAL_Delay(500);
 		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SDRAM......FAIL.", LEFT_MODE);
 		goto stall;
 	}
@@ -360,9 +395,13 @@ void boot_process(void)
 //!	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing Firmware...", LEFT_MODE);
 
 run_radio:
-
 	return;
 
+stall:
+	return;
+
+
+#if 0
 	if(is_firmware_valid() == 0)
 	{
 		//HAL_Delay(500);
@@ -409,4 +448,17 @@ stall:
 			power_off_x(0);
 		}
 	}
+#endif
+}
+
+void ui_proc(void)
+{
+	ui_proc_show_bms_flags();
+	ui_proc_show_charge_msg();
+	ui_proc_show_soc();
+}
+
+void ui_proc_init(void)
+{
+	ui_proc_bootup();
 }

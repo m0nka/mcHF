@@ -223,8 +223,8 @@ void bq40z80_init(void)
 	//if(bq40z80_read_16bit_reg(0x08, &val) == 0)
 	//	printf("temp: %d deg C(0x%04x)\r\n", (val/10 - 273), val);
 
-	//if(bq40z80_read_16bit_reg(0x09, &val) == 0)
-	//	printf("volt: %dmV \r\n", val);
+	if(bq40z80_read_16bit_reg(0x09, &val) == 0)
+		printf("batt: %dmV \r\n", val);
 
 	//printf("soc:  %d%% \r\n", bq40z80_read_soc());
 

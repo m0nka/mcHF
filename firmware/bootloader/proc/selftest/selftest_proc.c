@@ -36,6 +36,7 @@ char SDPath[4]; 						/* SD card logical drive path */
 
 extern ulong reset_reason;
 extern uchar gen_boot_reason_err;
+extern uchar charge_mode;
 
 int test_sd_card(void)
 {
@@ -223,4 +224,21 @@ ulong is_firmware_valid(void)
 	// ...
 
 	return 0;
+}
+
+void selftest_proc()
+{
+	if(charge_mode)
+		return;
+
+	// On complete charging, execute radio firmware
+	if(is_firmware_valid() == 0)
+	{
+		jump_to_fw(RADIO_FIRM_ADDR);
+	}
+}
+
+void selftest_proc_init()
+{
+
 }

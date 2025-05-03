@@ -452,21 +452,19 @@ int main(void)
 	// Init hw
     critical_hw_init_and_run_fw();
 
-    //EXTI15_10_IRQHandler_Config();
-
     // Proc init
     bsp_config();
-
     bms_proc_init();
-
-    // Actual bootloader sequencing
-    boot_process();
+    ui_proc_init();
+    selftest_proc_init();
 
     while(1)
     {
-    	HAL_Delay(1000);
-    	HAL_GPIO_TogglePin(POWER_LED_PORT, POWER_LED);
+    	bms_proc();
+    	ui_proc();
+    	selftest_proc();
 
-    	ui_proc_show_bms_flags();
+    	HAL_Delay(500);
+    	HAL_GPIO_TogglePin(POWER_LED_PORT, POWER_LED);
     }
 }
