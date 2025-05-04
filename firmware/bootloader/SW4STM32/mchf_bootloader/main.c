@@ -417,21 +417,6 @@ int main(void)
 	// Disable FMC Bank1 to avoid speculative/cache accesses
 	FMC_Bank1_R->BTCR[0] &= ~FMC_BCRx_MBKEN;
 
-#if 0
-	int32_t timeout;
-
-	  /* Wait until CPU2 boots and enters in stop mode or timeout*/
-	  timeout = 0xFFFF;
-	  while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
-	  if ( timeout < 0 )
-	  {
-	    //Error_Handler();
-	  }
-
-	// Remap M4 core boot address (overwrites fuses)
-	//----HAL_SYSCFG_CM4BootAddConfig(SYSCFG_BOOT_ADDR0, D2_AXISRAM_BASE);
-#endif
-
 	// All GPIOs ready
     gpio_clocks_on();
 
@@ -440,9 +425,6 @@ int main(void)
 
     // Enable the CPU Cache
     CPU_CACHE_Enable();
-
-	// Needs to be first thing (after MMU init ?)
-	//dsp_core_stat = boot_dsp_core(NULL);
 
     // Init hal
     HAL_Init();
