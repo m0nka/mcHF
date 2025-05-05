@@ -962,15 +962,19 @@ static void ui_controls_create_sw_big(void)
 	#endif
 
 	// Draw frame/lines
-	GUI_SetColor(HOT_PINK);
+	GUI_SetColor(GUI_DARKGRAY);			//HOT_PINK
 	#if 1
-	GUI_DrawRoundedFrame(	sb.x,
+	GUI_DrawHLine((sb.y + 1), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_DrawHLine((sb.y + 0), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_DrawHLine((sb.y - 1), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
+	GUI_DrawHLine((sb.y - 2), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
+/*	GUI_DrawRoundedFrame(	sb.x,
 							sb.y,
 							(sb.x + SW_FRAME_X_SIZE),
 							(sb.y + SW_FRAME_Y_SIZE),
 							SW_FRAME_CORNER_R,
 							SW_FRAME_WIDTH
-						);
+						);*/
 	#else
 	// Top
 	GUI_DrawHLine((sb.y + 21), 					sb.x, (sb.x + SW_FRAME_X_SIZE));

@@ -71,54 +71,6 @@ typedef struct DialFrequency
 
 } DialFrequency;
 
-//#ifdef CLASSIC_LAYOUT
-#define M_FREQ_X					450
-#define M_FREQ_Y					420
-
-#define M_FREQ1_X					250
-#define M_FREQ1_Y					452
-//
-#define M_FREQ1_X_SZ				188
-//#else
-//#define M_FREQ_X					531
-//#define M_FREQ_Y					350
-//#define M_FREQ1_X					356
-//#define M_FREQ1_Y					364
-//#endif
-//
-// ----------------------------------------------------------------------------
-// Band control
-#define BAND_X						(M_FREQ_X + FREQ_FONT_SIZE_X*4 + 7)	// 140
-#define BAND_Y						(M_FREQ_Y - 20)						// 60
-// ----------------------------------------------------------------------------
-// Step
-#define VFO_STEP_X					(M_FREQ_X + FREQ_FONT_SIZE_X*7 + 12)// 80
-#define VFO_STEP_Y					(M_FREQ_Y - 20)						// 60
-//
-#define VFO_STEP_SIZE_X				52
-#define VFO_STEP_SIZE_Y				20
-// ----------------------------------------------------------------------------
-// RX/TX
-#define RADIO_MODE1_X				360 + 54
-#define RADIO_MODE1_Y				440
-//
-// ----------------------------------------------------------------------------
-// Decoder
-#define DECODER_MODE_X				365
-#define DECODER_MODE_Y				424
-//
-#define DEC_MODE_X_SZ				72
-//
-// ----------------------------------------------------------------------------
-// AGC control
-#define AGC_X						250
-#define AGC_Y						399
-
-// ----------------------------------------------------------------------------
-// RX/TX indicator
-#define RXTX_X						(M_FREQ_X + FREQ_FONT_SIZE_X*1 + 12)// 80
-#define RXTX_Y						(M_FREQ_Y - 15)						// 86
-
 // Exports
 void ui_controls_agc_init(void);
 WM_HWIN ui_controls_frequency_init(WM_HWIN hParent);

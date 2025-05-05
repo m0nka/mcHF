@@ -277,6 +277,15 @@ void ui_controls_volume_init(WM_HWIN hParent)
 	GUI_DispStringInRect(buff, &Rect, GUI_TA_HCENTER | GUI_TA_VCENTER);
 	GUI_SetClipRect(NULL);*/
 	#endif
+
+	GUI_SetColor(GUI_ORANGE);
+	GUI_DrawRoundedFrame(	(SPEAKER_X - 50),
+							(SPEAKER_Y - 40),
+							(SPEAKER_X - 50 + 250),
+							(SPEAKER_Y - 40 + 94),
+							5,
+							2
+						);
 }
 
 //*----------------------------------------------------------------------------

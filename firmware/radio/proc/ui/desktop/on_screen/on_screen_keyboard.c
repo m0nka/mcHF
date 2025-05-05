@@ -60,7 +60,7 @@
 #define ID_BUTTON_X6Y4          	(GUI_ID_USER + 0x67)
 
 #define KEYB_X						254
-#define KEYB_Y						138
+#define KEYB_Y						222
 
 #define KEYB_SIZE_X					595
 #define KEYB_SIZE_Y					250

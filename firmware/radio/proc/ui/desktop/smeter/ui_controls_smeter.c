@@ -26,6 +26,7 @@
 #include "desktop\clock\ui_controls_clock.h"
 
 //#define USE_SPRITE
+//#define ANALOGUE_SMETER
 
 // Externally declared s-meter bmp
 extern GUI_CONST_STORAGE GUI_BITMAP bmscale;
@@ -398,7 +399,7 @@ static void ui_controls_smeter_set_needle(uchar pos)
 //*----------------------------------------------------------------------------
 void ui_controls_smeter_init(void)
 {
-#if 0
+#ifdef ANALOGUE_SMETER
 	PARAM       Param;      // Parameters for drawing routine
 	int         Cnt;
 	int         tDiff = 0;
@@ -438,26 +439,18 @@ void ui_controls_smeter_init(void)
 
 	// Debug
 	sm.repaints = 0;
-#endif
-
-	GUI_SetColor(GUI_WHITE);
-
+#else
 	// Frame
-	#if 0
-	GUI_DrawRoundedFrame(	S_METER_X,
-							S_METER_Y,
-							(S_METER_X + S_METER_SIZE_X),
-							(S_METER_Y + S_METER_SIZE_Y),
-							5,
-							SW_FRAME_WIDTH
-						);
-	#endif
+	GUI_SetColor(GUI_DARKCYAN);
+	GUI_DrawRoundedFrame(	(S_METER_X - S_METER_FRAME_LEFT),					(S_METER_Y - S_METER_FRAME_TOP),
+   							(bmscale.XSize + S_METER_X + S_METER_FRAME_RIGHT), 	(bmscale.YSize + S_METER_Y + S_METER_FRAME_BOTTOM),
+							S_METER_FRAME_CURVE, 								S_METER_FRAME_WIDTH);
 
 	GUI_SetColor(GUI_DARKGRAY);
 
 	// Top/Bottom background
-	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 37), 2);
-	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 60),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 67), 2);
+	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + S_METER_SY + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + S_METER_SY + 37), 2);
+	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + S_METER_SY + 60),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + S_METER_SY + 67), 2);
 
 	GUI_SetColor(GUI_LIGHTGREEN);
 
@@ -471,8 +464,9 @@ void ui_controls_smeter_init(void)
 	//if(tsu.rxtx)
 	//	GUI_DispStringAt("1   3   5   7   9",S_METER_X + 20, S_METER_Y + 10);
 	//else
-	GUI_DispStringAt("1   3   5   7   9",S_METER_X + 20, S_METER_Y + 10);
+	GUI_DispStringAt("1   3   5   7   9",S_METER_X + 20, S_METER_Y + S_METER_SY + 10);
 
+#endif
 	// Ready to refresh
 	sm.init_done = 1;
 }
@@ -528,7 +522,7 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 {
 	ushort 		i,curr;//,diff,step,some_val,expanded,bandw,centre_freq,aver,peak;
 	//uchar		is_up;
-
+#ifndef ANALOGUE_SMETER
 	static uchar loc_tx_state = 10;
 
 	// Handle TX
@@ -537,25 +531,25 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 		GUI_SetColor(GUI_BLACK);
 
 		// Clear top text line
-		GUI_FillRect((S_METER_X + 10), (S_METER_Y + 10),(S_METER_X + 340), (S_METER_Y + 24));
+		GUI_FillRect((S_METER_X + 10), (S_METER_Y + S_METER_SY + 10),(S_METER_X + 340), (S_METER_Y + S_METER_SY + 24));
 
 		// Clear top text line
-		GUI_FillRect((S_METER_X + 10), (S_METER_Y + 75),(S_METER_X + 340), (S_METER_Y + 89));
+		GUI_FillRect((S_METER_X + 10), (S_METER_Y + S_METER_SY + 75),(S_METER_X + 340), (S_METER_Y + S_METER_SY + 89));
 
 		GUI_SetColor(GUI_LIGHTGRAY);
 		GUI_SetFont(&GUI_Font8x16_1);
 
 		if(tsu.rxtx)
 		{
-			GUI_DispStringAt("P  1   2   5       10         15   20   W", S_METER_X + 12, S_METER_Y + 10);
+			GUI_DispStringAt("P  1   2   5       10         15   20   W", S_METER_X + 12, S_METER_Y + S_METER_SY + 10);
 		}
 		else
 		{
-			GUI_DispStringAt("S  1   3   5   7   9   +20   +40  +60  dB", S_METER_X + 12, S_METER_Y + 10);
+			GUI_DispStringAt("S  1   3   5   7   9   +20   +40  +60  dB", S_METER_X + 12, S_METER_Y + S_METER_SY + 10);
 			GUI_SetColor(GUI_DARKGRAY);
 		}
 
-		GUI_DispStringAt("SWR 1  3   5       10         30         ", S_METER_X + 12, S_METER_Y + 75);
+		GUI_DispStringAt("SWR 1  3   5       10         30         ", S_METER_X + 12, S_METER_Y + S_METER_SY + 75);
 
 		if(loc_tx_state == 10)
 			loc_tx_state = tsu.rxtx;
@@ -591,10 +585,10 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 			// ToDo: finish it off...
 
 			GUI_SetColor(GUI_DARKGRAY);
-			GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 37), 2);
+			GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + S_METER_SY + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + S_METER_SY + 37), 2);
 
 			GUI_SetColor(GUI_LIGHTGREEN);
-			GUI_FillRoundedRect((S_METER_X + 10 + 0),  (S_METER_Y + 30),(S_METER_X + (10 + t_val)), (S_METER_Y + 37), 2);
+			GUI_FillRoundedRect((S_METER_X + 10 + 0),  (S_METER_Y + S_METER_SY + 30),(S_METER_X + (10 + t_val)), (S_METER_Y + S_METER_SY + 37), 2);
 		}
 
 		return;
@@ -662,11 +656,11 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 	ushort s_sta = 0;					// progress bar
 
 	GUI_SetColor(GUI_DARKGRAY);
-	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 37), 2);
+	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + S_METER_SY + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + S_METER_SY + 37), 2);
 
 	GUI_SetColor(GUI_LIGHTGREEN);
-	GUI_FillRoundedRect((S_METER_X + 10 + s_sta),  (S_METER_Y + 30),(S_METER_X + (10 + s_val)), (S_METER_Y + 37), 2);
-
+	GUI_FillRoundedRect((S_METER_X + 10 + s_sta),  (S_METER_Y + S_METER_SY + 30),(S_METER_X + (10 + s_val)), (S_METER_Y + S_METER_SY + 37), 2);
+#else
 
 	#if 0
 	// old and nearby values
@@ -744,7 +738,7 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 		if(cb) cb();
 	}
 	#endif
-
+#endif
 	// Save to public
 	sm.old_value = curr;
 }

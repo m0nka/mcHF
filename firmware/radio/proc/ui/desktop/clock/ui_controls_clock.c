@@ -31,7 +31,7 @@
 #define CLOCK_DATES_SHIFT 	130
 #define CLOCK_LOCKS_SHIFT 	280
 
-#define CLOCK_COLOR			GUI_LIGHTGRAY
+#define CLOCK_COLOR			GUI_DARKMAGENTA
 
 RTC_DateTypeDef sdatestructureget;
 RTC_TimeTypeDef stimestructureget;
