@@ -174,6 +174,19 @@ ushort bq40z80_read_runtime(void)
 	return 0xFFFF;
 }
 
+ushort bq40z80_read_status(void)
+{
+	ushort val = 0;
+
+	if(!bms_loc_init)
+		return 0xFFFF;
+
+	if(bq40z80_read_16bit_reg(0x16, &val) == 0)
+		return val;
+
+	return 0xFFFF;
+}
+
 void bq40z80_init(void)
 {
 	//ulong err;

@@ -619,7 +619,7 @@ void mchf_pro_board_tx_disable(void)
 	HAL_GPIO_Init(DAC1_OUTX_PORT, &gpio_init_structure);
 }
 
-void bsp_config(void)
+void mchf_pro_board_init(void)
 {
 	// Use sharing, as DSP core might be running after reset
 	printf_init(1);

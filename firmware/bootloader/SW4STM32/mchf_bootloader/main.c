@@ -562,7 +562,7 @@ int main(void)
     critical_hw_init_and_run_fw();
 
     // Proc init
-    bsp_config();
+    mchf_pro_board_init();
     bms_proc_init();
     ui_proc_init();
     selftest_proc_init();
@@ -576,7 +576,7 @@ int main(void)
     	ui_proc();
 
     	// Self test state machine
- //!   	selftest_proc();
+    	selftest_proc();
 
     	// Blink the speaker LED
     	show_alive();
