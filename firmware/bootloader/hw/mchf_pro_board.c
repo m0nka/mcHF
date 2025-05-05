@@ -594,6 +594,31 @@ void bt_hw_power(void)
 	HAL_GPIO_WritePin(RFM_DIO2_PORT, RFM_DIO2, GPIO_PIN_SET);
 }
 
+void lora_hw_power(void)
+{
+	// ToDo: Make sure LORA module is off
+}
+
+// Make sure TX is disabled
+//
+void mchf_pro_board_tx_disable(void)
+{
+	GPIO_InitTypeDef  gpio_init_structure;
+
+	HAL_GPIO_WritePin(DAC1_OUTX_PORT,  	DAC1_OUT1,  GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(DAC1_OUTX_PORT,  	DAC1_OUT2,  GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(PTT_PIN_PORT, 	PTT_PIN, 	GPIO_PIN_RESET);
+
+	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	gpio_init_structure.Pull  = GPIO_NOPULL;
+
+	gpio_init_structure.Pin   = PTT_PIN;
+	HAL_GPIO_Init(PTT_PIN_PORT, &gpio_init_structure);
+
+	gpio_init_structure.Pin   = DAC1_OUT1|DAC1_OUT2;
+	HAL_GPIO_Init(DAC1_OUTX_PORT, &gpio_init_structure);
+}
+
 void bsp_config(void)
 {
 	// Use sharing, as DSP core might be running after reset
@@ -605,7 +630,15 @@ void bsp_config(void)
 	// Initialise the screen
 	hw_lcd_gpio_init();
 	hw_lcd_reset();
+
+	// BT module off
 	bt_hw_power();
+
+	// LORA module off
+	lora_hw_power();
+
+	// Transmitter off
+	mchf_pro_board_tx_disable();
 
 	#ifdef CONTEXT_IPC_PROC
 	ipc_proc_init();
@@ -677,11 +710,10 @@ void critical_hw_init_and_run_fw(void)
 	}
 	#endif
 
-	// 5V control via logic high
-	//  - using isolation MOSFET to prevent idle leak battery->regulator inhibit->CPU gpio
+	// Keep 5V and 8V rails off
 	GPIO_InitStruct.Pin   = VCC_5V_ON;
 	HAL_GPIO_Init(VCC_5V_ON_PORT, &GPIO_InitStruct);
-	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, 1);
+	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, 0);
 
 	// Disable charger
 	#if 0

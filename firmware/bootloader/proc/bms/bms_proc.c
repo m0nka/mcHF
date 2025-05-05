@@ -39,6 +39,9 @@ void bms_proc_periodic(void)
 	// 50% duty, 1kHz
 	if(charge_mode)
 		HAL_GPIO_TogglePin(BMS_PWM_PORT, BMS_PWM_PIN);
+
+	// Reduce brightness
+	HAL_GPIO_TogglePin(LCD_BL_CTRL_GPIO_PORT, GPIO_PIN_9);
 }
 
 //*----------------------------------------------------------------------------
@@ -85,6 +88,13 @@ void bms_proc_is_charging(void)
 		charge_mode = 1;
 	else
 		charge_mode = 0;
+
+	// Disable PWM
+	if(charge_mode == 0)
+	{
+		// Full charge allowed
+		HAL_GPIO_WritePin(BMS_PWM_PORT, BMS_PWM_PIN, GPIO_PIN_RESET);
+	}
 }
 
 //*----------------------------------------------------------------------------

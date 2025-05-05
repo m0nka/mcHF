@@ -126,7 +126,11 @@ uchar bare_lcd_init(void)
 	//draw_atlas_ui();
 
 	// Right side info bar
-	lcd_low_DrawRect(1, 345, 479, 134, lcd_low_COLOR_WHITE);							// rect outline
+	//lcd_low_DrawRect(1, 345, 479, 134, lcd_low_COLOR_WHITE);							// rect outline
+
+	lcd_low_DrawRect(290, 345, 189, 134, lcd_low_COLOR_LIGHTGRAY);
+	lcd_low_DrawRect(  1, 345, 279, 134, lcd_low_COLOR_LIGHTBLUE);
+	lcd_low_DrawRect(  1,  19,  70, 320, lcd_low_COLOR_LIGHTCYAN);
 	//
 	//lcd_low_SetBackColor(lcd_low_COLOR_WHITE);
 	lcd_low_SetTextColor(lcd_low_COLOR_BLACK);
@@ -229,7 +233,7 @@ void ui_proc_show_charge_msg(void)
 	else
 		lcd_low_SetTextColor(lcd_low_COLOR_BLACK);
 
-	lcd_low_DisplayStringAt(LINE(29), 40,  (uchar *)"[Charging]", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(28), 40,  (uchar *)"[Charging]", LEFT_MODE);
 }
 
 void ui_proc_show_soc(void)
@@ -262,8 +266,8 @@ void ui_proc_show_charge_data(void)
 	lcd_low_SetTextColor(lcd_low_COLOR_WHITE);
 	lcd_low_SetFont(&Font16);
 
-	lcd_low_DisplayStringAt(LINE(26), 10,  (uchar *)"Pack:", LEFT_MODE);
-	lcd_low_DisplayStringAt(LINE(27), 10,  (uchar *)"Curr:", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(26), 15,  (uchar *)"Pack:", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(27), 15,  (uchar *)"Curr:", LEFT_MODE);
 
 	sprintf(buff, "%dmV", pack_volt);
 	lcd_low_DisplayStringAt(LINE(26), 100,  (uchar *)buff, LEFT_MODE);
