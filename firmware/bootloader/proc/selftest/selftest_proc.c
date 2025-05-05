@@ -34,6 +34,8 @@ FATFS SDFatFs;  						/* File system object for SD card logical drive */
 FIL MyFile;     						/* File object */
 char SDPath[4]; 						/* SD card logical drive path */
 
+extern ulong sys_timer;
+
 extern ulong reset_reason;
 extern uchar gen_boot_reason_err;
 extern uchar charge_mode;
@@ -228,6 +230,16 @@ ulong is_firmware_valid(void)
 
 void selftest_proc()
 {
+	static ulong st_timer = 0;
+
+	// Run timer
+	if(st_timer == 0)
+		st_timer = sys_timer;
+	else if((st_timer + 500) < sys_timer)
+		st_timer = sys_timer;
+	else
+		return;
+
 	if(charge_mode)
 		return;
 

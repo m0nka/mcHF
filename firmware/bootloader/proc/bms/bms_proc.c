@@ -24,11 +24,31 @@ uchar	charge_mode = 0;
 short	pack_curr	= 0;
 ushort  pack_volt	= 0;
 
+extern ulong  sys_timer;
+
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void bms_proc_periodic(void)
 {
-	//HAL_GPIO_TogglePin(BMS_PWM_PORT, BMS_PWM_PIN);
+	// 50% duty, 1kHz
+	if(charge_mode)
+		HAL_GPIO_TogglePin(BMS_PWM_PORT, BMS_PWM_PIN);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void bms_proc_hw_init(void)
 {
 	GPIO_InitTypeDef  gpio_init_structure;
@@ -45,13 +65,21 @@ void bms_proc_hw_init(void)
 	//HAL_GPIO_WritePin(BMS_PWM_PORT, BMS_PWM_PIN, GPIO_PIN_SET);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void bms_proc_is_charging(void)
 {
 	// Need at least the init bit on
 	if((batt_status == 0xFFFF)||(batt_status == 0))
 		return;
 
-	short curr = bq40z80_read_current();
+	short curr = 10;//bq40z80_read_current();
 
 	if(((batt_status & 0x40) != 0x40)&&(curr > 0))
 		charge_mode = 1;
@@ -59,9 +87,28 @@ void bms_proc_is_charging(void)
 		charge_mode = 0;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void bms_proc(void)
 {
 	static uchar soc_skip = 0;
+	static ulong bms_timer = 0;
+
+	// Run timer
+	if(bms_timer == 0)
+		bms_timer = sys_timer;
+	else if((bms_timer + 500) < sys_timer)
+		bms_timer = sys_timer;
+	else
+		return;
+
+	//--printf("bms proc..  \r\n");
 
 	// Update local status
 	batt_status = bq40z80_read_status();
@@ -73,17 +120,24 @@ void bms_proc(void)
 	pack_curr = bq40z80_read_current();
 	pack_volt = bq40z80_read_pack_voltage();
 
-	// Update SOC
+	// Update SOC(every 10s)
 	if(soc_skip++ > 20)
 	{
 		soc = bq40z80_read_soc();
-		//if(soc != 0xFF)
-		//	printf("soc: %d%% \r\n", soc);
+		//if(soc != 0xFF) printf("soc: %d%% \r\n", soc);
 
 		soc_skip = 0;
 	}
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void bms_proc_init(void)
 {
 	// Charge pins

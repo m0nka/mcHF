@@ -200,7 +200,7 @@ short bq40z80_read_current(void)
 	if(bq40z80_read_16bit_reg(0x0B, &curr) == 0)
 	{
 		// Add calib factor
-		curr -= 250;
+		//curr -= 250;
 
 		//printf("curr: %dmA \r\n", curr);
 		return curr;

@@ -19,43 +19,107 @@
 
 #include "hw_sdram.h"
 
+ulong	sys_timer = 0;
+
 int 	dsp_core_stat;
 ulong	reset_reason;
 uchar   gen_boot_reason_err = 0;
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void NMI_Handler(void)
 {
-  Error_Handler(11);
+	Error_Handler(11);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void HardFault_Handler(void)
 {
 	printf( "== HARD FAULT ==\n");
 	while(1);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void MemManage_Handler(void)
 {
-  Error_Handler(13);
+	Error_Handler(13);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void BusFault_Handler(void)
 {
-  Error_Handler(14);
+	Error_Handler(14);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void UsageFault_Handler(void)
 {
-  Error_Handler(15);
+	Error_Handler(15);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void DebugMon_Handler(void)
 {
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void SysTick_Handler(void)
 {
+	// Increase epoch
+	sys_timer++;
+
+	// Rudimentary PWM(testing only)
 	bms_proc_periodic();
+
+	// Lib update
 	HAL_IncTick();
 }
 
@@ -217,6 +281,14 @@ void SystemClock_Config(void)
   HAL_EnableCompensationCell();
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void MPU_Config(void)
 {
 	MPU_Region_InitTypeDef MPU_InitStruct;
@@ -388,17 +460,41 @@ void MPU_Config(void)
 	HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void CPU_CACHE_Enable(void)
 {
 	SCB_EnableICache();
 	SCB_EnableDCache();
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void Error_Handler(int err)
 {
 	gen_boot_reason_err = err;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void gpio_clocks_on(void)
 {
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -412,6 +508,36 @@ void gpio_clocks_on(void)
 	__HAL_RCC_GPIOI_CLK_ENABLE();
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
+void show_alive(void)
+{
+	static ulong led_timer = 0;
+
+	if(led_timer == 0)
+		led_timer = sys_timer;
+	else if((led_timer + 500) < sys_timer)
+	{
+		HAL_GPIO_TogglePin(POWER_LED_PORT, POWER_LED);
+
+		led_timer = sys_timer;
+	}
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       :
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 int main(void)
 {
 	// Disable FMC Bank1 to avoid speculative/cache accesses
@@ -443,11 +569,16 @@ int main(void)
 
     while(1)
     {
+    	// BMS comms
     	bms_proc();
-    	ui_proc();
-    	selftest_proc();
 
-    	HAL_Delay(500);
-    	HAL_GPIO_TogglePin(POWER_LED_PORT, POWER_LED);
+    	// UI repaint
+    	ui_proc();
+
+    	// Self test state machine
+ //!   	selftest_proc();
+
+    	// Blink the speaker LED
+    	show_alive();
     }
 }

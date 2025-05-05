@@ -36,6 +36,8 @@ static uint32_t LCD_Y_Size = 0;
 
 extern LTDC_HandleTypeDef hltdc;
 
+extern ulong  	sys_timer;
+
 extern ulong 	reset_reason;
 extern uchar	gen_boot_reason_err;
 extern ushort 	batt_status;
@@ -474,6 +476,16 @@ stall:
 
 void ui_proc(void)
 {
+	static ulong ui_timer = 0;
+
+	// Run timer
+	if(ui_timer == 0)
+		ui_timer = sys_timer;
+	else if((ui_timer + 500) < sys_timer)
+		ui_timer = sys_timer;
+	else
+		return;
+
 	ui_proc_show_bms_flags();
 	ui_proc_show_charge_msg();
 	ui_proc_show_soc();
