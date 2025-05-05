@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>mchf-bootloader</name>
+	<name>mchf_bootloader</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -62,9 +62,24 @@
 			<locationURI>PARENT-2-PROJECT_LOC/config/stm32h7xx_hal_conf.h</locationURI>
 		</link>
 		<link>
+			<name>hw/bq40z80.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/bq40z80.c</locationURI>
+		</link>
+		<link>
+			<name>hw/mchf_pro_board.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/mchf_pro_board.c</locationURI>
+		</link>
+		<link>
 			<name>hw/sd_diskio.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/hw/sd_diskio.c</locationURI>
+		</link>
+		<link>
+			<name>hw/shared_i2c.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/shared_i2c.c</locationURI>
 		</link>
 		<link>
 			<name>startup/startup_stm32h747xx_CM7.s</name>
@@ -502,14 +517,19 @@
 			<locationURI>PARENT-3-PROJECT_LOC/base_hw/hw/hw_uart.c</locationURI>
 		</link>
 		<link>
-			<name>proc/ipc/ipc_proc.c</name>
+			<name>proc/bms/bms_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ipc/ipc_proc.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/bms/bms_proc.c</locationURI>
 		</link>
 		<link>
-			<name>proc/ipc/lwrb.c</name>
+			<name>proc/selftest/selftest_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ipc/lwrb.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/selftest/selftest_proc.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ui/ui_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/ui_proc.c</locationURI>
 		</link>
 		<link>
 			<name>Middlewares/FatFs/Core/diskio.c</name>
@@ -575,7 +595,7 @@
 	<variableList>
 		<variable>
 			<name>copy_PARENT</name>
-			<value>$%7BPARENT-2-ECLIPSE_HOME%7D/Projects/mcHFpro/firmware/mchf-bootloader/SW4STM32</value>
+			<value>$%7BPARENT-2-ECLIPSE_HOME%7D/Projects/mcHFpro/firmware/mchf_bootloader/SW4STM32</value>
 		</variable>
 		<variable>
 			<name>copy_PARENT1</name>
@@ -583,7 +603,7 @@
 		</variable>
 		<variable>
 			<name>copy_PARENT12</name>
-			<value>$%7Bcopy_PARENT1%7D/mchf-bootloader</value>
+			<value>$%7Bcopy_PARENT1%7D/mchf_bootloader</value>
 		</variable>
 		<variable>
 			<name>copy_PARENT123</name>

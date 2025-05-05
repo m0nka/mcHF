@@ -15,3 +15,5 @@
 - increase R38/C39 to have delay in bootloader ?(hold power in hw on reset)
 - add zero ohm links on the attenuator data lines
 - Maybe rethink the PROG_HOLD line, so we can do development with built in battery as well ?
+- hook LCD vdd to 3V rail, so bootloader mode can keep 5 and 8V off
+- dual LCD supply via diodes(3V and 5V rails)

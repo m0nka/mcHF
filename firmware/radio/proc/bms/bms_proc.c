@@ -1335,8 +1335,20 @@ static void bms_proc_power_off(void)
 static void bms_proc_worker(void)
 {
 	static uchar bms_read_skip = 0;
+	ushort status = 0;
 
 	bms_proc_power_off();
+
+	status = bq40z80_read_status();
+
+	// Restart to bootloader mode if charging
+	if((status != 0xFFFF)&&(status != 0))
+	{
+		if((status & 0x40) != 0x40)
+		{
+			NVIC_SystemReset();
+		}
+	}
 
 	if(bms_read_skip == 0)
 	{

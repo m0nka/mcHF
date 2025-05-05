@@ -10,10 +10,13 @@
 **  Last Modified:                                                                 **
 **  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
+//
+// ToDo: File duplicated in radio firmware - fix!
+//
 #include "main.h"
 #include "mchf_pro_board.h"
 
-#ifdef CONTEXT_BMS
+//#ifdef CONTEXT_BMS
 
 #include "shared_i2c.h"
 
@@ -187,6 +190,41 @@ ushort bq40z80_read_status(void)
 	return 0xFFFF;
 }
 
+short bq40z80_read_current(void)
+{
+	short curr;
+
+	if(!bms_loc_init)
+		return 0;
+
+	if(bq40z80_read_16bit_reg(0x0B, &curr) == 0)
+	{
+		// Add calib factor
+		//curr -= 250;
+
+		//printf("curr: %dmA \r\n", curr);
+		return curr;
+	}
+
+	return 0;
+}
+
+ushort bq40z80_read_pack_voltage(void)
+{
+	ushort volt;
+
+	if(!bms_loc_init)
+		return 0;
+
+	if(bq40z80_read_16bit_reg(0x09, &volt) == 0)
+	{
+		//printf("pack: %dmV \r\n", volt);
+		return volt;
+	}
+
+	return 0;
+}
+
 void bq40z80_init(void)
 {
 	//ulong err;
@@ -210,7 +248,7 @@ void bq40z80_init(void)
 	//	printf("stat: %04x \r\n", val);
 
 	//if(bq40z80_read_16bit_reg(0x18, &val) == 0)
-	//	printf("dsgn capa: %04x \r\n", val);
+	//	printf("dsgn capa: %d \r\n", val);
 
 	//bq40z80_read_all_regs();
 
@@ -218,7 +256,7 @@ void bq40z80_init(void)
 	//	printf("temp: %d deg C(0x%04x)\r\n", (val/10 - 273), val);
 
 	//if(bq40z80_read_16bit_reg(0x09, &val) == 0)
-	//	printf("volt: %dmV \r\n", val);
+	//	printf("batt: %dmV \r\n", val);
 
 	//printf("soc:  %d%% \r\n", bq40z80_read_soc());
 
@@ -245,4 +283,4 @@ void bq40z80_init(void)
 }
 
 
-#endif
+//#endif

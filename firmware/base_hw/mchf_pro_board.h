@@ -534,4 +534,14 @@ void 	print_hex_array(uchar *pArray, ushort aSize);
 // bsp.c
 void bsp_power_off(void);
 void power_off_a(void);
+
+// bootloader
+void power_off_x(uchar reset_reason);
+void jump_to_fw(ulong SubDemoAddress);
+uchar update_radio(void);
+void early_backup_domain_init(void);
+void bt_hw_power(void);
+void mchf_pro_board_init(void);
+void critical_hw_init_and_run_fw(void);
+
 #endif
