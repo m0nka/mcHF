@@ -38,10 +38,12 @@ void bms_proc_periodic(void)
 {
 	// 50% duty, 1kHz
 	if(charge_mode)
-		HAL_GPIO_TogglePin(BMS_PWM_PORT, BMS_PWM_PIN);
+	{
+		//HAL_GPIO_TogglePin(BMS_PWM_PORT, BMS_PWM_PIN);
+	}
 
 	// Reduce brightness
-	HAL_GPIO_TogglePin(LCD_BL_CTRL_GPIO_PORT, GPIO_PIN_9);
+	//HAL_GPIO_TogglePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN);
 }
 
 //*----------------------------------------------------------------------------
@@ -82,7 +84,7 @@ void bms_proc_is_charging(void)
 	if((batt_status == 0xFFFF)||(batt_status == 0))
 		return;
 
-	short curr = 10;//bq40z80_read_current();
+	short curr = bq40z80_read_current();
 
 	if(((batt_status & 0x40) != 0x40)&&(curr > 0))
 		charge_mode = 1;

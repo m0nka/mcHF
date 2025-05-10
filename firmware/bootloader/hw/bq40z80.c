@@ -197,7 +197,7 @@ short bq40z80_read_current(void)
 	if(!bms_loc_init)
 		return 0;
 
-	if(bq40z80_read_16bit_reg(0x0B, &curr) == 0)
+	if(bq40z80_read_16bit_reg(0x0A, &curr) == 0)
 	{
 		// Add calib factor
 		//curr -= 250;
@@ -238,6 +238,15 @@ void bq40z80_init(void)
 
 	if(shared_i2c_is_ready(0x17, 10) != 0)
 		return;
+
+	#if 0
+	// Reset(0x41, 0x12)
+	if(bq40z80_write_16bit_reg(0x41, 0x0000) != 0)
+		return;
+
+	HAL_Delay(500);
+	power_off_x(0);
+	#endif
 
 	bms_loc_init = 1;
 	//printf("== bms ready ==\r\n");

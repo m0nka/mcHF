@@ -16,6 +16,7 @@
 #include "ui_proc.h"
 #include "selftest_proc.h"
 #include "bms_proc.h"
+#include "shared_tim.h"
 
 #include "hw_sdram.h"
 
@@ -564,6 +565,7 @@ int main(void)
     // Proc init
     mchf_pro_board_init();
     bms_proc_init();
+    shared_tim_init();
     ui_proc_init();
     selftest_proc_init();
 

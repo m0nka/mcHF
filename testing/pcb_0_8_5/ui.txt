@@ -17,3 +17,4 @@
 - Maybe rethink the PROG_HOLD line, so we can do development with built in battery as well ?
 - hook LCD vdd to 3V rail, so bootloader mode can keep 5 and 8V off
 - dual LCD supply via diodes(3V and 5V rails)
+- hook 3V rail to VBAT via diode, as when BMS fails, there is nothing on the power button
