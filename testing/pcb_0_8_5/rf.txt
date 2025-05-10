@@ -3,7 +3,6 @@
 - RFC2, need bigger inductor/footprint, to handle 1A
 - U200, the MT3608 has diff footprint than RT9293, use same type for both ?
 - U200 control ok via 3V logic levels ? Is there feedtrough of 20V to the cpu ?
-- D6, replace with SS24 maybe ?
 - SS34 footrpint needs to be wider, and pads need spacing out!
 - C27/C28 possible wrong placement
 - C114/C115 needs to be next to R50/R51
@@ -17,3 +16,5 @@
 - Q6 gate and drain swapped ;(
 - D6 is overkill, use smaller diode
 - Add SS34 in paralled to Q6
+- R500/R501, current draw too high, increase to 56k/10k(280uA)
+- add two diodes infront of VBAT div, to PACK_P and BATT_F rails(otherwise radio will not start if BMS fails, or no cells installed, and using USB power)
