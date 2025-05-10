@@ -353,8 +353,8 @@
 //
 // ----------------------------------------------------------------------------
 // Battery icon
-#define BATTERY_X					769
-#define BATTERY_Y					40
+#define BATTERY_X					369
+#define BATTERY_Y					140
 //
 #define BATTERY_SIZE_X				75
 #define BATTERY_SIZE_Y				50

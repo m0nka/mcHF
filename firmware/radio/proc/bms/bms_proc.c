@@ -1349,7 +1349,7 @@ static void bms_proc_worker(void)
 	{
 		if((status & 0x40) != 0x40)
 		{
-			NVIC_SystemReset();
+			//NVIC_SystemReset();
 		}
 	}
 
