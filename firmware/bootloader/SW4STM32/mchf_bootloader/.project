@@ -527,6 +527,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/bms/bms_proc.c</locationURI>
 		</link>
 		<link>
+			<name>proc/keypad/keypad_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/keypad/keypad_proc.c</locationURI>
+		</link>
+		<link>
 			<name>proc/selftest/selftest_proc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/selftest/selftest_proc.c</locationURI>

@@ -39,6 +39,7 @@ extern ulong sys_timer;
 extern ulong reset_reason;
 extern uchar gen_boot_reason_err;
 extern uchar charge_mode;
+extern uchar stay_in_boot;
 
 int test_sd_card(void)
 {
@@ -232,6 +233,9 @@ void selftest_proc()
 {
 	static ulong st_timer = 0;
 
+	if(stay_in_boot)
+		return;
+
 	// Run timer
 	if(st_timer == 0)
 		st_timer = sys_timer;
@@ -242,6 +246,8 @@ void selftest_proc()
 
 	if(charge_mode)
 		return;
+
+	//power_off_x(0);
 
 	// On complete charging, execute radio firmware
 	if(is_firmware_valid() == 0)
