@@ -17,8 +17,6 @@
 // Exports
 void ui_controls_clock_init(void);
 void ui_controls_clock_quit(void);
-
-void ui_controls_clock_restore(void);
 void ui_controls_clock_refresh(void);
 
 #endif

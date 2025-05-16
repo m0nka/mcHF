@@ -72,6 +72,8 @@ extern HCD_HandleTypeDef hhcd;
 // Combined LCD/Touch reset flag
 uchar lcd_touch_reset_done = 0;
 
+ulong epoch = 0;
+
 void NMI_Handler(void)
 {
 	Error_Handler(11);
@@ -114,6 +116,7 @@ void DebugMon_Handler(void)
 
 void SysTick_Handler(void)
 {
+	epoch++;
 	osSystickHandler();
 }
 

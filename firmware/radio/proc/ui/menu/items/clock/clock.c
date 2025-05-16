@@ -246,14 +246,10 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			k_GetDate(&Date);
 			//HAL_RTC_GetTime(&RtcHandle, &Time, RTC_FORMAT_BIN);
 			//HAL_RTC_GetDate(&RtcHandle, &Date, RTC_FORMAT_BIN);
-
-			printf("year on load: %d\r\n", Date.Year);
+			//printf("year on load: %d\r\n", Date.Year);
     
-			hTimerTime = WM_CreateTimer(pMsg->hWin, 0, 1000, 0);
+			CALENDAR_Create(pMsg->hWin, 10, 7, (2000 + Date.Year), Date.Month, Date.Date, 2, ID_CALENDAR, WM_CF_SHOW);
 
-			//CALENDAR_Create(pMsg->hWin, 10, 7, (2018 + Date.Year), Date.Month, Date.Date, 2, ID_CALENDAR, WM_CF_SHOW);
-			CALENDAR_Create(pMsg->hWin, 10, 7, (2021), Date.Month, Date.Date, 2, ID_CALENDAR, WM_CF_SHOW); // ToDo: Fix year!
-    
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_SPINBOX_HOUR);
 			SPINBOX_SetRange(hItem, 0, 23);
       
@@ -263,6 +259,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_SPINBOX_SEC);
 			SPINBOX_SetRange(hItem, 0, 59);
       
+			hTimerTime = WM_CreateTimer(pMsg->hWin, 0, 1000, 0);
 			break;
 		}
 
@@ -296,7 +293,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			}
 			else
 			{
-				printf("upd1 %d\r\n",Time.Seconds);
+				//printf("upd1 %d\r\n",Time.Seconds);
 
 				hItem = WM_GetDialogItem(pMsg->hWin, ID_SPINBOX_HOUR);
 				Time.Hours = SPINBOX_GetValue(hItem);
@@ -354,17 +351,17 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 							CALENDAR_SetSel(hItem, &hDate);
 							WM_InvalidateWindow(hItem);
         
-							printf("year sel: %d\r\n", hDate.Year);
+							//printf("year sel: %d\r\n", hDate.Year);
 
 							if(	(hDate.Day > 0) &&
 								(hDate.Day <= 31) &&
 								(hDate.Month > 0) &&
 								(hDate.Month <= 12) &&
-								(hDate.Year >= 1900))
+								(hDate.Year >= 2000))
 							{
 								Date.Date  = hDate.Day;
 								Date.Month = hDate.Month;
-								Date.Year  = 21;	//hDate.Year - 2021; // ToDo: Fix it
+								Date.Year  = hDate.Year - 2000;
 								//Date.WeekDay = 0;
 								//printf("year set: %d\r\n", Date.Year);
 
@@ -391,7 +388,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 		        // Return from menu
 		        case GUI_KEY_HOME:
 		        {
-		        	printf("GUI_KEY_HOME\r\n");
+		        	//printf("GUI_KEY_HOME\r\n");
 		        	GUI_EndDialog(pMsg->hWin, 0);
 		        	break;
 		        }
