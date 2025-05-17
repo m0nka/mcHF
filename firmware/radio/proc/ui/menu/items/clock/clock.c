@@ -1,51 +1,15 @@
-/**
-  ******************************************************************************
-  * @file    system_win.c
-  * @author  MCD Application Team
-  * @version V1.4.5
-  * @date    03-June-2016 
-  * @brief   System information functions
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright � 2016 STMicroelectronics International N.V. 
-  * All rights reserved.</center></h2>
-  *
-  * Redistribution and use in source and binary forms, with or without 
-  * modification, are permitted, provided that the following conditions are met:
-  *
-  * 1. Redistribution of source code must retain the above copyright notice, 
-  *    this list of conditions and the following disclaimer.
-  * 2. Redistributions in binary form must reproduce the above copyright notice,
-  *    this list of conditions and the following disclaimer in the documentation
-  *    and/or other materials provided with the distribution.
-  * 3. Neither the name of STMicroelectronics nor the names of other 
-  *    contributors to this software may be used to endorse or promote products 
-  *    derived from this software without specific written permission.
-  * 4. This software, including modifications and/or derivative works of this 
-  *    software, must execute solely and exclusively on microcontroller or
-  *    microprocessor devices manufactured by or for STMicroelectronics.
-  * 5. Redistribution and use of this software other than as permitted under 
-  *    this license is void and will automatically terminate your rights under 
-  *    this license. 
-  *
-  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
-  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
-  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
-  * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
-  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
-  * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
-  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  ******************************************************************************
-  */
-/* Includes ------------------------------------------------------------------*/
-
+/************************************************************************************
+**                                                                                 **
+**                             mcHF Pro QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                                                                 **
+**---------------------------------------------------------------------------------**
+**                                                                                 **
+**  File name:                                                                     **
+**  Description:                                                                   **
+**  Last Modified:                                                                 **
+**  Licence:               GNU GPLv3                                               **
+************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
 
@@ -93,31 +57,40 @@ WM_HWIN   	hCdialog;
 #define ID_BUTTON_APPLY			  	(GUI_ID_USER + 0x04)
 #define ID_CALENDAR              	(GUI_ID_USER + 0x05)
 #define ID_SPINBOX_SEC           	(GUI_ID_USER + 0x06)
+#define ID_TEXT_SPIN_0             	(GUI_ID_USER + 0x07)
+#define ID_BUTTON_LOCK			  	(GUI_ID_USER + 0x08)
 
 static const GUI_WIDGET_CREATE_INFO _aDialog[] = 
 {
 	// -----------------------------------------------------------------------------------------------------------------------------
-	//							name						id					x		y		xsize	ysize	?		?		?
+	//							name			id					x		y		xsize	ysize	?		?		?
 	// -----------------------------------------------------------------------------------------------------------------------------
 	// Self
-	{ WINDOW_CreateIndirect,	"", 						ID_WINDOW_0,		0,    	  0,	800,	430, 	0, 		0x64, 	0 },
-	// Back Button
-	//{ BUTTON_CreateIndirect, 	"Back",			 			ID_BUTTON_EXIT, 	670, 	375, 	120, 	45, 	0, 		0x0, 	0 },
+	{ WINDOW_CreateIndirect,	"", 			ID_WINDOW_0,		0,    	0,		854,	430, 	0, 		0x64, 	0 },
+	// Header text
+	{ TEXT_CreateIndirect, 		"Header1", 		ID_TEXT_SPIN_0,		480,	7,		360, 	50,  	0, 		0x0,	0 },
 	//
-	{ SPINBOX_CreateIndirect, 	"Spinbox", 					ID_SPINBOX_HOUR, 	510, 	 17, 	120, 	160, 	0, 		0x0, 	0 },
+	{ SPINBOX_CreateIndirect, 	"Spinbox", 		ID_SPINBOX_HOUR, 	480,    58, 	110, 	160, 	0, 		0x0, 	0 },
 	//
-	{ SPINBOX_CreateIndirect, 	"Spinbox", 					ID_SPINBOX_MINUTE, 	510, 	197, 	120, 	160, 	0, 		0x0, 	0 },
+	{ SPINBOX_CreateIndirect, 	"Spinbox", 		ID_SPINBOX_MINUTE, 	605, 	58, 	110, 	160, 	0, 		0x0, 	0 },
 	//
-	{ SPINBOX_CreateIndirect, 	"Spinbox", 					ID_SPINBOX_SEC, 	670, 	237, 	120, 	80, 	0, 		0x0, 	0 },
+	{ SPINBOX_CreateIndirect, 	"Spinbox", 		ID_SPINBOX_SEC, 	730, 	58, 	110, 	160, 	0, 		0x0, 	0 },
 	//
-	{ BUTTON_CreateIndirect, 	"Update",		 			ID_BUTTON_APPLY, 	510, 	375, 	120, 	45, 	0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"Update",		ID_BUTTON_APPLY, 	480, 	230, 	110, 	45, 	0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"Lock",			ID_BUTTON_APPLY, 	730, 	230, 	110, 	45, 	0, 		0x0, 	0 },
 };
 
 #define PI                  	3.14
 #define AA_FACTOR           	3
 
-#define X0                      49
-#define Y0                      48
+#define AN_CLOCK_X              660
+#define AN_CLOCK_Y              330
+
+GUI_POINT 		aPointsDest[3][4];
+
+WM_HTIMER 		hTimerTime;
+uint8_t 		DisableAutoRefresh = 0;
+CALENDAR_DATE  	hDate;
 
 static const GUI_POINT aPoints[3][4] = {
 
@@ -139,12 +112,6 @@ static const GUI_POINT aPoints[3][4] = {
    {0 * AA_FACTOR,-34 * AA_FACTOR}},
 };
 
-GUI_POINT 		aPointsDest[3][4];
-
-WM_HTIMER 		hTimerTime;
-uint8_t 		DisableAutoRefresh = 0;
-CALENDAR_DATE  	hDate;
-
 static void DrawNeedle(uint32_t index, uint16_t x0, uint16_t y0) 
 {
   /* draw Needles */
@@ -160,7 +127,7 @@ static void DrawNeedle(uint32_t index, uint16_t x0, uint16_t y0)
   }
 }
 
-static void GUI_UpdateClock (uint16_t x0, uint16_t y0, uint8_t hour, uint8_t min, uint8_t sec)
+static void GUI_UpdateClock(uint16_t x0, uint16_t y0, uint8_t hour, uint8_t min, uint8_t sec)
 {
   int8_t i = 0;
   int32_t SinHQ, CosHQ ,a = 0;
@@ -244,19 +211,27 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 		{
 			k_GetTime(&Time);
 			k_GetDate(&Date);
-			//HAL_RTC_GetTime(&RtcHandle, &Time, RTC_FORMAT_BIN);
-			//HAL_RTC_GetDate(&RtcHandle, &Date, RTC_FORMAT_BIN);
-			//printf("year on load: %d\r\n", Date.Year);
     
 			CALENDAR_Create(pMsg->hWin, 10, 7, (2000 + Date.Year), Date.Month, Date.Date, 2, ID_CALENDAR, WM_CF_SHOW);
 
+			// Header
+			hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_SPIN_0);
+			TEXT_SetFont(hItem,&GUI_Font20_1);
+			TEXT_SetBkColor(hItem,GUI_LIGHTBLUE);
+			TEXT_SetTextColor(hItem,GUI_WHITE);
+			TEXT_SetTextAlign(hItem,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
+			TEXT_SetText(hItem,"HOUR              MIN                SEC");
+
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_SPINBOX_HOUR);
+			SPINBOX_SetFont(hItem,&GUI_Font24_1);
 			SPINBOX_SetRange(hItem, 0, 23);
       
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_SPINBOX_MINUTE);
+			SPINBOX_SetFont(hItem,&GUI_Font24_1);
 			SPINBOX_SetRange(hItem, 0, 59);
       
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_SPINBOX_SEC);
+			SPINBOX_SetFont(hItem,&GUI_Font24_1);
 			SPINBOX_SetRange(hItem, 0, 59);
       
 			hTimerTime = WM_CreateTimer(pMsg->hWin, 0, 1000, 0);
@@ -277,7 +252,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 				//printf("upd0 %d\r\n",Time.Seconds);
 
-				GUI_UpdateClock (725, 97, Time.Hours, Time.Minutes, Time.Seconds);
+				GUI_UpdateClock(AN_CLOCK_X, AN_CLOCK_Y, Time.Hours, Time.Minutes, Time.Seconds);
       
 				hItem = WM_GetDialogItem(pMsg->hWin, ID_SPINBOX_HOUR);
 				SPINBOX_SetValue(hItem, Time.Hours);
@@ -304,7 +279,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 				hItem = WM_GetDialogItem(pMsg->hWin, ID_SPINBOX_SEC);
 				Time.Seconds = SPINBOX_GetValue(hItem);
       
-				GUI_UpdateClock (725, 97, Time.Hours, Time.Minutes, Time.Seconds);
+				GUI_UpdateClock(AN_CLOCK_X, AN_CLOCK_Y, Time.Hours, Time.Minutes, Time.Seconds);
 			}
 			break;
 		}

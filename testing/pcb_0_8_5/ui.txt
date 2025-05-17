@@ -18,3 +18,4 @@
 - hook LCD vdd to 3V rail, so bootloader mode can keep 5 and 8V off
 - dual LCD supply via diodes(3V and 5V rails)
 - R38(DNP), to reduce voltage drop on cold power start
+- D6/D7 are likely not needed, as the chip has internal switch(ToDo: investigate)
