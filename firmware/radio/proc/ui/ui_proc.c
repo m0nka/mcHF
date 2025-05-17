@@ -17,10 +17,6 @@
 
 #include "ui_proc.h"
 
-//#include "touch_driver.h"
-//#include "hw\rtc\k_rtc.h"
-//#include "hw\dsp_eep\hw_dsp_eep.h"
-
 #include "radio_init.h"
 #include "ui_actions.h"
 

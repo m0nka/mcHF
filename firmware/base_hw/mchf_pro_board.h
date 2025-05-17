@@ -44,7 +44,7 @@
 #define M7_CLOCK			480
 
 // ----------------------------------------
-//#define	USE_LSE                     // xtal/caps no good on proto?
+#define	USE_LSE                     // xtal/caps no good on proto?
 
 // ----------------------------------------
 // Prevent Hard Fault on 0.8.4 proto board
