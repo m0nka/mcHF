@@ -24,6 +24,8 @@
 #include "ui_menu_module.h"
 #include "stm32h7xx_hal_rtc.h"
 
+#include "clock.h"
+
 static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos);
 static void KillClock(void);
 
@@ -68,23 +70,17 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 	// Self
 	{ WINDOW_CreateIndirect,	"", 			ID_WINDOW_0,		0,    	0,		854,	430, 	0, 		0x64, 	0 },
 	// Header text
-	{ TEXT_CreateIndirect, 		"Header1", 		ID_TEXT_SPIN_0,		480,	7,		360, 	50,  	0, 		0x0,	0 },
+	{ TEXT_CreateIndirect, 		"Header1", 		ID_TEXT_SPIN_0,		485,	30,		360, 	50,  	0, 		0x0,	0 },
 	//
-	{ SPINBOX_CreateIndirect, 	"Spinbox", 		ID_SPINBOX_HOUR, 	480,    58, 	110, 	160, 	0, 		0x0, 	0 },
+	{ SPINBOX_CreateIndirect, 	"Spinbox", 		ID_SPINBOX_HOUR, 	485,    88, 	110, 	160, 	0, 		0x0, 	0 },
 	//
-	{ SPINBOX_CreateIndirect, 	"Spinbox", 		ID_SPINBOX_MINUTE, 	605, 	58, 	110, 	160, 	0, 		0x0, 	0 },
+	{ SPINBOX_CreateIndirect, 	"Spinbox", 		ID_SPINBOX_MINUTE, 	610, 	88, 	110, 	160, 	0, 		0x0, 	0 },
 	//
-	{ SPINBOX_CreateIndirect, 	"Spinbox", 		ID_SPINBOX_SEC, 	730, 	58, 	110, 	160, 	0, 		0x0, 	0 },
+	{ SPINBOX_CreateIndirect, 	"Spinbox", 		ID_SPINBOX_SEC, 	735, 	88, 	110, 	160, 	0, 		0x0, 	0 },
 	//
-	{ BUTTON_CreateIndirect, 	"Update",		ID_BUTTON_APPLY, 	480, 	230, 	110, 	45, 	0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"Lock",			ID_BUTTON_APPLY, 	730, 	230, 	110, 	45, 	0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"Update",		ID_BUTTON_APPLY, 	485, 	270, 	110, 	45, 	0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"Lock",			ID_BUTTON_APPLY, 	735, 	270, 	110, 	45, 	0, 		0x0, 	0 },
 };
-
-#define PI                  	3.14
-#define AA_FACTOR           	3
-
-#define AN_CLOCK_X              660
-#define AN_CLOCK_Y              330
 
 GUI_POINT 		aPointsDest[3][4];
 
@@ -212,7 +208,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			k_GetTime(&Time);
 			k_GetDate(&Date);
     
-			CALENDAR_Create(pMsg->hWin, 10, 7, (2000 + Date.Year), Date.Month, Date.Date, 2, ID_CALENDAR, WM_CF_SHOW);
+			CALENDAR_Create(pMsg->hWin, CALENDAR_X, CALENDAR_Y, (2000 + Date.Year), Date.Month, Date.Date, 2, ID_CALENDAR, WM_CF_SHOW);
 
 			// Header
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_SPIN_0);
