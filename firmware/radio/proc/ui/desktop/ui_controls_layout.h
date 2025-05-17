@@ -247,7 +247,7 @@
 #define M_FREQ_X					450
 #define M_FREQ_Y					130
 
-#define M_FREQ1_X					380
+#define M_FREQ1_X					365
 #define M_FREQ1_Y					68
 //
 #define M_FREQ1_X_SZ				188
@@ -276,14 +276,14 @@
 //
 // ----------------------------------------------------------------------------
 // Decoder
-#define DECODER_MODE_X				496
+#define DECODER_MODE_X				481
 #define DECODER_MODE_Y				38
 //
 #define DEC_MODE_X_SZ				72
 //
 // ----------------------------------------------------------------------------
 // AGC control
-#define AGC_X						380
+#define AGC_X						365
 #define AGC_Y						10
 
 // ----------------------------------------------------------------------------
@@ -345,7 +345,7 @@
 //
 // ----------------------------------------------------------------------------
 // Filter
-#define FILTER_X					381
+#define FILTER_X					366
 #define FILTER_Y					38
 //
 #define FILTER_SIZE_X				110
@@ -353,11 +353,11 @@
 //
 // ----------------------------------------------------------------------------
 // Battery icon
-#define BATTERY_X					369
-#define BATTERY_Y					140
+#define BATTERY_X					365
+#define BATTERY_Y					110
 //
 #define BATTERY_SIZE_X				75
-#define BATTERY_SIZE_Y				50
+#define BATTERY_SIZE_Y				72
 //
 // ----------------------------------------------------------------------------
 // Filter
