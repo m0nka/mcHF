@@ -1212,11 +1212,6 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/user_i/user_i.c</locationURI>
 		</link>
 		<link>
-			<name>proc/ui/menu/items/user_i/user_i_icons.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/user_i/user_i_icons.c</locationURI>
-		</link>
-		<link>
 			<name>proc/ui/menu/items/user_i/user_i_icons.h</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/user_i/user_i_icons.h</locationURI>

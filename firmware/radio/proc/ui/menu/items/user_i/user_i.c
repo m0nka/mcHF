@@ -50,14 +50,14 @@ K_ModuleItem_Typedef  user_i =
 WM_HWIN   	hUdialog;
 
 #define ID_WINDOW_0               	(GUI_ID_USER + 0x00)
-//#define ID_BUTTON_EXIT            	(GUI_ID_USER + 0x01)
+//#define ID_BUTTON_EXIT            (GUI_ID_USER + 0x01)
 
 #define ID_CHECKBOX_0				(GUI_ID_USER + 0x02)
 #define ID_CHECKBOX_1				(GUI_ID_USER + 0x03)
 #define ID_CHECKBOX_2				(GUI_ID_USER + 0x04)
 #define ID_CHECKBOX_3				(GUI_ID_USER + 0x05)
 
-//#define ID_RADIO_0         			(GUI_ID_USER + 0x05)
+//#define ID_RADIO_0         		(GUI_ID_USER + 0x05)
 #define ID_ICONVIEW_0    			(GUI_ID_USER + 0x06)
 
 static const GUI_WIDGET_CREATE_INFO _aDialog[] =
@@ -80,8 +80,8 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 	//{ ICONVIEW_CreateIndirect, "Iconview", 					ID_ICONVIEW_0, 		12, 	50, 	768, 	180, 	0, 	0x009800fc, 0 },
 };
 
-extern 	osMessageQId 			hEspMessage;
-struct 	ESPMessage				esp_msg_x;
+//extern 	osMessageQId 			hEspMessage;
+//struct 	ESPMessage				esp_msg_x;
 
 extern TaskHandle_t 					hVfoTask;
 
@@ -265,7 +265,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			break;
 		}
 		#endif
-
+#if 0
 		case ID_ICONVIEW_0:
 		{
 			if(NCode == WM_NOTIFICATION_RELEASED)
@@ -278,7 +278,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 
 			break;
 		}
-
+#endif
 		// -------------------------------------------------------------
 		default:
 			break;
@@ -289,8 +289,8 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 {
 	WM_HWIN 			hItem;
 	int 				Id, NCode;
-	const void * pData;
-	U32          FileSize;
+	//const void * pData;
+	//U32          FileSize;
 
 	switch (pMsg->MsgId)
 	{
@@ -298,7 +298,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 		{
 			// Save public on init
 			user_i_theme_id = ui_s.theme_id;
-
+#if 0
 			hItem = ICONVIEW_CreateEx(	4,
 			   							10,
 										798,
@@ -330,7 +330,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 				ICONVIEW_SetSel		(hItem, ui_s.theme_id);
 			else
 				ICONVIEW_SetSel		(hItem, 0);
-
+#endif
 			// Init Checkbox
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_0);
 			CHECKBOX_SetFont(hItem,&GUI_Font16_1);
@@ -370,7 +370,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			// Doesn't work in menu, maybe create in each individual menu item ?
 			//--hKeypad = GUI_CreateKeyPad(WM_GetDesktopWindowEx(0));
 
-			esp_msg_x.ucProcStatus = TASK_PROC_IDLE;
+			//esp_msg_x.ucProcStatus = TASK_PROC_IDLE;
 			break;
 		}
 
@@ -446,7 +446,7 @@ static void KillUI(void)
 	{
 		printf("new theme id=%d, needs update on exit\r\n", ui_s.theme_id);
 
-		#if 1
+		#if 0
 		if(esp_msg_x.ucProcStatus == TASK_PROC_IDLE)
 		{
 			esp_msg_x.ucMessageID  = 0x04;			// SQLite write
