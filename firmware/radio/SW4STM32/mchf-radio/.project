@@ -1032,6 +1032,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/volume/ui_controls_volume.c</locationURI>
 		</link>
 		<link>
+			<name>proc/ui/driver/backlight/shared_tim.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/driver/backlight/shared_tim.c</locationURI>
+		</link>
+		<link>
 			<name>proc/ui/driver/mipi/otm8009a.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/driver/mipi/otm8009a.c</locationURI>

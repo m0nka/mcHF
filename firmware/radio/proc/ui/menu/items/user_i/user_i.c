@@ -21,6 +21,8 @@
 #include "ui_menu_module.h"
 #include "user_i_icons.h"
 
+#include "shared_tim.h"
+
 extern GUI_CONST_STORAGE GUI_BITMAP bmicon_consumer;
 
 // UI driver public state
@@ -63,17 +65,21 @@ WM_HWIN   	hUdialog;
 static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 {
 	// -----------------------------------------------------------------------------------------------------------------------------
-	//							name						id					x		y		xsize	ysize	?		?		?
+	//							name			id					x		y		xsize	ysize	?		?		?
 	// -----------------------------------------------------------------------------------------------------------------------------
 	// Self
-	{ WINDOW_CreateIndirect,	"", 						ID_WINDOW_0,		0,    	0,		800,	430, 	0, 		0x64, 	0 },
-	// Back Button
-//	{ BUTTON_CreateIndirect, 	"Back",			 			ID_BUTTON_EXIT, 	670, 	375, 	120, 	45, 	0, 		0x0, 	0 },
+	{ WINDOW_CreateIndirect,	"", 			ID_WINDOW_0,		0,    	0,		800,	430, 	0, 		0x64, 	0 },
+	//
+	// Backlight slider
+	{ TEXT_CreateIndirect,     	"Backlight" ,	0,                	10,		10,  	100,  	20, 			TEXT_CF_LEFT 				},
+	{ EDIT_CreateIndirect,     	NULL,     		GUI_ID_EDIT0,   	10,  	35,  	40,  	40, 			EDIT_CI_DISABELD,		3 	},
+	{ SLIDER_CreateIndirect,   	NULL,     		GUI_ID_SLIDER0,		60, 	35, 	400,  	40 									},
+	//
 	// Check boxes
-	{ CHECKBOX_CreateIndirect,	"", 						ID_CHECKBOX_0, 		20, 	260,	250, 	30, 	0, 		0x0, 	0 },
-	{ CHECKBOX_CreateIndirect,	"", 						ID_CHECKBOX_1, 		20, 	300,	250, 	30, 	0, 		0x0, 	0 },
-	{ CHECKBOX_CreateIndirect,	"", 						ID_CHECKBOX_2, 		20, 	340,	250, 	30, 	0, 		0x0, 	0 },
-	{ CHECKBOX_CreateIndirect,	"", 						ID_CHECKBOX_3, 		20, 	380,	250, 	30, 	0, 		0x0, 	0 },
+	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_0, 		20, 	260,	250, 	30, 	0, 		0x0, 	0 },
+	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_1, 		20, 	300,	250, 	30, 	0, 		0x0, 	0 },
+	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_2, 		20, 	340,	250, 	30, 	0, 		0x0, 	0 },
+	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_3, 		20, 	380,	250, 	30, 	0, 		0x0, 	0 },
 	//
 	// Radio box						    																(spacing << 8)|(no_items)
 	//{ RADIO_CreateIndirect, 	"Radio", 					ID_RADIO_0, 		500, 	300, 	160, 	80, 	0, 		0x2003,	0 },
@@ -90,6 +96,9 @@ uchar user_i_theme_id;
 static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 {
 	WM_HWIN hItem;
+	WM_HWIN hSlider;
+	WM_HWIN hEdit;
+	ulong 	v = 0;
 
 	switch(Id)
 	{
@@ -134,6 +143,27 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			break;
 		}
 		#endif
+
+		// Audio gain slider
+		case GUI_ID_SLIDER0:
+		{
+			if(NCode != WM_NOTIFICATION_VALUE_CHANGED)
+				break;
+
+			hSlider = WM_GetDialogItem(pMsg->hWin, GUI_ID_SLIDER0);
+			hEdit   = WM_GetDialogItem(pMsg->hWin, GUI_ID_EDIT0);
+
+			// Get slider position
+			v = SLIDER_GetValue(hSlider);
+
+			// Update Edit box
+			EDIT_SetValue(hEdit, v);
+
+			tsu.brightness = (uchar)v;
+			shared_tim_change(tsu.brightness);
+
+			break;
+		}
 
 		// ------------------------------------------------------------
 		//
@@ -287,10 +317,13 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 
 static void _cbDialog(WM_MESSAGE * pMsg)
 {
-	WM_HWIN 			hItem;
+	WM_HWIN 			hItem, hSlider, hEdit;
 	int 				Id, NCode;
 	//const void * pData;
 	//U32          FileSize;
+	WM_HWIN hDlg;
+
+	hDlg = pMsg->hWin;
 
 	switch (pMsg->MsgId)
 	{
@@ -298,7 +331,8 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 		{
 			// Save public on init
 			user_i_theme_id = ui_s.theme_id;
-#if 0
+
+			#if 0
 			hItem = ICONVIEW_CreateEx(	4,
 			   							10,
 										798,
@@ -330,7 +364,24 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 				ICONVIEW_SetSel		(hItem, ui_s.theme_id);
 			else
 				ICONVIEW_SetSel		(hItem, 0);
-#endif
+			#endif
+
+			// Fix edit box
+			hEdit = WM_GetDialogItem(hDlg, GUI_ID_EDIT0);
+			EDIT_SetFont(hEdit,&GUI_Font16_1);
+			EDIT_SetBkColor(hEdit,EDIT_CI_ENABLED,GUI_LIGHTBLUE);
+			EDIT_SetTextColor(hEdit,EDIT_CI_ENABLED,GUI_WHITE);
+			EDIT_SetTextAlign(hEdit,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
+
+			// Fix scroll
+			hSlider = WM_GetDialogItem(hDlg, GUI_ID_SLIDER0);
+			SLIDER_SetWidth(hSlider, 20);
+			SLIDER_SetRange(hSlider,0, 100);
+
+			SLIDER_SetValue(hSlider, tsu.brightness);
+			EDIT_SetDecMode(hEdit, tsu.brightness, 0, 100, 0, 0);
+			WM_SetFocus(hSlider);
+
 			// Init Checkbox
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_0);
 			CHECKBOX_SetFont(hItem,&GUI_Font16_1);

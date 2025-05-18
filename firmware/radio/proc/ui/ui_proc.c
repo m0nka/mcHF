@@ -24,6 +24,7 @@
 #include "dialog.h"
 
 #include "stm32h747i_discovery_sdram.h"
+#include "shared_tim.h"
 
 //#define PROC_USE_WM
 
@@ -638,7 +639,8 @@ static void ui_proc_change_mode(void)
 		return;
 
 	// Backlight off
-	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+	//---HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+	shared_tim_change(20);
 
 	switch(state)
 	{
@@ -788,7 +790,8 @@ static void ui_proc_change_mode(void)
 	ui_s.lock_requests = 0;
 
 	// Backlight on
-	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+	//---HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+	shared_tim_change(tsu.brightness);
 }
 #endif
 
@@ -911,6 +914,10 @@ void ui_proc_task(void const *arg)
 	vTaskDelay(UI_PROC_START_DELAY);
 	//printf("ui proc start\r\n");
 
+	// Backlight PWM
+	shared_tim_init();
+	shared_tim_change(tsu.brightness);
+
 	ui_actions_init();
 	ui_lora_state_init();
 
@@ -1006,7 +1013,12 @@ ui_proc_loop:
 	GUI_Exec();
 	GUI_Delay(UI_PROC_SLEEP_TIME);
 	#else
-	if((ui_s.cur_state == MODE_MENU)||(ui_s.cur_state == MODE_DESKTOP_FT8))
+	if(ui_s.cur_state == MODE_MENU)
+	{
+		GUI_Exec();
+		GUI_Delay(10);
+	}
+	else if(ui_s.cur_state == MODE_DESKTOP_FT8)
 	{
 		GUI_Exec();
 		GUI_Delay(UI_PROC_SLEEP_TIME);

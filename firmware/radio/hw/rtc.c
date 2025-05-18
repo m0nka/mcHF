@@ -84,7 +84,7 @@ void k_CalendarBkupInit(void)
 	}
 
 	// Fix crazy dates
-	check_date_sanity();
+//!	check_date_sanity();
 }
 
 /**

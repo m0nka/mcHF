@@ -560,7 +560,7 @@ uint8_t bsp_config(void)
 	#endif
 
 	printf_init(1);
-	printf("-->%s v: %d.%d\r\n", DEVICE_STRING, MCHF_R_VER_RELEASE, MCHF_R_VER_BUILD);
+	printf("-->%s v: %d.%d.%d\r\n", DEVICE_STRING, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE, MCHF_R_VER_BUILD);
 
 	power_cntr_init();
 

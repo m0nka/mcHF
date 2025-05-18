@@ -618,6 +618,7 @@ void radio_init_on_reset(void)
 	tsu.band[tsu.curr_band].nco_freq	= 0;
 	tsu.band[tsu.curr_band].demod_mode	= DEMOD_USB;
 	tsu.demo_mode 						= 0;
+	tsu.brightness						= 80;
 	#endif
 
 	// Enforce 80m - test
