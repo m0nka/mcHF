@@ -44,7 +44,7 @@ int 	pub_value 		= 0;
 int 	old_value 		= 0;
 int 	skip 			= 0;
 int 	init_done		= 0;
-uchar	smet_disabled 	= 0;		// disabled from UI menu(var in eeprom)
+//uchar	smet_disabled 	= 0;		// disabled from UI menu(var in eeprom)
 ulong 	repaints 		= 0;
 uchar 	use_bmp 		= 1;
 uchar	is_peak			= 0;
@@ -398,9 +398,9 @@ static void ui_controls_smeter_set_needle(uchar pos)
 void ui_controls_smeter_init(void)
 {
 	// From Eeprom
-	sm.smet_disabled = (*(uchar *)(EEP_BASE + EEP_AN_MET_ON));
+	//tsu.smet_type = (*(uchar *)(EEP_BASE + EEP_AN_MET_ON));
 
-	if(sm.smet_disabled)
+	if(tsu.smet_type)
 	{
 		PARAM       Param;      // Parameters for drawing routine
 		int         Cnt;
@@ -529,7 +529,7 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 	if(sm.old_value == curr)
 		return;
 
-	if(!sm.smet_disabled)
+	if(!tsu.smet_type)
 	{
 		static uchar loc_tx_state = 10;
 

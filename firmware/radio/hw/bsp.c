@@ -34,6 +34,7 @@
 #include "ui_proc.h"
 #include "bms_proc.h"
 #include "keypad_proc.h"
+#include "radio_init.h"
 
 #include "version.h"
 
@@ -407,6 +408,9 @@ void bsp_power_off(void)
 
 	//vTaskDelay(4000);
 	HAL_Delay(3000);
+
+	// Save current system state to eeprom
+	radio_init_save_before_off();
 
 	#if 0
 	// Enter reason for reset, so the bootloader doesn't power back on the radio

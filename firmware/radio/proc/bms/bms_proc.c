@@ -1318,6 +1318,9 @@ static void bms_proc_power_off(void)
    			printf("user held button, will power off, bye!\r\n");
    			vTaskDelay(200);
 
+   			// Need more cleanup ??
+   			// ...
+
    			// Reset(0x41, 0x12)
    			//bq40z80_write_16bit_reg(0x41, 0x0000);
 

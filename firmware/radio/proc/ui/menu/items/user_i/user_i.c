@@ -162,6 +162,9 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			tsu.brightness = (uchar)v;
 			shared_tim_change(tsu.brightness);
 
+			// Update eeprom
+//!			WRITE_EEPROM(EEP_BRIGHTNESS, tsu.brightness);
+
 			break;
 		}
 
@@ -179,7 +182,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 				{
 					hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_0);
 					// Save to eeprom
-					*(uchar *)(EEP_BASE + EEP_SW_SMOOTH) = CHECKBOX_GetState(hItem);
+//!					*(uchar *)(EEP_BASE + EEP_SW_SMOOTH) = CHECKBOX_GetState(hItem);
 
 					break;
 				}
@@ -202,8 +205,10 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 				case WM_NOTIFICATION_VALUE_CHANGED:
 				{
 					hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_1);
+					tsu.smet_type = CHECKBOX_GetState(hItem);
+
 					// Save to eeprom
-					*(uchar *)(EEP_BASE + EEP_AN_MET_ON) = CHECKBOX_GetState(hItem);
+//!					*(uchar *)(EEP_BASE + EEP_SMET_TYPE) = tsu.smet_type;
 
 					break;
 				}
@@ -268,7 +273,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 					}
 
 					// Save to eeprom
-					*(uchar *)(EEP_BASE + EEP_DEMO_MODE) = CHECKBOX_GetState(hItem);
+//!					*(uchar *)(EEP_BASE + EEP_DEMO_MODE) = tsu.demo_mode;
 
 					break;
 				}
@@ -393,7 +398,8 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_1);
 			CHECKBOX_SetFont(hItem,&GUI_Font16_1);
 			CHECKBOX_SetText(hItem, "Enable Analogue S-Meter");
-			CHECKBOX_SetState(hItem, *(uchar *)(EEP_BASE + EEP_AN_MET_ON));
+			//CHECKBOX_SetState(hItem, *(uchar *)(EEP_BASE + EEP_AN_MET_ON));
+			CHECKBOX_SetState(hItem, tsu.smet_type);
 
 #if 0
 			// Init Checkbox
@@ -407,7 +413,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_3);
 			CHECKBOX_SetFont(hItem,&GUI_Font16_1);
 			CHECKBOX_SetText(hItem, "Demo Mode");
-			CHECKBOX_SetState(hItem, *(uchar *)(EEP_BASE + EEP_DEMO_MODE));
+			CHECKBOX_SetState(hItem, tsu.demo_mode);
 
 			#if 0
 			// Initialization of 'Radio'

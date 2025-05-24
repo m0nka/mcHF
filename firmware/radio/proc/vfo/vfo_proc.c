@@ -143,7 +143,7 @@ static void vfo_proc_demo_mode_handler(void)
 
 		// Init CW transmitter instance
 		vfo_cw_gen_start(0, 14200000, "CQ CQ CQ DE M0NKA");
-		//vfo_cw_gen_start(1, 14212000, "TEST TEST TEST");
+		vfo_cw_gen_start(1, 14206000, "TEST TEST M0NKA");
 
 		vfo_loc_demo_mode = tsu.demo_mode;
 	}

@@ -188,10 +188,22 @@ static void radio_init_eep_defaults(void)
 	}
 
 	// Save
-	//save_band_info();
+	save_band_info();
+
+	// Save system defaults
+	WRITE_EEPROM(EEP_AUDIO_VOL, 0);
+	WRITE_EEPROM(EEP_CURR_BAND, BAND_MODE_20);
+	WRITE_EEPROM(EEP_DEMOD_MOD, DEMOD_USB);
+	WRITE_EEPROM(EEP_CURFILTER, AUDIO_3P6KHZ);
+
+	// Save UI defaults
+	WRITE_EEPROM(EEP_SW_SMOOTH,   0);
+	WRITE_EEPROM(EEP_DEMO_MODE,   0);
+	WRITE_EEPROM(EEP_BRIGHTNESS, 80);
+	WRITE_EEPROM(EEP_SMET_TYPE,   0);
 
 	// Set as initialised
-	//WRITE_EEPROM(EEP_BASE_ADDR,0x73);
+	WRITE_EEPROM(EEP_BASE_ADDR,0x73);
 }
 
 //*----------------------------------------------------------------------------
@@ -212,8 +224,10 @@ static int radio_init_load_eep_values(void)
 	// Check if data is valid
 	if(READ_EEPROM(EEP_BASE_ADDR) != 0x73)
 	{
-		printf("Eeprom lost, reload...\r\n");
+		//printf("Eeprom lost, reload...\r\n");
+		HAL_PWR_EnableBkUpAccess();
 		radio_init_eep_defaults();
+		HAL_PWR_DisableBkUpAccess();
 		return 1;
 	}
 
@@ -246,13 +260,36 @@ static int radio_init_load_eep_values(void)
 	r0 = READ_EEPROM(EEP_CURR_BAND);
 	//printf("r0 = %d\r\n",r0);
 	if(r0 != 0xFF)
+	{
 		tsu.curr_band = r0;
+
+		// Overload protection
+		if(tsu.curr_band > BAND_MODE_GEN)
+			tsu.curr_band = BAND_MODE_80;
+	}
 	else
 		tsu.curr_band = BAND_MODE_80;
 
-	// Overload protection
-	if(tsu.curr_band > BAND_MODE_GEN)
-		tsu.curr_band = BAND_MODE_80;
+	// Load Demo mode flag
+	r0 = READ_EEPROM(EEP_DEMO_MODE);
+	if(r0 != 0xFF)
+		tsu.demo_mode = r0;
+	else
+		tsu.demo_mode = 0;
+
+	// Load Brightness
+	r0 = READ_EEPROM(EEP_BRIGHTNESS);
+	if(r0 != 0xFF)
+		tsu.brightness = r0;
+	else
+		tsu.brightness = 80;
+
+	// Load S-meter type
+	r0 = READ_EEPROM(EEP_SMET_TYPE);
+	if(r0 != 0xFF)
+		tsu.smet_type = r0;
+	else
+		tsu.smet_type = 0;
 
 	return 0;
 }
@@ -527,6 +564,31 @@ void radio_init_show_current_demod_mode(uchar mode)
 	}
 }
 
+void radio_init_save_before_off(void)
+{
+	HAL_PWR_EnableBkUpAccess();
+
+	// Save
+	save_band_info();
+
+	// Save system defaults
+	//WRITE_EEPROM(EEP_AUDIO_VOL, 0);
+	WRITE_EEPROM(EEP_CURR_BAND, tsu.curr_band);
+	//WRITE_EEPROM(EEP_DEMOD_MOD, DEMOD_USB);
+	//WRITE_EEPROM(EEP_CURFILTER, AUDIO_3P6KHZ);
+
+	// Save UI defaults
+	WRITE_EEPROM(EEP_SW_SMOOTH,   0);
+	WRITE_EEPROM(EEP_DEMO_MODE,   0);
+	WRITE_EEPROM(EEP_BRIGHTNESS, 80);
+	WRITE_EEPROM(EEP_SMET_TYPE,  tsu.smet_type);
+
+	// Set as initialised
+	WRITE_EEPROM(EEP_BASE_ADDR, 0x73);
+
+	HAL_PWR_DisableBkUpAccess();
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : radio_init_on_reset
 //* Object              :
@@ -582,8 +644,10 @@ void radio_init_on_reset(void)
 	// Mute off
 	tsu.audio_mute_flag = 0;
 
-	// Demo mode off
-	tsu.demo_mode = 0;
+	// UI values
+	tsu.demo_mode 		= 0;
+	tsu.brightness		= 80;
+	tsu.smet_type		= 0;
 
 	// Enable virtual eeprom
 	INIT_EEPROM();
@@ -594,8 +658,8 @@ void radio_init_on_reset(void)
 	// ToDo: Are we going to send those to the DSP core at all ?
 	radio_init_load_dsp_values();
 
-	if(e == 0)
-		return;
+	//if(e == 0)
+	//	return;
 
 	// By default side encoder changes audio volume
 	tsu.active_side_enc_id 	= 0;
@@ -607,19 +671,17 @@ void radio_init_on_reset(void)
 	tsu.bias0				= 0;
 	tsu.bias1				= 0;
 
-	// Enforce 20m - test
-	#if 1
-	tsu.curr_band 						= BAND_MODE_20;
-	//tsu.band[tsu.curr_band].tx_power	= PA_LEVEL_5W;
-	tsu.band[tsu.curr_band].volume 		= 0;
-	tsu.band[tsu.curr_band].active_vfo  = VFO_A;
-	tsu.band[tsu.curr_band].vfo_a 		= 14074*1000 + 000;
-	tsu.band[tsu.curr_band].fixed_mode 	= 0;
-	tsu.band[tsu.curr_band].nco_freq	= 0;
-	tsu.band[tsu.curr_band].demod_mode	= DEMOD_USB;
-	tsu.demo_mode 						= 0;
-	tsu.brightness						= 80;
-	#endif
+	// Enforce 20m on eeprom error
+	if(e)
+	{
+		tsu.curr_band 						= BAND_MODE_20;
+		tsu.band[tsu.curr_band].volume 		= 0;
+		tsu.band[tsu.curr_band].active_vfo  = VFO_A;
+		tsu.band[tsu.curr_band].vfo_a 		= 14074*1000 + 000;
+		tsu.band[tsu.curr_band].fixed_mode 	= 0;
+		tsu.band[tsu.curr_band].nco_freq	= 0;
+		tsu.band[tsu.curr_band].demod_mode	= DEMOD_USB;
+	}
 
 	// Enforce 80m - test
 	#if 0

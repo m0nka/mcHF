@@ -384,6 +384,7 @@ __attribute__((__common__)) struct TRANSCEIVER_STATE_UI {
 
 	uchar	demo_mode;
 	uchar	brightness;
+	uchar	smet_type;
 
 	// We need new definition called full span, which is opposite
 	// what we called 'frequency translate' in lower than v 0.7.

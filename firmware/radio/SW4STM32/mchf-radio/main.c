@@ -562,15 +562,15 @@ int main(void)
 	// ADC3 clock from PLL2
 	PeriphCommonClock_Config();
 
+    // HW init
+    if(bsp_config() != 0)
+    	goto stall_radio;
+
     // RTC init
     k_CalendarBkupInit();
 
     // Set radio public values
     radio_init_on_reset();
-
-    // HW init
-    if(bsp_config() != 0)
-    	goto stall_radio;
 
     // Init ADC HW
     if(adc_init() != 0)
