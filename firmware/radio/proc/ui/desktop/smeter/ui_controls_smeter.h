@@ -16,7 +16,7 @@
 
 #include "GUI.h"
 
-#define SMETER_EXPAND_VALUE		1
+#define SMETER_EXPAND_VALUE		3
 
 // S-meter public
 __attribute__((__common__)) struct S_METER {

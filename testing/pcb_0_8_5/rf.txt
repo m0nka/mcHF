@@ -17,4 +17,5 @@
 - D6 is overkill, use smaller diode
 - Add SS34 in paralled to Q6
 - R500/R501, current draw too high, increase to 56k/10k(280uA)
-- add two diodes infront of VBAT div, to PACK_P and BATT_F rails(otherwise radio will not start if BMS fails, or no cells installed, and using USB power)
+- add two diodes infront of VBAT div, to PACK_P and BATT_F rails(otherwise radio will not start if BMS fails, 
+  or no cells installed, and using USB power)

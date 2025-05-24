@@ -56,7 +56,7 @@ WM_HWIN   	hUdialog;
 
 #define ID_CHECKBOX_0				(GUI_ID_USER + 0x02)
 #define ID_CHECKBOX_1				(GUI_ID_USER + 0x03)
-#define ID_CHECKBOX_2				(GUI_ID_USER + 0x04)
+//#define ID_CHECKBOX_2				(GUI_ID_USER + 0x04)
 #define ID_CHECKBOX_3				(GUI_ID_USER + 0x05)
 
 //#define ID_RADIO_0         		(GUI_ID_USER + 0x05)
@@ -77,8 +77,8 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 	//
 	// Check boxes
 	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_0, 		20, 	260,	250, 	30, 	0, 		0x0, 	0 },
-	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_1, 		20, 	300,	250, 	30, 	0, 		0x0, 	0 },
-	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_2, 		20, 	340,	250, 	30, 	0, 		0x0, 	0 },
+	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_1, 		20, 	320,	250, 	30, 	0, 		0x0, 	0 },
+	//{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_2, 		20, 	340,	250, 	30, 	0, 		0x0, 	0 },
 	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_3, 		20, 	380,	250, 	30, 	0, 		0x0, 	0 },
 	//
 	// Radio box						    																(spacing << 8)|(no_items)
@@ -213,6 +213,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			break;
 		}
 
+#if 0
 		// ------------------------------------------------------------
 		//
 		case ID_CHECKBOX_2:
@@ -236,7 +237,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 		    }
 			break;
 		}
-
+#endif
 		// ------------------------------------------------------------
 		//
 		case ID_CHECKBOX_3:
@@ -394,11 +395,13 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			CHECKBOX_SetText(hItem, "Enable Analogue S-Meter");
 			CHECKBOX_SetState(hItem, *(uchar *)(EEP_BASE + EEP_AN_MET_ON));
 
+#if 0
 			// Init Checkbox
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_2);
 			CHECKBOX_SetFont(hItem,&GUI_Font16_1);
 			CHECKBOX_SetText(hItem, "Show Iambic Keyer Control");
 			CHECKBOX_SetState(hItem, *(uchar *)(EEP_BASE + EEP_KEYER_ON));
+#endif
 
 			// Init Checkbox
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_3);

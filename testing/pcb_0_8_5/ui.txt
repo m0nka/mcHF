@@ -19,3 +19,6 @@
 - dual LCD supply via diodes(3V and 5V rails)
 - R38(DNP), to reduce voltage drop on cold power start
 - D6/D7 are likely not needed, as the chip has internal switch(ToDo: investigate)
+- isolate RTC osc crystal with ground plane
+  (https://community.st.com/t5/stm32-mcus-products/stm32h7xx-rtc-accuracy-problems/td-p/263675/page/3)
+- remove external VREF bandgap, use internal ?(nothing that needs precision, since BMS now does all critical ADC meas)  

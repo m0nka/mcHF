@@ -138,7 +138,7 @@ static void ui_proc_cb(void)
 
 static void ui_proc_cb_sm(void)
 {
-	ui_controls_clock_refresh();
+	//ui_controls_clock_refresh();
 }
 
 //*----------------------------------------------------------------------------
