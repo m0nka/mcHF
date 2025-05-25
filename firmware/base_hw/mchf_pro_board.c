@@ -555,7 +555,8 @@ void MPU_Config(void)
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
 	#endif
 
-	// RTC Domain SRAM
+	// RTC Domain SRAM - not a great idea, needs manual flush on write
+	#if 0
 	MPU_InitStruct.Enable 			= MPU_REGION_ENABLE;
 	MPU_InitStruct.BaseAddress 		= D3_BKPSRAM_BASE;					// 0x38800000
 	MPU_InitStruct.Size 			= MPU_REGION_SIZE_4KB;				// 4KB
@@ -568,6 +569,7 @@ void MPU_Config(void)
 	MPU_InitStruct.SubRegionDisable = 0x00;
 	MPU_InitStruct.DisableExec 		= MPU_INSTRUCTION_ACCESS_DISABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
+	#endif
 
     HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
 }

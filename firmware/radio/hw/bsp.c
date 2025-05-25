@@ -79,7 +79,6 @@ HAL_StatusTypeDef HAL_FLASHEx_Unlock_Bank1(void);
 __RAM_CODE_SECTION
 HAL_StatusTypeDef HAL_FLASHEx_Unlock_Bank2(void);
 
-
 #if 0
 /* Private functions ---------------------------------------------------------*/
 __STATIC_INLINE void my_data_copy(void *dst, void *src, size_t size)
@@ -211,7 +210,7 @@ static void bsp_backlight_init(void)
 //* Notes    			:
 //* Context    			: CONTEXT_RESET
 //*----------------------------------------------------------------------------
-static void tasks_pre_os_init(void)
+void tasks_pre_os_init(void)
 {
 	#ifdef CONTEXT_BMS
 	bms_proc_hw_init();
@@ -375,13 +374,9 @@ void power_off(void)
 }
 #endif
 
-//#define PWR_WAKEUP_PIN_FLAGS  	(PWR_WAKEUP_FLAG1 | PWR_WAKEUP_FLAG2 | PWR_WAKEUP_FLAG3 | \
-//                               	 PWR_WAKEUP_FLAG4 | PWR_WAKEUP_FLAG5 | PWR_WAKEUP_FLAG6)
-
 // Via stop mode
 void bsp_power_off(void)
 {
-	//PWREx_WakeupPinTypeDef sPinParams;
 	//printf("power off in\r\n");
 
 	// Stop all repaints
@@ -393,24 +388,18 @@ void bsp_power_off(void)
 	portDISABLE_INTERRUPTS();
 
 	// Tasks hw cleanup
-//!	audio_proc_power_cleanup();
-//!	band_proc_power_cleanup();
-	#ifdef CONTEXT_IPC_PROC
-	ipc_proc_power_cleanup();
-	#endif
-//!	rotary_proc_power_cleanup();
-//!	touch_proc_power_cleanup();
-//!	trx_proc_power_clean_up();
-//!	vfo_proc_power_cleanup();
+	audio_proc_power_cleanup();
+	band_proc_power_cleanup();
+	rotary_proc_power_cleanup();
+	touch_proc_power_cleanup();
+	trx_proc_power_clean_up();
+	vfo_proc_power_cleanup();
+	radio_init_save_before_off();
 	#ifdef CONTEXT_BMS
 	bms_proc_power_cleanup();
 	#endif
 
-	//vTaskDelay(4000);
 	HAL_Delay(3000);
-
-	// Save current system state to eeprom
-	radio_init_save_before_off();
 
 	#if 0
 	// Enter reason for reset, so the bootloader doesn't power back on the radio
@@ -419,43 +408,8 @@ void bsp_power_off(void)
 	// Restart to bootloader
 	NVIC_SystemReset();
 	#else
-	// Backlight off
 	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
-	// Regulator off
-	//HAL_GPIO_WritePin(POWER_HOLD_PORT, POWER_HOLD, 0);
 	LL_GPIO_ResetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
-	#endif
-
-	#if 0
-	// Disable used wakeup source: PWR_WAKEUP_PIN4
-	HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN2);
-
-	// Clear all related wakeup flags
-	HAL_PWREx_ClearWakeupFlag(PWR_WAKEUP_PIN_FLAGS);
-
-	//Enable WakeUp Pin PWR_WAKEUP_PIN4 connected to PC.13(WKUP2) User Button //
-	sPinParams.WakeUpPin    = PWR_WAKEUP_PIN2;
-	sPinParams.PinPolarity  = PWR_PIN_POLARITY_LOW;
-	sPinParams.PinPull      = PWR_PIN_PULL_DOWN;
-	HAL_PWREx_EnableWakeUpPin(&sPinParams);
-
-	#if 1
-	printf("standby mode\r\n");
-	#ifdef CONTEXT_ICC
-	HAL_HSEM_FastTake(HSEM_ID_26);				// Domain D2 off via request
-	HAL_HSEM_Release (HSEM_ID_26, 0);			//
-	#endif
-	//HAL_PWREx_EnterSTANDBYMode(PWR_D1_DOMAIN);	// Power off domain D1
-	HAL_PWR_EnterSTANDBYMode();
-	#else
-	printf("stop mode\r\n");
-	#ifdef CONTEXT_ICC
-	HAL_HSEM_FastTake(HSEM_ID_26);				// Stop D2 domain via HSEM fast notification
-	HAL_HSEM_Release (HSEM_ID_26, 0);
-	#endif
-	HAL_PWREx_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFI, PWR_D1_DOMAIN);// stop D1
-	#endif
-
 	#endif
 }
 
@@ -545,25 +499,35 @@ void bsp_gpio_clocks_on(void)
 	__HAL_RCC_GPIOI_CLK_ENABLE();
 }
 
+#if 0
+static void MX_CRC_Init(void)
+{
+	static CRC_HandleTypeDef hcrc;
+
+	hcrc.Instance = CRC;
+	hcrc.Init.DefaultPolynomialUse = DEFAULT_POLYNOMIAL_ENABLE;
+	hcrc.Init.DefaultInitValueUse = DEFAULT_INIT_VALUE_ENABLE;
+	hcrc.Init.InputDataInversionMode = CRC_INPUTDATA_INVERSION_NONE;
+	hcrc.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_DISABLE;
+	hcrc.InputDataFormat = CRC_INPUTDATA_FORMAT_BYTES;
+
+	if(HAL_CRC_Init(&hcrc) != HAL_OK)
+	{
+		Error_Handler(342);
+	}
+}
+#endif
+
 uint8_t bsp_config(void)
 {
-	LL_GPIO_InitTypeDef 		GPIO_InitStruct = {0};
+	//LL_GPIO_InitTypeDef 		GPIO_InitStruct = {0};
 
 	// Enable CRC to Unlock GUI
 	__HAL_RCC_CRC_CLK_ENABLE();
-
-	// PF6 is LED
-	#if 0
-	GPIO_InitStruct.Pin 	= POWER_LED;
-	GPIO_InitStruct.Mode 	= LL_GPIO_MODE_OUTPUT;
-	GPIO_InitStruct.Pull 	= LL_GPIO_PULL_DOWN;
-	LL_GPIO_Init(POWER_LED_PORT, &GPIO_InitStruct);
-
-	// Power LED set out and On by bootloader, turn off
-	LL_GPIO_ResetOutputPin(POWER_LED_PORT, POWER_LED);
-	#endif
+	//--MX_CRC_Init();
 
 	printf_init(1);
+	printf("----------------------------------------------  \r\n");
 	printf("-->%s v: %d.%d.%d\r\n", DEVICE_STRING, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE, MCHF_R_VER_BUILD);
 
 	power_cntr_init();
@@ -578,7 +542,7 @@ uint8_t bsp_config(void)
 	#endif
 
 	// Task hw basic init (after LCD Reset!)
-	tasks_pre_os_init();
+	//--tasks_pre_os_init();
 
 	/* Print Clock configuration */
 	//printf( "== CPU running at %dMHz, Peripherals at %dMHz/%dMHz  ==\r\n" , (HAL_RCCEx_GetD1SysClockFreq()/1000000U)

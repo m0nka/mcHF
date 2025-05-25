@@ -392,7 +392,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_0);
 			CHECKBOX_SetFont(hItem,&GUI_Font16_1);
 			CHECKBOX_SetText(hItem, "Spectrum Display Smooth Mode");
-			CHECKBOX_SetState(hItem, *(uchar *)(EEP_BASE + EEP_SW_SMOOTH));
+			CHECKBOX_SetState(hItem, 0);	// *(uchar *)(EEP_BASE + EEP_SW_SMOOTH));
 
 			// Init Checkbox
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_1);

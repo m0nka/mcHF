@@ -44,7 +44,7 @@ static uchar vfo_proc_set_freq(void)
 	// Local copy of active frequency
 	ulong freq = tsu.band[tsu.curr_band].vfo_a;
 
-	// Need four time actual frequencry due to the mixer/exciter switches
+	// Need four time actual frequency due to the mixer/exciter switches
 	freq *= 4;
 
 	//printf("vfo freq = %d\r\n", freq);

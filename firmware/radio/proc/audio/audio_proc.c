@@ -229,7 +229,7 @@ audio_proc_loop:
 	}
 	goto audio_proc_loop;
 
-//audio_proc_exit:
+audio_proc_exit:
 	vTaskDelete(NULL);
 }
 #endif

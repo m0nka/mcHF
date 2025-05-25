@@ -951,10 +951,10 @@ void ui_proc_task(void const *arg)
 		ui_proc_init_desktop();
 
 		// Demo mode on after boot up
-		if(*(uchar *)(EEP_BASE + EEP_DEMO_MODE))
+		if(tsu.demo_mode)
 		{
 			// Change demo mode
-			tsu.demo_mode = 1;
+			//tsu.demo_mode = 1;
 
 			// Wake up vfo task(use any notif id)
 			if(hVfoTask != NULL)

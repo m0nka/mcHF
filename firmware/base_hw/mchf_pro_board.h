@@ -23,7 +23,7 @@
 #include "cmsis_os.h"
 #include "task.h"
 #include "cpu_utils.h"
-#include "virt_eeprom.h"
+//--#include "virt_eeprom.h"
 #endif
 
 #include "mchf_pro_pinmap.h"

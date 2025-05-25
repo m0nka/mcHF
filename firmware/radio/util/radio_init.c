@@ -16,6 +16,7 @@
 #include "mchf_icc_def.h"
 
 #include "codec_hw.h"
+#include "virt_eeprom.h"
 #include "radio_init.h"
 
 // Public radio state
@@ -23,6 +24,36 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 
 // DSP core state
 extern struct 	TransceiverState 		ts;
+
+ulong radio_init_eep_chksum(void)
+{
+	ulong i, chk;
+
+	for(i = 4, chk = 0; i < 0x1000; i++)
+	{
+		chk += virt_eeprom_read(i);
+	}
+	//printf("Eeprom chk 0x%x\r\n", chk);
+
+	return chk;
+}
+
+static void save_band_info(void)
+{
+//	memcpy((uchar *)(EEP_BASE + EEP_BANDS),
+	//		(uchar *)(&(tsu.band[0].band_start)),
+		//	(MAX_BANDS * sizeof(BAND_INFO)));
+
+	uchar  *src = (uchar *)(&(tsu.band[0].band_start));
+	ushort dest = EEP_BANDS;
+	ushort size = (MAX_BANDS * sizeof(BAND_INFO));
+	ushort i;
+
+	for(i = 0; i < size; i++)
+	{
+		virt_eeprom_write((dest + i), *src++);
+	}
+}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : radio_init_eep_defaults
@@ -34,6 +65,8 @@ extern struct 	TransceiverState 		ts;
 static void radio_init_eep_defaults(void)
 {
 	ulong i;
+
+	printf("load eep defaults \r\n");
 
 	// Generate band info values
 	for(i = 0; i < MAX_BANDS; i++)
@@ -191,19 +224,24 @@ static void radio_init_eep_defaults(void)
 	save_band_info();
 
 	// Save system defaults
-	WRITE_EEPROM(EEP_AUDIO_VOL, 0);
-	WRITE_EEPROM(EEP_CURR_BAND, BAND_MODE_20);
-	WRITE_EEPROM(EEP_DEMOD_MOD, DEMOD_USB);
-	WRITE_EEPROM(EEP_CURFILTER, AUDIO_3P6KHZ);
+	virt_eeprom_write(EEP_CURR_BAND, BAND_MODE_20);
 
 	// Save UI defaults
-	WRITE_EEPROM(EEP_SW_SMOOTH,   0);
-	WRITE_EEPROM(EEP_DEMO_MODE,   0);
-	WRITE_EEPROM(EEP_BRIGHTNESS, 80);
-	WRITE_EEPROM(EEP_SMET_TYPE,   0);
+	virt_eeprom_write(EEP_SW_SMOOTH,   0);
+	virt_eeprom_write(EEP_DEMO_MODE,   0);
+	virt_eeprom_write(EEP_BRIGHTNESS, 80);
+	virt_eeprom_write(EEP_SMET_TYPE,   0);
+
+	// Generate checksum
+	ulong chk = radio_init_eep_chksum();
+
+	// Save it
+	virt_eeprom_write(EEP_BASE_ADDR + 1, chk >>  16);
+	virt_eeprom_write(EEP_BASE_ADDR + 2, chk >>   8);
+	virt_eeprom_write(EEP_BASE_ADDR + 3, chk & 0xFF);
 
 	// Set as initialised
-	WRITE_EEPROM(EEP_BASE_ADDR,0x73);
+	virt_eeprom_write(EEP_BASE_ADDR, 0x73);
 }
 
 //*----------------------------------------------------------------------------
@@ -216,19 +254,39 @@ static void radio_init_eep_defaults(void)
 static int radio_init_load_eep_values(void)
 {
 	uchar *bkp = (uchar *)EEP_BASE;
-	uchar r0;
+	uchar r0, val;
+	ulong read_chk, calc_chk;
+
+	if(!tsu.eeprom_init_done)
+	{
+		printf("eep init not done\r\n");
+		return 1;
+	}
 
 	// Test - force write
-	//--WRITE_EEPROM(EEP_BASE_ADDR,0x00);
+	//--virt_eeprom_write(EEP_BASE_ADDR, 0x00);
 
 	// Check if data is valid
-	if(READ_EEPROM(EEP_BASE_ADDR) != 0x73)
+	val = virt_eeprom_read(EEP_BASE_ADDR);
+	if(val != 0x73)
 	{
-		//printf("Eeprom lost, reload...\r\n");
-		HAL_PWR_EnableBkUpAccess();
-		radio_init_eep_defaults();
-		HAL_PWR_DisableBkUpAccess();
-		return 1;
+		printf("eep bad sig(0x%x)\r\n", val);
+		return 2;
+	}
+
+	// Calculate checksum
+	calc_chk = radio_init_eep_chksum();
+
+	// Read saved value
+	read_chk  = virt_eeprom_read(EEP_BASE_ADDR + 1) << 16;
+	read_chk |= virt_eeprom_read(EEP_BASE_ADDR + 2) <<  8;
+	read_chk |= virt_eeprom_read(EEP_BASE_ADDR + 3);
+
+	// Verify checksum
+	if(calc_chk != read_chk)
+	{
+		printf("eep check sum: 0x%x/0x%x \r\n", calc_chk, read_chk);
+		return 2;
 	}
 
 	// All at once
@@ -251,14 +309,13 @@ static int radio_init_load_eep_values(void)
 		printf("tstep = %d\r\n",tsu.band[i].step);
 		printf("filte = %d\r\n",tsu.band[i].filter);
 		printf("demod = %d\r\n",tsu.band[i].demod_mode);
-		printf("dspmo = %d\r\n",tsu.band[i].dsp_mode);
+		//printf("dspmo = %d\r\n",tsu.band[i].dsp_mode);
 		printf("volum = %d\r\n",tsu.band[i].volume);
 	}
 	#endif
 
 	// Load band
-	r0 = READ_EEPROM(EEP_CURR_BAND);
-	//printf("r0 = %d\r\n",r0);
+	r0 = virt_eeprom_read(EEP_CURR_BAND);
 	if(r0 != 0xFF)
 	{
 		tsu.curr_band = r0;
@@ -271,25 +328,32 @@ static int radio_init_load_eep_values(void)
 		tsu.curr_band = BAND_MODE_80;
 
 	// Load Demo mode flag
-	r0 = READ_EEPROM(EEP_DEMO_MODE);
+	r0 = virt_eeprom_read(EEP_DEMO_MODE);
 	if(r0 != 0xFF)
 		tsu.demo_mode = r0;
 	else
 		tsu.demo_mode = 0;
 
 	// Load Brightness
-	r0 = READ_EEPROM(EEP_BRIGHTNESS);
+	r0 = virt_eeprom_read(EEP_BRIGHTNESS);
 	if(r0 != 0xFF)
 		tsu.brightness = r0;
 	else
 		tsu.brightness = 80;
 
 	// Load S-meter type
-	r0 = READ_EEPROM(EEP_SMET_TYPE);
+	r0 = virt_eeprom_read(EEP_SMET_TYPE);
 	if(r0 != 0xFF)
 		tsu.smet_type = r0;
 	else
 		tsu.smet_type = 0;
+
+	#if 0
+	printf("curr band: %d\r\n",tsu.curr_band);
+	printf("demo mode: %d\r\n",tsu.demo_mode);
+	printf("smet type: %d\r\n",tsu.smet_type);
+	printf("brightnes: %d\r\n",tsu.brightness);
+	#endif
 
 	return 0;
 }
@@ -501,6 +565,55 @@ static void radio_init_load_dsp_values(void)
 	ts.mem_disp = 0;						// when TRUE, memory display is enabled
 }
 
+static void radio_init_misc_values(void)
+{
+	// Set clocks in use - fix in HW init!!
+	//--tsu.main_clk = EXT_16MHZ_XTAL;
+	//--tsu.rcc_clk = EXT_32KHZ_XTAL;
+
+	tsu.use_full_span		= 0;	// use frequency translate
+
+	// DSP status
+	tsu.dsp_alive 			= 0;
+	tsu.dsp_seq_number_old 	= 0;
+	tsu.dsp_seq_number	 	= 0;	// track if alive
+	tsu.dsp_freq			= 0;	// set as zero ?
+	tsu.dsp_volume			= 0;	// set as zero ?
+
+	// Local status
+	//tsu.audio_volume		= START_UP_AUDIO_VOL;
+	//tsu.vfo_a 				= 0xFFFFFFFF;			// Invalid, do not update DSP
+	//tsu.vfo_b 				= 0xFFFFFFFF;			// Invalid, do not update DSP
+	//tsu.active_vfo			= VFO_A;
+	tsu.step				= 0xFFFFFFFF;			// Invalid, do not update DSP
+	//tsu.demod_mode 			= 0xFF;					// Invalid, do not update DSP
+	tsu.curr_band			= 0xFF;					// Invalid, do not update DSP
+	//tsu.curr_filter			= 0xFF;					// Invalid, do not update DSP
+	tsu.step_idx			= 0xFF;					// Invalid, do not update DSP
+	//tsu.nco_freq			= 0;					// NCO -20kHz to +20kHz, zero disables translation routines in the the DSP
+	//tsu.fixed_mode			= 0;					// vfo in centre mode
+	tsu.cw_tx_state			= 0;					// rx mode
+	tsu.cw_iamb_type		= 0;					// iambic type, nothing selected
+
+	// DSP API requests
+	//tsu.update_audio_dsp_req 	= 0;
+	//tsu.update_freq_dsp_req  	= 0;
+	//tsu.update_band_dsp_req		= 0;
+	//tsu.update_demod_dsp_req	= 0;
+	//tsu.update_filter_dsp_req	= 0;
+	//tsu.update_nco_dsp_req		= 0;
+	//tsu.update_dsp_eep_req 		= 0;
+	//tsu.update_dsp_restart 		= 0;
+
+	// Mute off
+	tsu.audio_mute_flag = 0;
+
+	// UI values
+	tsu.demo_mode 		= 0;
+	tsu.brightness		= 80;
+	tsu.smet_type		= 0;
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : radio_init_ui_to_dsp
 //* Object              :
@@ -566,27 +679,38 @@ void radio_init_show_current_demod_mode(uchar mode)
 
 void radio_init_save_before_off(void)
 {
-	HAL_PWR_EnableBkUpAccess();
+	#if 0
+	printf("curr band: %d\r\n",tsu.curr_band);
+	printf("demo mode: %d\r\n",tsu.demo_mode);
+	printf("smet type: %d\r\n",tsu.smet_type);
+	printf("brightnes: %d\r\n",tsu.brightness);
+	#endif
 
 	// Save
 	save_band_info();
 
 	// Save system defaults
-	//WRITE_EEPROM(EEP_AUDIO_VOL, 0);
-	WRITE_EEPROM(EEP_CURR_BAND, tsu.curr_band);
-	//WRITE_EEPROM(EEP_DEMOD_MOD, DEMOD_USB);
-	//WRITE_EEPROM(EEP_CURFILTER, AUDIO_3P6KHZ);
+	virt_eeprom_write(EEP_CURR_BAND, tsu.curr_band);
 
 	// Save UI defaults
-	WRITE_EEPROM(EEP_SW_SMOOTH,   0);
-	WRITE_EEPROM(EEP_DEMO_MODE,   0);
-	WRITE_EEPROM(EEP_BRIGHTNESS, 80);
-	WRITE_EEPROM(EEP_SMET_TYPE,  tsu.smet_type);
+	virt_eeprom_write(EEP_SW_SMOOTH,  0);
+	virt_eeprom_write(EEP_DEMO_MODE,  tsu.demo_mode);
+	virt_eeprom_write(EEP_BRIGHTNESS, tsu.brightness);
+	virt_eeprom_write(EEP_SMET_TYPE,  tsu.smet_type);
+
+	// Generate checksum
+	ulong chk = radio_init_eep_chksum();
+
+	// Save it
+	virt_eeprom_write(EEP_BASE_ADDR + 1, chk >>  16);
+	virt_eeprom_write(EEP_BASE_ADDR + 2, chk >>   8);
+	virt_eeprom_write(EEP_BASE_ADDR + 3, chk & 0xFF);
 
 	// Set as initialised
-	WRITE_EEPROM(EEP_BASE_ADDR, 0x73);
+	virt_eeprom_write(EEP_BASE_ADDR, 0x73);
 
 	HAL_PWR_DisableBkUpAccess();
+	//--HAL_PWREx_EnableBkUpReg();
 }
 
 //*----------------------------------------------------------------------------
@@ -599,67 +723,28 @@ void radio_init_save_before_off(void)
 //*----------------------------------------------------------------------------
 void radio_init_on_reset(void)
 {
+	int res;
+
 	// Eeprom flags
 	tsu.eeprom_init_done	= 0;
 	//tsu.eeprom_data_valid 	= 0;
 
-	// Set clocks in use - fix in HW init!!
-	//--tsu.main_clk = EXT_16MHZ_XTAL;
-	//--tsu.rcc_clk = EXT_32KHZ_XTAL;
-
-	tsu.use_full_span		= 0;	// use frequency translate
-
-	// DSP status
-	tsu.dsp_alive 			= 0;
-	tsu.dsp_seq_number_old 	= 0;
-	tsu.dsp_seq_number	 	= 0;	// track if alive
-	tsu.dsp_freq			= 0;	// set as zero ?
-	tsu.dsp_volume			= 0;	// set as zero ?
-
-	// Local status
-	//tsu.audio_volume		= START_UP_AUDIO_VOL;
-	//tsu.vfo_a 				= 0xFFFFFFFF;			// Invalid, do not update DSP
-	//tsu.vfo_b 				= 0xFFFFFFFF;			// Invalid, do not update DSP
-	//tsu.active_vfo			= VFO_A;
-	tsu.step				= 0xFFFFFFFF;			// Invalid, do not update DSP
-	//tsu.demod_mode 			= 0xFF;					// Invalid, do not update DSP
-	tsu.curr_band			= 0xFF;					// Invalid, do not update DSP
-	//tsu.curr_filter			= 0xFF;					// Invalid, do not update DSP
-	tsu.step_idx			= 0xFF;					// Invalid, do not update DSP
-	//tsu.nco_freq			= 0;					// NCO -20kHz to +20kHz, zero disables translation routines in the the DSP
-	//tsu.fixed_mode			= 0;					// vfo in centre mode
-	tsu.cw_tx_state			= 0;					// rx mode
-	tsu.cw_iamb_type		= 0;					// iambic type, nothing selected
-
-	// DSP API requests
-	//tsu.update_audio_dsp_req 	= 0;
-	//tsu.update_freq_dsp_req  	= 0;
-	//tsu.update_band_dsp_req		= 0;
-	//tsu.update_demod_dsp_req	= 0;
-	//tsu.update_filter_dsp_req	= 0;
-	//tsu.update_nco_dsp_req		= 0;
-	//tsu.update_dsp_eep_req 		= 0;
-	//tsu.update_dsp_restart 		= 0;
-
-	// Mute off
-	tsu.audio_mute_flag = 0;
-
-	// UI values
-	tsu.demo_mode 		= 0;
-	tsu.brightness		= 80;
-	tsu.smet_type		= 0;
+	radio_init_misc_values();
 
 	// Enable virtual eeprom
-	INIT_EEPROM();
+	virt_eeprom_init();
 
 	// Init pub struct
-	int e = radio_init_load_eep_values();
+	res = radio_init_load_eep_values();
 
 	// ToDo: Are we going to send those to the DSP core at all ?
 	radio_init_load_dsp_values();
 
-	//if(e == 0)
-	//	return;
+	if(res == 0)
+		return;
+
+	// Restore eeprom
+	radio_init_eep_defaults();
 
 	// By default side encoder changes audio volume
 	tsu.active_side_enc_id 	= 0;
@@ -671,17 +756,14 @@ void radio_init_on_reset(void)
 	tsu.bias0				= 0;
 	tsu.bias1				= 0;
 
-	// Enforce 20m on eeprom error
-	if(e)
-	{
-		tsu.curr_band 						= BAND_MODE_20;
-		tsu.band[tsu.curr_band].volume 		= 0;
-		tsu.band[tsu.curr_band].active_vfo  = VFO_A;
-		tsu.band[tsu.curr_band].vfo_a 		= 14074*1000 + 000;
-		tsu.band[tsu.curr_band].fixed_mode 	= 0;
-		tsu.band[tsu.curr_band].nco_freq	= 0;
-		tsu.band[tsu.curr_band].demod_mode	= DEMOD_USB;
-	}
+	// Enforce 20m on eeprom on error
+	tsu.curr_band 						= BAND_MODE_20;
+	tsu.band[tsu.curr_band].volume 		= 0;
+	tsu.band[tsu.curr_band].active_vfo  = VFO_A;
+	tsu.band[tsu.curr_band].vfo_a 		= 14074*1000 + 000;
+	tsu.band[tsu.curr_band].fixed_mode 	= 0;
+	tsu.band[tsu.curr_band].nco_freq	= 0;
+	tsu.band[tsu.curr_band].demod_mode	= DEMOD_USB;
 
 	// Enforce 80m - test
 	#if 0

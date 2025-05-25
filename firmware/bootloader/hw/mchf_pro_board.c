@@ -648,7 +648,7 @@ void mchf_pro_board_init(void)
 	#endif
 
 	// Seems to be important
-	early_backup_domain_init();
+	//--early_backup_domain_init();
 }
 
 // Critical HW init on start
@@ -660,12 +660,12 @@ void critical_hw_init_and_run_fw(void)
 	GPIO_InitTypeDef  GPIO_InitStruct;
 
 	// Enable RTC back-up registers access
-	__HAL_RCC_RTC_ENABLE();
-	__HAL_RCC_RTC_CLK_ENABLE();
-	HAL_PWR_EnableBkUpAccess();
+	//__HAL_RCC_RTC_ENABLE();
+	//__HAL_RCC_RTC_CLK_ENABLE();
+	//HAL_PWR_EnableBkUpAccess();
 
-    reset_reason = READ_REG(BKP_REG_RESET_REASON);
-	WRITE_REG(BKP_REG_RESET_REASON, RESET_CLEAR);
+    //reset_reason = READ_REG(BKP_REG_RESET_REASON);
+	//WRITE_REG(BKP_REG_RESET_REASON, RESET_CLEAR);
 
 	// PG11 is power hold
 	GPIO_InitStruct.Pin   = POWER_HOLD;
@@ -675,12 +675,12 @@ void critical_hw_init_and_run_fw(void)
 	HAL_GPIO_Init(POWER_HOLD_PORT, &GPIO_InitStruct);
 
 	// Power off request from firmware
-	if(reset_reason == RESET_POWER_OFF)
-	{
+	//if(reset_reason == RESET_POWER_OFF)
+	//{
 		//printf("power off request from radio...\r\n");
-		HAL_Delay(300);
-		power_off_x(RESET_POWER_OFF);
-	}
+		//HAL_Delay(300);
+		//power_off_x(RESET_POWER_OFF);
+	//}
 
 	// PF6 is LED - ack boot up, in firmware should be ambient sensor, not GPIO!
 	GPIO_InitStruct.Pin   = POWER_LED;

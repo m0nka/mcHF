@@ -22,6 +22,7 @@ static k_AlarmCallback AlarmCallback;
 #define BUTTON_WAKEUP_PIN                   GPIO_PIN_13
 RTC_HandleTypeDef RtcHandle;
 
+#if 0
 // Fix insane Date on startup
 void check_date_sanity(void)
 {
@@ -40,6 +41,7 @@ void check_date_sanity(void)
 
 	k_SetDate(&sdatestructureget);
 }
+#endif
 
 void k_CalendarBkupInit(void)
 {
@@ -99,14 +101,6 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
 {
 	RCC_OscInitTypeDef        RCC_OscInitStruct;
 	RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct;
-  
-	// Enables access to the backup domain
-	// To enable access on RTC registers
-	PWR->CR1 |= PWR_CR1_DBP;
-  	while((PWR->CR1 & PWR_CR1_DBP) == RESET)
-  	{
-  		__asm("nop");
-  	}
 
 	#ifdef USE_LSE
   	// Configure LSE as RTC clock source
@@ -116,6 +110,7 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
   	RCC_OscInitStruct.LSIState 			= RCC_LSI_OFF;
   	if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   	{
+  		Error_Handler(520);
   		return;
   	}
   
@@ -123,6 +118,7 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
   	PeriphClkInitStruct.RTCClockSelection 		= RCC_RTCCLKSOURCE_LSE;
   	if(HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   	{
+  		Error_Handler(521);
   		return;
   	}
   
@@ -151,7 +147,6 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
 	// Enable the RTC peripheral Clock
 	__HAL_RCC_RTC_ENABLE();
 	__HAL_RCC_RTC_CLK_ENABLE();
-	__HAL_RCC_BKPRAM_CLK_ENABLE();
 }
 
 

@@ -572,6 +572,9 @@ int main(void)
     // Set radio public values
     radio_init_on_reset();
 
+    // Init each task hw
+    tasks_pre_os_init();
+
     // Init ADC HW
     if(adc_init() != 0)
     	goto stall_radio;

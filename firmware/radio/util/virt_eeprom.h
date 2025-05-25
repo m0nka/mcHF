@@ -15,18 +15,12 @@
 
 // Virtual eeprom locations
 #define	EEP_BASE_ADDR				0x000
-#define	EEP_AUDIO_VOL				0x001
-#define	EEP_CURR_BAND				0x002
-#define	EEP_DEMOD_MOD				0x003
-#define	EEP_CURFILTER				0x004
 //
+#define	EEP_CURR_BAND				0x004
 #define	EEP_SW_SMOOTH				0x005
-//#define	EEP_AN_MET_ON			0x006
-//#define	EEP_KEYER_ON			0x007
-//#define	EEP_AGC_STATE			0x008
-#define	EEP_DEMO_MODE				0x009
-#define	EEP_BRIGHTNESS				0x00A
-#define	EEP_SMET_TYPE				0x00B
+#define	EEP_DEMO_MODE				0x006
+#define	EEP_BRIGHTNESS				0x007
+#define	EEP_SMET_TYPE				0x008
 //
 #define	EEP_BANDS					0xE10		// pos 3600, band info, 400 bytes
 
@@ -41,10 +35,9 @@
 //
 #define EEP_BASE					0x38800000
 //
-void  	WRITE_EEPROM(ushort addr,uchar value);
-ulong 	READ_EEPROM (ushort addr);
-ulong 	INIT_EEPROM(void);
 
-#define save_band_info()	{memcpy((uchar *)(EEP_BASE + EEP_BANDS),(uchar *)(&(tsu.band[0].band_start)),(MAX_BANDS * sizeof(BAND_INFO)));}
+void 	virt_eeprom_write(ushort addr,uchar value);
+ulong 	virt_eeprom_read(ushort addr);
+ulong 	virt_eeprom_init(void);
 
 #endif
