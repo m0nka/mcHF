@@ -96,15 +96,12 @@ extern TaskHandle_t 					hVfoTask;
 extern K_ModuleItem_Typedef  	dsp_s;				// Standard DSP Menu
 extern K_ModuleItem_Typedef  	menu_pa;			// Extended DSP Menu
 extern K_ModuleItem_Typedef  	user_i;				// User Interface
-//extern K_ModuleItem_Typedef  	file_b;				// File Browser
 extern K_ModuleItem_Typedef  	clock;				// Clock Settings
-extern K_ModuleItem_Typedef  	reset;				// Factory Reset
-//extern K_ModuleItem_Typedef  	wsjt;				// WSJT-X Tools
 extern K_ModuleItem_Typedef  	logbook;			// Logbook
 extern K_ModuleItem_Typedef  	menu_batt;			// Battery
 extern K_ModuleItem_Typedef  	info;				// System Information
-extern K_ModuleItem_Typedef  	lora;				// System Information
-extern K_ModuleItem_Typedef  	esp32;				// System Information
+extern K_ModuleItem_Typedef  	lora;				// Lora module control
+//extern K_ModuleItem_Typedef  	file_b;				// File Browser
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_add_menu_items
@@ -120,14 +117,11 @@ static void ui_proc_add_menu_items(void)
 	k_ModuleAdd(&menu_pa);				// Extended DSP Menu
 	k_ModuleAdd(&user_i);				// User Interface
 	k_ModuleAdd(&clock);				// Clock Settings
-	//k_ModuleAdd(&file_b);				// File Browser
 	k_ModuleAdd(&menu_batt);			// Battery
-	k_ModuleAdd(&reset);				// Factory Reset
-	//k_ModuleAdd(&wsjt);				// WSJT-X Tools
 	k_ModuleAdd(&logbook);				// Logbook
 	k_ModuleAdd(&lora);					// Lora
-	k_ModuleAdd(&esp32);				// ESP32
 	k_ModuleAdd(&info);					// About
+	//k_ModuleAdd(&file_b);				// File Browser
 }
 
 static void ui_proc_cb(void)

@@ -72,11 +72,6 @@
 			<locationURI>PARENT-2-PROJECT_LOC/config/is42s32800j_conf.h</locationURI>
 		</link>
 		<link>
-			<name>config/mchf_radio_decl.h</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/config/mchf_radio_decl.h</locationURI>
-		</link>
-		<link>
 			<name>config/mt25tl01g_conf.h</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/config/mt25tl01g_conf.h</locationURI>
@@ -1147,16 +1142,6 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/dsp_s/dsp_s_res.c</locationURI>
 		</link>
 		<link>
-			<name>proc/ui/menu/items/esp32/esp32.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/esp32/esp32.c</locationURI>
-		</link>
-		<link>
-			<name>proc/ui/menu/items/esp32/esp32_res.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/esp32/esp32_res.c</locationURI>
-		</link>
-		<link>
 			<name>proc/ui/menu/items/file_b/file_b.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/file_b/file_b.c</locationURI>
@@ -1200,16 +1185,6 @@
 			<name>proc/ui/menu/items/pa/menu_pa.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/pa/menu_pa.c</locationURI>
-		</link>
-		<link>
-			<name>proc/ui/menu/items/reset/reset.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/reset/reset.c</locationURI>
-		</link>
-		<link>
-			<name>proc/ui/menu/items/reset/reset_res.c</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/reset/reset_res.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/user_i/user_i.c</name>

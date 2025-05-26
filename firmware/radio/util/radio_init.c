@@ -56,195 +56,6 @@ static void save_band_info(void)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : radio_init_eep_defaults
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void radio_init_eep_defaults(void)
-{
-	ulong i;
-
-	printf("load eep defaults \r\n");
-
-	// Generate band info values
-	for(i = 0; i < MAX_BANDS; i++)
-	{
-		// Startup volume
-		tsu.band[i].volume 			= 0;
-		tsu.band[i].audio_balance 	= 8;
-		tsu.band[i].st_volume		= 3;
-		tsu.band[i].step 			= T_STEP_1KHZ;
-		tsu.band[i].filter			= AUDIO_3P6KHZ;
-		tsu.band[i].atten	 		= ATTEN_0DB;
-		tsu.band[i].nco_freq		= 0;
-		tsu.band[i].active_vfo		= VFO_A;
-		tsu.band[i].fixed_mode		= 0;
-		tsu.band[i].span			= 40000;
-
-		// VFOs values
-		switch(i)
-		{
-			case BAND_MODE_2200:
-				tsu.band[i].vfo_a 		= BAND_FREQ_2200;
-				tsu.band[i].vfo_b 		= BAND_FREQ_2200;
-				tsu.band[i].band_start 	= BAND_FREQ_2200;
-				tsu.band[i].band_end 	= (BAND_FREQ_2200 + BAND_SIZE_2200);
-				tsu.band[i].demod_mode	= DEMOD_LSB;
-				tsu.band[i].power_factor= 0;
-				tsu.band[i].tx_power	= 0xFF;
-				break;
-
-			case BAND_MODE_630:
-				tsu.band[i].vfo_a 		= BAND_FREQ_630;
-				tsu.band[i].vfo_b 		= BAND_FREQ_630;
-				tsu.band[i].band_start 	= BAND_FREQ_630;
-				tsu.band[i].band_end 	= (BAND_FREQ_630 + BAND_SIZE_630);
-				tsu.band[i].demod_mode	= DEMOD_LSB;
-				tsu.band[i].power_factor= 0;
-				tsu.band[i].tx_power	= 0xFF;
-				break;
-
-			case BAND_MODE_160:
-				tsu.band[i].vfo_a 		= BAND_FREQ_160;
-				tsu.band[i].vfo_b 		= BAND_FREQ_160;
-				tsu.band[i].band_start 	= BAND_FREQ_160;
-				tsu.band[i].band_end 	= (BAND_FREQ_160 + BAND_SIZE_160);
-				tsu.band[i].demod_mode	= DEMOD_LSB;
-				tsu.band[i].power_factor= TX_POWER_FACTOR_160_DEFAULT;
-				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
-				break;
-
-			case BAND_MODE_80:
-				tsu.band[i].vfo_a 		= BAND_FREQ_80;
-				tsu.band[i].vfo_b 		= BAND_FREQ_80;
-				tsu.band[i].band_start 	= BAND_FREQ_80;
-				tsu.band[i].band_end 	= (BAND_FREQ_80 + BAND_SIZE_80);
-				tsu.band[i].demod_mode	= DEMOD_LSB;
-				tsu.band[i].power_factor= TX_POWER_FACTOR_80_DEFAULT;
-				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
-				break;
-
-			case BAND_MODE_60:
-				tsu.band[i].vfo_a 		= BAND_FREQ_60;
-				tsu.band[i].vfo_b 		= BAND_FREQ_60;
-				tsu.band[i].band_start 	= BAND_FREQ_60;
-				tsu.band[i].band_end 	= (BAND_FREQ_60 + BAND_SIZE_60);
-				tsu.band[i].demod_mode	= DEMOD_LSB;
-				tsu.band[i].power_factor= TX_POWER_FACTOR_60_DEFAULT;
-				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
-				break;
-
-			case BAND_MODE_40:
-				tsu.band[i].vfo_a 		= BAND_FREQ_40;
-				tsu.band[i].vfo_b 		= BAND_FREQ_40;
-				tsu.band[i].band_start 	= BAND_FREQ_40;
-				tsu.band[i].band_end 	= (BAND_FREQ_40 + BAND_SIZE_40);
-				tsu.band[i].demod_mode	= DEMOD_LSB;
-				tsu.band[i].power_factor= TX_POWER_FACTOR_40_DEFAULT;
-				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
-				break;
-
-			case BAND_MODE_30:
-				tsu.band[i].vfo_a 		= BAND_FREQ_30;
-				tsu.band[i].vfo_b 		= BAND_FREQ_30;
-				tsu.band[i].band_start 	= BAND_FREQ_30;
-				tsu.band[i].band_end 	= (BAND_FREQ_30 + BAND_SIZE_30);
-				tsu.band[i].demod_mode	= DEMOD_USB;
-				tsu.band[i].power_factor= TX_POWER_FACTOR_30_DEFAULT;
-				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
-				break;
-
-			case BAND_MODE_20:
-				tsu.band[i].vfo_a 		= BAND_FREQ_20;
-				tsu.band[i].vfo_b 		= BAND_FREQ_20;
-				tsu.band[i].band_start 	= BAND_FREQ_20;
-				tsu.band[i].band_end 	= (BAND_FREQ_20 + BAND_SIZE_20);
-				tsu.band[i].demod_mode	= DEMOD_USB;
-				tsu.band[i].power_factor= TX_POWER_FACTOR_20_DEFAULT;
-				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
-				break;
-
-			case BAND_MODE_17:
-				tsu.band[i].vfo_a 		= BAND_FREQ_17;
-				tsu.band[i].vfo_b 		= BAND_FREQ_17;
-				tsu.band[i].band_start 	= BAND_FREQ_17;
-				tsu.band[i].band_end 	= (BAND_FREQ_17 + BAND_SIZE_17);
-				tsu.band[i].demod_mode	= DEMOD_USB;
-				tsu.band[i].power_factor= TX_POWER_FACTOR_17_DEFAULT;
-				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
-				break;
-
-			case BAND_MODE_15:
-				tsu.band[i].vfo_a 		= BAND_FREQ_15;
-				tsu.band[i].vfo_b 		= BAND_FREQ_15;
-				tsu.band[i].band_start 	= BAND_FREQ_15;
-				tsu.band[i].band_end 	= (BAND_FREQ_15 + BAND_SIZE_15);
-				tsu.band[i].demod_mode	= DEMOD_USB;
-				tsu.band[i].power_factor= TX_POWER_FACTOR_15_DEFAULT;
-				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
-				break;
-
-			case BAND_MODE_12:
-				tsu.band[i].vfo_a 		= BAND_FREQ_12;
-				tsu.band[i].vfo_b 		= BAND_FREQ_12;
-				tsu.band[i].band_start 	= BAND_FREQ_12;
-				tsu.band[i].band_end 	= (BAND_FREQ_12 + BAND_SIZE_12);
-				tsu.band[i].demod_mode	= DEMOD_USB;
-				tsu.band[i].power_factor= TX_POWER_FACTOR_12_DEFAULT;
-				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
-				break;
-
-			case BAND_MODE_10:
-				tsu.band[i].vfo_a 		= BAND_FREQ_10;
-				tsu.band[i].vfo_b 		= BAND_FREQ_10;
-				tsu.band[i].band_start 	= BAND_FREQ_10;
-				tsu.band[i].band_end 	= (BAND_FREQ_10 + BAND_SIZE_10);
-				tsu.band[i].demod_mode	= DEMOD_USB;
-				tsu.band[i].power_factor= TX_POWER_FACTOR_10_DEFAULT;
-				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
-				break;
-
-			case BAND_MODE_GEN:
-				tsu.band[i].vfo_a 		= BAND_FREQ_GEN;
-				tsu.band[i].vfo_b 		= BAND_FREQ_GEN;
-				tsu.band[i].band_start 	= BAND_FREQ_GEN;
-				tsu.band[i].band_end 	= (BAND_FREQ_GEN + BAND_SIZE_GEN);
-				tsu.band[i].demod_mode	= DEMOD_AM;
-				tsu.band[i].power_factor= 0;
-				tsu.band[i].tx_power	= 0xFF;
-				break;
-			default:
-				break;
-		}
-	}
-
-	// Save
-	save_band_info();
-
-	// Save system defaults
-	virt_eeprom_write(EEP_CURR_BAND, BAND_MODE_20);
-
-	// Save UI defaults
-	virt_eeprom_write(EEP_SW_SMOOTH,   0);
-	virt_eeprom_write(EEP_DEMO_MODE,   0);
-	virt_eeprom_write(EEP_BRIGHTNESS, 80);
-	virt_eeprom_write(EEP_SMET_TYPE,   0);
-
-	// Generate checksum
-	ulong chk = radio_init_eep_chksum();
-
-	// Save it
-	virt_eeprom_write(EEP_BASE_ADDR + 1, chk >>  16);
-	virt_eeprom_write(EEP_BASE_ADDR + 2, chk >>   8);
-	virt_eeprom_write(EEP_BASE_ADDR + 3, chk & 0xFF);
-
-	// Set as initialised
-	virt_eeprom_write(EEP_BASE_ADDR, 0x73);
-}
-
-//*----------------------------------------------------------------------------
 //* Function Name       : transceiver_load_eep_values
 //* Object              :
 //* Input Parameters    :
@@ -612,6 +423,195 @@ static void radio_init_misc_values(void)
 	tsu.demo_mode 		= 0;
 	tsu.brightness		= 80;
 	tsu.smet_type		= 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : radio_init_eep_defaults
+//* Object              :
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+void radio_init_eep_defaults(void)
+{
+	ulong i;
+
+	printf("load eep defaults \r\n");
+
+	// Generate band info values
+	for(i = 0; i < MAX_BANDS; i++)
+	{
+		// Startup volume
+		tsu.band[i].volume 			= 0;
+		tsu.band[i].audio_balance 	= 8;
+		tsu.band[i].st_volume		= 3;
+		tsu.band[i].step 			= T_STEP_1KHZ;
+		tsu.band[i].filter			= AUDIO_3P6KHZ;
+		tsu.band[i].atten	 		= ATTEN_0DB;
+		tsu.band[i].nco_freq		= 0;
+		tsu.band[i].active_vfo		= VFO_A;
+		tsu.band[i].fixed_mode		= 0;
+		tsu.band[i].span			= 40000;
+
+		// VFOs values
+		switch(i)
+		{
+			case BAND_MODE_2200:
+				tsu.band[i].vfo_a 		= BAND_FREQ_2200;
+				tsu.band[i].vfo_b 		= BAND_FREQ_2200;
+				tsu.band[i].band_start 	= BAND_FREQ_2200;
+				tsu.band[i].band_end 	= (BAND_FREQ_2200 + BAND_SIZE_2200);
+				tsu.band[i].demod_mode	= DEMOD_LSB;
+				tsu.band[i].power_factor= 0;
+				tsu.band[i].tx_power	= 0xFF;
+				break;
+
+			case BAND_MODE_630:
+				tsu.band[i].vfo_a 		= BAND_FREQ_630;
+				tsu.band[i].vfo_b 		= BAND_FREQ_630;
+				tsu.band[i].band_start 	= BAND_FREQ_630;
+				tsu.band[i].band_end 	= (BAND_FREQ_630 + BAND_SIZE_630);
+				tsu.band[i].demod_mode	= DEMOD_LSB;
+				tsu.band[i].power_factor= 0;
+				tsu.band[i].tx_power	= 0xFF;
+				break;
+
+			case BAND_MODE_160:
+				tsu.band[i].vfo_a 		= BAND_FREQ_160;
+				tsu.band[i].vfo_b 		= BAND_FREQ_160;
+				tsu.band[i].band_start 	= BAND_FREQ_160;
+				tsu.band[i].band_end 	= (BAND_FREQ_160 + BAND_SIZE_160);
+				tsu.band[i].demod_mode	= DEMOD_LSB;
+				tsu.band[i].power_factor= TX_POWER_FACTOR_160_DEFAULT;
+				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
+				break;
+
+			case BAND_MODE_80:
+				tsu.band[i].vfo_a 		= BAND_FREQ_80;
+				tsu.band[i].vfo_b 		= BAND_FREQ_80;
+				tsu.band[i].band_start 	= BAND_FREQ_80;
+				tsu.band[i].band_end 	= (BAND_FREQ_80 + BAND_SIZE_80);
+				tsu.band[i].demod_mode	= DEMOD_LSB;
+				tsu.band[i].power_factor= TX_POWER_FACTOR_80_DEFAULT;
+				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
+				break;
+
+			case BAND_MODE_60:
+				tsu.band[i].vfo_a 		= BAND_FREQ_60;
+				tsu.band[i].vfo_b 		= BAND_FREQ_60;
+				tsu.band[i].band_start 	= BAND_FREQ_60;
+				tsu.band[i].band_end 	= (BAND_FREQ_60 + BAND_SIZE_60);
+				tsu.band[i].demod_mode	= DEMOD_LSB;
+				tsu.band[i].power_factor= TX_POWER_FACTOR_60_DEFAULT;
+				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
+				break;
+
+			case BAND_MODE_40:
+				tsu.band[i].vfo_a 		= BAND_FREQ_40;
+				tsu.band[i].vfo_b 		= BAND_FREQ_40;
+				tsu.band[i].band_start 	= BAND_FREQ_40;
+				tsu.band[i].band_end 	= (BAND_FREQ_40 + BAND_SIZE_40);
+				tsu.band[i].demod_mode	= DEMOD_LSB;
+				tsu.band[i].power_factor= TX_POWER_FACTOR_40_DEFAULT;
+				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
+				break;
+
+			case BAND_MODE_30:
+				tsu.band[i].vfo_a 		= BAND_FREQ_30;
+				tsu.band[i].vfo_b 		= BAND_FREQ_30;
+				tsu.band[i].band_start 	= BAND_FREQ_30;
+				tsu.band[i].band_end 	= (BAND_FREQ_30 + BAND_SIZE_30);
+				tsu.band[i].demod_mode	= DEMOD_USB;
+				tsu.band[i].power_factor= TX_POWER_FACTOR_30_DEFAULT;
+				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
+				break;
+
+			case BAND_MODE_20:
+				tsu.band[i].vfo_a 		= BAND_FREQ_20;
+				tsu.band[i].vfo_b 		= BAND_FREQ_20;
+				tsu.band[i].band_start 	= BAND_FREQ_20;
+				tsu.band[i].band_end 	= (BAND_FREQ_20 + BAND_SIZE_20);
+				tsu.band[i].demod_mode	= DEMOD_USB;
+				tsu.band[i].power_factor= TX_POWER_FACTOR_20_DEFAULT;
+				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
+				break;
+
+			case BAND_MODE_17:
+				tsu.band[i].vfo_a 		= BAND_FREQ_17;
+				tsu.band[i].vfo_b 		= BAND_FREQ_17;
+				tsu.band[i].band_start 	= BAND_FREQ_17;
+				tsu.band[i].band_end 	= (BAND_FREQ_17 + BAND_SIZE_17);
+				tsu.band[i].demod_mode	= DEMOD_USB;
+				tsu.band[i].power_factor= TX_POWER_FACTOR_17_DEFAULT;
+				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
+				break;
+
+			case BAND_MODE_15:
+				tsu.band[i].vfo_a 		= BAND_FREQ_15;
+				tsu.band[i].vfo_b 		= BAND_FREQ_15;
+				tsu.band[i].band_start 	= BAND_FREQ_15;
+				tsu.band[i].band_end 	= (BAND_FREQ_15 + BAND_SIZE_15);
+				tsu.band[i].demod_mode	= DEMOD_USB;
+				tsu.band[i].power_factor= TX_POWER_FACTOR_15_DEFAULT;
+				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
+				break;
+
+			case BAND_MODE_12:
+				tsu.band[i].vfo_a 		= BAND_FREQ_12;
+				tsu.band[i].vfo_b 		= BAND_FREQ_12;
+				tsu.band[i].band_start 	= BAND_FREQ_12;
+				tsu.band[i].band_end 	= (BAND_FREQ_12 + BAND_SIZE_12);
+				tsu.band[i].demod_mode	= DEMOD_USB;
+				tsu.band[i].power_factor= TX_POWER_FACTOR_12_DEFAULT;
+				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
+				break;
+
+			case BAND_MODE_10:
+				tsu.band[i].vfo_a 		= BAND_FREQ_10;
+				tsu.band[i].vfo_b 		= BAND_FREQ_10;
+				tsu.band[i].band_start 	= BAND_FREQ_10;
+				tsu.band[i].band_end 	= (BAND_FREQ_10 + BAND_SIZE_10);
+				tsu.band[i].demod_mode	= DEMOD_USB;
+				tsu.band[i].power_factor= TX_POWER_FACTOR_10_DEFAULT;
+				tsu.band[i].tx_power	= PA_LEVEL_0_5W;
+				break;
+
+			case BAND_MODE_GEN:
+				tsu.band[i].vfo_a 		= BAND_FREQ_GEN;
+				tsu.band[i].vfo_b 		= BAND_FREQ_GEN;
+				tsu.band[i].band_start 	= BAND_FREQ_GEN;
+				tsu.band[i].band_end 	= (BAND_FREQ_GEN + BAND_SIZE_GEN);
+				tsu.band[i].demod_mode	= DEMOD_AM;
+				tsu.band[i].power_factor= 0;
+				tsu.band[i].tx_power	= 0xFF;
+				break;
+			default:
+				break;
+		}
+	}
+
+	// Save
+	save_band_info();
+
+	// Save system defaults
+	virt_eeprom_write(EEP_CURR_BAND, BAND_MODE_20);
+
+	// Save UI defaults
+	virt_eeprom_write(EEP_SW_SMOOTH,   0);
+	virt_eeprom_write(EEP_DEMO_MODE,   0);
+	virt_eeprom_write(EEP_BRIGHTNESS, 80);
+	virt_eeprom_write(EEP_SMET_TYPE,   0);
+
+	// Generate checksum
+	ulong chk = radio_init_eep_chksum();
+
+	// Save it
+	virt_eeprom_write(EEP_BASE_ADDR + 1, chk >>  16);
+	virt_eeprom_write(EEP_BASE_ADDR + 2, chk >>   8);
+	virt_eeprom_write(EEP_BASE_ADDR + 3, chk & 0xFF);
+
+	// Set as initialised
+	virt_eeprom_write(EEP_BASE_ADDR, 0x73);
 }
 
 //*----------------------------------------------------------------------------
