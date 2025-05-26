@@ -137,7 +137,7 @@ static void ui_controls_repaint_state(void)
 
 	// Display RF gain, as cool progress bar
 	sprintf(buff,"%2d",tsu.rf_gain);
-	ui_cool_progress_gain(RF_GAIN_X, RF_GAIN_Y, tsu.rf_gain, buff);
+	ui_cool_progress_gain(RF_GAIN_X, RF_GAIN_Y - 5, tsu.rf_gain, buff);
 }
 
 //*----------------------------------------------------------------------------
@@ -1155,6 +1155,7 @@ static void ui_controls_frequency_vfo_a_initial_paint(uchar is_init)
 		GUI_SetColor(GUI_LIGHTGREEN);
 	else
 		GUI_SetColor(GUI_GRAY);
+
 	GUI_SetFont(&GUI_Font20B_1);
 	GUI_DispStringAt("VFO A",VFO_A_X, VFO_A_Y);
 
@@ -1169,11 +1170,11 @@ static void ui_controls_frequency_vfo_a_initial_paint(uchar is_init)
 	if(is_init)
 		GUI_DispStringAt("999.999.999",(M_FREQ_X + 1),(M_FREQ_Y + 5));
 	else
-		GUI_DispStringAt("___.___.___",(M_FREQ_X + 1),(M_FREQ_Y + 5));
+		GUI_DispStringAt("   .   .   ",(M_FREQ_X + 1),(M_FREQ_Y + 5));
 
 	// Update frequency, but only if not active
-//	if(tsu.band[tsu.curr_band].active_vfo == VFO_B)
-//		ui_controls_frequency_update_vfo_a(tsu.band[tsu.curr_band].vfo_a);
+	if(tsu.band[tsu.curr_band].active_vfo == VFO_B)
+		ui_controls_frequency_update_vfo_a(tsu.band[tsu.curr_band].vfo_a);
 }
 
 //*----------------------------------------------------------------------------
@@ -1302,11 +1303,11 @@ static int ui_controls_frequency_refresh_a(uchar flags)
 
 		return ui_controls_frequency_update_vfo_a(vfo_af);
 	}
-	//else
-	//{
-	//	ui_controls_frequency_update_vfo_b(tsu.band[tsu.curr_band].vfo_b);
-	//	return 1;
-	//}
+	else
+	{
+		ui_controls_frequency_update_vfo_b(tsu.band[tsu.curr_band].vfo_b);
+		return 1;
+	}
 
 	return 0;
 }

@@ -25,6 +25,7 @@ uchar bq40z80_read_soc(void);
 ushort bq40z80_read_runtime(void);
 
 ushort bq40z80_read_status(void);
+short bq40z80_read_current(void);
 
 void  bq40z80_init(void);
 

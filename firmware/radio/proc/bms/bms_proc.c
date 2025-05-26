@@ -1360,6 +1360,13 @@ static void bms_proc_worker(void)
 	{
 		bmss.perc = bq40z80_read_soc();
 		bmss.mins = bq40z80_read_runtime();
+
+		// Decide if we run on USB voltage based on BMS
+		// current draw from the battery pack
+		if(bq40z80_read_current() > PACK_CURR_THRSH)
+			bmss.run_on_dc = 1;
+		else
+			bmss.run_on_dc = 0;
 	}
 
 	bms_read_skip++;

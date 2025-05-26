@@ -987,7 +987,7 @@ ui_proc_loop:
 				cntr_id = 1;
 				WM_InvalidateWindow(WM_HBKWIN);
 				#else
-//!				ui_controls_frequency_refresh(0);
+				ui_controls_frequency_refresh(0);
 				#endif
 
 				break;

@@ -245,12 +245,12 @@ void ui_controls_volume_init(WM_HWIN hParent)
 	if(!mute_flag)
 	{
 		sprintf(buff,"%2d",volume);
-		ui_cool_progress_volume(SPEAKER_X, SPEAKER_Y, volume, buff);
+		ui_cool_progress_volume(SPEAKER_X, SPEAKER_Y - 5, volume, buff);
 	}
 	else
 	{
 		sprintf(buff,"%2d",mute_saved_vol);
-		ui_cool_progress_volume(SPEAKER_X, SPEAKER_Y, mute_saved_vol, buff);
+		ui_cool_progress_volume(SPEAKER_X, SPEAKER_Y - 5, mute_saved_vol, buff);
 	}
 
 	#if 0
@@ -414,7 +414,7 @@ void ui_controls_volume_refresh(void)
 	//GUI_FillRect((SPEAKER_X + 4),(SPEAKER_Y + 37),(SPEAKER_X + 16),(SPEAKER_Y + 46));
 
 	sprintf(buff,"%2d",volume);
-	ui_cool_progress_volume(SPEAKER_X, SPEAKER_Y, volume, buff);
+	ui_cool_progress_volume(SPEAKER_X, SPEAKER_Y - 5, volume, buff);
 
 /*	GUI_SetColor(GUI_BLUE);
 	GUI_SetFont(&GUI_Font8x8_ASCII);

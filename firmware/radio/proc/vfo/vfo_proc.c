@@ -36,13 +36,19 @@ uchar vfo_loc_demo_mode = 0;
 
 static uchar vfo_proc_set_freq(void)
 {
+	ulong freq;
+
 	if(tsu.curr_band > BAND_MODE_GEN)
 	{
 		printf("vfo_proc_set_freq, curr band: %d, CRITICAL ERROR!\r\n", tsu.curr_band);
 		return 100;
 	}
+
 	// Local copy of active frequency
-	ulong freq = tsu.band[tsu.curr_band].vfo_a;
+	if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
+		freq = tsu.band[tsu.curr_band].vfo_a;
+	else
+		freq = tsu.band[tsu.curr_band].vfo_b;
 
 	// Need four time actual frequency due to the mixer/exciter switches
 	freq *= 4;
