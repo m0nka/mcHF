@@ -13,6 +13,8 @@
 #ifndef __UI_ACTIONS
 #define __UI_ACTIONS
 
+void ui_actions_init(void);
+
 uchar ui_actions_ipc_msg(uchar send, uchar msg, uchar *in_buff);
 
 void ui_actions_change_band(uchar band, uchar skip_destop_upd);

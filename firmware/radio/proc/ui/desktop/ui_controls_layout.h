@@ -42,6 +42,8 @@
 #define S_METER_X					2
 #define S_METER_Y					1
 //
+#define S_METER_SY					25
+//
 #define S_METER_MAX					330
 //
 #define S_METER_FRAME_LEFT			1
@@ -63,7 +65,7 @@
 #define LCD_WIDTH					854
 //
 #define SW_FRAME_X					0
-#define SW_FRAME_Y					112
+#define SW_FRAME_Y					202		//112
 //
 #define HEADER_Y_SIZE				0
 //
@@ -241,6 +243,56 @@
 //
 // ----------------------------------------------------------------------------
 
+//#ifdef CLASSIC_LAYOUT
+#define M_FREQ_X					450
+#define M_FREQ_Y					130
+
+#define M_FREQ1_X					365
+#define M_FREQ1_Y					68
+//
+#define M_FREQ1_X_SZ				188
+//#else
+//#define M_FREQ_X					531
+//#define M_FREQ_Y					350
+//#define M_FREQ1_X					356
+//#define M_FREQ1_Y					364
+//#endif
+//
+// ----------------------------------------------------------------------------
+// Band control
+#define BAND_X						(M_FREQ_X + FREQ_FONT_SIZE_X*4 + 7)
+#define BAND_Y						(M_FREQ_Y - 24)
+// ----------------------------------------------------------------------------
+// Step
+#define VFO_STEP_X					(M_FREQ_X + FREQ_FONT_SIZE_X*7 + 12)
+#define VFO_STEP_Y					(M_FREQ_Y - 24)
+//
+#define VFO_STEP_SIZE_X				52
+#define VFO_STEP_SIZE_Y				20
+
+#define VFO_A_X						(M_FREQ_X + FREQ_FONT_SIZE_X*9 + 7)
+#define VFO_A_Y						(M_FREQ_Y - 22)
+// ----------------------------------------------------------------------------
+// RX/TX
+#define RADIO_MODE1_X				360 + 54
+#define RADIO_MODE1_Y				440
+//
+// ----------------------------------------------------------------------------
+// Decoder
+#define DECODER_MODE_X				481
+#define DECODER_MODE_Y				38
+//
+#define DEC_MODE_X_SZ				72
+//
+// ----------------------------------------------------------------------------
+// AGC control
+#define AGC_X						365
+#define AGC_Y						10
+
+// ----------------------------------------------------------------------------
+// RX/TX indicator
+#define RXTX_X						(M_FREQ_X + FREQ_FONT_SIZE_X*1 + 12)// 80
+#define RXTX_Y						(M_FREQ_Y - 15)						// 86
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
@@ -266,8 +318,8 @@
 //
 // ----------------------------------------------------------------------------
 // Clock control
-#define CLOCK_X						605
-#define CLOCK_Y						3
+#define CLOCK_X						30
+#define CLOCK_Y						S_METER_SIZE_Y + 65
 //
 #define CLOCK_SIZE_X				350
 #define CLOCK_SIZE_Y				20
@@ -279,39 +331,36 @@
 //
 // ----------------------------------------------------------------------------
 // Speaker control
-#define SPEAKER_X					40
-#define SPEAKER_Y					430
+#define SPEAKER_X					645
+#define SPEAKER_Y					50
 //
 #define SPEAKER_SIZE_X				62
 #define SPEAKER_SIZE_Y				50
 
-#define RF_GAIN_X					120
-#define RF_GAIN_Y					430
+#define RF_GAIN_X					725
+#define RF_GAIN_Y					50
+
+#define TX_STAT_X					805
+#define TX_STAT_Y					50
+
+#define TX_STAT_SIZE_X				60
+#define TX_STAT_SIZE_Y				56
 //
 // ----------------------------------------------------------------------------
 // Filter
-#define FILTER_X					251
-#define FILTER_Y					425
+#define FILTER_X					366
+#define FILTER_Y					38
 //
 #define FILTER_SIZE_X				110
 #define FILTER_SIZE_Y				22
 //
 // ----------------------------------------------------------------------------
 // Battery icon
-#define BATTERY_X					769
-#define BATTERY_Y					40
+#define BATTERY_X					365
+#define BATTERY_Y					110
 //
 #define BATTERY_SIZE_X				75
-#define BATTERY_SIZE_Y				50
-//
-// ----------------------------------------------------------------------------
-// TX Status control
-//
-#define TX_STAT_X					200
-#define TX_STAT_Y					430
-
-#define TX_STAT_SIZE_X				60
-#define TX_STAT_SIZE_Y				56
+#define BATTERY_SIZE_Y				72
 //
 // ----------------------------------------------------------------------------
 // Filter

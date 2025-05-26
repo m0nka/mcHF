@@ -17,10 +17,6 @@
 
 #include "ui_proc.h"
 
-//#include "touch_driver.h"
-//#include "hw\rtc\k_rtc.h"
-//#include "hw\dsp_eep\hw_dsp_eep.h"
-
 #include "radio_init.h"
 #include "ui_actions.h"
 
@@ -28,6 +24,7 @@
 #include "dialog.h"
 
 #include "stm32h747i_discovery_sdram.h"
+#include "shared_tim.h"
 
 //#define PROC_USE_WM
 
@@ -99,15 +96,12 @@ extern TaskHandle_t 					hVfoTask;
 extern K_ModuleItem_Typedef  	dsp_s;				// Standard DSP Menu
 extern K_ModuleItem_Typedef  	menu_pa;			// Extended DSP Menu
 extern K_ModuleItem_Typedef  	user_i;				// User Interface
-//extern K_ModuleItem_Typedef  	file_b;				// File Browser
 extern K_ModuleItem_Typedef  	clock;				// Clock Settings
-extern K_ModuleItem_Typedef  	reset;				// Factory Reset
-//extern K_ModuleItem_Typedef  	wsjt;				// WSJT-X Tools
 extern K_ModuleItem_Typedef  	logbook;			// Logbook
 extern K_ModuleItem_Typedef  	menu_batt;			// Battery
 extern K_ModuleItem_Typedef  	info;				// System Information
-extern K_ModuleItem_Typedef  	lora;				// System Information
-extern K_ModuleItem_Typedef  	esp32;				// System Information
+extern K_ModuleItem_Typedef  	lora;				// Lora module control
+//extern K_ModuleItem_Typedef  	file_b;				// File Browser
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_add_menu_items
@@ -123,14 +117,11 @@ static void ui_proc_add_menu_items(void)
 	k_ModuleAdd(&menu_pa);				// Extended DSP Menu
 	k_ModuleAdd(&user_i);				// User Interface
 	k_ModuleAdd(&clock);				// Clock Settings
-	//k_ModuleAdd(&file_b);				// File Browser
 	k_ModuleAdd(&menu_batt);			// Battery
-	k_ModuleAdd(&reset);				// Factory Reset
-	//k_ModuleAdd(&wsjt);				// WSJT-X Tools
 	k_ModuleAdd(&logbook);				// Logbook
 	k_ModuleAdd(&lora);					// Lora
-	k_ModuleAdd(&esp32);				// ESP32
 	k_ModuleAdd(&info);					// About
+	//k_ModuleAdd(&file_b);				// File Browser
 }
 
 static void ui_proc_cb(void)
@@ -141,7 +132,7 @@ static void ui_proc_cb(void)
 
 static void ui_proc_cb_sm(void)
 {
-	ui_controls_clock_refresh();
+	//ui_controls_clock_refresh();
 }
 
 //*----------------------------------------------------------------------------
@@ -596,7 +587,7 @@ static void ui_proc_init_desktop(void)
 	ui_controls_frequency_init(WM_HBKWIN);
 	ui_controls_smeter_init();
 	ui_controls_filter_init();
-	//ui_controls_cpu_stat_init();
+	ui_controls_cpu_stat_init();
 	//ui_controls_dsp_stat_init();
 	ui_controls_battery_init();
 	ui_controls_tx_stat_init();
@@ -642,7 +633,8 @@ static void ui_proc_change_mode(void)
 		return;
 
 	// Backlight off
-	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+	//---HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+	shared_tim_change(20);
 
 	switch(state)
 	{
@@ -792,7 +784,8 @@ static void ui_proc_change_mode(void)
 	ui_s.lock_requests = 0;
 
 	// Backlight on
-	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+	//---HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+	shared_tim_change(tsu.brightness);
 }
 #endif
 
@@ -866,7 +859,7 @@ static void ui_proc_periodic(void)
 	ui_controls_clock_refresh();
 
 	//--ui_controls_volume_refresh();
-	//ui_controls_cpu_stat_refresh();
+	ui_controls_cpu_stat_refresh();
 	//ui_controls_dsp_stat_refresh();
 	ui_controls_battery_refresh();
 	ui_controls_filter_refresh();
@@ -915,6 +908,10 @@ void ui_proc_task(void const *arg)
 	vTaskDelay(UI_PROC_START_DELAY);
 	//printf("ui proc start\r\n");
 
+	// Backlight PWM
+	shared_tim_init();
+	shared_tim_change(tsu.brightness);
+
 	ui_actions_init();
 	ui_lora_state_init();
 
@@ -948,10 +945,10 @@ void ui_proc_task(void const *arg)
 		ui_proc_init_desktop();
 
 		// Demo mode on after boot up
-		if(*(uchar *)(EEP_BASE + EEP_DEMO_MODE))
+		if(tsu.demo_mode)
 		{
 			// Change demo mode
-			tsu.demo_mode = 1;
+			//tsu.demo_mode = 1;
 
 			// Wake up vfo task(use any notif id)
 			if(hVfoTask != NULL)
@@ -990,7 +987,7 @@ ui_proc_loop:
 				cntr_id = 1;
 				WM_InvalidateWindow(WM_HBKWIN);
 				#else
-//!				ui_controls_frequency_refresh(0);
+				ui_controls_frequency_refresh(0);
 				#endif
 
 				break;
@@ -1010,7 +1007,12 @@ ui_proc_loop:
 	GUI_Exec();
 	GUI_Delay(UI_PROC_SLEEP_TIME);
 	#else
-	if((ui_s.cur_state == MODE_MENU)||(ui_s.cur_state == MODE_DESKTOP_FT8))
+	if(ui_s.cur_state == MODE_MENU)
+	{
+		GUI_Exec();
+		GUI_Delay(10);
+	}
+	else if(ui_s.cur_state == MODE_DESKTOP_FT8)
 	{
 		GUI_Exec();
 		GUI_Delay(UI_PROC_SLEEP_TIME);

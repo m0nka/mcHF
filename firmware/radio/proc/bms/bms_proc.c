@@ -1318,6 +1318,12 @@ static void bms_proc_power_off(void)
    			printf("user held button, will power off, bye!\r\n");
    			vTaskDelay(200);
 
+   			// Need more cleanup ??
+   			// ...
+
+   			// Reset(0x41, 0x12)
+   			//bq40z80_write_16bit_reg(0x41, 0x0000);
+
    			// Power off process
    			bsp_power_off();
    		}
@@ -1346,7 +1352,7 @@ static void bms_proc_worker(void)
 	{
 		if((status & 0x40) != 0x40)
 		{
-			NVIC_SystemReset();
+			//NVIC_SystemReset();
 		}
 	}
 
@@ -1354,6 +1360,13 @@ static void bms_proc_worker(void)
 	{
 		bmss.perc = bq40z80_read_soc();
 		bmss.mins = bq40z80_read_runtime();
+
+		// Decide if we run on USB voltage based on BMS
+		// current draw from the battery pack
+		if(bq40z80_read_current() > PACK_CURR_THRSH)
+			bmss.run_on_dc = 1;
+		else
+			bmss.run_on_dc = 0;
 	}
 
 	bms_read_skip++;

@@ -14,54 +14,15 @@
 
 #include "rtc.h"
 
-/* External variables --------------------------------------------------------*/
 static k_AlarmCallback AlarmCallback;
   
-/* Private typedef -----------------------------------------------------------*/
-/* Private defines -----------------------------------------------------------*/
 #define RTC_ASYNCH_PREDIV  0x7F   /* LSE as RTC clock */
 #define RTC_SYNCH_PREDIV   0x00FF /* LSE as RTC clock */
 
-/* Private macros ------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
 #define BUTTON_WAKEUP_PIN                   GPIO_PIN_13
 RTC_HandleTypeDef RtcHandle;
 
 #if 0
-#define BUTTON_WAKEUP_GPIO_PORT             GPIOC
-
-//typedef void (* BSP_EXTI_LineCallback) (void);
-extern EXTI_HandleTypeDef hts_exti_[2];
-
-void EXTI15_10_IRQHandler(void)
-{
-	if (__HAL_GPIO_EXTI_GET_IT(BUTTON_WAKEUP_PIN) != 0x00U)
-	{
-	    __HAL_GPIO_EXTI_CLEAR_IT(BUTTON_WAKEUP_PIN);
-
-	    printf("btn1\r\n");
-	}
-}
-
-static void wake_irq_setup(void)
-{
-	GPIO_InitTypeDef gpio_init_structure;
-
-	gpio_init_structure.Pin 	= BUTTON_WAKEUP_PIN;
-	gpio_init_structure.Pull 	= GPIO_PULLDOWN;
-	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_LOW;
-	gpio_init_structure.Mode 	= GPIO_MODE_IT_RISING;
-	HAL_GPIO_Init(BUTTON_WAKEUP_GPIO_PORT, &gpio_init_structure);
-
-	HAL_EXTI_D1_EventInputConfig	(EXTI_LINE13 , EXTI_MODE_IT,  ENABLE);
-	(void)HAL_EXTI_GetHandle(&hts_exti_[0],EXTI_LINE_13);
-
-	HAL_NVIC_SetPriority(EXTI15_10_IRQn, 15U, 0x00);
-	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
-}
-
-#endif
-
 // Fix insane Date on startup
 void check_date_sanity(void)
 {
@@ -80,12 +41,8 @@ void check_date_sanity(void)
 
 	k_SetDate(&sdatestructureget);
 }
+#endif
 
-/**
-  * @brief  Configure the current time and date.
-  * @param  None
-  * @retval None
-  */
 void k_CalendarBkupInit(void)
 {
 	// Remove PC13 from RTC domain
@@ -129,7 +86,7 @@ void k_CalendarBkupInit(void)
 	}
 
 	// Fix crazy dates
-	check_date_sanity();
+//!	check_date_sanity();
 }
 
 /**
@@ -144,14 +101,6 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
 {
 	RCC_OscInitTypeDef        RCC_OscInitStruct;
 	RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct;
-  
-	// Enables access to the backup domain
-	// To enable access on RTC registers
-	PWR->CR1 |= PWR_CR1_DBP;
-  	while((PWR->CR1 & PWR_CR1_DBP) == RESET)
-  	{
-  		__asm("nop");
-  	}
 
 	#ifdef USE_LSE
   	// Configure LSE as RTC clock source
@@ -161,6 +110,7 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
   	RCC_OscInitStruct.LSIState 			= RCC_LSI_OFF;
   	if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   	{
+  		Error_Handler(520);
   		return;
   	}
   
@@ -168,6 +118,7 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
   	PeriphClkInitStruct.RTCClockSelection 		= RCC_RTCCLKSOURCE_LSE;
   	if(HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   	{
+  		Error_Handler(521);
   		return;
   	}
   
@@ -196,7 +147,6 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef *hrtc)
 	// Enable the RTC peripheral Clock
 	__HAL_RCC_RTC_ENABLE();
 	__HAL_RCC_RTC_CLK_ENABLE();
-	__HAL_RCC_BKPRAM_CLK_ENABLE();
 }
 
 
@@ -281,6 +231,8 @@ void k_GetDate(  RTC_DateTypeDef *Date)
    {
      Date->Date = Date->Month = 1;
    }    
+
+   //printf("year get: %d\r\n", Date->Year);
 }
 
 /**
@@ -298,8 +250,9 @@ void k_SetAlarm(RTC_AlarmTypeDef *Alarm)
   * @param  Date: Pointer to Date structure
   * @retval None
   */
-void k_SetDate(  RTC_DateTypeDef *Date)
+void k_SetDate(RTC_DateTypeDef *Date)
 {
+   //printf("year set: %d\r\n", Date->Year);
    HAL_RTC_SetDate(&RtcHandle, Date, RTC_FORMAT_BIN);
 }
 
@@ -323,13 +276,3 @@ void k_SetAlarmCallback (k_AlarmCallback alarmCallback)
 {
   AlarmCallback = alarmCallback;
 }
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

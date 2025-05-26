@@ -303,11 +303,9 @@ static void rotary_update_freq_publics(int pot_diff)
 		}
 		else
 		{
-			if(tsu.band[tsu.curr_band].active_vfo == 0)
-				//tsu.vfo_a += tsu.step;
+			if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 				tsu.band[tsu.curr_band].vfo_a += tsu.band[tsu.curr_band].step;
 			else
-				//tsu.vfo_b += tsu.step;
 				tsu.band[tsu.curr_band].vfo_b += tsu.band[tsu.curr_band].step;
 
 			// Set request
@@ -341,11 +339,9 @@ static void rotary_update_freq_publics(int pot_diff)
 		}
 		else
 		{
-			if(tsu.band[tsu.curr_band].active_vfo == 0)
-				//tsu.vfo_a -= tsu.step;
+			if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 				tsu.band[tsu.curr_band].vfo_a -= tsu.band[tsu.curr_band].step;
 			else
-				//tsu.vfo_b -= tsu.step;
 				tsu.band[tsu.curr_band].vfo_b -= tsu.band[tsu.curr_band].step;
 
 			// Set request
@@ -380,7 +376,7 @@ static void rotary_check_front_enc(void)
 		return;
 
 	// No update on invalid local copy of the frequency
-	if(tsu.band[tsu.curr_band].active_vfo == 0)
+	if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 	{
 		if(tsu.band[tsu.curr_band].vfo_a == 0xFFFFFFFF)
 			return;

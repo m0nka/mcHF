@@ -16,14 +16,17 @@
 #include "ui_proc.h"
 #include "selftest_proc.h"
 #include "bms_proc.h"
+#include "keypad_proc.h"
 
+#include "shared_tim.h"
 #include "hw_sdram.h"
 
 ulong	sys_timer = 0;
 
 int 	dsp_core_stat;
-ulong	reset_reason;
+ulong	reset_reason = RESET_CLEAR;
 uchar   gen_boot_reason_err = 0;
+uchar	stay_in_boot = 0;
 
 //*----------------------------------------------------------------------------
 //* Function Name       :
@@ -558,12 +561,17 @@ int main(void)
     // Configure the system clock to 400 MHz
     SystemClock_Config();
 
+    // Keyboard early init
+    keypad_proc_init();
+	//keypad_proc();
+
 	// Init hw
     critical_hw_init_and_run_fw();
 
-    // Proc init
-    mchf_pro_board_init();
+	// Proc init
+	mchf_pro_board_init();
     bms_proc_init();
+    shared_tim_init();
     ui_proc_init();
     selftest_proc_init();
 
@@ -580,5 +588,8 @@ int main(void)
 
     	// Blink the speaker LED
     	show_alive();
+
+    	// Scan keyboard
+    	keypad_proc();
     }
 }

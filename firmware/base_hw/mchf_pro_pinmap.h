@@ -69,13 +69,16 @@
 #define RFM_MOSI_SPI1					LL_GPIO_PIN_7
 #define RFM_MOSI_SPI1_PORT				GPIOA
 
-// PA8			BMS_PWM -> ToDo: BMS CC control
+// PA8			BMS_PWM, BMS CC control (TIM1_CH1)
 #define BMS_PWM_PIN               		GPIO_PIN_8
 #define BMS_PWM_PORT         			GPIOA
+#define BMS_PWM_AF         				LL_GPIO_AF_1
 
-// PA9			LCD_BL_CTRL
+// PA9			LCD_BL_CTRL (TIM1_CH2)
 #define LCD_BL_CTRL_PIN               	GPIO_PIN_9
 #define LCD_BL_CTRL_GPIO_PORT         	GPIOA
+#define LCD_BL_CTRL_AF         			LL_GPIO_AF_1
+#define LCD_BL_CTRL_TIM_CH				LL_TIM_CHANNEL_CH2
 
 // PA10			FAN_ON
 #define FAN_CNTR						GPIO_PIN_10

@@ -32,6 +32,7 @@ extern struct BMSState	bmss;
 #endif
 
 uchar curr_batt_value = 0;
+uchar source_suppy = 0xff;
 
 static void ui_controls_battery_progress(uchar val)
 {
@@ -41,10 +42,14 @@ static void ui_controls_battery_progress(uchar val)
 		val = 100;
 
 	// Clear
-	GUI_SetColor(GUI_WHITE);
-	GUI_FillRoundedRect((BATTERY_X + 2),(BATTERY_Y + 5),(BATTERY_X + BATTERY_SIZE_X - 1),(BATTERY_Y + BATTERY_SIZE_Y - 0),2);
+	GUI_SetColor(GUI_LIGHTGRAY);
+	GUI_FillRoundedRect(	(BATTERY_X + 2),
+							(BATTERY_Y + 5),
+							(BATTERY_X + BATTERY_SIZE_X - 1),
+							(BATTERY_Y + BATTERY_SIZE_Y - 2),
+							2);
 
-	int y0 = BATTERY_Y + BATTERY_SIZE_Y + 5 - 50;//val/2;	// top
+	int y0 = BATTERY_Y + BATTERY_SIZE_Y + 5 - (val/3)*2;	// top
 	int y1 = BATTERY_Y + BATTERY_SIZE_Y - 0;			// bottom
 
 	//if(bmss.run_on_dc)
@@ -52,7 +57,7 @@ static void ui_controls_battery_progress(uchar val)
 	//else if(val < 25)
 	//	GUI_SetColor(GUI_LIGHTRED);
 	//else
-		GUI_SetColor(APPLE_MAC_GREY);
+		GUI_SetColor(GUI_LIGHTBLUE);
 
 	// Update
 	GUI_FillRect((BATTERY_X + 2), y0,(BATTERY_X + BATTERY_SIZE_X - 1), y1);
@@ -66,22 +71,33 @@ static void ui_controls_battery_progress(uchar val)
 		x += 5;
 
 	// Text
-	GUI_SetColor(GUI_BLACK);
-	GUI_SetFont(&GUI_Font20_ASCII);
+	GUI_SetColor(GUI_WHITE);
+	GUI_SetFont(&GUI_Font20B_ASCII);
 
 	#ifdef CONTEXT_BMS
-	GUI_DispStringAt(buf, x - 8,  BATTERY_Y + BATTERY_SIZE_Y - 18);
 
-	if(bmss.mins)
+	if(bmss.run_on_dc)
+		GUI_SetColor(GUI_LIGHTGRAY);
+
+	GUI_DispStringAt(buf, x - 8,  BATTERY_Y + BATTERY_SIZE_Y - 20);
+
+	GUI_SetColor(GUI_BLACK);
+
+	if((bmss.mins)&&(!bmss.run_on_dc))
 	{
-		if(bmss.mins > 36000)
-			bmss.mins = 36000;
-
-		sprintf(buf, "%dh%dm", bmss.mins/60, bmss.mins%60);
-		GUI_DispStringAt(buf, x - 26, BATTERY_Y + BATTERY_SIZE_Y - 42);
+		if((bmss.mins/60) > 99)
+		{
+			sprintf(buf, "%2dh", bmss.mins/60);
+			GUI_DispStringAt(buf, x - 12, BATTERY_Y + BATTERY_SIZE_Y - 62);
+		}
+		else
+		{
+			sprintf(buf, "%2dh%2dm", bmss.mins/60, bmss.mins%60);
+			GUI_DispStringAt(buf, x - 26, BATTERY_Y + BATTERY_SIZE_Y - 62);
+		}
 	}
 	else
-		GUI_DispStringAt("NA", x - 6, BATTERY_Y + BATTERY_SIZE_Y - 42);
+		GUI_DispStringAt("      ", x - 6, BATTERY_Y + BATTERY_SIZE_Y - 62);
 	#else
 	GUI_DispStringAt("offline", x - 12, BATTERY_Y + BATTERY_SIZE_Y - 33);
 	#endif
@@ -100,15 +116,15 @@ void ui_controls_battery_init(void)
 	curr_batt_value = 0;
 
 	// Two pixel frame
-	GUI_SetColor(HOT_PINK);
+	GUI_SetColor(GUI_ORANGE);
 	GUI_DrawRoundedRect((BATTERY_X +  0),(BATTERY_Y + 3),(BATTERY_X + BATTERY_SIZE_X),    (BATTERY_Y + BATTERY_SIZE_Y + 1),2);
 	GUI_DrawRoundedRect((BATTERY_X +  1),(BATTERY_Y + 4),(BATTERY_X + BATTERY_SIZE_X + 1),(BATTERY_Y + BATTERY_SIZE_Y + 2),2);
 
 	// Terminal
-	GUI_FillRect(	(BATTERY_X + BATTERY_SIZE_X),
-					(BATTERY_Y + BATTERY_SIZE_Y/2 - 5),
-					(BATTERY_X + BATTERY_SIZE_X + 6),
-					(BATTERY_Y + BATTERY_SIZE_Y/2 + 11));
+	GUI_FillRect(	(BATTERY_X + BATTERY_SIZE_X/2 - 10),
+					(BATTERY_Y - 5),
+					(BATTERY_X + BATTERY_SIZE_X/2 + 12),
+					(BATTERY_Y + 2));
 
 	ui_controls_battery_progress(100);
 }
@@ -149,6 +165,8 @@ void ui_controls_battery_touch(void)
 //*----------------------------------------------------------------------------
 void ui_controls_battery_refresh(void)
 {
+	//return;
+
 	#if 0
 	// Exercise the progress bar
 	static uchar bv = 0;
@@ -168,10 +186,13 @@ void ui_controls_battery_refresh(void)
 	#else
 	// Real progress from BMS
 	#ifdef CONTEXT_BMS
-	if(curr_batt_value != bmss.perc)
+	if((curr_batt_value != bmss.perc)||(source_suppy != bmss.run_on_dc))
 	{
 		ui_controls_battery_progress(bmss.perc);
+
+		// Save old values
 		curr_batt_value = bmss.perc;
+		source_suppy 	= bmss.run_on_dc;
 	}
 	#endif
 

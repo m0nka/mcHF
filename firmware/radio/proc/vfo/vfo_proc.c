@@ -36,15 +36,21 @@ uchar vfo_loc_demo_mode = 0;
 
 static uchar vfo_proc_set_freq(void)
 {
+	ulong freq;
+
 	if(tsu.curr_band > BAND_MODE_GEN)
 	{
 		printf("vfo_proc_set_freq, curr band: %d, CRITICAL ERROR!\r\n", tsu.curr_band);
 		return 100;
 	}
-	// Local copy of active frequency
-	ulong freq = tsu.band[tsu.curr_band].vfo_a;
 
-	// Need four time actual frequencry due to the mixer/exciter switches
+	// Local copy of active frequency
+	if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
+		freq = tsu.band[tsu.curr_band].vfo_a;
+	else
+		freq = tsu.band[tsu.curr_band].vfo_b;
+
+	// Need four time actual frequency due to the mixer/exciter switches
 	freq *= 4;
 
 	//printf("vfo freq = %d\r\n", freq);
@@ -143,7 +149,7 @@ static void vfo_proc_demo_mode_handler(void)
 
 		// Init CW transmitter instance
 		vfo_cw_gen_start(0, 14200000, "CQ CQ CQ DE M0NKA");
-		//vfo_cw_gen_start(1, 14212000, "TEST TEST TEST");
+		vfo_cw_gen_start(1, 14206000, "TEST TEST M0NKA");
 
 		vfo_loc_demo_mode = tsu.demo_mode;
 	}

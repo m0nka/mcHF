@@ -57,6 +57,7 @@
 #include "stm32h7xx_ll_spi.h"
 #include "stm32h7xx_ll_pwr.h"
 #include "stm32h7xx_ll_adc.h"
+#include "stm32h7xx_ll_tim.h"
 //#include "stm32h7xx_ll_dma.h"
 //#include "stm32h7xx_ll_bdma.h"
 

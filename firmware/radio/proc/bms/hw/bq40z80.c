@@ -187,6 +187,25 @@ ushort bq40z80_read_status(void)
 	return 0xFFFF;
 }
 
+short bq40z80_read_current(void)
+{
+	short curr;
+
+	if(!bms_loc_init)
+		return 0;
+
+	if(bq40z80_read_16bit_reg(0x0A, &curr) == 0)
+	{
+		// Add calib factor
+		//curr -= 250;
+
+		//printf("curr: %dmA \r\n", curr);
+		return curr;
+	}
+
+	return 0;
+}
+
 void bq40z80_init(void)
 {
 	//ulong err;

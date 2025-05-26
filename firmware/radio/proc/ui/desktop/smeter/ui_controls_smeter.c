@@ -26,6 +26,7 @@
 #include "desktop\clock\ui_controls_clock.h"
 
 //#define USE_SPRITE
+//#define ANALOGUE_SMETER
 
 // Externally declared s-meter bmp
 extern GUI_CONST_STORAGE GUI_BITMAP bmscale;
@@ -37,21 +38,19 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 // ICC fast comm
 extern TaskHandle_t hIccTask;
 
-#if 0
 // -------------------------
 // S-meter publics
 int 	pub_value 		= 0;
 int 	old_value 		= 0;
 int 	skip 			= 0;
 int 	init_done		= 0;
-uchar	smet_disabled 	= 0;		// disabled from UI menu(var in eeprom)
+//uchar	smet_disabled 	= 0;		// disabled from UI menu(var in eeprom)
 ulong 	repaints 		= 0;
 uchar 	use_bmp 		= 1;
 uchar	is_peak			= 0;
 uchar	rotary_block	= 0;		// s-meter refresh request from rotary driver (while moving dial)
 ushort	rotary_timer	= 0;		// how long to block refresh for
 // -------------------------
-#endif
 
 // Object for banding memory device
 GUI_AUTODEV 	AutoDev;
@@ -300,7 +299,7 @@ static void ui_controls_smeter_draw_via_rotate(uchar pos)
 	// Rotate
 	GUI_RotatePolygon(Param.aPoints, NeedleBoundary, countof(NeedleBoundary), Param.Angle);
 
-#if 0
+	#if 0
 	printf("----------------------------------------------------------------------------------------\r\n");
 	printf(	"{%d,%d},{%d,%d},{%d,%d},{%d,%d},{%d,%d}\r\n",
 			Param.aPoints[0].x/MAG,Param.aPoints[0].y/MAG,
@@ -309,7 +308,7 @@ static void ui_controls_smeter_draw_via_rotate(uchar pos)
 			Param.aPoints[3].x/MAG,Param.aPoints[3].y/MAG,
 			Param.aPoints[4].x/MAG,Param.aPoints[4].y/MAG
 		  );
-#endif
+	#endif
 
 	// Repaint
 	GUI_MEMDEV_DrawAuto(&AutoDev, &Param.AutoDevInfo, &ui_controls_draw_needle, &Param);
@@ -398,80 +397,76 @@ static void ui_controls_smeter_set_needle(uchar pos)
 //*----------------------------------------------------------------------------
 void ui_controls_smeter_init(void)
 {
-#if 0
-	PARAM       Param;      // Parameters for drawing routine
-	int         Cnt;
-	int         tDiff = 0;
-	int         t0;
-
-	// Init public data
-	sm.pub_value 		= 0;
-	sm.old_value 		= 0;
-	sm.skip 			= 0;
-	sm.init_done		= 0;
-	sm.smet_disabled 	= 0;
-	sm.repaints 		= 0;
-	sm.use_bmp 			= 1;
-	sm.is_peak			= 0;
-	sm.rotary_block		= 0;
-	sm.rotary_timer		= 0;
-
-	// Enable high resolution for antialiasing
-	GUI_AA_EnableHiRes();
-	GUI_AA_SetFactor(MAG);
-
-	#ifndef USE_SPRITE
-	// Create GUI_AUTODEV-object
-	GUI_MEMDEV_CreateAuto(&AutoDev);
-	#endif
-
-	// Needle at 0
-	#ifndef USE_SIDE_ENC_FOR_S_METER
-	ui_controls_smeter_set_needle(S_NEEDLE_LEFT);
-	#endif
-	#ifdef USE_SIDE_ENC_FOR_S_METER
-	ui_controls_smeter_set_needle(S_NEEDLE_CENTRE);
-	#endif
-
 	// From Eeprom
-	sm.smet_disabled = (*(uchar *)(EEP_BASE + EEP_AN_MET_ON));
+	//tsu.smet_type = (*(uchar *)(EEP_BASE + EEP_AN_MET_ON));
 
-	// Debug
-	sm.repaints = 0;
-#endif
+	if(tsu.smet_type)
+	{
+		PARAM       Param;      // Parameters for drawing routine
+		int         Cnt;
+		int         tDiff = 0;
+		int         t0;
 
-	GUI_SetColor(GUI_WHITE);
+		// Init public data
+		sm.pub_value 		= 0;
+		sm.old_value 		= 0;
+		sm.skip 			= 0;
+		sm.init_done		= 0;
+		//sm.smet_disabled 	= 0;
+		sm.repaints 		= 0;
+		sm.use_bmp 			= 1;
+		sm.is_peak			= 0;
+		sm.rotary_block		= 0;
+		sm.rotary_timer		= 0;
 
-	// Frame
-	#if 0
-	GUI_DrawRoundedFrame(	S_METER_X,
-							S_METER_Y,
-							(S_METER_X + S_METER_SIZE_X),
-							(S_METER_Y + S_METER_SIZE_Y),
-							5,
-							SW_FRAME_WIDTH
-						);
-	#endif
+		// Enable high resolution for antialiasing
+		GUI_AA_EnableHiRes();
+		GUI_AA_SetFactor(MAG);
 
-	GUI_SetColor(GUI_DARKGRAY);
+		#ifndef USE_SPRITE
+		// Create GUI_AUTODEV-object
+		GUI_MEMDEV_CreateAuto(&AutoDev);
+		#endif
 
-	// Top/Bottom background
-	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 37), 2);
-	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 60),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 67), 2);
+		// Needle at 0
+		#ifndef USE_SIDE_ENC_FOR_S_METER
+		ui_controls_smeter_set_needle(S_NEEDLE_LEFT);
+		#endif
+		#ifdef USE_SIDE_ENC_FOR_S_METER
+		ui_controls_smeter_set_needle(S_NEEDLE_CENTRE);
+		#endif
 
-	GUI_SetColor(GUI_LIGHTGREEN);
+		// Debug
+		sm.repaints = 0;
+	}
+	else
+	{
+		// Frame
+		GUI_SetColor(GUI_DARKCYAN);
+		GUI_DrawRoundedFrame(	(S_METER_X - S_METER_FRAME_LEFT),					(S_METER_Y - S_METER_FRAME_TOP),
+								(bmscale.XSize + S_METER_X + S_METER_FRAME_RIGHT), 	(bmscale.YSize + S_METER_Y + S_METER_FRAME_BOTTOM),
+								S_METER_FRAME_CURVE, 								S_METER_FRAME_WIDTH);
 
-	// Top/Bottom active part
-	//GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 30),(S_METER_X + 10), (S_METER_Y + 37), 2);
-	//GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 60),(S_METER_X + 10), (S_METER_Y + 67), 2);
+		GUI_SetColor(GUI_DARKGRAY);
 
-	GUI_SetColor(GUI_LIGHTGRAY);
-	GUI_SetFont(&GUI_Font8x16_1);
+		// Top/Bottom background
+		GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + S_METER_SY + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + S_METER_SY + 37), 2);
+		GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + S_METER_SY + 60),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + S_METER_SY + 67), 2);
 
-	//if(tsu.rxtx)
-	//	GUI_DispStringAt("1   3   5   7   9",S_METER_X + 20, S_METER_Y + 10);
-	//else
-	GUI_DispStringAt("1   3   5   7   9",S_METER_X + 20, S_METER_Y + 10);
+		GUI_SetColor(GUI_LIGHTGREEN);
+
+		// Top/Bottom active part
+		//GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 30),(S_METER_X + 10), (S_METER_Y + 37), 2);
+		//GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 60),(S_METER_X + 10), (S_METER_Y + 67), 2);
+
+		GUI_SetColor(GUI_LIGHTGRAY);
+		GUI_SetFont(&GUI_Font8x16_1);
+
+		//if(tsu.rxtx)
+		//	GUI_DispStringAt("1   3   5   7   9",S_METER_X + 20, S_METER_Y + 10);
+		//else
+		GUI_DispStringAt("1   3   5   7   9",S_METER_X + 20, S_METER_Y + S_METER_SY + 10);
+	}
 
 	// Ready to refresh
 	sm.init_done = 1;
@@ -526,224 +521,236 @@ void ui_controls_smeter_touch(void)
 //*----------------------------------------------------------------------------
 void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 {
-	ushort 		i,curr;//,diff,step,some_val,expanded,bandw,centre_freq,aver,peak;
-	//uchar		is_up;
+	ushort curr;
 
-	static uchar loc_tx_state = 10;
-
-	// Handle TX
-	if(loc_tx_state != tsu.rxtx)
-	{
-		GUI_SetColor(GUI_BLACK);
-
-		// Clear top text line
-		GUI_FillRect((S_METER_X + 10), (S_METER_Y + 10),(S_METER_X + 340), (S_METER_Y + 24));
-
-		// Clear top text line
-		GUI_FillRect((S_METER_X + 10), (S_METER_Y + 75),(S_METER_X + 340), (S_METER_Y + 89));
-
-		GUI_SetColor(GUI_LIGHTGRAY);
-		GUI_SetFont(&GUI_Font8x16_1);
-
-		if(tsu.rxtx)
-		{
-			GUI_DispStringAt("P  1   2   5       10         15   20   W", S_METER_X + 12, S_METER_Y + 10);
-		}
-		else
-		{
-			GUI_DispStringAt("S  1   3   5   7   9   +20   +40  +60  dB", S_METER_X + 12, S_METER_Y + 10);
-			GUI_SetColor(GUI_DARKGRAY);
-		}
-
-		GUI_DispStringAt("SWR 1  3   5       10         30         ", S_METER_X + 12, S_METER_Y + 75);
-
-		if(loc_tx_state == 10)
-			loc_tx_state = tsu.rxtx;
-		else
-			loc_tx_state = tsu.rxtx;
-
-		if(tsu.rxtx)
-		{
-			ushort t_val = 0;
-			ushort f_volts = 0;
-			ushort r_volts = 0;
-
-			// Forward voltage on the bridge
-			f_volts = adc_read_fwd_power();
-			if(f_volts == 0xFFFF)
-				{}//sprintf(buf, "FWD %d.%dV", 0, 0);
-			else
-			{
-				//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
-				printf("%4dmV(fwd) \r\n", f_volts);
-			}
-
-			// Forward voltage on the bridge
-			r_volts = adc_read_ref_power();
-			if(r_volts == 0xFFFF)
-			{}//sprintf(buf, "FWD %d.%dV", 0, 0);
-			else
-			{
-				//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
-				printf("%4dmV(ref) \r\n", r_volts);
-			}
-
-			// ToDo: finish it off...
-
-			GUI_SetColor(GUI_DARKGRAY);
-			GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 37), 2);
-
-			GUI_SetColor(GUI_LIGHTGREEN);
-			GUI_FillRoundedRect((S_METER_X + 10 + 0),  (S_METER_Y + 30),(S_METER_X + (10 + t_val)), (S_METER_Y + 37), 2);
-		}
-
-		return;
-	}
-
-	// Control ready ?
-	//if((!(sm.init_done)) || (sm.smet_disabled) || (sm.rotary_block))
-	//{
-	//	ui_controls_smeter_block_on();
-	//	return;
-	//}
-
-	#ifdef USE_SIDE_ENC_FOR_S_METER
-	if(s_met_pos != s_met_pos_loc)
-	{
-		ui_controls_smeter_set_needle(s_met_pos);
-		s_met_pos_loc = s_met_pos;
-	}
-	return;
-	#endif
-
-	// Debug
-	//sm.repaints = 0;
-
-	#if 0
-	// Already calculated by spectrum repaint routines
-	bandw 		= (ui_sw.bandpass_end - ui_sw.bandpass_start);
-	centre_freq = (ui_sw.bandpass_end - ui_sw.bandpass_start)/2 + ui_sw.bandpass_start;
-
-	if(sm.is_peak)
-	{
-		// Peak point from a bandwidth
-		// midpoint is (start_element + count/2)
-		for(i = 0, peak = 0; i < bandw; i++)
-		{
-			// is peak ?
-			if(ui_sw.fft_value[(centre_freq - (bandw/2)) + i] > aver)
-				peak = ui_sw.fft_value[(centre_freq - (bandw/2)) + i];
-		}
-		curr = peak;
-	}
-	else
-	{
-		// Average for a bandwidth
-		// midpoint is (start_element + count/2)
-		for(i = 0, aver = 0; i < bandw; i++)
-		{
-			// Accumulate
-			aver += ui_sw.fft_value[(centre_freq - (bandw/2)) + i];
-		}
-		curr  = aver/bandw;
-	}
-	#else
 	curr = ui_sw.sm_value;	// calc by DSP
-	#endif
 
-	#if 1
 	// Nothing change, skip repaint
 	if(sm.old_value == curr)
 		return;
-	#endif
 
-	ushort s_val = curr * 10;
-	//ushort s_sta = (curr * 10) - 20;	// moving dot
-	ushort s_sta = 0;					// progress bar
+	if(!tsu.smet_type)
+	{
+		static uchar loc_tx_state = 10;
 
-	GUI_SetColor(GUI_DARKGRAY);
-	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + 37), 2);
+		// Handle TX
+		if(loc_tx_state != tsu.rxtx)
+		{
+			GUI_SetColor(GUI_BLACK);
 
-	GUI_SetColor(GUI_LIGHTGREEN);
-	GUI_FillRoundedRect((S_METER_X + 10 + s_sta),  (S_METER_Y + 30),(S_METER_X + (10 + s_val)), (S_METER_Y + 37), 2);
+			// Clear top text line
+			GUI_FillRect((S_METER_X + 10), (S_METER_Y + S_METER_SY + 10),(S_METER_X + 340), (S_METER_Y + S_METER_SY + 24));
 
+			// Clear top text line
+			GUI_FillRect((S_METER_X + 10), (S_METER_Y + S_METER_SY + 75),(S_METER_X + 340), (S_METER_Y + S_METER_SY + 89));
 
-	#if 0
-	// old and nearby values
-	if(
-		(old_value == curr - 4)	||
-		(old_value == curr - 3)	||
-		(old_value == curr - 2)	||
-		(old_value == curr - 1)	||
-		(old_value == curr) 	||
-		(old_value == curr + 1)	||
-		(old_value == curr + 2)	||
-		(old_value == curr + 3) ||
-		(old_value == curr + 4)
-		)
+			GUI_SetColor(GUI_LIGHTGRAY);
+			GUI_SetFont(&GUI_Font8x16_1);
+
+			if(tsu.rxtx)
+			{
+				GUI_DispStringAt("P  1   2   5       10         15   20   W", S_METER_X + 12, S_METER_Y + S_METER_SY + 10);
+			}
+			else
+			{
+				GUI_DispStringAt("S  1   3   5   7   9   +20   +40  +60  dB", S_METER_X + 12, S_METER_Y + S_METER_SY + 10);
+				GUI_SetColor(GUI_DARKGRAY);
+			}
+
+			GUI_DispStringAt("SWR 1  3   5       10         30         ", S_METER_X + 12, S_METER_Y + S_METER_SY + 75);
+
+			if(loc_tx_state == 10)
+				loc_tx_state = tsu.rxtx;
+			else
+				loc_tx_state = tsu.rxtx;
+
+			if(tsu.rxtx)
+			{
+				ushort t_val = 0;
+				ushort f_volts = 0;
+				ushort r_volts = 0;
+
+				// Forward voltage on the bridge
+				f_volts = adc_read_fwd_power();
+				if(f_volts == 0xFFFF)
+					{}//sprintf(buf, "FWD %d.%dV", 0, 0);
+				else
+				{
+					//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
+					printf("%4dmV(fwd) \r\n", f_volts);
+				}
+
+				// Forward voltage on the bridge
+				r_volts = adc_read_ref_power();
+				if(r_volts == 0xFFFF)
+				{}//sprintf(buf, "FWD %d.%dV", 0, 0);
+				else
+				{
+					//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
+					printf("%4dmV(ref) \r\n", r_volts);
+				}
+
+				// ToDo: finish it off...
+
+				GUI_SetColor(GUI_DARKGRAY);
+				GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + S_METER_SY + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + S_METER_SY + 37), 2);
+
+				GUI_SetColor(GUI_LIGHTGREEN);
+				GUI_FillRoundedRect((S_METER_X + 10 + 0),  (S_METER_Y + S_METER_SY + 30),(S_METER_X + (10 + t_val)), (S_METER_Y + S_METER_SY + 37), 2);
+			}
+
+			return;
+		}
+
+		// Control ready ?
+		//if((!(sm.init_done)) || (sm.smet_disabled) || (sm.rotary_block))
+		//{
+		//	ui_controls_smeter_block_on();
+		//	return;
+		//}
+
+		#ifdef USE_SIDE_ENC_FOR_S_METER
+		if(s_met_pos != s_met_pos_loc)
+		{
+			ui_controls_smeter_set_needle(s_met_pos);
+			s_met_pos_loc = s_met_pos;
+		}
 		return;
-	#endif
+		#endif
 
-	// Remove noise floor
-	//if(curr < 25) curr = 0;
-#if 0
-	// Expand scale
-	expanded = curr*SMETER_EXPAND_VALUE;
+		// Debug
+		//sm.repaints = 0;
 
-	// Decide needle direction, based on old value
-	if(sm.old_value > curr)
-	{
-		is_up = 0;				// needle going down
-		diff = ((sm.old_value)*SMETER_EXPAND_VALUE) - expanded;
-	}
-	else
-	{
-		is_up = 1;				// needle going up
-		diff  = expanded - ((sm.old_value)*SMETER_EXPAND_VALUE);
-	}
+		#if 0
+		// Already calculated by spectrum repaint routines
+		bandw 		= (ui_sw.bandpass_end - ui_sw.bandpass_start);
+		centre_freq = (ui_sw.bandpass_end - ui_sw.bandpass_start)/2 + ui_sw.bandpass_start;
 
-	// IRL analogue meter emulation by variable step change
-	if(is_up)
-		step = S_NEEDLE_STEP_FAST;
-	else
-		step = S_NEEDLE_STEP_SLOW;
-
-	// Debug only
-	sm.repaints = diff/step;
-
-	#if 0
-	printf("--------------------------------------\r\n");
-	printf("curr = %d\r\n",curr);
-	printf("expanded = %d\r\n",expanded);
-	printf("step = %d\r\n",step);
-	printf("dif = %d\r\n",diff);
-	printf("repaints = %d\r\n",repaints);
-	printf("now loop...\r\n");
-	#endif
-#endif
-	#if 1
-	// Repaint direct
-	//ui_controls_smeter_draw_via_rotate(expanded);
-	#else
-	// Repaint in steps
-	for(i = 0; i < diff; i += step)
-	{
-		if(is_up)
-			some_val = ((sm.old_value)*SMETER_EXPAND_VALUE) + i;
+		if(sm.is_peak)
+		{
+			// Peak point from a bandwidth
+			// midpoint is (start_element + count/2)
+			for(i = 0, peak = 0; i < bandw; i++)
+			{
+				// is peak ?
+				if(ui_sw.fft_value[(centre_freq - (bandw/2)) + i] > aver)
+					peak = ui_sw.fft_value[(centre_freq - (bandw/2)) + i];
+			}
+			curr = peak;
+		}
 		else
-			some_val = ((sm.old_value)*SMETER_EXPAND_VALUE) - i;
+		{
+			// Average for a bandwidth
+			// midpoint is (start_element + count/2)
+			for(i = 0, aver = 0; i < bandw; i++)
+			{
+				// Accumulate
+				aver += ui_sw.fft_value[(centre_freq - (bandw/2)) + i];
+			}
+			curr  = aver/bandw;
+		}
+		#else
+		//curr = ui_sw.sm_value;	// calc by DSP
+		#endif
 
-		// Collapse scale
-		some_val = some_val/2;
+		#if 0
+		// Nothing change, skip repaint
+		if(sm.old_value == curr)
+			return;
+		#endif
 
-		//printf("some_val = %d\r\n",some_val);
+		ushort s_val = curr * 10;
+		//ushort s_sta = (curr * 10) - 20;	// moving dot
+		ushort s_sta = 0;					// progress bar
 
-		ui_controls_smeter_draw_via_rotate(some_val);
+		GUI_SetColor(GUI_DARKGRAY);
+		GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + S_METER_SY + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + S_METER_SY + 37), 2);
 
-		// Fast UI update callback
-		if(cb) cb();
+		GUI_SetColor(GUI_LIGHTGREEN);
+		GUI_FillRoundedRect((S_METER_X + 10 + s_sta),  (S_METER_Y + S_METER_SY + 30),(S_METER_X + (10 + s_val)), (S_METER_Y + S_METER_SY + 37), 2);
 	}
-	#endif
+	else
+	{
+		ushort 		i,diff,step,some_val,expanded,bandw,centre_freq,aver,peak;
+		uchar		is_up;
+
+		#if 0
+		// old and nearby values
+		if(
+				(old_value == curr - 4)	||
+				(old_value == curr - 3)	||
+				(old_value == curr - 2)	||
+				(old_value == curr - 1)	||
+				(old_value == curr) 	||
+				(old_value == curr + 1)	||
+				(old_value == curr + 2)	||
+				(old_value == curr + 3) ||
+				(old_value == curr + 4)
+			)
+			return;
+		#endif
+
+		// Remove noise floor
+		//if(curr < 25) curr = 0;
+		#if 1
+		// Expand scale
+		expanded = curr*SMETER_EXPAND_VALUE;
+
+		// Decide needle direction, based on old value
+		if(sm.old_value > curr)
+		{
+			is_up = 0;				// needle going down
+			diff = ((sm.old_value)*SMETER_EXPAND_VALUE) - expanded;
+		}
+		else
+		{
+			is_up = 1;				// needle going up
+			diff  = expanded - ((sm.old_value)*SMETER_EXPAND_VALUE);
+		}
+
+		// IRL analogue meter emulation by variable step change
+		if(is_up)
+			step = S_NEEDLE_STEP_FAST;
+		else
+			step = S_NEEDLE_STEP_SLOW;
+
+		// Debug only
+		sm.repaints = diff/step;
+
+		#if 0
+		printf("--------------------------------------\r\n");
+		printf("curr = %d\r\n",curr);
+		printf("expanded = %d\r\n",expanded);
+		printf("step = %d\r\n",step);
+		printf("dif = %d\r\n",diff);
+		printf("repaints = %d\r\n",repaints);
+		printf("now loop...\r\n");
+		#endif
+		#endif
+		#if 1
+		// Repaint direct
+		ui_controls_smeter_draw_via_rotate(expanded);
+		#else
+			// Repaint in steps
+			for(i = 0; i < diff; i += step)
+			{
+				if(is_up)
+					some_val = ((sm.old_value)*SMETER_EXPAND_VALUE) + i;
+				else
+					some_val = ((sm.old_value)*SMETER_EXPAND_VALUE) - i;
+
+				// Collapse scale
+				some_val = some_val/2;
+
+				//printf("some_val = %d\r\n",some_val);
+
+				ui_controls_smeter_draw_via_rotate(some_val);
+
+				// Fast UI update callback
+				if(cb) cb();
+			}
+		#endif
+	}
 
 	// Save to public
 	sm.old_value = curr;

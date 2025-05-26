@@ -171,7 +171,7 @@ void ui_proc_show_bms_flags(void)
 				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X2,  (uchar *)"TCA", LEFT_MODE);
 				break;
 			case 2:
-				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X1,  (uchar *)"RCV", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X1,  (uchar *)"---", LEFT_MODE);
 				break;
 			case 3:
 				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X2,  (uchar *)"OTA", LEFT_MODE);
@@ -180,7 +180,7 @@ void ui_proc_show_bms_flags(void)
 				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X1,  (uchar *)"TDA", LEFT_MODE);
 				break;
 			case 5:
-				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X2,  (uchar *)"RSV", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X2,  (uchar *)"---", LEFT_MODE);
 				break;
 			case 6:
 				lcd_low_DisplayStringAt(LINE(line), BMS_FLAGS_X1,  (uchar *)"RCA", LEFT_MODE);
@@ -272,7 +272,7 @@ void ui_proc_show_charge_data(void)
 	sprintf(buff, "%dmV", pack_volt);
 	lcd_low_DisplayStringAt(LINE(26), 100,  (uchar *)buff, LEFT_MODE);
 
-	sprintf(buff, "%dmA", pack_curr);
+	sprintf(buff, "%dmA     ", pack_curr);
 	lcd_low_DisplayStringAt(LINE(27), 100,  (uchar *)buff, LEFT_MODE);
 }
 

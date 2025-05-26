@@ -82,6 +82,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/hw/shared_i2c.c</locationURI>
 		</link>
 		<link>
+			<name>hw/shared_tim.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/shared_tim.c</locationURI>
+		</link>
+		<link>
 			<name>startup/startup_stm32h747xx_CM7.s</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/startup_stm32h747xx_CM7.s</locationURI>
@@ -520,6 +525,11 @@
 			<name>proc/bms/bms_proc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/bms/bms_proc.c</locationURI>
+		</link>
+		<link>
+			<name>proc/keypad/keypad_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/keypad/keypad_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/selftest/selftest_proc.c</name>

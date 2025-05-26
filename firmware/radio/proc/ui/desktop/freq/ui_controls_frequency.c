@@ -137,7 +137,7 @@ static void ui_controls_repaint_state(void)
 
 	// Display RF gain, as cool progress bar
 	sprintf(buff,"%2d",tsu.rf_gain);
-	ui_cool_progress_gain(RF_GAIN_X, RF_GAIN_Y, tsu.rf_gain, buff);
+	ui_cool_progress_gain(RF_GAIN_X, RF_GAIN_Y - 5, tsu.rf_gain, buff);
 }
 
 //*----------------------------------------------------------------------------
@@ -563,8 +563,11 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 	if((d_100mhz != df.dial_100_mhz) || (df.vfo_a_segments_invalid))
 	{
 		// Delete segment
-		//GUI_SetColor(GUI_BLUE);
+		#ifdef SHOW_MASKING
+		GUI_SetColor(MASKING_COLOR);
+		#else
 		GUI_SetColor(GUI_BLACK);
+		#endif
 		GUI_FillRect((M_FREQ_X + 1 + (FREQ_FONT_SIZE_X * 0)),(M_FREQ_Y + 5),(M_FREQ_X + FREQ_FONT_SIZE_X + 1 + (FREQ_FONT_SIZE_X * 0)),(M_FREQ_Y + 5 + FREQ_FONT_SIZE_Y));
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 			GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
@@ -584,8 +587,11 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 	if((d_10mhz != df.dial_010_mhz) || (df.vfo_a_segments_invalid))
 	{
 		// Delete segment
-		//GUI_SetColor(GUI_YELLOW);
+		#ifdef SHOW_MASKING
+		GUI_SetColor(MASKING_COLOR);
+		#else
 		GUI_SetColor(GUI_BLACK);
+		#endif
 		GUI_FillRect((M_FREQ_X + 1 + (FREQ_FONT_SIZE_X * 1)),(M_FREQ_Y + 5),(M_FREQ_X + FREQ_FONT_SIZE_X + 1 + (FREQ_FONT_SIZE_X * 1)),(M_FREQ_Y + 5 + FREQ_FONT_SIZE_Y));
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
@@ -615,8 +621,11 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 	if((d_1mhz != df.dial_001_mhz) || (df.vfo_a_segments_invalid))
 	{
 		// Delete segment
-		//GUI_SetColor(GUI_BLUE);
+		#ifdef SHOW_MASKING
+		GUI_SetColor(MASKING_COLOR);
+		#else
 		GUI_SetColor(GUI_BLACK);
+		#endif
 		GUI_FillRect((M_FREQ_X + 1 + (FREQ_FONT_SIZE_X * 2)),(M_FREQ_Y + 5),(M_FREQ_X + FREQ_FONT_SIZE_X + 1 + (FREQ_FONT_SIZE_X * 2)),(M_FREQ_Y + 5 + FREQ_FONT_SIZE_Y));
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
@@ -640,8 +649,11 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 	if((d_100khz != df.dial_100_khz) || (df.vfo_a_segments_invalid))
 	{
 		// Delete segment
-		//GUI_SetColor(GUI_YELLOW);
+		#ifdef SHOW_MASKING
+		GUI_SetColor(MASKING_COLOR);
+		#else
 		GUI_SetColor(GUI_BLACK);
+		#endif
 		GUI_FillRect((M_FREQ_X + 1 + (FREQ_FONT_SIZE_X * 4)),(M_FREQ_Y + 5),(M_FREQ_X + FREQ_FONT_SIZE_X + 1 + (FREQ_FONT_SIZE_X * 4)),(M_FREQ_Y + 5 + FREQ_FONT_SIZE_Y));
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
@@ -665,8 +677,11 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 	if((d_10khz != df.dial_010_khz) || (df.vfo_a_segments_invalid))
 	{
 		// Delete segment
-		//GUI_SetColor(GUI_BLUE);
+		#ifdef SHOW_MASKING
+		GUI_SetColor(MASKING_COLOR);
+		#else
 		GUI_SetColor(GUI_BLACK);
+		#endif
 		GUI_FillRect((M_FREQ_X + 1 + (FREQ_FONT_SIZE_X * 5)),(M_FREQ_Y + 5),(M_FREQ_X + FREQ_FONT_SIZE_X + 1 + (FREQ_FONT_SIZE_X * 5)),(M_FREQ_Y + 5 + FREQ_FONT_SIZE_Y));
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
@@ -693,8 +708,11 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		//printf("tsu.band[tsu.curr_band].step    : %08x\r\n",tsu.band[tsu.curr_band].step);
 
 		// Delete segment
-		//GUI_SetColor(GUI_YELLOW);
+		#ifdef SHOW_MASKING
+		GUI_SetColor(MASKING_COLOR);
+		#else
 		GUI_SetColor(GUI_BLACK);
+		#endif
 		GUI_FillRect((M_FREQ_X + 1 + (FREQ_FONT_SIZE_X * 6)),(M_FREQ_Y + 5),(M_FREQ_X + FREQ_FONT_SIZE_X + 1 + (FREQ_FONT_SIZE_X * 6)),(M_FREQ_Y + 5 + FREQ_FONT_SIZE_Y));
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
@@ -718,8 +736,11 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 	if((d_100hz != df.dial_100_hz) || (df.vfo_a_segments_invalid))
 	{
 		// Delete segment
-		//GUI_SetColor(GUI_BLUE);
+		#ifdef SHOW_MASKING
+		GUI_SetColor(MASKING_COLOR);
+		#else
 		GUI_SetColor(GUI_BLACK);
+		#endif
 		GUI_FillRect((M_FREQ_X + 1 + (FREQ_FONT_SIZE_X * 8)),(M_FREQ_Y + 5),(M_FREQ_X + FREQ_FONT_SIZE_X + 1 + (FREQ_FONT_SIZE_X * 8)),(M_FREQ_Y + 5 + FREQ_FONT_SIZE_Y));
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
@@ -743,8 +764,11 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 	if((d_10hz != df.dial_010_hz) || (df.vfo_a_segments_invalid))
 	{
 		// Delete segment
-		//GUI_SetColor(GUI_YELLOW);
+		#ifdef SHOW_MASKING
+		GUI_SetColor(MASKING_COLOR);
+		#else
 		GUI_SetColor(GUI_BLACK);
+		#endif
 		GUI_FillRect((M_FREQ_X + 1 + (FREQ_FONT_SIZE_X * 9)),(M_FREQ_Y + 5),(M_FREQ_X + FREQ_FONT_SIZE_X + 1 + (FREQ_FONT_SIZE_X * 9)),(M_FREQ_Y + 5 + FREQ_FONT_SIZE_Y));
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
@@ -768,8 +792,11 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 	if((d_1hz != df.dial_001_hz) || (df.vfo_a_segments_invalid))
 	{
 		// Delete segment
-		//GUI_SetColor(GUI_BLUE);
+		#ifdef SHOW_MASKING
+		GUI_SetColor(MASKING_COLOR);
+		#else
 		GUI_SetColor(GUI_BLACK);
+		#endif
 		GUI_FillRect((M_FREQ_X + 1 + (FREQ_FONT_SIZE_X * 10)),(M_FREQ_Y + 5),(M_FREQ_X + FREQ_FONT_SIZE_X + 1 + (FREQ_FONT_SIZE_X * 10)),(M_FREQ_Y + 5 + FREQ_FONT_SIZE_Y));
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
@@ -1105,10 +1132,17 @@ static void ui_controls_frequency_vfo_a_initial_paint(uchar is_init)
 	df.dial_010_hz		= 9;
 	df.dial_001_hz		= 9;
 
-	// Filler
-	//GUI_SetColor(GUI_GRAY);
+	// Mask the whole control
+	#if 0
+	GUI_SetColor(GUI_GRAY);
+	#else
 	GUI_SetColor(GUI_BLACK);
-	GUI_FillRoundedRect((M_FREQ_X + 0),(M_FREQ_Y + 0),(M_FREQ_X + 267),(M_FREQ_Y + 40),2);
+	#endif
+	GUI_FillRoundedRect((M_FREQ_X + 0),
+						(M_FREQ_Y + 0),
+						(M_FREQ_X + FREQ_FONT_SIZE_X*11 + 2),
+						(M_FREQ_Y + 55),
+						2);
 
 	// Frame
 	#ifdef FRAME_MAIN_DIAL
@@ -1121,9 +1155,9 @@ static void ui_controls_frequency_vfo_a_initial_paint(uchar is_init)
 		GUI_SetColor(GUI_LIGHTGREEN);
 	else
 		GUI_SetColor(GUI_GRAY);
+
 	GUI_SetFont(&GUI_Font20B_1);
-	GUI_DispStringAt("VFO A",(M_FREQ_X + FREQ_FONT_SIZE_X*9 + 7),(M_FREQ_Y - 20));
-	//GUI_DispStringAt("VFO A", 255, 60);
+	GUI_DispStringAt("VFO A",VFO_A_X, VFO_A_Y);
 
 	// Digits colour
 	GUI_SetFont(FREQ_FONT);
@@ -1136,11 +1170,11 @@ static void ui_controls_frequency_vfo_a_initial_paint(uchar is_init)
 	if(is_init)
 		GUI_DispStringAt("999.999.999",(M_FREQ_X + 1),(M_FREQ_Y + 5));
 	else
-		GUI_DispStringAt("___.___.___",(M_FREQ_X + 1),(M_FREQ_Y + 5));
+		GUI_DispStringAt("   .   .   ",(M_FREQ_X + 1),(M_FREQ_Y + 5));
 
 	// Update frequency, but only if not active
-//	if(tsu.band[tsu.curr_band].active_vfo == VFO_B)
-//		ui_controls_frequency_update_vfo_a(tsu.band[tsu.curr_band].vfo_a);
+	if(tsu.band[tsu.curr_band].active_vfo == VFO_B)
+		ui_controls_frequency_update_vfo_a(tsu.band[tsu.curr_band].vfo_a);
 }
 
 //*----------------------------------------------------------------------------
@@ -1158,6 +1192,7 @@ static void ui_controls_frequency_vfo_b_initial_paint(uchar is_init)
 
 	// Publics reset
 	df.vfo_b_scr_freq 	= 0;
+	//--df.last_screen_step	= 0xFFFFFF88;		ToDo: Check if we need VFO B invalidation
 	//
 	df.sdial_100_mhz	= 9;
 	df.sdial_010_mhz	= 9;
@@ -1172,10 +1207,12 @@ static void ui_controls_frequency_vfo_b_initial_paint(uchar is_init)
 	// Frame
 	GUI_SetColor(GUI_GRAY);
 	GUI_FillRoundedRect((M_FREQ1_X + 46),(M_FREQ1_Y + 0),(M_FREQ1_X + M_FREQ1_X_SZ),(M_FREQ1_Y + 24),2);
+
 	if(tsu.band[tsu.curr_band].active_vfo == VFO_B)
 		GUI_SetColor(GUI_WHITE);
 	else
 		GUI_SetColor(GUI_LIGHTGRAY);
+
 	GUI_DrawRoundedRect((M_FREQ1_X + 0),(M_FREQ1_Y + 0),(M_FREQ1_X + M_FREQ1_X_SZ),(M_FREQ1_Y + 24),2);
 
 	// Leading text background
@@ -1183,6 +1220,7 @@ static void ui_controls_frequency_vfo_b_initial_paint(uchar is_init)
 		GUI_SetColor(GUI_RED);
 	else
 		GUI_SetColor(GUI_LIGHTGRAY);
+
 	GUI_FillRoundedRect((M_FREQ1_X + 1),(M_FREQ1_Y + 1),(M_FREQ1_X + 46),(M_FREQ1_Y + 23),2);
 
 	// Leading text colour
@@ -1266,11 +1304,11 @@ static int ui_controls_frequency_refresh_a(uchar flags)
 
 		return ui_controls_frequency_update_vfo_a(vfo_af);
 	}
-	//else
-	//{
-	//	ui_controls_frequency_update_vfo_b(tsu.band[tsu.curr_band].vfo_b);
-	//	return 1;
-	//}
+	else
+	{
+		ui_controls_frequency_update_vfo_b(tsu.band[tsu.curr_band].vfo_b);
+		return 1;
+	}
 
 	return 0;
 }

@@ -279,7 +279,8 @@ void ui_actions_change_active_vfo(void)
 		tsu.band[tsu.curr_band].active_vfo = VFO_A;
 
 	// Notify ICC dispatcher
-	xTaskNotify(hIccTask, UI_ICC_NCO_FREQ, eSetValueWithOverwrite);	// Update NCO frequency(DSP)
+	xTaskNotify(hIccTask, UI_ICC_NCO_FREQ, 	eSetValueWithOverwrite);	// Update NCO frequency(DSP)
+	xTaskNotify(hVfoTask, UI_NEW_FREQ_EVENT,eSetValueWithOverwrite);	// Update VFO
 
 	// Change '0' to center frequency in Fixed mode
 	//--ui_controls_update_span();

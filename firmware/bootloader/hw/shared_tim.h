@@ -10,12 +10,11 @@
 **  Last Modified:                                                                 **
 **  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
-#ifndef __UI_CONTROLS_CLOCK
-#define __UI_CONTROLS_CLOCK
+#ifndef __SHARED_TIM_H
+#define __SHARED_TIM_H
 
-// Exports
-void ui_controls_clock_init(void);
-void ui_controls_clock_quit(void);
-void ui_controls_clock_refresh(void);
+//#define USE_LL_VERSION
+
+void shared_tim_init(void);
 
 #endif

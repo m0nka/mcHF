@@ -72,6 +72,8 @@ extern HCD_HandleTypeDef hhcd;
 // Combined LCD/Touch reset flag
 uchar lcd_touch_reset_done = 0;
 
+ulong epoch = 0;
+
 void NMI_Handler(void)
 {
 	Error_Handler(11);
@@ -114,6 +116,7 @@ void DebugMon_Handler(void)
 
 void SysTick_Handler(void)
 {
+	epoch++;
 	osSystickHandler();
 }
 
@@ -559,15 +562,18 @@ int main(void)
 	// ADC3 clock from PLL2
 	PeriphCommonClock_Config();
 
+    // HW init
+    if(bsp_config() != 0)
+    	goto stall_radio;
+
     // RTC init
     k_CalendarBkupInit();
 
     // Set radio public values
     radio_init_on_reset();
 
-    // HW init
-    if(bsp_config() != 0)
-    	goto stall_radio;
+    // Init each task hw
+    tasks_pre_os_init();
 
     // Init ADC HW
     if(adc_init() != 0)

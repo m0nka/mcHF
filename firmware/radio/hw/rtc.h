@@ -11,7 +11,7 @@
 
 
 /* Exported types ------------------------------------------------------------*/
-   typedef void (*k_AlarmCallback)(void);
+typedef void (*k_AlarmCallback)(void);
    
 /* Exported constants --------------------------------------------------------*/
 /* Exported macros -----------------------------------------------------------*/

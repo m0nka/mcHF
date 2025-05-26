@@ -23,7 +23,7 @@
 #include "cmsis_os.h"
 #include "task.h"
 #include "cpu_utils.h"
-#include "virt_eeprom.h"
+//--#include "virt_eeprom.h"
 #endif
 
 #include "mchf_pro_pinmap.h"
@@ -44,7 +44,7 @@
 #define M7_CLOCK			480
 
 // ----------------------------------------
-//#define	USE_LSE                     // xtal/caps no good on proto?
+#define	USE_LSE                     // xtal/caps no good on proto?
 
 // ----------------------------------------
 // Prevent Hard Fault on 0.8.4 proto board
@@ -383,6 +383,8 @@ __attribute__((__common__)) struct TRANSCEIVER_STATE_UI {
 	ushort 	bias1;
 
 	uchar	demo_mode;
+	uchar	brightness;
+	uchar	smet_type;
 
 	// We need new definition called full span, which is opposite
 	// what we called 'frequency translate' in lower than v 0.7.

@@ -543,7 +543,7 @@ void codec_hw_power_cleanup(void)
 	HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);	// mute
 	#endif
 
-	BSP_I2C1_DeInit();
+//!	BSP_I2C1_DeInit();
 }
 
 // context audio, after dsp core starts MCLK

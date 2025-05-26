@@ -21,7 +21,9 @@
 #include "dialog.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "radio_init.h"
 
+#include "ui_proc.h"
 #include "ui_menu_module.h"
 
 // temp, from digitizer driver
@@ -56,30 +58,31 @@ K_ModuleItem_Typedef  info =
 
 WM_HWIN   	hIdialog;
 
-#define ID_WINDOW_0               	(GUI_ID_USER + 0x00)
-//#define ID_BUTTON_EXIT            	(GUI_ID_USER + 0x01)
+#define ID_WINDOW_0               		(GUI_ID_USER + 0x00)
 
-//#define ID_BUTTON_UPDATE           	(GUI_ID_USER + 0x02)
+#define ID_BUTTON_FW_UPDATE         	(GUI_ID_USER + 0x01)
+#define ID_BUTTON_SYS_RESTART           (GUI_ID_USER + 0x02)
+#define ID_BUTTON_EEP_RESET           	(GUI_ID_USER + 0x03)
 
-#define ID_LISTBOX1           		(GUI_ID_USER + 0x03)
-//#define ID_LISTBOX2           		(GUI_ID_USER + 0x04)
+#define ID_LISTBOX1           			(GUI_ID_USER + 0x04)
+#define ID_LISTBOX2           		(GUI_ID_USER + 0x05)
 
 static const GUI_WIDGET_CREATE_INFO _aDialog[] = 
 {
-	// -----------------------------------------------------------------------------------------------------------------------------
-	//							name						id					x		y		xsize	ysize	?		?		?
-	// -----------------------------------------------------------------------------------------------------------------------------
-	// Self
-	{ WINDOW_CreateIndirect,	"", 						ID_WINDOW_0,		0,    	0,		800,	430, 	0, 		0x64, 	0 },
-	// Back Button
-	//{ BUTTON_CreateIndirect, 	"Back",			 			ID_BUTTON_EXIT, 	670, 	375, 	120, 	45, 	0, 		0x0, 	0 },
+// -----------------------------------------------------------------------------------------------------------------------------
+//							name		id						x		y		xsize	ysize	?		?		?
+// -----------------------------------------------------------------------------------------------------------------------------
+// Self
+{ WINDOW_CreateIndirect,	"", 		ID_WINDOW_0,			0,    	0,		854,	430, 	0, 		0x64, 	0 },
 
-	// Update Firmware Button
-	//{ BUTTON_CreateIndirect, 	"Update",			 		ID_BUTTON_UPDATE, 	670, 	275, 	120, 	45, 	0, 		0x0, 	0 },
+// Buttons
+{ BUTTON_CreateIndirect, 	"Update",	ID_BUTTON_FW_UPDATE,	690, 	55, 	120, 	45, 	0, 		0x0, 	0 },
+{ BUTTON_CreateIndirect, 	"Restart",	ID_BUTTON_SYS_RESTART,	690, 	115, 	120, 	45, 	0, 		0x0, 	0 },
+{ BUTTON_CreateIndirect, 	"Defaults",	ID_BUTTON_EEP_RESET,	690, 	175, 	120, 	45, 	0, 		0x0, 	0 },
 
-	// List boxes
-	{ LISTBOX_CreateIndirect, 	"Listbox",					ID_LISTBOX1, 		  5, 	 10, 	640, 	410, 	0, 		0x0, 	0 },
-	//{ LISTBOX_CreateIndirect, 	"Listbox",					ID_LISTBOX2, 		535, 	 10, 	255, 	350, 	0, 		0x0, 	0 },
+// List boxes
+{ LISTBOX_CreateIndirect, 	"Listbox",	ID_LISTBOX1, 		 	5, 	 	10, 	640, 	300, 	0, 		0x0, 	0 },
+{ LISTBOX_CreateIndirect, 	"Listbox",	ID_LISTBOX2, 			5, 		320, 	640, 	100, 	0, 		0x0, 	0 },
 };
 
 // ------------------------------------------------------
@@ -106,7 +109,7 @@ static void about_print_fw_vers(WM_HWIN hItem)
     LISTBOX_AddString(hItem,fw_id);
 }
 
-#if 0
+#if 1
 static void about_print_fw_auth(WM_HWIN hItem)
 {
 	char fw_id[200];
@@ -177,25 +180,9 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 
 	switch(Id)
 	{
-		#if 0
-		// -------------------------------------------------------------
-		// Button
-		case ID_BUTTON_EXIT:
-		{
-			switch(NCode)
-			{
-				case WM_NOTIFICATION_RELEASED:
-					GUI_EndDialog(pMsg->hWin, 0);
-					break;
-			}
-			break;
-		}
-		#endif
-
-#if 0
 		// -------------------------------------------------------------
 		// Update Firmware Button
-		case ID_BUTTON_UPDATE:
+		case ID_BUTTON_FW_UPDATE:
 		{
 			switch(NCode)
 			{
@@ -215,7 +202,46 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			}
 			break;
 		}
-#endif
+
+		// -------------------------------------------------------------
+		// System Restart
+		case ID_BUTTON_SYS_RESTART:
+		{
+			switch(NCode)
+			{
+				case WM_NOTIFICATION_RELEASED:
+				{
+					printf("system restart\r\n");
+
+					vTaskDelay(100);
+					NVIC_SystemReset();
+
+					break;
+				}
+			}
+			break;
+		}
+
+		// -------------------------------------------------------------
+		// Eeprom Defaults
+		case ID_BUTTON_EEP_RESET:
+		{
+			switch(NCode)
+			{
+				case WM_NOTIFICATION_RELEASED:
+				{
+					printf("eeprom defaults\r\n");
+
+					// Direct call, no locking
+					// ToDo: check if this might be a problem in the future
+					//
+					radio_init_eep_defaults();
+
+					break;
+				}
+			}
+			break;
+		}
 
 		// -------------------------------------------------------------
 		default:
@@ -368,18 +394,22 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 	//WM_HWIN 			hItem;
 	int 				Id, NCode;
 	WM_HWIN 			hList;
-	//SCROLLBAR_Handle 	hScrollV;
+	SCROLLBAR_Handle 	hScrollV;
 
 	switch (pMsg->MsgId)
 	{
 		case WM_INIT_DIALOG:
 		{
-			//hList = WM_GetDialogItem(pMsg->hWin, ID_LISTBOX2);
-			//LISTBOX_SetFont(hList, &GUI_Font16B_ASCII);
-			//about_print_fw_auth(hList);
+			hList = WM_GetDialogItem(pMsg->hWin, ID_LISTBOX2);
+			LISTBOX_SetFont(hList, &GUI_Font24B_ASCII);
+			LISTBOX_SetTextColor(hList,LISTBOX_CI_UNSEL, GUI_DARKBLUE);
+			hScrollV = SCROLLBAR_CreateAttached(hList, SCROLLBAR_CF_VERTICAL);
+			about_print_fw_auth(hList);
 
 			hList = WM_GetDialogItem(pMsg->hWin, ID_LISTBOX1);
 			LISTBOX_SetFont(hList, &GUI_Font24B_ASCII);
+			LISTBOX_SetTextColor(hList,LISTBOX_CI_UNSEL, GUI_DARKBLUE);
+			//hScrollV = SCROLLBAR_CreateAttached(hList, SCROLLBAR_CF_VERTICAL);
 			//LISTBOX_SetTextColor(hList,LISTBOX_CI_UNSEL|LISTBOX_CI_SEL|LISTBOX_CI_SELFOCUS|LISTBOX_CI_DISABLED,GUI_BLUE);
 
 			// Start the state machine
@@ -460,6 +490,8 @@ static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos)
 	memcpy(p_widget, _aDialog,sizeof(_aDialog));
 	p_widget[0].y0 = menu_layout[ui_s.theme_id].iconview_y;	// shift
 
+	//LISTBOX_SetDefaultBkColor(LISTBOX_CI_UNSEL,GUI_STCOLOR_LIGHTBLUE);
+
 	hIdialog = GUI_CreateDialogBox(p_widget, GUI_COUNTOF(_aDialog), _cbDialog, hWin, xpos, ypos);
 
 	free(p_widget);
@@ -473,6 +505,8 @@ static void KillInfo(void)
 {
 	//printf("kill menu\r\n");
 	GUI_EndDialog(hIdialog, 0);
+
+	//LISTBOX_SetDefaultBkColor(LISTBOX_CI_UNSEL,GUI_WHITE);
 }
 
 #endif

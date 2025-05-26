@@ -14,6 +14,8 @@
 #include "main.h"
 #include "version.h"
 
+#include "keypad_proc.h"
+
 #include "hw_lcd.h"
 
 CRC_HandleTypeDef   CrcHandle;
@@ -23,6 +25,7 @@ extern const unsigned char dsp_idle[816];
 
 extern ulong reset_reason;
 extern uchar gen_boot_reason_err;
+extern uchar stay_in_boot;
 
 #if 0
 #define USE_RTC
@@ -645,7 +648,7 @@ void mchf_pro_board_init(void)
 	#endif
 
 	// Seems to be important
-	early_backup_domain_init();
+	//--early_backup_domain_init();
 }
 
 // Critical HW init on start
@@ -657,12 +660,12 @@ void critical_hw_init_and_run_fw(void)
 	GPIO_InitTypeDef  GPIO_InitStruct;
 
 	// Enable RTC back-up registers access
-	__HAL_RCC_RTC_ENABLE();
-	__HAL_RCC_RTC_CLK_ENABLE();
-	HAL_PWR_EnableBkUpAccess();
+	//__HAL_RCC_RTC_ENABLE();
+	//__HAL_RCC_RTC_CLK_ENABLE();
+	//HAL_PWR_EnableBkUpAccess();
 
-    reset_reason = READ_REG(BKP_REG_RESET_REASON);
-	WRITE_REG(BKP_REG_RESET_REASON, RESET_CLEAR);
+    //reset_reason = READ_REG(BKP_REG_RESET_REASON);
+	//WRITE_REG(BKP_REG_RESET_REASON, RESET_CLEAR);
 
 	// PG11 is power hold
 	GPIO_InitStruct.Pin   = POWER_HOLD;
@@ -672,12 +675,12 @@ void critical_hw_init_and_run_fw(void)
 	HAL_GPIO_Init(POWER_HOLD_PORT, &GPIO_InitStruct);
 
 	// Power off request from firmware
-	if(reset_reason == RESET_POWER_OFF)
-	{
-		printf("power off request from radio...\r\n");
-		HAL_Delay(300);
-		power_off_x(RESET_POWER_OFF);
-	}
+	//if(reset_reason == RESET_POWER_OFF)
+	//{
+		//printf("power off request from radio...\r\n");
+		//HAL_Delay(300);
+		//power_off_x(RESET_POWER_OFF);
+	//}
 
 	// PF6 is LED - ack boot up, in firmware should be ambient sensor, not GPIO!
 	GPIO_InitStruct.Pin   = POWER_LED;
@@ -687,69 +690,23 @@ void critical_hw_init_and_run_fw(void)
 	HAL_GPIO_WritePin(POWER_LED_PORT,POWER_LED, 1);		// led on
 	HAL_GPIO_WritePin(POWER_HOLD_PORT,POWER_HOLD, 1);	// hold power, high
 
-	// Change DSP code
-	#if 0
-	if(reset_reason == RESET_DSP_RELOAD)
-	{
-		printf("dsp reload request from radio...\r\n");
-
-		if(test_sd_card() == 0)
-		{
-			printf("sd card detected\r\n");
-			if(load_default_dsp_core(0) == 0)
-			{
-				printf("dsp core loaded to D2 RAM\r\n");
-
-				// Reinitialize the Stack pointer
-				__set_MSP(*(__IO uint32_t*) RADIO_FIRM_ADDR);
-
-				// Jump to application address
-				((pFunc) (*(__IO uint32_t*) (RADIO_FIRM_ADDR + 4)))();
-			}
-		}
-	}
-	#endif
-
 	// Keep 5V and 8V rails off
 	GPIO_InitStruct.Pin   = VCC_5V_ON;
 	HAL_GPIO_Init(VCC_5V_ON_PORT, &GPIO_InitStruct);
 	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, 0);
 
-	// Disable charger
-	#if 0
-	GPIO_InitStruct.Pin   = CHGR_ON;
-	HAL_GPIO_Init(CHGR_ON_PORT, &GPIO_InitStruct);
-	//
-	GPIO_InitStruct.Pin   = CC_CV;
-	HAL_GPIO_Init(CC_CV_PORT, &GPIO_InitStruct);
-	//
-	HAL_GPIO_WritePin(CHGR_ON_PORT, CHGR_ON, 0);
-	HAL_GPIO_WritePin(CC_CV_PORT,   CC_CV,   0);
-	#endif
-
-	// Test only
-	#if 0
-	// Power is PI11
-	__HAL_RCC_GPIOI_CLK_ENABLE();
-	GPIO_InitStruct.Pin   = ESP_POWER;
-	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
-	HAL_GPIO_Init(ESP_POWER_PORT, &GPIO_InitStruct);
-
-	// Power on
-	HAL_GPIO_WritePin(ESP_POWER_PORT, ESP_POWER, GPIO_PIN_RESET);
-	#endif
-
 	//HAL_PWR_DisableBkUpAccess();
 
-	if(reset_reason == RESET_JUMP_TO_FW)
-	{
+	if(keypad_proc_is_held_on_start())
+		return;
+
+	//if(reset_reason == RESET_JUMP_TO_FW)
+	//{
 		// Reinitialize the Stack pointer
 		__set_MSP(*(__IO uint32_t*) RADIO_FIRM_ADDR);
 
 		// Jump to application address
 		((pFunc) (*(__IO uint32_t*) (RADIO_FIRM_ADDR + 4)))();
-	}
+	//}
 }
-
-
 

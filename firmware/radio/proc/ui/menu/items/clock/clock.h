@@ -10,12 +10,16 @@
 **  Last Modified:                                                                 **
 **  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
-#ifndef __UI_CONTROLS_CLOCK
-#define __UI_CONTROLS_CLOCK
+#ifndef __CLOCK_H
+#define __CLOCK_H
 
-// Exports
-void ui_controls_clock_init(void);
-void ui_controls_clock_quit(void);
-void ui_controls_clock_refresh(void);
+#define PI                  	3.14
+#define AA_FACTOR           	3
+
+#define CALENDAR_X             	5
+#define CALENDAR_Y              30
+
+#define AN_CLOCK_X              660
+#define AN_CLOCK_Y              360
 
 #endif

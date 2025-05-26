@@ -19,6 +19,8 @@
 #include "stm32h7xx_hal_rcc_ex.h"
 #include "stm32h7xx_hal_adc.h"
 
+#define PACK_CURR_THRSH						-10
+
 //#define USE_BALANCER
 #define BALANCER_FREQ						30
 
