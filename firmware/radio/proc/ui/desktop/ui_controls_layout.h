@@ -260,15 +260,18 @@
 //
 // ----------------------------------------------------------------------------
 // Band control
-#define BAND_X						(M_FREQ_X + FREQ_FONT_SIZE_X*4 + 7)	// 140
-#define BAND_Y						(M_FREQ_Y - 20)						// 60
+#define BAND_X						(M_FREQ_X + FREQ_FONT_SIZE_X*4 + 7)
+#define BAND_Y						(M_FREQ_Y - 24)
 // ----------------------------------------------------------------------------
 // Step
-#define VFO_STEP_X					(M_FREQ_X + FREQ_FONT_SIZE_X*7 + 12)// 80
-#define VFO_STEP_Y					(M_FREQ_Y - 20)						// 60
+#define VFO_STEP_X					(M_FREQ_X + FREQ_FONT_SIZE_X*7 + 12)
+#define VFO_STEP_Y					(M_FREQ_Y - 24)
 //
 #define VFO_STEP_SIZE_X				52
 #define VFO_STEP_SIZE_Y				20
+
+#define VFO_A_X						(M_FREQ_X + FREQ_FONT_SIZE_X*9 + 7)
+#define VFO_A_Y						(M_FREQ_Y - 22)
 // ----------------------------------------------------------------------------
 // RX/TX
 #define RADIO_MODE1_X				360 + 54

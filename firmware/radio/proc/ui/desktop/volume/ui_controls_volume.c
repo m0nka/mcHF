@@ -278,14 +278,23 @@ void ui_controls_volume_init(WM_HWIN hParent)
 	GUI_SetClipRect(NULL);*/
 	#endif
 
+	// Unified volume control frame
 	GUI_SetColor(GUI_ORANGE);
-	GUI_DrawRoundedFrame(	(SPEAKER_X - 50),
-							(SPEAKER_Y - 40),
-							(SPEAKER_X - 50 + 250),
-							(SPEAKER_Y - 40 + 94),
+	GUI_DrawRoundedFrame(	(SPEAKER_X - 80),
+							(SPEAKER_Y - 50),
+							(SPEAKER_X - 80 + 280),
+							(SPEAKER_Y - 50 + 100),
 							5,
 							2
 						);
+
+	// System status progress bar(s)
+	GUI_SetColor(GUI_LIGHTBLUE);
+	GUI_FillRoundedRect(	(SPEAKER_X - 65),
+							(SPEAKER_Y - 40),
+							(SPEAKER_X - 65 + 20),
+							(SPEAKER_Y - 40 + 80),
+							2);
 }
 
 //*----------------------------------------------------------------------------
