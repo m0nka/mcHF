@@ -287,14 +287,6 @@ void ui_controls_volume_init(WM_HWIN hParent)
 							5,
 							2
 						);
-
-	// System status progress bar(s)
-	GUI_SetColor(GUI_LIGHTBLUE);
-	GUI_FillRoundedRect(	(SPEAKER_X - 65),
-							(SPEAKER_Y - 40),
-							(SPEAKER_X - 65 + 20),
-							(SPEAKER_Y - 40 + 80),
-							2);
 }
 
 //*----------------------------------------------------------------------------

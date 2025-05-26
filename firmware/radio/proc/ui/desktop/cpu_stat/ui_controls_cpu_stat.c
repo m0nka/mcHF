@@ -29,6 +29,29 @@ ulong	cpu_cnt = 0;		// count var
 uchar 	uc_keep_alive = 0;
 uchar 	uc_keep_flag  = 0;
 
+static void ui_controls_cpu_stat_prog_bar(uchar val)
+{
+	if(val > 100)
+		val = 100;
+
+	val = (100 - val);
+
+	GUI_SetColor(GUI_BLACK);
+	GUI_FillRoundedRect(	(SPEAKER_X - 65),
+							(SPEAKER_Y - 40),
+							(SPEAKER_X - 65 + 20),
+							(SPEAKER_Y - 40 + 80),
+							2);
+
+	GUI_SetColor(GUI_LIGHTBLUE);
+	GUI_FillRoundedRect(	(SPEAKER_X - 65),
+							(SPEAKER_Y - (40 - val)),
+							(SPEAKER_X - 65 + 20),
+							(SPEAKER_Y - 40 + 80),
+							2);
+}
+
+#if 0
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_cpu_stat_show_alive
 //* Object              : create blinking mark to show OS is still running
@@ -52,6 +75,7 @@ static void ui_controls_cpu_stat_show_alive(void)
 	uc_keep_alive = 0;
 	uc_keep_flag = !uc_keep_flag;
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_cpu_stat_show_cpu_load
@@ -76,30 +100,28 @@ static void ui_controls_cpu_stat_show_cpu_load(void)
 	}
 	skip_cpu = 0;
 
-	// Clear dynamic part
-	GUI_SetColor(GUI_WHITE);
-	GUI_FillRect(CPU_L_X + 53,	CPU_L_Y + 1,	CPU_L_X + 102,	CPU_L_Y + 13);
-
-	// Create frame
-	GUI_SetColor(HOT_PINK);
-	GUI_DrawRect(CPU_L_X - 1,	CPU_L_Y - 1,	CPU_L_X + 106,	CPU_L_Y + 15);
-	GUI_DrawRect(CPU_L_X,		CPU_L_Y,		CPU_L_X + 105,	CPU_L_Y + 14);
-	GUI_FillRect(CPU_L_X + 20,	CPU_L_Y,		CPU_L_X + 52,	CPU_L_Y + 14);
-	GUI_FillRect(CPU_L_X + 103,	CPU_L_Y - 1, 	CPU_L_X + 104, CPU_L_Y + 15);
-
 	// Get average
 	usage = cpu_aver/cpu_cnt;
+	if(usage > 99) usage = 99;
+
+	// Update progress
+	ui_controls_cpu_stat_prog_bar(usage);
 
 	//EnterCriticalSection();
-	sprintf((char *)tmp , "%3d%%", usage);
+	sprintf((char *)tmp , "%2d", usage);
 	//ExitCriticalSection();
 
+	// Clear dynamic part
+	GUI_SetColor(GUI_LIGHTBLUE);
+	GUI_FillRect(	(SPEAKER_X - 65 + 2),
+					(SPEAKER_Y - 40 + 67),
+					(SPEAKER_X - 65 + 16),
+					(SPEAKER_Y - 40 + 78));
+
 	// Show CPU load
-	GUI_SetFont(&GUI_Font8x16_1);
+	GUI_SetFont(&GUI_Font16B_ASCII);
 	GUI_SetColor(GUI_WHITE);
-	GUI_DispStringAt("CPU", CPU_L_X + 25, CPU_L_Y + 1);
-	GUI_SetColor(HOT_PINK);
-	GUI_DispStringAt(tmp,CPU_L_X + 65,CPU_L_Y + 1);
+	GUI_DispStringAt(tmp, (SPEAKER_X - 65 + 4), (SPEAKER_Y - 40 + 65));
 
 	// Reset accumulator
 	cpu_aver 	= 0;
@@ -116,17 +138,21 @@ static void ui_controls_cpu_stat_show_cpu_load(void)
 //*----------------------------------------------------------------------------
 void ui_controls_cpu_stat_init(void)
 {
-	char   	buff[100];
+	// System status progress bar
+#if 0
+	GUI_SetColor(GUI_LIGHTBLUE);
+	GUI_FillRoundedRect(	(SPEAKER_X - 65),
+							(SPEAKER_Y - 20),
+							(SPEAKER_X - 65 + 20),
+							(SPEAKER_Y - 40 + 80),
+							2);
+#endif
 
-	// Debug print CPU firmware version
-	GUI_SetColor(GUI_WHITE);
-	GUI_SetFont(&GUI_Font8x16_1);
-	//sprintf(buff,"CPU v: %d.%d.%d.%d",MCHF_R_VER_MAJOR, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE, MCHF_R_VER_BUILD);
-	//GUI_DispStringAt(buff,360,55);
+	ui_controls_cpu_stat_prog_bar(100);
 
-	// This ok as init ?
-	ui_controls_cpu_stat_show_cpu_load();
-	ui_controls_cpu_stat_show_alive();
+	// DSP Status
+	//GUI_SetColor(GUI_WHITE);
+	//GUI_DrawHLine((SPEAKER_Y - 20), (SPEAKER_X - 65), (SPEAKER_X - 65 + 20));
 }
 
 //*----------------------------------------------------------------------------
@@ -166,6 +192,6 @@ void ui_controls_cpu_stat_touch(void)
 void ui_controls_cpu_stat_refresh(void)
 {
 	ui_controls_cpu_stat_show_cpu_load();
-	ui_controls_cpu_stat_show_alive();
+	//ui_controls_cpu_stat_show_alive();
 }
 #endif

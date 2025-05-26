@@ -1192,6 +1192,7 @@ static void ui_controls_frequency_vfo_b_initial_paint(uchar is_init)
 
 	// Publics reset
 	df.vfo_b_scr_freq 	= 0;
+	//--df.last_screen_step	= 0xFFFFFF88;		ToDo: Check if we need VFO B invalidation
 	//
 	df.sdial_100_mhz	= 9;
 	df.sdial_010_mhz	= 9;
