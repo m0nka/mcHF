@@ -189,18 +189,15 @@ ushort bq40z80_read_status(void)
 
 short bq40z80_read_current(void)
 {
-	short curr;
+	ushort curr;
 
 	if(!bms_loc_init)
 		return 0;
 
 	if(bq40z80_read_16bit_reg(0x0A, &curr) == 0)
 	{
-		// Add calib factor
-		//curr -= 250;
-
-		//printf("curr: %dmA \r\n", curr);
-		return curr;
+		//printf("curr: %dmA \r\n", (short)curr);
+		return (short)curr;
 	}
 
 	return 0;

@@ -57,7 +57,7 @@ static void ui_controls_battery_progress(uchar val)
 	//else if(val < 25)
 	//	GUI_SetColor(GUI_LIGHTRED);
 	//else
-		GUI_SetColor(GUI_LIGHTBLUE);
+		GUI_SetColor(GUI_LIGHTGREEN);
 
 	// Update
 	GUI_FillRect((BATTERY_X + 2), y0,(BATTERY_X + BATTERY_SIZE_X - 1), y1);
@@ -70,15 +70,21 @@ static void ui_controls_battery_progress(uchar val)
 	else if(val < 100)
 		x += 5;
 
-	// Text
-	GUI_SetColor(GUI_WHITE);
+	if(bmss.run_on_dc)
+		GUI_SetColor(GUI_BLACK);		// on USB suppy
+	else
+	{
+		if(val > 34)
+			GUI_SetColor(GUI_WHITE);	// on battery, good SOC, light colour
+		else
+			GUI_SetColor(GUI_RED);		// on battery, low SOC, need contrast
+	}
+
 	GUI_SetFont(&GUI_Font20B_ASCII);
 
 	#ifdef CONTEXT_BMS
 
-	if(bmss.run_on_dc)
-		GUI_SetColor(GUI_LIGHTGRAY);
-
+	// Battery percentage text
 	GUI_DispStringAt(buf, x - 8,  BATTERY_Y + BATTERY_SIZE_Y - 20);
 
 	GUI_SetColor(GUI_BLACK);

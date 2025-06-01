@@ -15,12 +15,16 @@
 
 // Virtual eeprom locations
 #define	EEP_BASE_ADDR				0x000
-//
+// ---------------------------
+// Checksum - 3 bytes reserved
+// ---------------------------
 #define	EEP_CURR_BAND				0x004
 #define	EEP_SW_SMOOTH				0x005
 #define	EEP_DEMO_MODE				0x006
 #define	EEP_BRIGHTNESS				0x007
 #define	EEP_SMET_TYPE				0x008
+#define	EEP_AGC_MODE				0x009
+#define	EEP_RF_GAIN					0x00A
 //
 #define	EEP_BANDS					0xE10		// pos 3600, band info, 400 bytes
 

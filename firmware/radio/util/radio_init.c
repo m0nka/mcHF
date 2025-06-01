@@ -25,6 +25,13 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 // DSP core state
 extern struct 	TransceiverState 		ts;
 
+//*----------------------------------------------------------------------------
+//* Function Name       : radio_init_eep_chksum
+//* Object              :
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
 ulong radio_init_eep_chksum(void)
 {
 	ulong i, chk;
@@ -38,12 +45,15 @@ ulong radio_init_eep_chksum(void)
 	return chk;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : save_band_info
+//* Object              :
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
 static void save_band_info(void)
 {
-//	memcpy((uchar *)(EEP_BASE + EEP_BANDS),
-	//		(uchar *)(&(tsu.band[0].band_start)),
-		//	(MAX_BANDS * sizeof(BAND_INFO)));
-
 	uchar  *src = (uchar *)(&(tsu.band[0].band_start));
 	ushort dest = EEP_BANDS;
 	ushort size = (MAX_BANDS * sizeof(BAND_INFO));
@@ -159,6 +169,20 @@ static int radio_init_load_eep_values(void)
 	else
 		tsu.smet_type = 0;
 
+	// Load AGC mode
+	r0 = virt_eeprom_read(EEP_AGC_MODE);
+	if(r0 != 0xFF)
+		tsu.agc_mode = r0;
+	else
+		tsu.agc_mode = AGC_MED;
+
+	// Load RF Gain
+	r0 = virt_eeprom_read(EEP_RF_GAIN);
+	if(r0 != 0xFF)
+		tsu.rf_gain = r0;
+	else
+		tsu.rf_gain = 30;
+
 	#if 0
 	printf("curr band: %d\r\n",tsu.curr_band);
 	printf("demo mode: %d\r\n",tsu.demo_mode);
@@ -187,7 +211,7 @@ static void radio_init_load_dsp_values(void)
 	ts.audio_gain		= 0;//MAX_VOLUME_DEFAULT;		// Set max volume default
 	ts.audio_gain_active = 1;						// this variable is used in the active RX audio processing function
 
-	ts.rf_gain			= 10;//DEFAULT_RF_GAIN;			//
+	ts.rf_gain			= 30;//DEFAULT_RF_GAIN;			//
 	ts.max_rf_gain		= 3;//MAX_RF_GAIN_DEFAULT;		// setting for maximum gain (e.g. minimum S-meter reading)
 	ts.rf_codec_gain	= 0;//DEFAULT_RF_CODEC_GAIN_VAL;	// Set default RF gain (0 = lowest, 8 = highest, 9 = "Auto")
 	ts.rit_value		= 0;						// RIT value
@@ -601,6 +625,8 @@ void radio_init_eep_defaults(void)
 	virt_eeprom_write(EEP_DEMO_MODE,   0);
 	virt_eeprom_write(EEP_BRIGHTNESS, 80);
 	virt_eeprom_write(EEP_SMET_TYPE,   0);
+	virt_eeprom_write(EEP_AGC_MODE,   AGC_MED);
+	virt_eeprom_write(EEP_RF_GAIN,    30);
 
 	// Generate checksum
 	ulong chk = radio_init_eep_chksum();
@@ -638,7 +664,7 @@ void radio_init_ui_to_dsp(void)
 	ts.rf_gain			= 25;
 	#else
 	ts.agc_mode			= AGC_MED;
-	ts.rf_gain			= 50;
+	ts.rf_gain			= 30;
 	#endif
 
 	ts.nco_freq			= tsu.band[tsu.curr_band].nco_freq;
@@ -697,6 +723,8 @@ void radio_init_save_before_off(void)
 	virt_eeprom_write(EEP_DEMO_MODE,  tsu.demo_mode);
 	virt_eeprom_write(EEP_BRIGHTNESS, tsu.brightness);
 	virt_eeprom_write(EEP_SMET_TYPE,  tsu.smet_type);
+	virt_eeprom_write(EEP_AGC_MODE,   tsu.agc_mode);
+	virt_eeprom_write(EEP_RF_GAIN,    tsu.rf_gain);
 
 	// Generate checksum
 	ulong chk = radio_init_eep_chksum();
@@ -750,7 +778,7 @@ void radio_init_on_reset(void)
 	tsu.active_side_enc_id 	= 0;
 	tsu.stereo_mode 		= 0;		// mono by default
 	tsu.agc_mode			= AGC_MED;
-	tsu.rf_gain				= 50;
+	tsu.rf_gain				= 30;
 	tsu.keyer_mode 			= ts.keyer_mode;
 	tsu.tune				= 0;
 	tsu.bias0				= 0;
