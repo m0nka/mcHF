@@ -22,7 +22,7 @@
 #include "ui_controls_cpu_stat.h"
 #include "desktop\ui_controls_layout.h"
 
-#define SPROG_X				(SPEAKER_X - 70)
+#define SPROG_X				(SPEAKER_X - 64)
 
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
@@ -56,7 +56,7 @@ static void ui_controls_cpu_stat_prog_bar(uchar val)
 							2);
 }
 
-#if 1
+#if 0
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_cpu_stat_show_alive
 //* Object              : create blinking mark to show OS is still running
@@ -209,6 +209,6 @@ void ui_controls_cpu_stat_touch(void)
 void ui_controls_cpu_stat_refresh(void)
 {
 	ui_controls_cpu_stat_show_cpu_load();
-	ui_controls_cpu_stat_show_alive();
+	//--ui_controls_cpu_stat_show_alive(); - moved to the clock panel
 }
 #endif
