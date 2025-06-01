@@ -19,7 +19,9 @@
 #include "stm32h7xx_hal_rcc_ex.h"
 #include "stm32h7xx_hal_adc.h"
 
-#define PACK_CURR_THRSH						-10
+// Somewhat this value should allow to detect if the radio
+// is running on dc or batteries
+#define PACK_CURR_THRSH						-50
 
 //#define USE_BALANCER
 #define BALANCER_FREQ						30

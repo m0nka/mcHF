@@ -24,6 +24,7 @@
 //#include "ST_GUI_Addons.h"
 #include "ui_proc.h"
 #include "rtc.h"
+#include "desktop\ui_controls_layout.h"
 
 #include "on_screen_quick_log.h"
 

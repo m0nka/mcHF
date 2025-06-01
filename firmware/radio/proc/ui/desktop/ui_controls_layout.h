@@ -18,6 +18,15 @@
 
 #define CLASSIC_LAYOUT
 
+// Bambu Basic Light Gray (10104) - #D1D3D5
+#define APPLE_MAC_GREY	GUI_MAKE_COLOR(0x00D5D3D1)
+
+// Bambu Basic Hot Pink (10204) - #F5547C
+#define HOT_PINK		GUI_MAKE_COLOR(0x007C54F5)
+
+#define GUI_STCOLOR_LIGHTBLUE   		0x00DCA939
+#define GUI_STCOLOR_DARKBLUE    		0x00522000
+
 #ifdef CLASSIC_LAYOUT
 
 #define ID_WINDOW_VOLUME          	(GUI_ID_USER + 0x00)
