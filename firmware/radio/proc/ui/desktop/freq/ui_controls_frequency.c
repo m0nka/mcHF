@@ -124,11 +124,11 @@ static void ui_controls_repaint_state(void)
 			GUI_DispStringAt("8dB ", (AGC_X + 147), (AGC_Y + 2));
 			break;
 		case ATTEN_16DB:
-			GUI_SetColor(GUI_RED);
+			GUI_SetColor(HOT_PINK);
 			GUI_DispStringAt("16dB", (AGC_X + 142), (AGC_Y + 2));
 			break;
 		case ATTEN_32DB:
-			GUI_SetColor(GUI_RED);
+			GUI_SetColor(HOT_PINK);
 			GUI_DispStringAt("32dB", (AGC_X + 142), (AGC_Y + 2));
 			break;
 		default:
@@ -1217,7 +1217,7 @@ static void ui_controls_frequency_vfo_b_initial_paint(uchar is_init)
 
 	// Leading text background
 	if(tsu.band[tsu.curr_band].active_vfo == VFO_B)
-		GUI_SetColor(GUI_RED);
+		GUI_SetColor(HOT_PINK);
 	else
 		GUI_SetColor(GUI_LIGHTGRAY);
 

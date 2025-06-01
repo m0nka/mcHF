@@ -19,6 +19,7 @@
 #include "dialog.h"
 #include "ui_proc.h"
 #include "rtc.h"
+#include "desktop\ui_controls_layout.h"
 
 #include "ui_desktop_ft8.h"
 

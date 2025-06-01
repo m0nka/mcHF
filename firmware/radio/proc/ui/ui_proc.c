@@ -36,13 +36,12 @@
 #include "smeter\ui_controls_smeter.h"
 #include "freq\ui_controls_frequency.h"
 #include "volume\ui_controls_volume.h"
-#include "clock\ui_controls_clock.h"
+#include "clock_panel\ui_controls_clock_panel.h"
 #include "filter\ui_controls_filter.h"
 #include "cpu_stat\ui_controls_cpu_stat.h"
 #include "dsp_stat\ui_controls_dsp_stat.h"
 #include "sd_icon\ui_controls_sd_icon.h"
 #include "battery\ui_controls_battery.h"
-//#include "menu_button\ui_controls_menu_button.h"
 
 #include "on_screen\on_screen_keyboard.h"
 #include "on_screen\on_screen_audio.h"
@@ -132,7 +131,7 @@ static void ui_proc_cb(void)
 
 static void ui_proc_cb_sm(void)
 {
-	//ui_controls_clock_refresh();
+	//ui_controls_clock_panel_refresh();
 }
 
 //*----------------------------------------------------------------------------
@@ -566,7 +565,7 @@ static void ui_proc_init_desktop(void)
 
 	#ifdef PROC_USE_WM
 	ui_controls_volume_init	  (WM_HBKWIN);
-	ui_controls_clock_init	  (WM_HBKWIN);
+	ui_controls_clock_panel_init(WM_HBKWIN);
 	ui_controls_spectrum_init (WM_HBKWIN);
 	hFreqDialogA = ui_controls_frequency_init(WM_HBKWIN);
 
@@ -582,7 +581,7 @@ static void ui_proc_init_desktop(void)
 	//ui_proc_test_lcd();
 	#else
 	ui_controls_volume_init	  (WM_HBKWIN);
-	ui_controls_clock_init();
+	ui_controls_clock_panel_init();
 	ui_controls_spectrum_init (WM_HBKWIN);
 	ui_controls_frequency_init(WM_HBKWIN);
 	ui_controls_smeter_init();
@@ -645,7 +644,7 @@ static void ui_proc_change_mode(void)
 
 			// Destroy desktop controls
 			ui_controls_volume_quit();
-			ui_controls_clock_quit();
+			ui_controls_clock_panel_quit();
 			ui_controls_spectrum_quit();
 			ui_controls_frequency_quit();
 
@@ -702,7 +701,7 @@ static void ui_proc_change_mode(void)
 
 			// Destroy desktop controls
 			ui_controls_volume_quit();
-			ui_controls_clock_quit();
+			ui_controls_clock_panel_quit();
 			ui_controls_spectrum_quit();
 			ui_controls_frequency_quit();
 
@@ -856,7 +855,7 @@ static void ui_proc_periodic(void)
 		return;
 
 	ui_controls_frequency_refresh(0);
-	ui_controls_clock_refresh();
+	ui_controls_clock_panel_refresh();
 
 	//--ui_controls_volume_refresh();
 	ui_controls_cpu_stat_refresh();

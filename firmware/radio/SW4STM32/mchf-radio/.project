@@ -917,9 +917,9 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/battery/ui_controls_battery.c</locationURI>
 		</link>
 		<link>
-			<name>proc/ui/desktop/clock/ui_controls_clock.c</name>
+			<name>proc/ui/desktop/clock_panel/ui_controls_clock_panel.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/clock/ui_controls_clock.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/clock_panel/ui_controls_clock_panel.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/cpu_stat/ui_controls_cpu_stat.c</name>

@@ -23,7 +23,7 @@
 //#include "ui_driver.h"
 #include "ui_controls_smeter.h"
 #include "desktop\ui_controls_layout.h"
-#include "desktop\clock\ui_controls_clock.h"
+#include "desktop\clock_panel\ui_controls_clock_panel.h"
 
 //#define USE_SPRITE
 //#define ANALOGUE_SMETER
@@ -226,9 +226,6 @@ static void ui_controls_draw_needle(void * p)
 								S_METER_FRAME_CURVE, 								S_METER_FRAME_WIDTH);
 		#endif
 
-		// Recover Clock control
-		//--ui_controls_clock_restore();
-
 		#if 0
 		// Debug only
 		GUI_SetColor(GUI_BLUE);
@@ -312,6 +309,9 @@ static void ui_controls_smeter_draw_via_rotate(uchar pos)
 
 	// Repaint
 	GUI_MEMDEV_DrawAuto(&AutoDev, &Param.AutoDevInfo, &ui_controls_draw_needle, &Param);
+
+	// Recover Clock control
+	ui_controls_clock_panel_restore();
 }
 #endif
 

@@ -17,6 +17,7 @@
 #include "gui.h"
 #include "dialog.h"
 //#include "ST_GUI_Addons.h"
+#include "desktop\ui_controls_layout.h"
 
 #include "ui_menu_module.h"
 

@@ -961,13 +961,15 @@ static void ui_controls_create_sw_big(void)
 	GUI_MEMDEV_Select(0);
 	#endif
 
+	//printf("%d, %d \r\n",sb.x ,sb.y );
+
 	// Draw frame/lines
 	GUI_SetColor(GUI_DARKGRAY);			//HOT_PINK
 	#if 1
-	GUI_DrawHLine((sb.y + 1), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
-	GUI_DrawHLine((sb.y + 0), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
-	GUI_DrawHLine((sb.y - 1), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
-	GUI_DrawHLine((sb.y - 2), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
+	//GUI_DrawHLine((sb.y + 1), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
+	//GUI_DrawHLine((sb.y + 0), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
+	//GUI_DrawHLine((sb.y - 1), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
+	//GUI_DrawHLine((sb.y - 2), 					sb.x, (sb.x + SW_FRAME_X_SIZE));
 /*	GUI_DrawRoundedFrame(	sb.x,
 							sb.y,
 							(sb.x + SW_FRAME_X_SIZE),
