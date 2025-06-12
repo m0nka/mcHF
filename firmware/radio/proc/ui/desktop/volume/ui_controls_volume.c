@@ -279,11 +279,20 @@ void ui_controls_volume_init(WM_HWIN hParent)
 	#endif
 
 	// Unified volume control frame
-	GUI_SetColor(HOT_PINK);
+	GUI_SetColor(GUI_WHITE);
 	GUI_DrawRoundedFrame(	(SPEAKER_X - 80),
 							(SPEAKER_Y - 50),
 							(SPEAKER_X - 80 + 280),
 							(SPEAKER_Y - 50 + 100),
+							5,
+							2
+						);
+
+	GUI_SetColor(HOT_PINK);
+	GUI_DrawRoundedFrame(	(SPEAKER_X - 78),
+							(SPEAKER_Y - 48),
+							(SPEAKER_X - 82 + 280),
+							(SPEAKER_Y - 52 + 100),
 							5,
 							2
 						);

@@ -122,7 +122,7 @@ void ui_controls_battery_init(void)
 	curr_batt_value = 0;
 
 	// Two pixel frame
-	GUI_SetColor(HOT_PINK);
+	GUI_SetColor(GUI_DARKGREEN);
 	GUI_DrawRoundedRect((BATTERY_X +  0),(BATTERY_Y + 3),(BATTERY_X + BATTERY_SIZE_X),    (BATTERY_Y + BATTERY_SIZE_Y + 1),2);
 	GUI_DrawRoundedRect((BATTERY_X +  1),(BATTERY_Y + 4),(BATTERY_X + BATTERY_SIZE_X + 1),(BATTERY_Y + BATTERY_SIZE_Y + 2),2);
 

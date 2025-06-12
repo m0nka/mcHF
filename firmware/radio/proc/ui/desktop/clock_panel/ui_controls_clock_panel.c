@@ -166,16 +166,16 @@ static void ui_controls_clock_panel_dsp_details(void)
 		switch(ts.samp_rate)
 		{
 			case SAI_AUDIO_FREQUENCY_48K:
-				GUI_DispStringAt("48k", 420, 192);
+				GUI_DispStringAt("48k", 410, 192);
 				break;
 			case SAI_AUDIO_FREQUENCY_96K:
-				GUI_DispStringAt("96k", 420, 192);
+				GUI_DispStringAt("96k", 410, 192);
 				break;
 			case SAI_AUDIO_FREQUENCY_192K:
-				GUI_DispStringAt("192k", 420, 192);
+				GUI_DispStringAt("192k", 410, 192);
 				break;
 			default:
-				GUI_DispStringAt("NA", 420, 192);
+				GUI_DispStringAt("NA", 410, 192);
 				break;
 		}
 		dsp_control_init_done = 1;
@@ -186,10 +186,10 @@ static void ui_controls_clock_panel_dsp_details(void)
 	{
 		char   	buff[20];
 
-		GUI_SetColor(GUI_BLACK);
+		GUI_SetColor(HOT_PINK);
 		GUI_SetFont(&GUI_Font8x8_1);
 		sprintf(buff,"%d.%d",tsu.dsp_rev3,tsu.dsp_rev4);
-		GUI_DispStringAt(buff,460, 192);
+		GUI_DispStringAt(buff,448, 192);
 
 		dsp_version_done = 1;
 	}

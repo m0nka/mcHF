@@ -97,7 +97,7 @@
 //
 // waterfall only size
 #define WATERFALL_X_SIZE			SCOPE_X_SIZE
-#define WATERFALL_Y_SIZE			157 + 4				//SCOPE_Y_SIZE
+#define WATERFALL_Y_SIZE			146	// (157 + 4) , SCOPE_Y_SIZE
 //
 //
 // MENU button
