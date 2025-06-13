@@ -183,6 +183,13 @@ static int radio_init_load_eep_values(void)
 	else
 		tsu.rf_gain = 30;
 
+	// Load BT flag
+	r0 = virt_eeprom_read(EEP_BT_ON);
+	if(r0 != 0xFF)
+		tsu.bt_enabled = r0;
+	else
+		tsu.bt_enabled = 0;
+
 	#if 0
 	printf("curr band: %d\r\n",tsu.curr_band);
 	printf("demo mode: %d\r\n",tsu.demo_mode);
@@ -447,6 +454,10 @@ static void radio_init_misc_values(void)
 	tsu.demo_mode 		= 0;
 	tsu.brightness		= 80;
 	tsu.smet_type		= 0;
+
+	// Temp constant
+	tsu.sc_enabled		= 1;
+	tsu.wf_enabled		= 1;
 }
 
 //*----------------------------------------------------------------------------
@@ -627,6 +638,7 @@ void radio_init_eep_defaults(void)
 	virt_eeprom_write(EEP_SMET_TYPE,   0);
 	virt_eeprom_write(EEP_AGC_MODE,   AGC_MED);
 	virt_eeprom_write(EEP_RF_GAIN,    30);
+	virt_eeprom_write(EEP_BT_ON,       0);
 
 	// Generate checksum
 	ulong chk = radio_init_eep_chksum();
@@ -725,6 +737,7 @@ void radio_init_save_before_off(void)
 	virt_eeprom_write(EEP_SMET_TYPE,  tsu.smet_type);
 	virt_eeprom_write(EEP_AGC_MODE,   tsu.agc_mode);
 	virt_eeprom_write(EEP_RF_GAIN,    tsu.rf_gain);
+	virt_eeprom_write(EEP_BT_ON,      tsu.bt_enabled);
 
 	// Generate checksum
 	ulong chk = radio_init_eep_chksum();
