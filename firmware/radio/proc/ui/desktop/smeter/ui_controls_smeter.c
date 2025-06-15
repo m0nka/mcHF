@@ -378,92 +378,6 @@ static void ui_controls_smeter_set_needle(uchar pos)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : ui_controls_smeter_analogue_init
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void ui_controls_smeter_analogue_init(void)
-{
-	//PARAM       Param;      // Parameters for drawing routine
-	//int         Cnt;
-	//int         tDiff = 0;
-	//int         t0;
-
-	// Init public data
-	sm.pub_value 		= 0;
-	sm.old_value 		= 0;
-	sm.skip 			= 0;
-	sm.init_done		= 0;
-	//sm.smet_disabled 	= 0;
-	sm.repaints 		= 0;
-	sm.use_bmp 			= 1;
-	sm.is_peak			= 0;
-	sm.rotary_block		= 0;
-	sm.rotary_timer		= 0;
-
-	// Enable high resolution for antialiasing
-	GUI_AA_EnableHiRes();
-	GUI_AA_SetFactor(MAG);
-
-	#ifndef USE_SPRITE
-	// Create GUI_AUTODEV-object
-	GUI_MEMDEV_CreateAuto(&AutoDev);
-	#endif
-
-	// Needle at 0
-	#ifndef USE_SIDE_ENC_FOR_S_METER
-	ui_controls_smeter_set_needle(S_NEEDLE_LEFT);
-	#endif
-	#ifdef USE_SIDE_ENC_FOR_S_METER
-	ui_controls_smeter_set_needle(S_NEEDLE_CENTRE);
-	#endif
-
-	// Debug
-	sm.repaints = 0;
-}
-
-//*----------------------------------------------------------------------------
-//* Function Name       : ui_controls_smeter_digital_init
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void ui_controls_smeter_digital_init(void)
-{
-	// Reset
-	sm.loc_tx_state = UNDEF_TX_STATE;
-
-	// Frame
-	GUI_SetColor(GUI_DARKCYAN);
-	GUI_DrawRoundedFrame(	(S_METER_X - S_METER_FRAME_LEFT),					(S_METER_Y - S_METER_FRAME_TOP),
-							(bmscale.XSize + S_METER_X + S_METER_FRAME_RIGHT), 	(bmscale.YSize + S_METER_Y + S_METER_FRAME_BOTTOM),
-							S_METER_FRAME_CURVE, 								S_METER_FRAME_WIDTH);
-
-	GUI_SetColor(GUI_DARKGRAY);
-
-	// Top/Bottom background
-	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + S_METER_SY + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + S_METER_SY + 37), 2);
-	GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + S_METER_SY + 60),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + S_METER_SY + 67), 2);
-
-	GUI_SetColor(GUI_LIGHTGREEN);
-
-	// Top/Bottom active part
-	//GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 30),(S_METER_X + 10), (S_METER_Y + 37), 2);
-	//GUI_FillRoundedRect((S_METER_X + 10), (S_METER_Y + 60),(S_METER_X + 10), (S_METER_Y + 67), 2);
-
-	GUI_SetColor(GUI_LIGHTGRAY);
-	GUI_SetFont(&GUI_Font8x16_1);
-
-	//if(tsu.rxtx)
-	//	GUI_DispStringAt("1   3   5   7   9",S_METER_X + 20, S_METER_Y + 10);
-	//else
-	GUI_DispStringAt("1   3   5   7   9",S_METER_X + 20, S_METER_Y + S_METER_SY + 10);
-}
-
-//*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_smeter_analogue_refresh
 //* Object              :
 //* Input Parameters    :
@@ -478,8 +392,8 @@ static void ui_controls_smeter_analogue_refresh(FAST_REFRESH *cb)
 	curr = ui_sw.sm_value;	// calc by DSP
 
 	// Nothing change, skip repaint
-	if(sm.old_value == curr)
-		return;
+	//if(sm.old_value == curr)
+	//	return;
 
 	// Expand scale
 	expanded = curr*SMETER_EXPAND_VALUE;
@@ -542,6 +456,120 @@ static void ui_controls_smeter_analogue_refresh(FAST_REFRESH *cb)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : ui_controls_smeter_analogue_init
+//* Object              :
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static void ui_controls_smeter_analogue_init(void)
+{
+	//PARAM       Param;      // Parameters for drawing routine
+	//int         Cnt;
+	//int         tDiff = 0;
+	//int         t0;
+
+	// Init public data
+	sm.pub_value 		= 0;
+	sm.old_value 		= 0;
+	sm.skip 			= 0;
+	sm.init_done		= 0;
+	//sm.smet_disabled 	= 0;
+	sm.repaints 		= 0;
+	sm.use_bmp 			= 1;
+	sm.is_peak			= 0;
+	sm.rotary_block		= 0;
+	sm.rotary_timer		= 0;
+
+	// Enable high resolution for antialiasing
+	GUI_AA_EnableHiRes();
+	GUI_AA_SetFactor(MAG);
+
+	#ifndef USE_SPRITE
+	// Create GUI_AUTODEV-object
+	GUI_MEMDEV_CreateAuto(&AutoDev);
+	#endif
+
+	// Needle at 0
+	#ifndef USE_SIDE_ENC_FOR_S_METER
+	ui_controls_smeter_set_needle(S_NEEDLE_LEFT);
+	#endif
+	#ifdef USE_SIDE_ENC_FOR_S_METER
+	ui_controls_smeter_set_needle(S_NEEDLE_CENTRE);
+	#endif
+
+	// Debug
+	sm.repaints = 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : ui_controls_smeter_panels_refresh
+//* Object              :
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static void ui_controls_smeter_panels_refresh(void)
+{
+	// Enable/Disable panels
+	if(sm.loc_tx_state != tsu.rxtx)
+	{
+		GUI_SetFont(&GUI_Font8x16_1);
+
+		// RX panel
+		if(!tsu.rxtx)
+			GUI_SetColor(GUI_LIGHTGRAY);
+		else
+			GUI_SetColor(GUI_DARKGRAY);
+
+		GUI_DispStringAt(	"S  1   3   5   7   9   +20   +40  +60  dB",
+							S_METER_X + 12,
+							S_METER_Y + S_METER_SY - 10);
+
+		// TX panel
+		if(tsu.rxtx)
+			GUI_SetColor(GUI_LIGHTGRAY);
+		else
+			GUI_SetColor(GUI_DARKGRAY);
+
+		GUI_DispStringAt(	"P  1   2   5       10         15   20   W",
+							S_METER_X + 12,
+							S_METER_Y + S_METER_SY + 30);
+
+		GUI_DispStringAt(	"SWR 1  3   5       10         30         ",
+							S_METER_X + 12,
+							S_METER_Y + S_METER_SY + 85);
+
+		// Mask old S-meter progress
+		GUI_SetColor(GUI_DARKGRAY);
+		GUI_FillRoundedRect((S_METER_X + 10),
+							(S_METER_Y + S_METER_SY + 10),
+							(S_METER_X + 10 + S_METER_MAX),
+							(S_METER_Y + S_METER_SY + 17),
+							2);
+
+		// Mask old Power progress
+		GUI_SetColor(GUI_DARKGRAY);
+		GUI_FillRoundedRect((S_METER_X + 10),
+							(S_METER_Y + S_METER_SY + 50),
+							(S_METER_X + 10 + S_METER_MAX),
+							(S_METER_Y + S_METER_SY + 57),
+							2);
+
+		// Mask old SWR progress
+		GUI_SetColor(GUI_DARKGRAY);
+		GUI_FillRoundedRect((S_METER_X + 10),
+							(S_METER_Y + S_METER_SY + 70),
+							(S_METER_X + 10 + S_METER_MAX),
+							(S_METER_Y + S_METER_SY + 77),
+							2);
+
+
+		sm.loc_tx_state = tsu.rxtx;
+	}
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_smeter_digital_refresh
 //* Object              :
 //* Input Parameters    :
@@ -550,96 +578,158 @@ static void ui_controls_smeter_analogue_refresh(FAST_REFRESH *cb)
 //*----------------------------------------------------------------------------
 static void ui_controls_smeter_digital_refresh(void)
 {
-	//static uchar loc_tx_state = 10;
-	ushort 		 curr;
-
-	curr = ui_sw.sm_value;	// calc by DSP
-
-	// Nothing change, skip repaint
-	if(sm.old_value == curr)
-		return;
-
-	// Handle TX
-	if(sm.loc_tx_state != tsu.rxtx)
+	// Repaint based on mode
+	if(!tsu.rxtx)
 	{
-		GUI_SetColor(GUI_BLACK);
+		ushort s_sta 	= 0;
+		ushort curr 	= ui_sw.sm_value;
+		ushort s_val;
 
-		// Clear top text line
-		GUI_FillRect((S_METER_X + 10), (S_METER_Y + S_METER_SY + 10),(S_METER_X + 340), (S_METER_Y + S_METER_SY + 24));
+		s_val = (curr * 10);		// progress bar
+		//s_sta = (curr * 10) - 20;	// moving dot
 
-		// Clear top text line
-		GUI_FillRect((S_METER_X + 10), (S_METER_Y + S_METER_SY + 75),(S_METER_X + 340), (S_METER_Y + S_METER_SY + 89));
+		// Limiter S-meter
+		if(s_val > S_METER_MAX)
+			s_val = S_METER_MAX;
 
-		GUI_SetColor(GUI_LIGHTGRAY);
-		GUI_SetFont(&GUI_Font8x16_1);
+		// Mask old S-value progress
+		GUI_SetColor(GUI_DARKGRAY);
+		GUI_FillRoundedRect((S_METER_X + 10),
+							(S_METER_Y + S_METER_SY + 10),
+							(S_METER_X + 10 + S_METER_MAX),
+							(S_METER_Y + S_METER_SY + 17),
+							2);
 
-		if(tsu.rxtx)
-		{
-			GUI_DispStringAt("P  1   2   5       10         15   20   W", S_METER_X + 12, S_METER_Y + S_METER_SY + 10);
-		}
-		else
-		{
-			GUI_DispStringAt("S  1   3   5   7   9   +20   +40  +60  dB", S_METER_X + 12, S_METER_Y + S_METER_SY + 10);
-			GUI_SetColor(GUI_DARKGRAY);
-		}
+		// New S-meter value
+		GUI_SetColor(GUI_LIGHTGREEN);
+		GUI_FillRoundedRect((S_METER_X + 10 + s_sta),
+							(S_METER_Y + S_METER_SY + 10),
+							(S_METER_X + (10 + s_val)),
+							(S_METER_Y + S_METER_SY + 17),
+							2);
 
-		GUI_DispStringAt("SWR 1  3   5       10         30         ", S_METER_X + 12, S_METER_Y + S_METER_SY + 75);
-
-		if(sm.loc_tx_state == UNDEF_TX_STATE)
-			sm.loc_tx_state = tsu.rxtx;
-		else
-			sm.loc_tx_state = tsu.rxtx;
-
-		if(tsu.rxtx)
-		{
-			ushort t_val = 0;
-			ushort f_volts = 0;
-			ushort r_volts = 0;
-
-			// Forward voltage on the bridge
-			f_volts = adc_read_fwd_power();
-			if(f_volts == 0xFFFF)
-				{}//sprintf(buf, "FWD %d.%dV", 0, 0);
-			else
-			{
-				//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
-				printf("%4dmV(fwd) \r\n", f_volts);
-			}
-
-			// Forward voltage on the bridge
-			r_volts = adc_read_ref_power();
-			if(r_volts == 0xFFFF)
-			{}//sprintf(buf, "FWD %d.%dV", 0, 0);
-			else
-			{
-				//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
-				printf("%4dmV(ref) \r\n", r_volts);
-			}
-
-			// ToDo: finish it off...
-
-			GUI_SetColor(GUI_DARKGRAY);
-			GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + S_METER_SY + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + S_METER_SY + 37), 2);
-
-			GUI_SetColor(GUI_LIGHTGREEN);
-			GUI_FillRoundedRect((S_METER_X + 10 + 0),  (S_METER_Y + S_METER_SY + 30),(S_METER_X + (10 + t_val)), (S_METER_Y + S_METER_SY + 37), 2);
-		}
-
-		return;
+		// Save to public
+		sm.old_value = curr;
 	}
+	else
+	{
+		ushort t_val_p = 0;
+		ushort t_val_r = 0;
+		ushort f_volts = 0;
+		ushort r_volts = 0;
 
-	ushort s_val = curr * 10;
-	//ushort s_sta = (curr * 10) - 20;	// moving dot
-	ushort s_sta = 0;					// progress bar
+		// Forward voltage on the bridge
+		f_volts = adc_read_fwd_power();
+		if(f_volts == 0xFFFF)
+		{}//sprintf(buf, "FWD %d.%dV", 0, 0);
+		else
+		{
+			//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
+			printf("%4dmV(fwd) \r\n", f_volts);
 
+			// Temp!
+			t_val_p = f_volts/10;
+		}
+
+		// Forward voltage on the bridge
+		r_volts = adc_read_ref_power();
+		if(r_volts == 0xFFFF)
+		{}//sprintf(buf, "FWD %d.%dV", 0, 0);
+		else
+		{
+			//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
+			printf("%4dmV(ref) \r\n", r_volts);
+
+			// Temp!
+			t_val_r = r_volts/10;
+		}
+
+		// Limiter Power
+		if(t_val_p > S_METER_MAX)
+			t_val_p = S_METER_MAX;
+
+		// Limiter SWR
+		if(t_val_r > S_METER_MAX)
+			t_val_r = S_METER_MAX;
+
+		// Mask old Power progress
+		GUI_SetColor(GUI_DARKGRAY);
+		GUI_FillRoundedRect((S_METER_X + 10),
+							(S_METER_Y + S_METER_SY + 50),
+							(S_METER_X + 10 + S_METER_MAX),
+							(S_METER_Y + S_METER_SY + 57),
+							2);
+
+		// Repaint new Power progress
+		GUI_SetColor(GUI_LIGHTGREEN);
+		GUI_FillRoundedRect((S_METER_X + 10 + 0),
+							(S_METER_Y + S_METER_SY + 50),
+							(S_METER_X + (10 + t_val_r)),	// swapped! ToDo: need proper impl
+							(S_METER_Y + S_METER_SY + 57),
+							2);
+
+		// Mask old SWR progress
+		GUI_SetColor(GUI_DARKGRAY);
+		GUI_FillRoundedRect((S_METER_X + 10),
+							(S_METER_Y + S_METER_SY + 70),
+							(S_METER_X + 10 + S_METER_MAX),
+							(S_METER_Y + S_METER_SY + 77),
+							2);
+
+		// Repaint new SWR progress
+		GUI_SetColor(GUI_LIGHTGREEN);
+		GUI_FillRoundedRect((S_METER_X + 10 + 0),
+							(S_METER_Y + S_METER_SY + 70),
+							(S_METER_X + (10 + t_val_p)),	// swapped! ToDo: need proper impl
+							(S_METER_Y + S_METER_SY + 77),
+							2);
+
+	}
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : ui_controls_smeter_digital_init
+//* Object              :
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static void ui_controls_smeter_digital_init(void)
+{
+	// Reset
+	sm.loc_tx_state = UNDEF_TX_STATE;
+
+	// Frame
+	GUI_SetColor(GUI_DARKCYAN);
+	GUI_DrawRoundedFrame(	(S_METER_X - S_METER_FRAME_LEFT),
+							(S_METER_Y - S_METER_FRAME_TOP),
+							(bmscale.XSize + S_METER_X + S_METER_FRAME_RIGHT),
+							(bmscale.YSize + S_METER_Y + S_METER_FRAME_BOTTOM),
+							S_METER_FRAME_CURVE,
+							S_METER_FRAME_WIDTH);
+
+	// Top/Mid/Bottom background
 	GUI_SetColor(GUI_DARKGRAY);
-	GUI_FillRoundedRect((S_METER_X + 10),  (S_METER_Y + S_METER_SY + 30),(S_METER_X + 10 + S_METER_MAX), (S_METER_Y + S_METER_SY + 37), 2);
+	GUI_FillRoundedRect((S_METER_X + 10),
+						(S_METER_Y + S_METER_SY + 10),
+						(S_METER_X + 10 + S_METER_MAX),
+						(S_METER_Y + S_METER_SY + 17),
+						2);
 
-	GUI_SetColor(GUI_LIGHTGREEN);
-	GUI_FillRoundedRect((S_METER_X + 10 + s_sta),  (S_METER_Y + S_METER_SY + 30),(S_METER_X + (10 + s_val)), (S_METER_Y + S_METER_SY + 37), 2);
+	GUI_FillRoundedRect((S_METER_X + 10),
+						(S_METER_Y + S_METER_SY + 50),
+						(S_METER_X + 10 + S_METER_MAX),
+						(S_METER_Y + S_METER_SY + 57),
+						2);
 
-	// Save to public
-	sm.old_value = curr;
+	GUI_FillRoundedRect((S_METER_X + 10),
+						(S_METER_Y + S_METER_SY + 70),
+						(S_METER_X + 10 + S_METER_MAX),
+						(S_METER_Y + S_METER_SY + 77), 2);
+
+	// Initial paint of actual values
+	ui_controls_smeter_panels_refresh();
+	ui_controls_smeter_digital_refresh();
 }
 
 //*----------------------------------------------------------------------------
@@ -718,6 +808,14 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 		//--ui_controls_smeter_block_on();
 		return;
 	}
+
+	// Always repaint on RX/TX change
+	if(!tsu.smet_type)
+		ui_controls_smeter_panels_refresh();
+
+	// Nothing changed, skip repaint
+	if((sm.old_value == ui_sw.sm_value)&&(!tsu.rxtx))
+		return;
 
 	if(!tsu.smet_type)
 		ui_controls_smeter_digital_refresh();

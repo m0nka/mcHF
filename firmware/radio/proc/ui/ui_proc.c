@@ -866,12 +866,14 @@ static void ui_proc_periodic(void)
 
 	//--on_screen_keyboard_refresh();	// will not allow transparent dialog with moving background
 
+	ui_controls_smeter_refresh  (ui_proc_cb_sm);
+
 	// For now, no repaint while TX and CW keyer on screen
 	if((tsu.rxtx) && (tsu.band[tsu.curr_band].demod_mode == DEMOD_CW)) // && keyer shown
 		return;
 
 	ui_controls_spectrum_refresh(ui_proc_cb);
-	ui_controls_smeter_refresh  (ui_proc_cb_sm);
+	//--ui_controls_smeter_refresh  (ui_proc_cb_sm);
 
 	#ifdef CONTEXT_BMS
 	on_screen_power_refresh();
