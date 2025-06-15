@@ -16,7 +16,11 @@
 
 #include "GUI.h"
 
+//#define USE_SPRITE
+
 #define SMETER_EXPAND_VALUE		3
+
+#define UNDEF_TX_STATE			10
 
 // S-meter public
 __attribute__((__common__)) struct S_METER {
@@ -25,12 +29,17 @@ __attribute__((__common__)) struct S_METER {
 	int 	old_value;
 	int 	skip;
 	int 	init_done;
-	uchar	smet_disabled;		// disabled from UI menu(var in eeprom)
+
 	ulong 	repaints;
+
+	uchar	smet_disabled;		// disabled from UI menu(var in eeprom)
 	uchar 	use_bmp;
 	uchar	is_peak;
 	uchar	rotary_block;		// s-meter refresh request from rotary driver (while moving dial)
+
 	ushort	rotary_timer;		// how long to block refresh for
+	uchar loc_tx_state;
+
 
 } S_METER;
 
