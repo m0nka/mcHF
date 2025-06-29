@@ -391,9 +391,9 @@ static void ui_controls_smeter_analogue_refresh(FAST_REFRESH *cb)
 
 	curr = ui_sw.sm_value;	// calc by DSP
 
-	// Nothing change, skip repaint
-	//if(sm.old_value == curr)
-	//	return;
+	//
+	// ToDo: Implement TX mode...
+	//
 
 	// Expand scale
 	expanded = curr*SMETER_EXPAND_VALUE;
