@@ -188,7 +188,7 @@ ClassGenCCAutoRoomEnabled=1
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
-DocumentUniqueId=
+DocumentUniqueId=DJGYJSPN
 
 [Document10]
 DocumentPath=..\libs\pcb\__ui.PcbLib
@@ -366,7 +366,7 @@ GlobalBookmarks=0
 ExportBOM=0
 TemplateFilename=Board Stack Report.XLT
 TemplateStoreRelative=-1
-PrintQuality=-4
+PrintQuality=-3
 SCH_ShowBlankets=0
 SCH_NoERCSymbolsToShow="Thin Cross","Thick Cross","Small Cross",Checkbox,Triangle
 SCH_ShowNote=-1
