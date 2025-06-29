@@ -489,9 +489,6 @@ void codec_hw_init(void)
 	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
 	HAL_GPIO_Init(RFM_DIO2_PORT, &gpio_init_structure);
 
-	// Power off
-	HAL_GPIO_WritePin(RFM_DIO2_PORT, RFM_DIO2, GPIO_PIN_SET);
-
 	// 5V on is PG10 - done in bsp.c
 	//gpio_init_structure.Pin   = GPIO_PIN_10;
 	//HAL_GPIO_Init(GPIOG, &gpio_init_structure);

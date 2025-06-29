@@ -163,6 +163,7 @@ static void btm_proc_task(void *arg)
 {
 	uchar old_bt_state = 0;
 	uchar new_bt_state;
+	uchar loc_bt_enabled = 0xFF;
 
 	for(;;)
 	{
@@ -184,6 +185,18 @@ static void btm_proc_task(void *arg)
 				HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);	// unmute
 			}
 			old_bt_state = new_bt_state;
+		}
+
+		// Change BT module power state
+		if(tsu.bt_enabled != loc_bt_enabled)
+		{
+			// Power state update
+			if(tsu.bt_enabled)
+				HAL_GPIO_WritePin(RFM_DIO2_PORT, RFM_DIO2, GPIO_PIN_RESET);
+			else
+				HAL_GPIO_WritePin(RFM_DIO2_PORT, RFM_DIO2, GPIO_PIN_SET);
+
+			loc_bt_enabled = tsu.bt_enabled;
 		}
 
 		// Yield execution

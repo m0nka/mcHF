@@ -30,6 +30,9 @@ extern struct	UI_DRIVER_STATE			ui_s;
 extern 			TaskHandle_t 			hUiTask;
 extern struct 	UI_LORA_STATE 			uls;
 
+// Public radio state
+extern struct	TRANSCEIVER_STATE_UI	tsu;
+
 // Menu layout definitions from Flash
 extern const struct UIMenuLayout menu_layout[];
 
@@ -39,7 +42,7 @@ static void KillLora(void);
 K_ModuleItem_Typedef  lora =
 {
   2,
-  "LoRaWAN",
+  "GHz Radios",
   &bmheliumhntlogo,
   Startup,
   NULL,
@@ -54,6 +57,7 @@ WM_HWIN   	hLdialog;
 #define ID_BUTTON_UI_RESET		  	(GUI_ID_USER + 0x02)
 //#define ID_BUTTON_DSP_RESET		  	(GUI_ID_USER + 0x03)
 //#define ID_BUTTON_EEP_RESET		  	(GUI_ID_USER + 0x04)
+#define ID_CHECKBOX_0				(GUI_ID_USER + 0x03)
 
 static const GUI_WIDGET_CREATE_INFO _aDialog[] = 
 {
@@ -68,6 +72,9 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 	{ BUTTON_CreateIndirect, 	"LORA TX",		 		ID_BUTTON_UI_RESET,		40, 	40, 	120, 	45, 	0, 		0x0, 	0 },
 	//{ BUTTON_CreateIndirect, 	"Power OFF",		 	ID_BUTTON_DSP_RESET,	40, 	120, 	120, 	45, 	0, 		0x0, 	0 },
 	//{ BUTTON_CreateIndirect, 	"Kill Backup",	 		ID_BUTTON_EEP_RESET,	40, 	200, 	120, 	45, 	0, 		0x0, 	0 },
+
+	// Check boxes
+	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_0, 		20, 	260,	250, 	30, 	0, 		0x0, 	0 },
 
 	{ TEXT_CreateIndirect, 		"OFF",					GUI_ID_TEXT0,			180,	40,		120, 	45,  	0, 		0x0,	0 },
 };
@@ -108,13 +115,38 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 					printf("...Lora TX\r\n");
 
 					// ToDo: Fix messaging between tasks!
-					uchar s_r = ui_actions_ipc_msg(1, 8, NULL);
-					vTaskDelay(100);
-					uchar w_r = ui_actions_ipc_msg(0, 8, NULL);
+					//uchar s_r = ui_actions_ipc_msg(1, 8, NULL);
+					//vTaskDelay(100);
+					//uchar w_r = ui_actions_ipc_msg(0, 8, NULL);
 
 					break;
 				}
 			}
+			break;
+		}
+
+		// ------------------------------------------------------------
+		//
+		case ID_CHECKBOX_0:
+		{
+			switch(NCode)
+		    {
+				case WM_NOTIFICATION_CLICKED:
+					break;
+				case WM_NOTIFICATION_RELEASED:
+					break;
+				case WM_NOTIFICATION_VALUE_CHANGED:
+				{
+					hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_0);
+
+					// Save state, switch will be done by the bt task in audio.c
+					tsu.bt_enabled = CHECKBOX_GetState(hItem);
+
+					break;
+				}
+				default:
+					break;
+		    }
 			break;
 		}
 
@@ -178,7 +210,15 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 	switch (pMsg->MsgId)
 	{
 		case WM_INIT_DIALOG:
+		{
+			// Init Checkbox
+			hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_0);
+			CHECKBOX_SetFont(hItem,&GUI_Font16_1);
+			CHECKBOX_SetText(hItem, "Enable BT Audio");
+			CHECKBOX_SetState(hItem, tsu.bt_enabled);
+
 			break;
+		}
 
 		case WM_PAINT:
 		{

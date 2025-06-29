@@ -330,17 +330,18 @@ static void ui_controls_spectrum_decide_bandpass(void)
 static void ui_controls_spectrum_show_centre_freq(void)
 {
 	char buf[30];
+	ulong freq = tsu.band[tsu.curr_band].vfo_a;
 
 	if(!tsu.band[tsu.curr_band].fixed_mode)
 		return;
 
 	GUI_SetAlpha(88);						// Alpha is inverted!!!
 	GUI_SetFont(&GUI_Font24B_ASCII);
-	GUI_SetColor(GUI_MAGENTA);
+	GUI_SetColor(HOT_PINK);
 
-	sprintf(buf,"%dHz", (int)tsu.band[tsu.curr_band].vfo_a);
+	sprintf(buf,"%d.%03d.%03d", (int)(freq/1000000), (int)((freq%1000000)/1000), (int)((freq%1000)/1));
 
-	GUI_DispStringAt(buf, ((SW_FRAME_X + SPECTRUM_MID_POINT) - 47),(SCOPE_Y + 27));
+	GUI_DispStringAt(buf, ((SW_FRAME_X + SPECTRUM_MID_POINT) - 47), (SCOPE_Y + 19));
 	GUI_SetAlpha(255);
 }
 
@@ -501,19 +502,21 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 				);
 
 	// Draw horizontal grid lines
-	#if 0
+	#if 1
 	GUI_SetColor(GUI_DARKGRAY);
-	for (i = 0; i < 7; i++)
-		GUI_DrawHLine(((SCOPE_Y + SCOPE_Y_SIZE - 2) - (i * 16)),(sb.x + SW_FRAME_WIDTH),(sb.x + SW_FRAME_X_SIZE - 2));
-
+	for (i = 0; i < 5; i++)
+	{
+		GUI_DrawHLine(((SCOPE_Y + SCOPE_Y_SIZE - 2) - (i * 23)),(sb.x + 4),(sb.x + SW_FRAME_X_SIZE - 4));
+	}
 	#endif
 
 	// Draw vertical grid lines
-	#if 0
+	#if 1
 	GUI_SetColor(GUI_DARKGRAY);
 	for (i = 0; i < 7; i++)
+	{
 	    GUI_DrawVLine((43 + i*128), SCOPE_Y, (SCOPE_Y + SCOPE_Y_SIZE - 2));
-
+	}
 	#endif
 
 	// Draw bars
@@ -529,9 +532,13 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 		new_x = chk_x(((SW_FRAME_X + SW_FRAME_WIDTH) + i));
 		new_y = chk_y(SCOPE_Y + SCOPE_Y_SIZE - val);
 
-		// Alpha is inverted!!!
+		// Gradient vertical line
 		#if 1
+		GUI_DrawGradientV(new_x, new_y, new_x, chk_y(SCOPE_Y + SCOPE_Y_SIZE), GUI_LIGHTRED, GUI_LIGHTGREEN);
+		#endif
+
 		// Print vertical line for each point, transparent, to fill the spectrum
+		#if 0
 		GUI_SetColor(GUI_WHITE);
 		GUI_SetAlpha(128);
 		GUI_DrawVLine(new_x, new_y, chk_y(SCOPE_Y + SCOPE_Y_SIZE));
@@ -1046,20 +1053,21 @@ static void ui_controls_create_bottom_bar(void)
 	int i,j,x0,y0,FontSizeY;
 
 
-	return;
+	//return;
 
 
 	// Bottom divider below waterfall
-	GUI_SetColor(GUI_BLACK);
+	//GUI_SetColor(GUI_DARKGRAY);
 	//GUI_DrawHLine((WATERFALL_Y + WATERFALL_Y_SIZE), ((SW_FRAME_X + SW_FRAME_WIDTH) + SW_FRAME_WIDTH),((SW_FRAME_X + SW_FRAME_WIDTH) + WATERFALL_X_SIZE - SW_FRAME_WIDTH));
-	GUI_FillRect((SW_FRAME_X + SW_FRAME_WIDTH),
-				 (WATERFALL_Y + WATERFALL_Y_SIZE),
-				 (SW_FRAME_X + SW_FRAME_WIDTH + WATERFALL_X_SIZE),
-				 (WATERFALL_Y + WATERFALL_Y_SIZE) + 17);
+	GUI_DrawGradientH((SW_FRAME_X + SW_FRAME_WIDTH),
+				 	 (WATERFALL_Y + WATERFALL_Y_SIZE),
+					 (SW_FRAME_X + SW_FRAME_WIDTH + WATERFALL_X_SIZE),
+					 (WATERFALL_Y + WATERFALL_Y_SIZE) + 17,
+					 GUI_DARKGRAY, GUI_GRAY		);
 
 	// Bottom Frequency Span markers
 	GUI_SetFont(&GUI_Font8x16_1);
-	GUI_SetColor(GUI_GRAY);
+	//GUI_SetColor(GUI_BLACK);
 	FontSizeY = GUI_GetFontSizeY();
 
 	int sm;
@@ -1094,11 +1102,15 @@ static void ui_controls_create_bottom_bar(void)
 	    else
 	    	GUI_DispDecMin(v);
 		#else
+	    GUI_SetColor(GUI_WHITE);
 	    GUI_DispDecMin(v);
 	    #endif
 
 	    // line markers above digits
+	    GUI_SetColor(HOT_PINK);
+	    GUI_DrawVLine((x0 + 6),(y0 - 4),(y0 - 1));
 	    GUI_DrawVLine((x0 + 7),(y0 - 4),(y0 - 1));
+	    GUI_DrawVLine((x0 + 8),(y0 - 4),(y0 - 1));
 	}
 }
 
@@ -1218,8 +1230,8 @@ void ui_controls_spectrum_refresh(FAST_REFRESH *cb)
 			if(ui_sw.updated)
 			{
 				ui_controls_spectrum_fft_process_big();
-				ui_controls_spectrum_repaint_big(cb);
-				ui_controls_spectrum_wf_repaint_big(cb); // - super laggy
+				if(tsu.sc_enabled) ui_controls_spectrum_repaint_big(cb);
+				if(tsu.wf_enabled) ui_controls_spectrum_wf_repaint_big(cb); // - super laggy
 				ui_sw.updated = 0;
 			}
 			break;

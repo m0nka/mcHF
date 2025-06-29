@@ -393,6 +393,10 @@ __attribute__((__common__)) struct TRANSCEIVER_STATE_UI {
 	// and even smaller, zoomed in chunks of spectrum
 	uchar	use_full_span;
 
+	uchar	bt_enabled;
+	uchar	sc_enabled;
+	uchar	wf_enabled;
+
 	// Always align last member!
 
 } TRANSCEIVER_STATE_UI;

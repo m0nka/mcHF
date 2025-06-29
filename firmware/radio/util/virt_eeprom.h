@@ -25,6 +25,7 @@
 #define	EEP_SMET_TYPE				0x008
 #define	EEP_AGC_MODE				0x009
 #define	EEP_RF_GAIN					0x00A
+#define	EEP_BT_ON					0x00B
 //
 #define	EEP_BANDS					0xE10		// pos 3600, band info, 400 bytes
 
