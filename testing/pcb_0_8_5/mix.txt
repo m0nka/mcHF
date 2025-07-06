@@ -4,6 +4,6 @@
 [-] add damping resistors on the attenuator data lines
 [-] move BPF here
 [-] atten before BPF
-- use u.fl connectors to RF board
+[-] use u.fl connectors to RF board
 - J2MIX footprint needs extended pads for easier hand soldering
-- add metal cans to modules
+[-] add metal cans to modules
