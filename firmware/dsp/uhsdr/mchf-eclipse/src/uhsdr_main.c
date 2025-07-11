@@ -440,7 +440,6 @@ int mchfMain(void)
 
     Board_RedLed(LED_STATE_OFF);
 
-
     // Transceiver main loop
     for(;;)
     {

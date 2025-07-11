@@ -81,6 +81,11 @@
 			<locationURI>copy_PARENT/mchf-eclipse/misc/uhsdr_math.c</locationURI>
 		</link>
 		<link>
+			<name>mchf-eclipse/src/syscalls.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/src/syscalls.c</locationURI>
+		</link>
+		<link>
 			<name>mchf-eclipse/src/uhsdr_main.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT/mchf-eclipse/src/uhsdr_main.c</locationURI>
