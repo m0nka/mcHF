@@ -530,6 +530,11 @@ uint8_t bsp_config(void)
 	printf("----------------------------------------------  \r\n");
 	printf("-->%s v: %d.%d.%d\r\n", DEVICE_STRING, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE, MCHF_R_VER_BUILD);
 
+	#if 1
+	printf("== allow m4 core to take control == \r\n");
+	while(1);
+	#endif
+
 	power_cntr_init();
 
 	ptt_init();
