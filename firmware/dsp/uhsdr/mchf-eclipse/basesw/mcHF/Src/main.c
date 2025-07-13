@@ -32,11 +32,52 @@ void MX_USB_HOST_Process(void);
 
 #endif
 
+#ifdef H7_M4_CORE
+
+void SysTick_Handler(void)
+{
+	HAL_IncTick();
+}
+static void stall_core_and_wait(void)
+{
+	// HW semaphore Clock enable
+	__HAL_RCC_HSEM_CLK_ENABLE();
+
+	// HW semaphore Notification enable
+	HAL_HSEM_ActivateNotification(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
+
+	// When system initialization is finished, Cortex-M7 will release Cortex-M4  by means of
+	//  HSEM notification
+	HAL_PWREx_ClearPendingEvent();
+	HAL_PWREx_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFE, PWR_D2_DOMAIN);
+
+	HAL_Init();
+
+	// Clear Flags generated during the wakeup notification
+	HSEM_COMMON->ICR |= ((uint32_t)__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
+	HAL_NVIC_ClearPendingIRQ(HSEM2_IRQn);
+}
+#endif
+
+static void led_init(void)
+{
+	GPIO_InitTypeDef  GPIO_InitStruct;
+
+	__HAL_RCC_GPIOF_CLK_ENABLE();
+
+	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull  = GPIO_PULLDOWN;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+	GPIO_InitStruct.Pin   = GPIO_PIN_6;
+	HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+}
+
 //
 // ToDo: [1]. change startup file
 //		 [2]. replace HAL and LL
 //		 [3]. adjust linker script
-//		 4. add core notifications
+//		 [4]. add core notifications
 //		 5. add debug print
 //
 int main(void)
@@ -46,17 +87,15 @@ int main(void)
     //  we need to do this as early as possible
 	#endif
 
+    // Wait core notification
 	#ifdef H7_M4_CORE
-    // Stall, wait core notification...
-    // ToDo: ..
+	stall_core_and_wait();
 	#endif
-
-    // For now..
-    HAL_Init();
 
     // Clock init already done by M7 core
 	#ifndef H7_M4_CORE
-    HAL_RCC_DeInit();
+	HAL_Init();
+	HAL_RCC_DeInit();
     SystemClock_Config();
 	#endif
 
@@ -87,6 +126,7 @@ int main(void)
 	#ifdef H7_M4_CORE
     // ... driver specific init
     // ToDo: ...
+    led_init();
 	#endif
 
     #if defined(USE_USBHOST) || defined(BOOTLOADER_BUILD)
@@ -102,7 +142,11 @@ int main(void)
 
 	#ifndef BOOTLOADER_BUILD
 //!    mchfMain();
-    while(1);
+    while(1)
+    {
+    	HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_6);
+    	HAL_Delay(1000);
+    }
 	#else
     while (1)
     {

@@ -518,6 +518,23 @@ static void MX_CRC_Init(void)
 }
 #endif
 
+static ulong bsp_wake_second_core(void)
+{
+	int32_t timeout = 0xFFFF;
+
+	HAL_HSEM_FastTake(HSEM_ID_0);
+
+	// Release HSEM in order to notify the CPU2(CM4)
+	HAL_HSEM_Release(HSEM_ID_0, 0);
+
+	// wait until CPU2 wakes up from stop mode
+	while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) == RESET) && (timeout-- > 0));
+	if(timeout < 0)
+		return 1;
+
+	return 0;
+}
+
 uint8_t bsp_config(void)
 {
 	//LL_GPIO_InitTypeDef 		GPIO_InitStruct = {0};
@@ -530,7 +547,9 @@ uint8_t bsp_config(void)
 	printf("----------------------------------------------  \r\n");
 	printf("-->%s v: %d.%d.%d\r\n", DEVICE_STRING, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE, MCHF_R_VER_BUILD);
 
+	// Useful during ushdr port
 	#if 1
+	bsp_wake_second_core();
 	printf("== allow m4 core to take control == \r\n");
 	while(1);
 	#endif
