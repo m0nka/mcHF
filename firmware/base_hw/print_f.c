@@ -11,11 +11,17 @@
 **  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 
-#ifndef DSP_CORE
+#ifdef RADIO
 #include "mchf_pro_board.h"
 #include "main.h"
-#else
+#endif
+
+#ifdef DSP_CORE
 #include "mchf_board.h"
+#endif
+
+#ifdef BASEBAND
+#include "mchf_types.h"
 #endif
 
 #ifdef DSP_CORE
@@ -23,6 +29,11 @@
 
 #include "stm32h7xx_hal.h"
 #include "stm32h747i_discovery.h"
+#endif
+
+#ifdef BASEBAND
+#include "mchf_icc_def.h"
+#include "stm32h7xx_hal.h"
 #endif
 
 #include <stdio.h>
@@ -52,13 +63,20 @@ UART_HandleTypeDef 	DEBUG_UART_Handle;
 #endif
 uchar				share_port  = 0;
 
-#ifndef DSP_CORE
+
 #ifdef BOOTLOADER
 const char 			cpu_id_str[] = "b:";
-#else
+#endif
+
+#ifdef RADIO
 const char 			cpu_id_str[] = "r:";
 #endif
-#else
+
+#ifdef DSP_CORE
+const char 			cpu_id_str[] = "d:";
+#endif
+
+#ifdef BASEBAND
 const char 			cpu_id_str[] = "d:";
 #endif
 

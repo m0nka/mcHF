@@ -13,6 +13,11 @@
 #define HSEM_ID_0           0 			// CM7 to CM4 Notification
 #define HSEM_ID_1           1 			// CM4 to CM7 Notification
 
+#define	MCHF_D_VER_MAJOR			0
+#define	MCHF_D_VER_MINOR			2
+#define	MCHF_D_VER_RELEASE			12
+#define	MCHF_D_VER_BUILD			4
+
 #endif
 
 /* Private define ------------------------------------------------------------*/

@@ -38,6 +38,7 @@ void SysTick_Handler(void)
 {
 	HAL_IncTick();
 }
+
 static void stall_core_and_wait(void)
 {
 	// HW semaphore Clock enable
@@ -51,14 +52,12 @@ static void stall_core_and_wait(void)
 	HAL_PWREx_ClearPendingEvent();
 	HAL_PWREx_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFE, PWR_D2_DOMAIN);
 
-	HAL_Init();
-
 	// Clear Flags generated during the wakeup notification
 	HSEM_COMMON->ICR |= ((uint32_t)__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
 	HAL_NVIC_ClearPendingIRQ(HSEM2_IRQn);
 }
-#endif
 
+#if 0
 static void led_init(void)
 {
 	GPIO_InitTypeDef  GPIO_InitStruct;
@@ -72,13 +71,25 @@ static void led_init(void)
 	GPIO_InitStruct.Pin   = GPIO_PIN_6;
 	HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 }
+#endif
+
+static void debug_enable(void)
+{
+	// Init debug print in shared mode
+	printf_init(1);
+
+	HAL_Delay(50);
+	printf("-->%s v: %d.%d.%d\r\n", "mcHF Baseband", MCHF_D_VER_MINOR, MCHF_D_VER_RELEASE, MCHF_D_VER_BUILD);
+}
+
+#endif
 
 //
 // ToDo: [1]. change startup file
 //		 [2]. replace HAL and LL
 //		 [3]. adjust linker script
 //		 [4]. add core notifications
-//		 5. add debug print
+//		 [5]. add debug print
 //
 int main(void)
 {
@@ -90,6 +101,8 @@ int main(void)
     // Wait core notification
 	#ifdef H7_M4_CORE
 	stall_core_and_wait();
+	HAL_Init();
+	debug_enable();
 	#endif
 
     // Clock init already done by M7 core
@@ -126,7 +139,7 @@ int main(void)
 	#ifdef H7_M4_CORE
     // ... driver specific init
     // ToDo: ...
-    led_init();
+    //led_init();
 	#endif
 
     #if defined(USE_USBHOST) || defined(BOOTLOADER_BUILD)

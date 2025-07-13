@@ -26,6 +26,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>mchf-eclipse/base_hw/print_f.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/base_hw/print_f.c</locationURI>
+		</link>
+		<link>
 			<name>mchf-eclipse/hardware/uhsdr_board.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT1/mchf-eclipse/hardware/uhsdr_board.c</locationURI>
