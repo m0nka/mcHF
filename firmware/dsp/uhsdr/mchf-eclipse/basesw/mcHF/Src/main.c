@@ -1,46 +1,4 @@
-/**
-  ******************************************************************************
-  * File Name          : main.c
-  * Description        : Main program body
-  ******************************************************************************
-  *
-  * Copyright (c) 2017 STMicroelectronics International N.V. 
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without 
-  * modification, are permitted, provided that the following conditions are met:
-  *
-  * 1. Redistribution of source code must retain the above copyright notice, 
-  *    this list of conditions and the following disclaimer.
-  * 2. Redistributions in binary form must reproduce the above copyright notice,
-  *    this list of conditions and the following disclaimer in the documentation
-  *    and/or other materials provided with the distribution.
-  * 3. Neither the name of STMicroelectronics nor the names of other 
-  *    contributors to this software may be used to endorse or promote products 
-  *    derived from this software without specific written permission.
-  * 4. This software, including modifications and/or derivative works of this 
-  *    software, must execute solely and exclusively on microcontroller or
-  *    microprocessor devices manufactured by or for STMicroelectronics.
-  * 5. Redistribution and use of this software other than as permitted under 
-  *    this license is void and will automatically terminate your rights under 
-  *    this license. 
-  *
-  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
-  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
-  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
-  * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
-  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
-  * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
-  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  ******************************************************************************
-  */
-/* Includes ------------------------------------------------------------------*/
+
 #include "main.h"
 #include "stm32f4xx_hal.h"
 #include "adc.h"
@@ -57,27 +15,9 @@
 #include "gpio.h"
 #include "fsmc.h"
 
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
-/* Private variables ---------------------------------------------------------*/
-
-/* USER CODE BEGIN PV */
-/* Private variables ---------------------------------------------------------*/
-
-/* USER CODE END PV */
-
-/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void Error_Handler(void);
 
-/* USER CODE BEGIN PFP */
-/* Private function prototypes -----------------------------------------------*/
-
-/* USER CODE END PFP */
-
-/* USER CODE BEGIN 0 */
 #ifdef BOOTLOADER_BUILD
 void MX_USB_HOST_Process(void);
 #include "bootloader/bootloader_main.h"
@@ -86,78 +26,84 @@ void MX_USB_HOST_Process(void);
 #include "uhsdr_main.h"
 
 #endif
-/* USER CODE END 0 */
 
+//
+// ToDo: 1. change startup file
+//		 2. replace HAL and LL
+//		 3. adjust linker script
+//		 4. add core notifications
+//		 5. add debug print
+//
 int main(void)
 {
-
-  /* USER CODE BEGIN 1 */
-#ifdef BOOTLOADER_BUILD
+	#ifdef BOOTLOADER_BUILD
     Bootloader_CheckAndGoForBootTarget();
-  //  we need to do this as early as possible
-#endif
-  /* USER CODE END 1 */
+    //  we need to do this as early as possible
+	#endif
 
-  /* MCU Configuration----------------------------------------------------------*/
+	#ifdef H7_M4_CORE
+    // Stall, wait core notification...
+    // ToDo: ..
+	#endif
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+    HAL_Init();
+    HAL_RCC_DeInit();
 
-  HAL_RCC_DeInit();
+    // Clock init already done by M7 core
+	#ifndef H7_M4_CORE
+    SystemClock_Config();
+	#endif
 
-  /* Configure the system clock */
-  SystemClock_Config();
+	#ifdef BOOTLOADER_BUILD
+    Bootloader_Main();
+	#endif
 
-  /* Initialize all configured peripherals */
+    // Initialize all configured peripherals
+	#if !defined(BOOTLOADER_BUILD) && !defined(H7_M4_CORE)
+    MX_GPIO_Init();
+    MX_DMA_Init();
+    MX_ADC1_Init();
+    MX_ADC2_Init();
+    MX_ADC3_Init();
+    MX_DAC_Init();
+    MX_I2C1_Init();
+    MX_I2C2_Init();
+    MX_I2S3_Init();
+    MX_RTC_Init();
+    MX_SPI2_Init();
+    MX_TIM3_Init();
+    MX_TIM5_Init();
+    MX_TIM8_Init();
+    MX_USB_DEVICE_Init();
+	#endif
 
-#ifdef BOOTLOADER_BUILD
-  Bootloader_Main();
-#else
-  MX_GPIO_Init();
-  MX_DMA_Init();
-  MX_ADC1_Init();
-  MX_ADC2_Init();
-  MX_ADC3_Init();
-  MX_DAC_Init();
-  MX_I2C1_Init();
-  MX_I2C2_Init();
-  MX_I2S3_Init();
-  MX_RTC_Init();
-  MX_SPI2_Init();
-  MX_TIM3_Init();
-  MX_TIM5_Init();
-  MX_TIM8_Init();
-  MX_USB_DEVICE_Init();
-#endif
-#if defined(USE_USBHOST) || defined(BOOTLOADER_BUILD)
-  MX_USB_HOST_Init();
-#if defined(USE_USBDRIVE) || defined(BOOTLOADER_BUILD)
-  MX_FATFS_Init();
-#endif  // MX_FSMC_Init();
-#endif
-#ifndef BOOTLOADER_BUILD
-  MX_TIM4_Init();
-#endif
-  /* USER CODE BEGIN 2 */
-#ifndef BOOTLOADER_BUILD
-   mchfMain();
-  /* USER CODE END 2 */
+    // Initialize all configured peripherals
+	#ifdef H7_M4_CORE
+    // ... driver specific init
+    // ToDo: ...
+	#endif
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-#else
-  while (1)
-  {
-  /* USER CODE END WHILE */
-    MX_USB_HOST_Process();
+    #if defined(USE_USBHOST) || defined(BOOTLOADER_BUILD)
+//!    MX_USB_HOST_Init();
+	#if defined(USE_USBDRIVE) || defined(BOOTLOADER_BUILD)
+    MX_FATFS_Init();
+	#endif  // MX_FSMC_Init();
+	#endif
 
-    /* USER CODE BEGIN 3 */
-    Bootloader_UsbHostApplication();
+    #ifndef BOOTLOADER_BUILD
+//!    MX_TIM4_Init();
+	#endif
 
-  }
-#endif
-  /* USER CODE END 3 */
-
+	#ifndef BOOTLOADER_BUILD
+//!    mchfMain();
+    while(1);
+	#else
+    while (1)
+    {
+    	MX_USB_HOST_Process();
+    	Bootloader_UsbHostApplication();
+    }
+	#endif
 }
 
 /** System Clock Configuration
@@ -264,17 +210,6 @@ void assert_failed(uint8_t* file, uint32_t line)
     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
     for(;;); // We stuck here as long as we do not have any debug interface...
   /* USER CODE END 6 */
-
 }
 
 #endif
-
-/**
-  * @}
-  */ 
-
-/**
-  * @}
-*/ 
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
