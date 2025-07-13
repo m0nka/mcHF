@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * @file           : usbd_conf.c
@@ -769,3 +770,4 @@ void  USBD_LL_Delay (uint32_t Delay)
   HAL_Delay(Delay);  
 }
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

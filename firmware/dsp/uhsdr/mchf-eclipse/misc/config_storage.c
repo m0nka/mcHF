@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
  **                                                                                 **
@@ -269,3 +270,4 @@ void ConfigStorage_CopySerial2Array(uint32_t Addr, uint8_t *buffer, uint16_t len
     }
 
 }
+#endif

@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
  ******************************************************************************
   * @file            : USB_HOST
@@ -77,3 +78,4 @@ void MX_USB_HOST_Process(void);
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

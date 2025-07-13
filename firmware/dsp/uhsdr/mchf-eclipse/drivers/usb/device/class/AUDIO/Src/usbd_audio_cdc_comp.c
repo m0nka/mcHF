@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * @file    usbd_audio.c
@@ -955,3 +956,4 @@ uint8_t  USBD_AUDIO_RegisterInterface  (USBD_HandleTypeDef   *pdev,
   */ 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

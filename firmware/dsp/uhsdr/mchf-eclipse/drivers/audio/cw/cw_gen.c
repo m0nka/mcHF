@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
  **                                                                                 **
@@ -1079,3 +1080,4 @@ void CwGen_DahIRQ(void)
 {
     CwGen_DitIRQ();
 }
+#endif

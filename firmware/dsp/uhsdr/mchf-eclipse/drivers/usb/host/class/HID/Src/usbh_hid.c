@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * @file    usbh_hid.c
@@ -822,3 +823,4 @@ __weak void USBH_HID_EventCallback(USBH_HandleTypeDef *phost)
 */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

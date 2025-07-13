@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : RTC.c
@@ -116,3 +117,4 @@ void HAL_RTC_MspDeInit(RTC_HandleTypeDef* rtcHandle)
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

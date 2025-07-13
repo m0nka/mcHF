@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * @file    stm32f4xx_it.c
@@ -461,3 +462,4 @@ void OTG_HS_IRQHandler(void)
 #endif
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

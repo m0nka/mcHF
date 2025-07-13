@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
 **                                                                                 **
@@ -594,3 +595,4 @@ bool Codec_ReadyForIrqCall()
 {
     return (CODEC_ANA_I2C->Lock == HAL_UNLOCKED) && (CODEC_IQ_I2C->Lock == HAL_UNLOCKED);
 }
+#endif

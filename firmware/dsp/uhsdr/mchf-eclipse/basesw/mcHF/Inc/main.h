@@ -49,14 +49,21 @@
 
 /* USER CODE END Includes */
 
-/* Private define ------------------------------------------------------------*/
+#ifdef H7_M4_CORE
+#include "stm32h7xx_hal.h"
+#include <stdio.h>
+#include <stdint.h>
+#endif
 
+/* Private define ------------------------------------------------------------*/
+#ifndef H7_M4_CORE
 #define BUTTON_PWR_Pin GPIO_PIN_13
 #define BUTTON_PWR_GPIO_Port GPIOC
 #define PADDLE_DAH_Pin GPIO_PIN_0
 #define PADDLE_DAH_GPIO_Port GPIOE
 #define PADDLE_DIT_Pin GPIO_PIN_1
 #define PADDLE_DIT_GPIO_Port GPIOE
+#endif
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

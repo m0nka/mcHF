@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * @file    usbh_ctlreq.c 
@@ -875,7 +876,7 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
 */ 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
+#endif
 
 
 

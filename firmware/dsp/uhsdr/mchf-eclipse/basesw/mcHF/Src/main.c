@@ -1,5 +1,7 @@
 
 #include "main.h"
+
+#ifndef H7_M4_CORE
 #include "stm32f4xx_hal.h"
 #include "adc.h"
 #include "dac.h"
@@ -14,6 +16,9 @@
 #include "usb_host.h"
 #include "gpio.h"
 #include "fsmc.h"
+#else
+//#include "stm32h7xx_hal.h"
+#endif
 
 void SystemClock_Config(void);
 void Error_Handler(void);
@@ -29,7 +34,7 @@ void MX_USB_HOST_Process(void);
 
 //
 // ToDo: [1]. change startup file
-//		 2. replace HAL and LL
+//		 [2]. replace HAL and LL
 //		 3. adjust linker script
 //		 4. add core notifications
 //		 5. add debug print
@@ -107,8 +112,7 @@ int main(void)
 	#endif
 }
 
-/** System Clock Configuration
-*/
+#ifndef H7_M4_CORE
 void SystemClock_Config(void)
 {
 
@@ -175,42 +179,19 @@ void SystemClock_Config(void)
   /* SysTick_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
+#endif
 
-/* USER CODE BEGIN 4 */
-
-/* USER CODE END 4 */
-
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @param  None
-  * @retval None
-  */
 void Error_Handler(void)
 {
-  /* USER CODE BEGIN Error_Handler */
-  /* User can add his own implementation to report the HAL error return state */
-  while(1) 
-  {
-  }
-  /* USER CODE END Error_Handler */ 
+	while(1)
+	{
+	}
 }
 
 #ifdef USE_FULL_ASSERT
-
-/**
-   * @brief Reports the name of the source file and the source line number
-   * where the assert_param error has occurred.
-   * @param file: pointer to the source file name
-   * @param line: assert_param error line source number
-   * @retval None
-   */
 void assert_failed(uint8_t* file, uint32_t line)
 {
-  /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-    ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-    for(;;); // We stuck here as long as we do not have any debug interface...
-  /* USER CODE END 6 */
+    for(;;);
 }
 
 #endif

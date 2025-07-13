@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : ADC.c
@@ -296,3 +297,4 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

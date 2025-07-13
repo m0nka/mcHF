@@ -200,7 +200,8 @@
 									<listOptionValue builtIn="false" value="../../../mchf-eclipse"/>
 									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Inc"/>
 									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Include"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Inc"/>
+									<listOptionValue builtIn="false" value="../../../../../STM32CubeH7/Drivers/CMSIS/Device/ST/STM32H7xx/Include"/>
+									<listOptionValue builtIn="false" value="../../../../../STM32CubeH7/Drivers/STM32H7xx_HAL_Driver/Inc"/>
 									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Include"/>
 									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Inc"/>
 									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Inc"/>
@@ -239,9 +240,12 @@
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="ARM_MATH_CM4"/>
 									<listOptionValue builtIn="false" value="_GNU_SOURCE"/>
-									<listOptionValue builtIn="false" value="CORTEX_M4"/>
-									<listOptionValue builtIn="false" value="STM32F407xx"/>
-									<listOptionValue builtIn="false" value="USE_FULL_ASSERT"/>
+									<listOptionValue builtIn="false" value="CORTEX_M4___"/>
+									<listOptionValue builtIn="false" value="CORE_CM4"/>
+									<listOptionValue builtIn="false" value="STM32F407xx__"/>
+									<listOptionValue builtIn="false" value="STM32H7"/>
+									<listOptionValue builtIn="false" value="STM32H747xx"/>
+									<listOptionValue builtIn="false" value="USE_FULL_ASSERT___"/>
 									<listOptionValue builtIn="false" value="__FPU_PRESENT=1U"/>
 									<listOptionValue builtIn="false" value="UI_BRD_MCHF"/>
 									<listOptionValue builtIn="false" value="RF_BRD_MCHF"/>

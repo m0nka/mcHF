@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : gpio.h
@@ -81,3 +82,4 @@ void MX_GPIO_Init(void);
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

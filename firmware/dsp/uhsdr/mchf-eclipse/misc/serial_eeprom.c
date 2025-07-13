@@ -11,7 +11,7 @@
  **  Last Modified:                                                                 **
  **  Licence:       GNU GPLv3                                                      **
  ************************************************************************************/
-
+#ifndef H7_M4_CORE
 // Common
 #include "uhsdr_board.h"
 #include "uhsdr_hw_i2c.h"
@@ -618,3 +618,4 @@ uint16_t SerialEEPROM_WriteVariable(uint16_t addr, uint16_t value)      // refer
 
     return SerialEEPROM_24Cxx_WriteBulk(addr*2, bytes, 2, ts.ser_eeprom_type);
 }
+#endif

@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : TIM.h
@@ -92,3 +93,4 @@ void MX_TIM8_Init(void);
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

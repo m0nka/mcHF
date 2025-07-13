@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : DAC.c
@@ -138,3 +139,4 @@ void HAL_DAC_MspDeInit(DAC_HandleTypeDef* dacHandle)
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

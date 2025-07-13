@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
  **                                                                                **
@@ -921,7 +922,7 @@ void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t
 
     // interpolation
 
-// TODO: at this point we have 128 real audio samples filtered and AGC´ed in the variable 	 (for mono modes)
+// TODO: at this point we have 128 real audio samples filtered and AGCï¿½ed in the variable 	 (for mono modes)
     // for stereo modes (not yet implemented), the other channel is in cob.q_buffer_convolution
 
     // now we have to make blocks of 32 samples out of that for further processing
@@ -1034,4 +1035,4 @@ void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t
 
 
 #endif
-
+#endif

@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : SPI.c
@@ -174,3 +175,4 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

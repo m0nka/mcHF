@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
 **                                                                                 **
@@ -4402,3 +4403,4 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
     *txt_ptr_ptr = txt_ptr;
     *clr_ptr = clr;
 }
+#endif

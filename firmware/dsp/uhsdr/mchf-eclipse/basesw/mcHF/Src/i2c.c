@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : I2C.c
@@ -199,3 +200,4 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

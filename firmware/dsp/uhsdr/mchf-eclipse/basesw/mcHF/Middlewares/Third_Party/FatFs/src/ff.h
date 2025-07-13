@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /*---------------------------------------------------------------------------/
 /  FatFs - FAT file system module include R0.11     (C)ChaN, 2015
 /----------------------------------------------------------------------------/
@@ -362,3 +363,4 @@ int ff_del_syncobj (_SYNC_t sobj);				/* Delete a sync object */
 #endif
 
 #endif /* _FATFS */
+#endif

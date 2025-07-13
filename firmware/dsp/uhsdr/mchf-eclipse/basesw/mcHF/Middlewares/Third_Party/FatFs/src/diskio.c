@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /*-----------------------------------------------------------------------*/
 /* Low level disk I/O module skeleton for FatFs     (C)ChaN, 2014        */
 /*                                                                       */
@@ -157,4 +158,4 @@ __weak DWORD get_fattime (void)
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
+#endif

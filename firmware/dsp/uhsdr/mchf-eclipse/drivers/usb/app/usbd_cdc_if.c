@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * @file           : usbd_cdc_if.c
@@ -469,3 +470,4 @@ static int8_t  CDC_SOF (USBD_HandleTypeDef *pdev)
 
     return USBD_OK;
 }
+#endif

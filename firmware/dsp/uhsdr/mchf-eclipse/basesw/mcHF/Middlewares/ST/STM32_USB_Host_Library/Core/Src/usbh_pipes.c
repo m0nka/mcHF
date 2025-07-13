@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * @file    usbh_pipes.c
@@ -200,5 +201,5 @@ static uint16_t USBH_GetFreePipe (USBH_HandleTypeDef *phost)
 */ 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
+#endif
 

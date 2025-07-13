@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   *  FatFs - FAT file system module configuration file  R0.11 (C)ChaN, 2015
@@ -311,3 +312,4 @@
 */
 
 #endif /* _FFCONF */
+#endif

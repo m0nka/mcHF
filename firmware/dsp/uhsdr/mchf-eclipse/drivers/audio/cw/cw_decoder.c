@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /************************************************************************************
  **                                                                                 **
  **                               UHSDR Firmware Project                            **
@@ -1104,4 +1105,4 @@ void CwDecoder_WpmDisplayUpdate(bool force_update)
 		UiLcdHy28_PrintText(ts.Layout->CW_DECODER_WPM.x, ts.Layout->CW_DECODER_WPM.y, WPM_str,White,Black,0);
 	}
 }
-
+#endif

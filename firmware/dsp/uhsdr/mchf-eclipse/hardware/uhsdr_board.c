@@ -1,3 +1,5 @@
+#ifndef H7_M4_CORE
+
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
 **                                                                                 **
@@ -757,3 +759,4 @@ bool Board_PttDahLinePressed() {
 bool Board_DitLinePressed() {
     return  !HAL_GPIO_ReadPin(PADDLE_DIT_PIO,PADDLE_DIT);
 }
+#endif

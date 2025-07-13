@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : FSMC.c
@@ -235,3 +236,4 @@ void HAL_SRAM_MspDeInit(SRAM_HandleTypeDef* sramHandle){
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

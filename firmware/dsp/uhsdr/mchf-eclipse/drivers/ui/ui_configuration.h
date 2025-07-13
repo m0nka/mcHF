@@ -15,7 +15,7 @@
 #ifndef DRIVERS_UI_UI_CONFIGURATION_H_
 #define DRIVERS_UI_UI_CONFIGURATION_H_
 #include "uhsdr_board.h"
-
+#ifndef H7_M4_CORE
 enum
 {
     ConfigEntry_Stop = 0,
@@ -620,5 +620,5 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 // need to modify virtual EEPROM routines otherwise system may crash
 
 #define EEPROM_KEYER_MEMORY_ADDRESS		0x1000
-
+#endif
 #endif /* DRIVERS_UI_UI_CONFIGURATION_H_ */

@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
  **                                                                                 **
@@ -327,3 +328,4 @@ bool SoftTcxo_HandleLoTemperatureDrift()
     }
     return retval;
 }
+#endif

@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : I2S.c
@@ -206,3 +207,4 @@ void HAL_I2S_MspDeInit(I2S_HandleTypeDef* i2sHandle)
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * @file    usbh_diskio.c 
@@ -299,4 +300,4 @@ DRESULT USBH_ioctl(BYTE lun, BYTE cmd, void *buff)
 #endif /* _USE_IOCTL == 1 */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
+#endif
