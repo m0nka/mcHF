@@ -12,7 +12,7 @@
 :: Main Board
 @SET MAIN_BOARD=-DISCO
 :: Hex filename
-@SET HEX_FILE="Debug/mchf-uhsdr.elf"
+@SET HEX_FILE="Release/mchf_baseband.elf"
 @IF NOT EXIST "%HEX_FILE%" @ECHO %HEX_FILE% Does not exist !! && GOTO goError
 
 :: Board ID
