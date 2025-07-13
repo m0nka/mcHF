@@ -35,7 +35,7 @@ void MX_USB_HOST_Process(void);
 //
 // ToDo: [1]. change startup file
 //		 [2]. replace HAL and LL
-//		 3. adjust linker script
+//		 [3]. adjust linker script
 //		 4. add core notifications
 //		 5. add debug print
 //
