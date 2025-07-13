@@ -28,7 +28,7 @@ void MX_USB_HOST_Process(void);
 #endif
 
 //
-// ToDo: 1. change startup file
+// ToDo: [1]. change startup file
 //		 2. replace HAL and LL
 //		 3. adjust linker script
 //		 4. add core notifications
@@ -46,11 +46,12 @@ int main(void)
     // ToDo: ..
 	#endif
 
+    // For now..
     HAL_Init();
-    HAL_RCC_DeInit();
 
     // Clock init already done by M7 core
 	#ifndef H7_M4_CORE
+    HAL_RCC_DeInit();
     SystemClock_Config();
 	#endif
 
