@@ -90,6 +90,7 @@ static void debug_enable(void)
 //		 [3]. adjust linker script
 //		 [4]. add core notifications
 //		 [5]. add debug print
+//		 6. remove isolation
 //
 int main(void)
 {

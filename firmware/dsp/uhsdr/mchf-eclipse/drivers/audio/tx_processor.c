@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /************************************************************************************
  **                                                                                 **
  **                                        UHSDR                                    **
@@ -1076,4 +1075,3 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
         }
     }
 }
-#endif

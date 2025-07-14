@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
  **                                                                                **
@@ -155,5 +154,4 @@ uint32_t DigiModes_TxBufferGetPrevConsumer( void )
 {
     return prev_consumer;
 }
-#endif
 #endif

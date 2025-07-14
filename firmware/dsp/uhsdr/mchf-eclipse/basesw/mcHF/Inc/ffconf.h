@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   *  FatFs - FAT file system module configuration file  R0.11 (C)ChaN, 2015
@@ -47,7 +46,12 @@
 /*-----------------------------------------------------------------------------/
 / Additional user header to be used  
 /-----------------------------------------------------------------------------*/
+#ifndef H7_M4_CORE
 #include "stm32f4xx_hal.h"
+#else
+#include "stm32h7xx_hal.h"
+#endif
+
 #include "usbh_core.h"
 #include "usbh_msc.h"
 
@@ -312,4 +316,3 @@
 */
 
 #endif /* _FFCONF */
-#endif

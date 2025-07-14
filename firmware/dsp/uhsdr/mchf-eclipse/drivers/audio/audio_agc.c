@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /************************************************************************************
  **                                                                                 **
  **                                        UHSDR                                    **
@@ -594,4 +593,3 @@ void AudioAgc_RunAgcWdsp(int16_t blockSize, float32_t (*agcbuffer)[AUDIO_BLOCK_S
         }
     }
 }
-#endif

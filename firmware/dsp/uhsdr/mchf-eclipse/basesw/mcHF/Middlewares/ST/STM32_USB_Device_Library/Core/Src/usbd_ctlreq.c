@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * @file    usbd_req.c
@@ -781,4 +780,3 @@ static uint8_t USBD_GetLen(uint8_t *buf)
   */ 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-#endif

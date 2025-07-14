@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /**
  ******************************************************************************
   * @file            : USB_HOST
@@ -140,4 +139,3 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-#endif

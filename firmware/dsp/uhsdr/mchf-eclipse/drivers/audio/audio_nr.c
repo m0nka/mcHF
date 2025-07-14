@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /************************************************************************************
  **                                                                                 **
  **                               UHSDR Firmware                                    **
@@ -2539,5 +2538,4 @@ memcpy(working_buffer,&working_buffer[NR_FFT_SIZE],(2*order + 2*PL) * sizeof(flo
 
 
 
-#endif
 #endif

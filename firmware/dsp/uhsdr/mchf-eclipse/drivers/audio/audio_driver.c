@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
  **                                                                                 **
@@ -3048,5 +3047,4 @@ void AudioDriver_I2SCallback(AudioSample_t *audio, IqSample_t *iq, AudioSample_t
     SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
 #endif
 }
-#endif
 

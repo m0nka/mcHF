@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
  **                                                                                **
@@ -11,6 +10,7 @@
  **  Licence:		GNU GPLv3                                                      **
  ************************************************************************************/
 
+#ifdef USE_CONVOLUTION
 #include "audio_convolution.h"
 #include "audio_driver.h"
 #include "arm_const_structs.h"
@@ -21,7 +21,6 @@
 // use FreeDV buffers, if we switch on digital voice mode FreeDV
 // user code
 
-#ifdef USE_CONVOLUTION
 __IO int32_t Sample_in_head = 0;
 __IO int32_t Sample_in_tail = 0;
 __IO int32_t Sample_out_head = 0;
@@ -1034,5 +1033,4 @@ void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t
 
 
 
-#endif
 #endif

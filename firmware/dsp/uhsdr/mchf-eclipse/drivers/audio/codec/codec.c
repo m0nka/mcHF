@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
 **                                                                                 **
@@ -252,6 +251,9 @@ uint32_t Codec_Reset(uint32_t AudioFreq)
 {
 
     uint32_t retval;
+
+#ifndef H7_M4_CORE
+
 #ifdef UI_BRD_MCHF
     retval = Codec_ResetCodec(CODEC_I2C, AudioFreq, IQ_WORD_SIZE);
 #else
@@ -275,6 +277,7 @@ uint32_t Codec_Reset(uint32_t AudioFreq)
 
 
     }
+#endif
     return retval;
 }
 
@@ -283,11 +286,13 @@ uint32_t Codec_Reset(uint32_t AudioFreq)
  */
 void Codec_RestartI2S()
 {
+#ifndef H7_M4_CORE
     // Reg 09: Active Control
     Codec_WriteRegister(CODEC_IQ_I2C, W8731_ACTIVE_CNTR,0x0000);
     non_os_delay(); // we can't use HAL_Delay here, since our audio interrupt has higher priority which stops the ticks.
     // Reg 09: Active Control
     Codec_WriteRegister(CODEC_IQ_I2C, W8731_ACTIVE_CNTR,0x0001);
+#endif
 }
 
 /**
@@ -296,6 +301,7 @@ void Codec_RestartI2S()
  */
 void Codec_SwitchMicTxRxMode(uint8_t txrx_mode)
 {
+#ifndef H7_M4_CORE
     // only adjust the hardware if in TX txrx_mode with mic selected (it will kill RX otherwise!)
     if(txrx_mode == TRX_MODE_TX && ts.tx_audio_source == TX_AUDIO_MIC)
     {
@@ -322,6 +328,7 @@ void Codec_SwitchMicTxRxMode(uint8_t txrx_mode)
             ts.tx_mic_gain_mult = ts.tx_gain[TX_AUDIO_MIC];
         }
     }
+#endif
 }
 
 static bool is_microphone_active()
@@ -335,6 +342,7 @@ static bool is_microphone_active()
  */
 void Codec_PrepareTx(uint8_t current_txrx_mode)
 {
+#ifndef H7_M4_CORE
 	Codec_LineInGainAdj(0); // yes - momentarily mute LINE IN audio if in LINE IN mode until we have switched to TX
 
 	bool uses_mic_input = is_microphone_active();
@@ -366,6 +374,7 @@ void Codec_PrepareTx(uint8_t current_txrx_mode)
 		// pause an instant because the codec chip has its own delay before tasks complete when we use the microphone input!
 		// otherwise audible noise will be transmitted
 	}
+#endif
 }
 
 
@@ -376,6 +385,7 @@ void Codec_PrepareTx(uint8_t current_txrx_mode)
  */
 void Codec_SwitchTxRxMode(uint8_t txrx_mode)
 {
+#ifndef H7_M4_CORE
     // First step - mute sound
     Codec_VolumeSpkr(0);
     Codec_VolumeLineOut(txrx_mode);
@@ -425,6 +435,7 @@ void Codec_SwitchTxRxMode(uint8_t txrx_mode)
             }
         }
     }
+#endif
 }
 
 /**
@@ -487,6 +498,7 @@ void Codec_TxSidetoneSetgain(uint8_t txrx_mode)
 
 void Codec_VolumeSpkr(uint8_t vol)
 {
+#ifndef H7_M4_CORE
 #ifdef UI_BRD_MCHF
     uint32_t lv = vol*5>W8731_VOL_MAX?W8731_VOL_MAX:vol*5;
     // limit max value to 80
@@ -498,6 +510,7 @@ void Codec_VolumeSpkr(uint8_t vol)
 #else
     // external PA Control
     AudioPA_Volume(vol);
+#endif
 #endif
 }
 /**
@@ -511,7 +524,7 @@ void Codec_VolumeSpkr(uint8_t vol)
  */
 void Codec_VolumeLineOut(uint8_t txrx_mode)
 {
-
+#ifndef H7_M4_CORE
     uint16_t lov =  ts.lineout_gain + 0x2F;
     // Selectively mute "Right Headphone" output (LINE OUT) depending on transceiver configuration
 
@@ -538,6 +551,7 @@ void Codec_VolumeLineOut(uint8_t txrx_mode)
     // And since we have a dedidacted IQ codec, there is no need to switch of the lineout or headphones here
     Codec_WriteRegister(CODEC_ANA_I2C, W8731_RIGHT_HEADPH_OUT, lov | W8731_HEADPH_OUT_ZCEN | W8731_HEADPH_OUT_HPBOTH );   // value selected for 0.5VRMS at AGC setting
 #endif
+#endif
 }
 
 /**
@@ -546,6 +560,7 @@ void Codec_VolumeLineOut(uint8_t txrx_mode)
  */
 void Codec_MuteDAC(bool state)
 {
+#ifndef H7_M4_CORE
     if(state)
     {
         Codec_WriteRegister(CODEC_ANA_I2C, W8731_DIGI_AU_PATH_CNTR,(W8731_DEEMPH_CNTR|0x08));	// mute
@@ -554,6 +569,7 @@ void Codec_MuteDAC(bool state)
     {
         Codec_WriteRegister(CODEC_ANA_I2C, W8731_DIGI_AU_PATH_CNTR,(W8731_DEEMPH_CNTR));		// mute off
     }
+#endif
 }
 
 /**
@@ -572,7 +588,9 @@ static void Codec_InGainAdj(I2C_HandleTypeDef* hi2c, uint16_t gain)
  */
 void Codec_LineInGainAdj(uint8_t gain)
 {
+#ifndef H7_M4_CORE
     Codec_InGainAdj(CODEC_ANA_I2C, gain);
+#endif
 }
 
 /**
@@ -581,7 +599,9 @@ void Codec_LineInGainAdj(uint8_t gain)
  */
 void Codec_IQInGainAdj(uint8_t gain)
 {
+#ifndef H7_M4_CORE
     Codec_InGainAdj(CODEC_IQ_I2C, gain);
+#endif
 }
 
 /**
@@ -593,6 +613,9 @@ void Codec_IQInGainAdj(uint8_t gain)
  */
 bool Codec_ReadyForIrqCall()
 {
+#ifndef H7_M4_CORE
     return (CODEC_ANA_I2C->Lock == HAL_UNLOCKED) && (CODEC_IQ_I2C->Lock == HAL_UNLOCKED);
-}
+#else
+    return false;
 #endif
+}

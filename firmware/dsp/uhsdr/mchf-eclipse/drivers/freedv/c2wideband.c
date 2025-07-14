@@ -690,7 +690,7 @@ void experiment_rate_K_dct2(C2CONST *c2const, MODEL model_frames[], const int to
     }
 
 
-#ifdef C2WB_PLOT
+#ifdef C2WB_PLOT__
     printf("average dct spectral distortion: %3.2f dB\n", mean(dct2_sd, Nblocks));
     printf("mean number of coeffs/DCT: %3.2f/%d\n", mean(sumnz, Nblocks), Nt * K);
     printf("coeffs/second: %3.2f\n", mean(sumnz, Nblocks) / (Nt * Tf * dec));

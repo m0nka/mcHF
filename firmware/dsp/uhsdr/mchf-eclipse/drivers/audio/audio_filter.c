@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
 **                                                                                 **
@@ -1304,9 +1303,3 @@ float32_t AudioFilter_GoertzelEnergy(Goertzel* goertzel)
 	goertzel->buf[2] = 0;
 	return sqrtf(a * a + b * b);
 }
-
-
-
-
-
-#endif

@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /** 
   ******************************************************************************
   * @file    usbh_ioreq.c 
@@ -354,6 +353,5 @@ USBH_StatusTypeDef USBH_IsocSendData(USBH_HandleTypeDef *phost,
 */ 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-#endif
 
 

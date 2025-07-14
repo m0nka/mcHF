@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
 **                                                                                 **
@@ -177,6 +176,7 @@ static void UhsdrHWI2s_Sai32Bits(SAI_HandleTypeDef* hsai)
 
 static void UhsdrHwI2s_SetBitWidth()
 {
+#ifndef H7_M4_CORE
 #if defined(USE_32_IQ_BITS)
     #if defined(UI_BRD_MCHF)
     hi2s3.Init.DataFormat = I2S_DATAFORMAT_32B;
@@ -195,12 +195,14 @@ static void UhsdrHwI2s_SetBitWidth()
     UhsdrHWI2s_Sai32Bits(&hsai_BlockB1);
     #endif
 #endif
+#endif
 }
 
 
 
 void UhsdrHwI2s_Codec_StartDMA()
 {
+#ifndef H7_M4_CORE
     UhsdrHwI2s_SetBitWidth();
 
 #ifdef UI_BRD_MCHF
@@ -218,11 +220,13 @@ void UhsdrHwI2s_Codec_StartDMA()
     HAL_SAI_Transmit_DMA(&hsai_BlockB2,(uint8_t*)dma.iq_buf.out,sizeof(dma.iq_buf.out)/sizeof(dma.iq_buf.out[0].l));
 
 #endif
+#endif
 }
 
 
 void UhsdrHwI2s_Codec_StopDMA(void)
 {
+#ifndef H7_M4_CORE
 #ifdef UI_BRD_MCHF
     HAL_I2S_DMAStop(&hi2s3);
 #endif
@@ -232,5 +236,5 @@ void UhsdrHwI2s_Codec_StopDMA(void)
     HAL_SAI_DMAStop(&hsai_BlockA2);
     HAL_SAI_DMAStop(&hsai_BlockB2);
 #endif
-}
 #endif
+}

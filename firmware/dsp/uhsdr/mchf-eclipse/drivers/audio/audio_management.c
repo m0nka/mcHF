@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 
 #include "uhsdr_board.h"
@@ -403,4 +402,3 @@ void AudioManagement_SetSidetoneForDemodMode(uint8_t dmod_mode, bool tune_mode)
 
     softdds_configRunIQ(tonefreq,ts.samp_rate,0);
 }
-#endif
