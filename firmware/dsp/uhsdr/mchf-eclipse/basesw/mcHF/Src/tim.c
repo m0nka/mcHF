@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : TIM.c
@@ -60,6 +59,7 @@ TIM_HandleTypeDef htim8;
 /* TIM3 init function */
 void MX_TIM3_Init(void)
 {
+#ifndef H7_M4_CORE
   TIM_Encoder_InitTypeDef sConfig;
   TIM_MasterConfigTypeDef sMasterConfig;
 
@@ -88,11 +88,12 @@ void MX_TIM3_Init(void)
   {
     Error_Handler();
   }
-
+#endif
 }
 /* TIM4 init function */
 void MX_TIM4_Init(void)
 {
+#ifndef H7_M4_CORE
   TIM_Encoder_InitTypeDef sConfig;
   TIM_MasterConfigTypeDef sMasterConfig;
 
@@ -121,11 +122,12 @@ void MX_TIM4_Init(void)
   {
     Error_Handler();
   }
-
+#endif
 }
 /* TIM5 init function */
 void MX_TIM5_Init(void)
 {
+#ifndef H7_M4_CORE
   TIM_Encoder_InitTypeDef sConfig;
   TIM_MasterConfigTypeDef sMasterConfig;
 
@@ -154,11 +156,12 @@ void MX_TIM5_Init(void)
   {
     Error_Handler();
   }
-
+#endif
 }
 /* TIM8 init function */
 void MX_TIM8_Init(void)
 {
+#ifndef H7_M4_CORE
   TIM_Encoder_InitTypeDef sConfig;
   TIM_MasterConfigTypeDef sMasterConfig;
 
@@ -188,12 +191,12 @@ void MX_TIM8_Init(void)
   {
     Error_Handler();
   }
-
+#endif
 }
 
 void HAL_TIM_Encoder_MspInit(TIM_HandleTypeDef* tim_encoderHandle)
 {
-
+#ifndef H7_M4_CORE
   GPIO_InitTypeDef GPIO_InitStruct;
   if(tim_encoderHandle->Instance==TIM3)
   {
@@ -287,11 +290,12 @@ void HAL_TIM_Encoder_MspInit(TIM_HandleTypeDef* tim_encoderHandle)
 
   /* USER CODE END TIM8_MspInit 1 */
   }
+#endif
 }
 
 void HAL_TIM_Encoder_MspDeInit(TIM_HandleTypeDef* tim_encoderHandle)
 {
-
+#ifndef H7_M4_CORE
   if(tim_encoderHandle->Instance==TIM3)
   {
   /* USER CODE BEGIN TIM3_MspDeInit 0 */
@@ -364,6 +368,7 @@ void HAL_TIM_Encoder_MspDeInit(TIM_HandleTypeDef* tim_encoderHandle)
 
   /* USER CODE END TIM8_MspDeInit 1 */
   }
+#endif
 } 
 
 /* USER CODE BEGIN 1 */
@@ -379,4 +384,3 @@ void HAL_TIM_Encoder_MspDeInit(TIM_HandleTypeDef* tim_encoderHandle)
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-#endif

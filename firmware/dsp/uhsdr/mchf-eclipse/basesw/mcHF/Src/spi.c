@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : SPI.c
@@ -59,6 +58,7 @@ DMA_HandleTypeDef hdma_spi2_tx;
 /* SPI2 init function */
 void MX_SPI2_Init(void)
 {
+#ifndef H7_M4_CORE
   hspi2.Instance = SPI2;
   hspi2.Init.Mode = SPI_MODE_MASTER;
   hspi2.Init.Direction = SPI_DIRECTION_2LINES;
@@ -75,12 +75,12 @@ void MX_SPI2_Init(void)
   {
     Error_Handler();
   }
-
+#endif
 }
 
 void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
 {
-
+#ifndef H7_M4_CORE
   GPIO_InitTypeDef GPIO_InitStruct;
   if(spiHandle->Instance==SPI2)
   {
@@ -132,11 +132,12 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
 
   /* USER CODE END SPI2_MspInit 1 */
   }
+#endif
 }
 
 void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
 {
-
+#ifndef H7_M4_CORE
   if(spiHandle->Instance==SPI2)
   {
   /* USER CODE BEGIN SPI2_MspDeInit 0 */
@@ -158,7 +159,7 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
     HAL_DMA_DeInit(spiHandle->hdmatx);
   }
   /* USER CODE BEGIN SPI2_MspDeInit 1 */
-
+#endif
   /* USER CODE END SPI2_MspDeInit 1 */
 } 
 
@@ -175,4 +176,3 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-#endif

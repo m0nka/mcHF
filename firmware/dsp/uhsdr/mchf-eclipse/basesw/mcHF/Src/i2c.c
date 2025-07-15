@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : I2C.c
@@ -58,7 +57,7 @@ I2C_HandleTypeDef hi2c2;
 /* I2C1 init function */
 void MX_I2C1_Init(void)
 {
-
+#ifndef H7_M4_CORE
   hi2c1.Instance = I2C1;
   hi2c1.Init.ClockSpeed = 100000;
   hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_16_9;
@@ -72,12 +71,12 @@ void MX_I2C1_Init(void)
   {
     Error_Handler();
   }
-
+#endif
 }
 /* I2C2 init function */
 void MX_I2C2_Init(void)
 {
-
+#ifndef H7_M4_CORE
   hi2c2.Instance = I2C2;
   hi2c2.Init.ClockSpeed = 100000;
   hi2c2.Init.DutyCycle = I2C_DUTYCYCLE_16_9;
@@ -91,12 +90,12 @@ void MX_I2C2_Init(void)
   {
     Error_Handler();
   }
-
+#endif
 }
 
 void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
 {
-
+#ifndef H7_M4_CORE
   GPIO_InitTypeDef GPIO_InitStruct;
   if(i2cHandle->Instance==I2C1)
   {
@@ -144,11 +143,12 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
 
   /* USER CODE END I2C2_MspInit 1 */
   }
+#endif
 }
 
 void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
 {
-
+#ifndef H7_M4_CORE
   if(i2cHandle->Instance==I2C1)
   {
   /* USER CODE BEGIN I2C1_MspDeInit 0 */
@@ -185,6 +185,7 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
 
   /* USER CODE END I2C2_MspDeInit 1 */
   }
+#endif
 } 
 
 /* USER CODE BEGIN 1 */
@@ -200,4 +201,3 @@ void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-#endif

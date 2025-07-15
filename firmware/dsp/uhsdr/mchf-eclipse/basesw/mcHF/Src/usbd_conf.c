@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * @file           : usbd_conf.c
@@ -75,6 +74,7 @@ void SystemClock_Config(void);
 
 void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
 {
+#ifndef H7_M4_CORE
   GPIO_InitTypeDef GPIO_InitStruct;
   if(pcdHandle->Instance==USB_OTG_FS)
   {
@@ -103,10 +103,12 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
 
   /* USER CODE END USB_OTG_FS_MspInit 1 */
   }
+#endif
 }
 
 void HAL_PCD_MspDeInit(PCD_HandleTypeDef* pcdHandle)
 {
+#ifndef H7_M4_CORE
   if(pcdHandle->Instance==USB_OTG_FS)
   {
   /* USER CODE BEGIN USB_OTG_FS_MspDeInit 0 */
@@ -128,6 +130,7 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef* pcdHandle)
 
   /* USER CODE END USB_OTG_FS_MspDeInit 1 */
   }
+#endif
 }
 
 /**
@@ -288,6 +291,7 @@ void HAL_PCD_DisconnectCallback(PCD_HandleTypeDef *hpcd)
   */
 USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
 { 
+#ifndef H7_M4_CORE
   /* Init USB_IP */
   if (pdev->id == DEVICE_FS) {
   /* Link The driver to the stack */	
@@ -317,6 +321,7 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
   HAL_PCDEx_SetTxFiFo(&hpcd_USB_OTG_FS, 3, 0x80);
 
   }
+#endif
   return USBD_OK;
 }
 
@@ -776,4 +781,3 @@ void  USBD_LL_Delay (uint32_t Delay)
   HAL_Delay(Delay);  
 }
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-#endif

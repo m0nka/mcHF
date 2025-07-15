@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : gpio.c
@@ -66,7 +65,7 @@
 */
 void MX_GPIO_Init(void)
 {
-
+#ifndef H7_M4_CORE
   GPIO_InitTypeDef GPIO_InitStruct;
 
   /* GPIO Ports Clock Enable */
@@ -106,7 +105,7 @@ void MX_GPIO_Init(void)
 
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 14, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
-
+#endif
 }
 
 /* USER CODE BEGIN 2 */
@@ -122,4 +121,3 @@ void MX_GPIO_Init(void)
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-#endif

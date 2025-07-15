@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : DAC.c
@@ -57,6 +56,7 @@ DAC_HandleTypeDef hdac;
 /* DAC init function */
 void MX_DAC_Init(void)
 {
+#ifndef H7_M4_CORE
   DAC_ChannelConfTypeDef sConfig;
 
     /**DAC Initialization 
@@ -75,12 +75,12 @@ void MX_DAC_Init(void)
   {
     Error_Handler();
   }
-
+#endif
 }
 
 void HAL_DAC_MspInit(DAC_HandleTypeDef* dacHandle)
 {
-
+#ifndef H7_M4_CORE
   GPIO_InitTypeDef GPIO_InitStruct;
   if(dacHandle->Instance==DAC)
   {
@@ -102,11 +102,12 @@ void HAL_DAC_MspInit(DAC_HandleTypeDef* dacHandle)
 
   /* USER CODE END DAC_MspInit 1 */
   }
+#endif
 }
 
 void HAL_DAC_MspDeInit(DAC_HandleTypeDef* dacHandle)
 {
-
+#ifndef H7_M4_CORE
   if(dacHandle->Instance==DAC)
   {
   /* USER CODE BEGIN DAC_MspDeInit 0 */
@@ -124,6 +125,7 @@ void HAL_DAC_MspDeInit(DAC_HandleTypeDef* dacHandle)
   /* USER CODE BEGIN DAC_MspDeInit 1 */
 
   /* USER CODE END DAC_MspDeInit 1 */
+#endif
 } 
 
 /* USER CODE BEGIN 1 */
@@ -139,4 +141,3 @@ void HAL_DAC_MspDeInit(DAC_HandleTypeDef* dacHandle)
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-#endif

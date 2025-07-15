@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * @file   fatfs.c
@@ -78,4 +77,3 @@ DWORD get_fattime(void)
 /* USER CODE END Application */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-#endif

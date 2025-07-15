@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : I2S.c
@@ -60,7 +59,7 @@ DMA_HandleTypeDef hdma_i2s3_ext_rx;
 /* I2S3 init function */
 void MX_I2S3_Init(void)
 {
-
+#ifndef H7_M4_CORE
   hi2s3.Instance = SPI3;
   hi2s3.Init.Mode = I2S_MODE_MASTER_TX;
   hi2s3.Init.Standard = I2S_STANDARD_PHILIPS;
@@ -74,12 +73,12 @@ void MX_I2S3_Init(void)
   {
     Error_Handler();
   }
-
+#endif
 }
 
 void HAL_I2S_MspInit(I2S_HandleTypeDef* i2sHandle)
 {
-
+#ifndef H7_M4_CORE
   GPIO_InitTypeDef GPIO_InitStruct;
   if(i2sHandle->Instance==SPI3)
   {
@@ -162,11 +161,12 @@ void HAL_I2S_MspInit(I2S_HandleTypeDef* i2sHandle)
 
   /* USER CODE END SPI3_MspInit 1 */
   }
+#endif
 }
 
 void HAL_I2S_MspDeInit(I2S_HandleTypeDef* i2sHandle)
 {
-
+#ifndef H7_M4_CORE
   if(i2sHandle->Instance==SPI3)
   {
   /* USER CODE BEGIN SPI3_MspDeInit 0 */
@@ -190,7 +190,7 @@ void HAL_I2S_MspDeInit(I2S_HandleTypeDef* i2sHandle)
     HAL_DMA_DeInit(i2sHandle->hdmarx);
   }
   /* USER CODE BEGIN SPI3_MspDeInit 1 */
-
+#endif
   /* USER CODE END SPI3_MspDeInit 1 */
 } 
 
@@ -207,4 +207,3 @@ void HAL_I2S_MspDeInit(I2S_HandleTypeDef* i2sHandle)
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-#endif

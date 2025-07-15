@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : I2S.h
@@ -50,7 +49,12 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#ifndef H7_M4_CORE
 #include "stm32f4xx_hal.h"
+#else
+#include "stm32h7xx_hal.h"
+#endif
+
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
@@ -85,4 +89,3 @@ void MX_I2S3_Init(void);
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-#endif

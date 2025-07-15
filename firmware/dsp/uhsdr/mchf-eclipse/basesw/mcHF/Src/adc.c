@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : ADC.c
@@ -52,13 +51,16 @@
 
 /* USER CODE END 0 */
 
+#ifndef H7_M4_CORE
 ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc2;
 ADC_HandleTypeDef hadc3;
+#endif
 
 /* ADC1 init function */
 void MX_ADC1_Init(void)
 {
+#ifndef H7_M4_CORE
   ADC_ChannelConfTypeDef sConfig;
 
     /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
@@ -89,11 +91,12 @@ void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-
+#endif
 }
 /* ADC2 init function */
 void MX_ADC2_Init(void)
 {
+#ifndef H7_M4_CORE
   ADC_ChannelConfTypeDef sConfig;
 
     /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
@@ -124,11 +127,12 @@ void MX_ADC2_Init(void)
   {
     Error_Handler();
   }
-
+#endif
 }
 /* ADC3 init function */
 void MX_ADC3_Init(void)
 {
+#ifndef H7_M4_CORE
   ADC_ChannelConfTypeDef sConfig;
 
     /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
@@ -159,12 +163,12 @@ void MX_ADC3_Init(void)
   {
     Error_Handler();
   }
-
+#endif
 }
 
 void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
 {
-
+#ifndef H7_M4_CORE
   GPIO_InitTypeDef GPIO_InitStruct;
   if(adcHandle->Instance==ADC1)
   {
@@ -226,11 +230,12 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
 
   /* USER CODE END ADC3_MspInit 1 */
   }
+#endif
 }
 
 void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
 {
-
+#ifndef H7_M4_CORE
   if(adcHandle->Instance==ADC1)
   {
   /* USER CODE BEGIN ADC1_MspDeInit 0 */
@@ -282,6 +287,7 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
 
   /* USER CODE END ADC3_MspDeInit 1 */
   }
+#endif
 } 
 
 /* USER CODE BEGIN 1 */
@@ -297,4 +303,3 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-#endif

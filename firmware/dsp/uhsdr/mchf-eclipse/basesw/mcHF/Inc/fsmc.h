@@ -1,4 +1,3 @@
-#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * File Name          : FSMC.h
@@ -50,7 +49,12 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#ifndef H7_M4_CORE
 #include "stm32f4xx_hal.h"
+#else
+#include "stm32h7xx_hal.h"
+#endif
+
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
@@ -86,4 +90,3 @@ void HAL_SRAM_MspDeInit(SRAM_HandleTypeDef* hsram);
   */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-#endif
