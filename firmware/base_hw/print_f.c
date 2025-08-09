@@ -11,6 +11,11 @@
 **  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 
+#ifdef BOOTLOADER
+#include "mchf_pro_board.h"
+#include "main.h"
+#endif
+
 #ifdef RADIO
 #include "mchf_pro_board.h"
 #include "main.h"
