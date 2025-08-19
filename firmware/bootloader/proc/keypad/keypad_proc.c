@@ -316,7 +316,8 @@ static void keypad_scan_a(void)
 uchar keypad_proc_is_held_on_start(void)
 {
 	uchar res = 0;
-#if 1
+
+	#ifndef STARTEK_PATCH
 	keypad_set_out_lines_a(0);
 
 	if(keypad_check_input_lines_a() == 4)
@@ -330,8 +331,11 @@ uchar keypad_proc_is_held_on_start(void)
 	}
 
 	keypad_set_out_lines_a(8);
+	#else
+	res = 1;
+	stay_in_boot = 1;
+	#endif
 
-#endif
 	return res;
 }
 

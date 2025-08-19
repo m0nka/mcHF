@@ -217,10 +217,22 @@ static int LCDConf_ReadID(uchar *id)
   	HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
 
   	// Read Controller ID
+	#ifndef STARTEK_PATCH
   	if(DSI_IO_Read(0xDA, id, 1) != 0)
   		return 2;
 
-  	//printf("LCD ID: %02x\r\n",id[0]);
+  	printf("LCD ID: %02x\r\n",id[0]);
+
+ 	//if(DSI_IO_Read(0xDB, id, 1) != 0)
+  	//	return 3;
+
+ 	//printf("LCD ID: %02x\r\n",id[0]);
+
+ 	//if(DSI_IO_Read(0xDC, id, 1) != 0)
+  	//	return 3;
+
+ 	//printf("LCD ID: %02x\r\n",id[0]);
+	#endif
 
   	HAL_DSI_Stop(&hdsi);
 
@@ -305,11 +317,13 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
    	__HAL_RCC_DSI_RELEASE_RESET();
 
     uchar id[4];
+    uchar id_res = 0;
 
     // Read ID
-    if(LCDConf_ReadID(id) != 0)
+    id_res = LCDConf_ReadID(id);
+    if(id_res != 0)
     {
-    	printf("== unable to read LCD ID! ==\r\n");
+    	printf("== unable to read LCD ID(%d)! ==\r\n", id_res);
     	return 1;
     }
 

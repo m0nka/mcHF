@@ -562,34 +562,48 @@ int main(void)
     SystemClock_Config();
 
     // Keyboard early init
+	#ifndef STARTEK_PATCH
     keypad_proc_init();
-	//keypad_proc();
+	#endif
 
 	// Init hw
     critical_hw_init_and_run_fw();
 
 	// Proc init
 	mchf_pro_board_init();
-    bms_proc_init();
+
+	#ifndef STARTEK_PATCH
+	bms_proc_init();
     shared_tim_init();
+	#endif
+
     ui_proc_init();
+
+	#ifndef STARTEK_PATCH
     selftest_proc_init();
+	#endif
 
     while(1)
     {
     	// BMS comms
+		#ifndef STARTEK_PATCH
     	bms_proc();
+		#endif
 
     	// UI repaint
     	ui_proc();
 
     	// Self test state machine
+		#ifndef STARTEK_PATCH
     	selftest_proc();
+		#endif
 
     	// Blink the speaker LED
     	show_alive();
 
     	// Scan keyboard
+		#ifndef STARTEK_PATCH
     	keypad_proc();
+		#endif
     }
 }

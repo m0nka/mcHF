@@ -27,7 +27,7 @@
 #define  ST7701_HEIGHT            			480
 #endif
 
-#ifdef USE_LCD_BAREMETAL
+#if defined(USE_LCD_BAREMETAL) && !defined (STARTEK_PATCH)
 #define  ST7701_VSYNC             			((uint16_t)1)		// Vertical synchronization   - DO NOT TOUCH!!
 #define  ST7701_VBP               			((uint16_t)20)     	// Vertical back porch
 #define  ST7701_VFP            		   		((uint16_t)10)     	// Vertical front porch
@@ -35,6 +35,16 @@
 #define  ST7701_HSYNC			            ((uint16_t)2)     	// Horizontal synchronization
 #define  ST7701_HBP               			((uint16_t)60)     	// Horizontal back porch
 #define  ST7701_HFP               			((uint16_t)10)     	// Horizontal front porch
+#endif
+
+#ifdef STARTEK_PATCH
+#define  ST7701_VSYNC             			((uint16_t)4)		// Vertical synchronization   - DO NOT TOUCH!!
+#define  ST7701_VBP               			((uint16_t)20)     	// Vertical back porch
+#define  ST7701_VFP            		   		((uint16_t)10)     	// Vertical front porch
+//
+#define  ST7701_HSYNC			            ((uint16_t)4)     	// Horizontal synchronization
+#define  ST7701_HBP               			((uint16_t)10)     	// Horizontal back porch
+#define  ST7701_HFP               			((uint16_t)45)     	// Horizontal front porch
 #endif
 
 #ifndef USE_LCD_BAREMETAL

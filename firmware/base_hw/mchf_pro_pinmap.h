@@ -75,10 +75,15 @@
 #define BMS_PWM_AF         				LL_GPIO_AF_1
 
 // PA9			LCD_BL_CTRL (TIM1_CH2)
+#ifndef STARTEK_PATCH
 #define LCD_BL_CTRL_PIN               	GPIO_PIN_9
 #define LCD_BL_CTRL_GPIO_PORT         	GPIOA
 #define LCD_BL_CTRL_AF         			LL_GPIO_AF_1
 #define LCD_BL_CTRL_TIM_CH				LL_TIM_CHANNEL_CH2
+#else
+#define LCD_BL_CTRL_PIN               	GPIO_PIN_1
+#define LCD_BL_CTRL_GPIO_PORT         	GPIOB
+#endif
 
 // PA10			FAN_ON
 #define FAN_CNTR						GPIO_PIN_10

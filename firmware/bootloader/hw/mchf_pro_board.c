@@ -693,7 +693,12 @@ void critical_hw_init_and_run_fw(void)
 	// Keep 5V and 8V rails off
 	GPIO_InitStruct.Pin   = VCC_5V_ON;
 	HAL_GPIO_Init(VCC_5V_ON_PORT, &GPIO_InitStruct);
+
+	#ifndef STARTEK_PATCH
 	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, 0);
+	#else
+	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, 1);
+	#endif
 
 	//HAL_PWR_DisableBkUpAccess();
 

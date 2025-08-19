@@ -43,6 +43,7 @@ void hw_lcd_gpio_init(void)
 	#endif
 }
 
+#ifndef STARTEK_PATCH
 void hw_lcd_reset(void)
 {
 	GPIO_InitTypeDef  gpio_init_structure;
@@ -68,3 +69,16 @@ void hw_lcd_reset(void)
 	/* Wait for 300 ms after releasing XRES before sending commands */
 	HAL_Delay(300);
 }
+#else
+void hw_lcd_reset(void)
+{
+	GPIO_InitTypeDef  gpio_init_structure;
+
+	HAL_GPIO_WritePin(GPIOH, GPIO_PIN_7, GPIO_PIN_SET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOH, GPIO_PIN_7, GPIO_PIN_RESET);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(GPIOH, GPIO_PIN_7, GPIO_PIN_SET);
+	HAL_Delay(200);
+}
+#endif
