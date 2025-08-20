@@ -38,15 +38,15 @@
 #define  ST7701_HFP               			((uint16_t)10)     	// Horizontal front porch
 #endif
 
-// Startek 4.3 inch(ILI9806)
+// Startek 4.3 inch(ILI9806, Note: orginal timing crashes the driver!)
 #if defined(USE_LCD_BAREMETAL) && defined (STARTEK_43INCH)
-#define  ST7701_VSYNC             			((uint16_t)4)
-#define  ST7701_VBP               			((uint16_t)20)
-#define  ST7701_VFP            		   		((uint16_t)10)
+#define  ST7701_VSYNC             			((uint16_t)1)		// 4
+#define  ST7701_VBP               			((uint16_t)20)		// 20
+#define  ST7701_VFP            		   		((uint16_t)10)		// 10
 //
-#define  ST7701_HSYNC			            ((uint16_t)4)
-#define  ST7701_HBP               			((uint16_t)10)
-#define  ST7701_HFP               			((uint16_t)45)
+#define  ST7701_HSYNC			            ((uint16_t)4)		// 4
+#define  ST7701_HBP               			((uint16_t)60)		// 10
+#define  ST7701_HFP               			((uint16_t)10)		// 45
 #endif
 
 // Startek 3.5 inch
@@ -59,7 +59,6 @@
 #define  ST7701_HBP               			((uint16_t)60)
 #define  ST7701_HFP               			((uint16_t)10)
 #endif
-
 
 #ifndef USE_LCD_BAREMETAL
 #define  ST7701_VSYNC             			18
