@@ -43,7 +43,7 @@ void hw_lcd_gpio_init(void)
 	#endif
 }
 
-#ifndef STARTEK_PATCH
+#ifndef REV_0_8_4_PATCH__
 void hw_lcd_reset(void)
 {
 	GPIO_InitTypeDef  gpio_init_structure;

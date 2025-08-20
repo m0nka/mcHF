@@ -176,7 +176,6 @@ OTM8009A_LCD_Drv_t   ST7701_LCD_Driver =
 };
 
 // Vendor specific/not documented
-#ifndef STARTEK_PATCH
 static const uint8_t cmd2_bk1_e0[] = {0x00, 0x00, 0x02};
 static const uint8_t cmd2_bk1_e1[] = {0x08, 0x00, 0x0A, 0x00, 0x07, 0x00, 0x09, 0x00, 0x00, 0x33, 0x33};
 static const uint8_t cmd2_bk1_e2[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -189,14 +188,13 @@ static const uint8_t cmd2_bk1_e8[] = {0x0D, 0x60, 0xA0, 0xA0, 0x0F, 0x60, 0xA0, 
 static const uint8_t cmd2_bk1_eb[] = {0x02, 0x01, 0xE4, 0xE4, 0x44, 0x00, 0x40};
 static const uint8_t cmd2_bk1_ec[] = {0x02, 0x01};
 static const uint8_t cmd2_bk1_ed[] = {0xAB, 0x89, 0x76, 0x54, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x10, 0x45, 0x67, 0x98, 0xBA};
-#endif
+
 const uint8_t sleep_out[] = {OTM8009A_CMD_SLPOUT, 0x00};
 
 extern DSI_HandleTypeDef   hdsi;
 
 //#define LOC_DEBUG
 
-#ifndef STARTEK_PATCH
 void mipi_change_page(unsigned char page)
 {
 	static const uint8_t lcd_reg_data00[] =   {0x77, 0x01, 0x00, 0x00, 0x00};
@@ -214,7 +212,6 @@ void mipi_change_page(unsigned char page)
 	print_hex_array(lcd_reg_data,6);
 	#endif
 }
-#endif
 
 // Write cmd + single byte data
 void mipi_write_short(uint8_t reg, uint8_t data)
@@ -241,7 +238,7 @@ void mipi_write_long(uchar cmd, const uchar * data, ushort size)
 	#endif
 }
 
-#ifndef STARTEK_PATCH
+#ifdef STARTEK_5INCH
 int ST7701S_Init(unsigned long ColorCoding)
 {
 	static const uint8_t lcd_reg_data03[] = {0x02, 0x00, 0x00};
@@ -250,7 +247,7 @@ int ST7701S_Init(unsigned long ColorCoding)
 
 	unsigned char buff[40];
 
-	//printf("ST7701_Init...\r\n");
+	printf("ST7701_Init...\r\n");
 
 	// After reset delay	-	 ToDo: check if kernel running, if yes, use OS delay!
 	HAL_Delay(200);
@@ -354,11 +351,14 @@ int ST7701S_Init(unsigned long ColorCoding)
 
     mipi_write_short(OTM8009A_CMD_DISPON, 0);
 
-	//printf("ST7701_Init done.\r\n");
+	printf("ST7701_Init done.\r\n");
 	return 0;
 }
-#else
-int ST7701S_Init(unsigned long ColorCoding)
+#endif
+
+// ILI9806
+#ifdef STARTEK_43INCH
+int ST7701S_Init(unsigned long ClorCoding)
 {
 	unsigned char buff[40];
 

@@ -562,7 +562,7 @@ int main(void)
     SystemClock_Config();
 
     // Keyboard early init
-	#ifndef STARTEK_PATCH
+	#ifndef REV_0_8_4_PATCH
     keypad_proc_init();
 	#endif
 
@@ -572,21 +572,21 @@ int main(void)
 	// Proc init
 	mchf_pro_board_init();
 
-	#ifndef STARTEK_PATCH
+	#ifndef REV_0_8_4_PATCH
 	bms_proc_init();
     shared_tim_init();
 	#endif
 
     ui_proc_init();
 
-	#ifndef STARTEK_PATCH
+	#ifndef REV_0_8_4_PATCH
     selftest_proc_init();
 	#endif
 
     while(1)
     {
     	// BMS comms
-		#ifndef STARTEK_PATCH
+		#ifndef REV_0_8_4_PATCH
     	bms_proc();
 		#endif
 
@@ -594,7 +594,7 @@ int main(void)
     	ui_proc();
 
     	// Self test state machine
-		#ifndef STARTEK_PATCH
+		#ifndef REV_0_8_4_PATCH
     	selftest_proc();
 		#endif
 
@@ -602,7 +602,7 @@ int main(void)
     	show_alive();
 
     	// Scan keyboard
-		#ifndef STARTEK_PATCH
+		#ifndef REV_0_8_4_PATCH
     	keypad_proc();
 		#endif
     }

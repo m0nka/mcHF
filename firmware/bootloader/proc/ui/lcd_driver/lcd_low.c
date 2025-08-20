@@ -217,20 +217,16 @@ static int LCDConf_ReadID(uchar *id)
   	HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
 
   	// Read Controller ID
-	#ifndef STARTEK_PATCH
+	#if defined(STARTEK_5INCH) || defined (STARTEK_35INCH)
   	if(DSI_IO_Read(0xDA, id, 1) != 0)
   		return 2;
-
   	printf("LCD ID: %02x\r\n",id[0]);
 
  	//if(DSI_IO_Read(0xDB, id, 1) != 0)
   	//	return 3;
-
  	//printf("LCD ID: %02x\r\n",id[0]);
-
  	//if(DSI_IO_Read(0xDC, id, 1) != 0)
   	//	return 3;
-
  	//printf("LCD ID: %02x\r\n",id[0]);
 	#endif
 

@@ -75,7 +75,7 @@
 #define BMS_PWM_AF         				LL_GPIO_AF_1
 
 // PA9			LCD_BL_CTRL (TIM1_CH2)
-#ifndef STARTEK_PATCH
+#ifndef REV_0_8_4_PATCH
 #define LCD_BL_CTRL_PIN               	GPIO_PIN_9
 #define LCD_BL_CTRL_GPIO_PORT         	GPIOA
 #define LCD_BL_CTRL_AF         			LL_GPIO_AF_1
