@@ -43,10 +43,10 @@ void hw_lcd_gpio_init(void)
 	#endif
 }
 
-#ifndef REV_0_8_4_PATCH__
+#if 1
 void hw_lcd_reset(void)
 {
-	GPIO_InitTypeDef  gpio_init_structure;
+	//GPIO_InitTypeDef  gpio_init_structure;
 
 	/* Activate XRES active low */
 	#ifdef BOARD_EVAL_747
@@ -72,13 +72,13 @@ void hw_lcd_reset(void)
 #else
 void hw_lcd_reset(void)
 {
-	GPIO_InitTypeDef  gpio_init_structure;
+	//GPIO_InitTypeDef  gpio_init_structure;
 
 	HAL_GPIO_WritePin(GPIOH, GPIO_PIN_7, GPIO_PIN_SET);
-	HAL_Delay(1);
+	HAL_Delay(2);
 	HAL_GPIO_WritePin(GPIOH, GPIO_PIN_7, GPIO_PIN_RESET);
-	HAL_Delay(10);
+	HAL_Delay(20);
 	HAL_GPIO_WritePin(GPIOH, GPIO_PIN_7, GPIO_PIN_SET);
-	HAL_Delay(200);
+	HAL_Delay(400);
 }
 #endif

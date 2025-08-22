@@ -391,7 +391,7 @@ int ST7701S_Init(unsigned long ColorCoding)
 
 	printf("ST7701_Init...\r\n");
 
-	mipi_exit_sleep();
+	//mipi_exit_sleep();
 
 	// Change to Page 1 CMD
 	mipi_change_page(0xFF980604, 0x01);
@@ -575,7 +575,10 @@ int ST7701S_Init(unsigned long ColorCoding)
 	// Change to Page 0 CMD for Normal command
 	mipi_change_page(0xFF980604, 0x00);
 
-	mipi_write_short(0x36, 0x00);
+	// Display rotation(0x00, 0x01, 0x02, 0x03)
+	mipi_write_short(0x36, 0x03);
+
+	// 24bit colour
 	mipi_write_short(0x3A, 0x70);
 
 	mipi_write_short(0x11, 0);
@@ -591,6 +594,7 @@ int ST7701S_Init(unsigned long ColorCoding)
 #ifdef STARTEK_35INCH
 int ST7701S_Init(unsigned long ColorCoding)
 {
+	static const uint8_t lcd_reg_data03[] = {0x02, 0x00, 0x00};
 	unsigned char buff[40];
 
 	printf("ST7701_Init...\r\n");
@@ -619,21 +623,38 @@ int ST7701S_Init(unsigned long ColorCoding)
 	// Change to Page
 	mipi_change_page(0x77010000, 0x10);
 
-	// 480*800
-	buff[0] = 0x63;
-	buff[1] = 0x00;
-	mipi_write_long(0xC0, buff, 2);
+	// -------------------------------------------------------------------------------
+	// Display Line setting (0xC0)
+	//
+	// EX:(C0:0x6b,0x00) ((0x6b+1) x 8) = 864;
+	// EX:(C0:0xe9,0x03) ((0x69+1) x 8) + ( 3x2 ) = 854
+	//
+	buff[0] = DSI_CMD2_BK0_LNESET_B0;
+	buff[1] = DSI_CMD2_BK0_LNESET_B1;
+	mipi_write_long(DSI_CMD2_BK0_LNESET, buff, 2);
 
-	buff[0] = 0x10;
-	buff[1] = 0x02;
-	mipi_write_long(0xC1, buff, 2);
+	// -------------------------------------------------------------------------------
+	// Porch control (0xC1)
+	//
+	buff[0] = DSI_CMD2_BK0_PORCTRL_B0;
+	buff[1] = DSI_CMD2_BK0_PORCTRL_B1;
+	mipi_write_long(DSI_CMD2_BK0_PORCTRL, buff, 2);
 
-	//Inversion selection
-	//31 2-DOT 37-Column
-	buff[0] = 0x31;
-	buff[1] = 0x08;
+	// -------------------------------------------------------------------------------
+	// Inversion selection and frame rate control
+	//
+	// Densitron: 	0x37 0x08
+	// Linux:		0x37 0x06
+	//
+	buff[0] = DSI_CMD2_BK0_INVSEL_B0;
+	buff[1] = DSI_CMD2_BK0_INVSEL_B1;
 	mipi_write_long(0xC2, buff, 2);
+	mipi_write_long(0xC3, &lcd_reg_data03[0], sizeof(lcd_reg_data03));
 
+	// Rotate LCD 180deg for v 0.9
+//!	mipi_write_short(0xC7, 0x04);
+
+	// WTF ??
 	mipi_write_short(0xCC, 0x10);
 
 	// GAMMA SET
@@ -733,7 +754,9 @@ int ST7701S_Init(unsigned long ColorCoding)
 	// Change to Page 0 CMD for Normal command
 	mipi_change_page(0x77010000, 0x00);
 
-	mipi_write_short(0x36, 0x00);
+	// Rotate LCD 180deg for v 0.9
+//!	mipi_write_short(0x36, 0x10);
+
 	mipi_write_short(0x3A, 0x70);
 
 	mipi_write_short(0x29, 0);
