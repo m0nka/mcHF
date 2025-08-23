@@ -270,6 +270,41 @@ static void mipi_exit_sleep(void)
 	HAL_Delay(120);
 }
 
+ulong mipi_get_type(void)
+{
+	unsigned char buff[10];
+
+	if(HAL_DSI_Read(&hdsi, 0, buff, 4, DSI_DCS_SHORT_PKT_READ, 0xDA, buff) != HAL_OK)
+		return 0x00000000;
+
+	if(buff[0] == 0xFF)
+	{
+		if(HAL_DSI_Read(&hdsi, 0, buff, 4, DSI_DCS_SHORT_PKT_READ, 0x04, buff) == HAL_OK)
+		{
+			if((buff[0] == 0xFF)&&(buff[1] == 0xFF)&&(buff[1] == 0xFF))
+				return 0x77010000;
+		}
+		else
+			return 0x11111111;
+	}
+	else if(buff[0] == 0x00)
+	{
+		mipi_change_page(0xFF980604, 0x01);
+
+		if(HAL_DSI_Read(&hdsi, 0, buff, 4, DSI_DCS_SHORT_PKT_READ, 0x00, buff) == HAL_OK)
+		{
+			if(buff[0] == 0x98)
+				return 0x98060400;
+			else
+				return 0x22222222;
+		}
+		else
+			return 0x33333333;
+	}
+	else
+		return 0x44444444;
+}
+
 #ifdef STARTEK_5INCH
 int ST7701S_Init(unsigned long ColorCoding)
 {
@@ -387,11 +422,12 @@ int ST7701S_Init(unsigned long ColorCoding)
 #ifdef STARTEK_43INCH
 int ST7701S_Init(unsigned long ColorCoding)
 {
-	//unsigned char buff[40];
+	unsigned char buff[40];
 
 	printf("ST7701_Init...\r\n");
 
-	//mipi_exit_sleep();
+	// Kill init!!!
+	//--mipi_exit_sleep();
 
 	// Change to Page 1 CMD
 	mipi_change_page(0xFF980604, 0x01);
@@ -584,8 +620,11 @@ int ST7701S_Init(unsigned long ColorCoding)
 	// Display rotation(0x00, 0x01, 0x02, 0x03)
 	mipi_write_short(0x36, 0x03);
 
-	// 24bit colour
-	mipi_write_short(0x3A, 0x70);
+	// 24BIT
+	if(ColorCoding == DSI_RGB565)
+		mipi_write_short(0x3A, 0x50);
+	else
+		mipi_write_short(0x3A, 0x70);
 
 	// Backlight control off
 	mipi_write_short(0x53, 0x00);

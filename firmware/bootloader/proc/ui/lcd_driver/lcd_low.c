@@ -191,14 +191,12 @@ static int32_t DSI_IO_Read(uint16_t Reg, uint8_t *pData, uint16_t Size)
 	return HAL_DSI_Read(&hdsi, 0, pData, Size, DSI_DCS_SHORT_PKT_READ, Reg, pData);
 }
 
-#if 1
+#if 0
 // Init DSI just to read ID
 //
 static int LCDConf_ReadID(uchar *id)
 {
 	DSI_PLLInitTypeDef 	dsiPllInit;
-	//uchar page0[5] = {0xff, 0x98, 0x06, 0x04, 0x00};
-	//uchar page0[5] = {0x77, 0x01, 0x00, 0x00, 0x00};
 
 	hdsi.Instance = DSI;
 	HAL_DSI_DeInit(&(hdsi));
@@ -218,16 +216,11 @@ static int LCDConf_ReadID(uchar *id)
   	// Set reading mode
   	HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
 
-  	//HAL_DSI_LongWrite(&hdsi, 0, DSI_DCS_LONG_PKT_WRITE, 5, 0xFF, page0);
-
   	// Read Controller ID
   	if(DSI_IO_Read(0xDA, id, 1) != HAL_OK)
-  	{
   		printf("failed to read id\r\n");
-  		//return 2;
-  	}
   	else
-  		printf("LCD ID: %02x\r\n",id[0]);
+  		print_hex_array(id, 4);
 
   	HAL_DSI_Stop(&hdsi);
 
@@ -311,6 +304,7 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
    	__HAL_RCC_DSI_FORCE_RESET();
    	__HAL_RCC_DSI_RELEASE_RESET();
 
+	#if 0
     uchar id[4];
     uchar id_res = 0;
 
@@ -318,9 +312,10 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
     id_res = LCDConf_ReadID(id);
     if(id_res != 0)
     {
-    	printf("== unable to read LCD ID(%d)! ==\r\n", id_res);
+    	//printf("== unable to read LCD ID(%d)! ==\r\n", id_res);
     	return 1;
     }
+	#endif
 
     /* Initializes peripherals instance value */
     hltdc.Instance = LTDC;
@@ -381,6 +376,9 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
 
         /* Enable the DSI BTW for read operations */
         (void)HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
+
+        ulong type = mipi_get_type();
+        printf("LCD type: %08x  \r\n", type);
 
         ST7701S_Init(DSI_RGB565);
       }

@@ -273,5 +273,6 @@ extern OTM8009A_LCD_Drv_t   ST7701_LCD_Driver;
 #endif
 
 int ST7701S_Init(unsigned long ColorCoding);
+ulong mipi_get_type(void);
 
 #endif
