@@ -317,7 +317,7 @@ uchar keypad_proc_is_held_on_start(void)
 {
 	uchar res = 0;
 
-	#ifndef REV_0_8_4_PATCH
+	#ifndef REV_0_8_4_PATCH__
 	keypad_set_out_lines_a(0);
 
 	if(keypad_check_input_lines_a() == 4)

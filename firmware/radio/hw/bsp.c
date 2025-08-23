@@ -548,9 +548,10 @@ uint8_t bsp_config(void)
 	printf("-->%s v: %d.%d.%d\r\n", DEVICE_STRING, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE, MCHF_R_VER_BUILD);
 
 	// Useful during ushdr port
-	#if 1
+	#ifndef REV_0_8_4_PATCH
+	printf("== allow m4 core to take control and stall application processor == \r\n");
+	HAL_Delay(500);
 	bsp_wake_second_core();
-	printf("== allow m4 core to take control == \r\n");
 	while(1);
 	#endif
 

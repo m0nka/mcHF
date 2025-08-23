@@ -28,6 +28,7 @@
 #define  ST7701_HFP               			56
 #define  ST7701_WIDTH             			480
 #else
+#ifdef STARTEK_5INCH
 // 29.375MHz, 60Hz achievable with commented values, but left screen corner cut off ;(
 #define  ST7701_VSYNC             			18		//   - 4 -  8	2
 #define  ST7701_VBP               			80		// 30/20/12 10  38
@@ -39,7 +40,19 @@
 #define  ST7701_HFP               			56		// 30
 #define  ST7701_WIDTH             			480
 #endif
+#endif
 // ----------------------------------------------------------------------------------
+#ifdef STARTEK_43INCH
+#define  ST7701_VSYNC             			((uint16_t)4)		// 4
+#define  ST7701_VBP               			((uint16_t)20)		// 20
+#define  ST7701_VFP            		   		((uint16_t)10)		// 10
+#define  ST7701_HEIGHT            			800
+//
+#define  ST7701_HSYNC			            ((uint16_t)4)		// 4
+#define  ST7701_HBP               			((uint16_t)10)		// 10
+#define  ST7701_HFP               			((uint16_t)45)		// 45
+#define  ST7701_WIDTH             			480
+#endif
 
 #define BITS_PER_LONG 						32
 #define BIT(nr)								(1UL << (nr))
