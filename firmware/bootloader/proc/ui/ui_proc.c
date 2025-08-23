@@ -490,6 +490,16 @@ void ui_proc(void)
 	else
 		return;
 
+	// Toggle backlight, to track fading problem on 4.3inch LCD
+	#if 0
+	static uchar xl = 0;
+	if(xl++ > 10)
+	{
+		HAL_GPIO_TogglePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN);
+		xl = 0;
+	}
+	#endif
+
 	ui_proc_show_bms_flags();
 	ui_proc_show_charge_msg();
 	ui_proc_show_soc();

@@ -583,8 +583,8 @@ HAL_StatusTypeDef MX_DSIHOST_DSI_Init(DSI_HandleTypeDef *hdsi, uint32_t Width, u
   	VidCfg.LPLargestPacketSize			= 4;
   	VidCfg.LPVACTLargestPacketSize		= 4;
 	#else
-  	VidCfg.LPLargestPacketSize			= 8;
-  	VidCfg.LPVACTLargestPacketSize		= 8;
+  	VidCfg.LPLargestPacketSize			= 2;
+  	VidCfg.LPVACTLargestPacketSize		= 2;
 	#endif
 
   	VidCfg.LPHorizontalFrontPorchEnable	= DSI_LP_HFP_ENABLE;

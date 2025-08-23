@@ -40,13 +40,25 @@
 
 // Startek 4.3 inch(ILI9806, Note: orginal timing crashes the driver!)
 #if defined(USE_LCD_BAREMETAL) && defined (STARTEK_43INCH)
+#if 1
+// Not fading, but mirror image(bad porch control ?)
 #define  ST7701_VSYNC             			((uint16_t)1)		// 4
 #define  ST7701_VBP               			((uint16_t)20)		// 20
 #define  ST7701_VFP            		   		((uint16_t)10)		// 10
 //
 #define  ST7701_HSYNC			            ((uint16_t)4)		// 4
-#define  ST7701_HBP               			((uint16_t)60)		// 10
-#define  ST7701_HFP               			((uint16_t)10)		// 45
+#define  ST7701_HBP               			((uint16_t)10)		// 10
+#define  ST7701_HFP               			((uint16_t)45)		// 45
+#else
+// Image fits, but fades after a while
+#define  ST7701_VSYNC             			((uint16_t)1)
+#define  ST7701_VBP               			((uint16_t)120)
+#define  ST7701_VFP            		   		((uint16_t)240)
+//
+#define  ST7701_HSYNC			            ((uint16_t)1)
+#define  ST7701_HBP               			((uint16_t)1)
+#define  ST7701_HFP               			((uint16_t)1)
+#endif
 #endif
 
 // Startek 3.5 inch

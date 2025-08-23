@@ -406,12 +406,18 @@ int ST7701S_Init(unsigned long ColorCoding)
 	// 01 t800-03 gx09-01
 	mipi_write_short(0x21, 0x01);
 
+	// Porch control
+	//mipi_write_short(0x25, 0x02);
+	//mipi_write_short(0x26, 0x7F);
+	//mipi_write_short(0x27, 0x02);
+	//mipi_write_short(0x80, 0xC0);
+
 	// Resolution setting 480 X 800
 	mipi_write_short(0x30, 0x02);
 
 	// Inversion setting
 	// 02-2dot
-	mipi_write_short(0x31, 0x00);
+	mipi_write_short(0x31, 0x02);;
 
 	// BT DDVDH DDVDL
 	// 10,14,18 00	2XVCI
@@ -581,6 +587,9 @@ int ST7701S_Init(unsigned long ColorCoding)
 	// 24bit colour
 	mipi_write_short(0x3A, 0x70);
 
+	// Backlight control off
+	mipi_write_short(0x53, 0x00);
+
 	mipi_write_short(0x11, 0);
 	HAL_Delay(120);
 	mipi_write_short(0x29, 0);
@@ -631,6 +640,7 @@ int ST7701S_Init(unsigned long ColorCoding)
 	//
 	buff[0] = DSI_CMD2_BK0_LNESET_B0;
 	buff[1] = DSI_CMD2_BK0_LNESET_B1;
+	printf("lineset: %02x %02x \r\n",buff[0],buff[1]);
 	mipi_write_long(DSI_CMD2_BK0_LNESET, buff, 2);
 
 	// -------------------------------------------------------------------------------
