@@ -43,14 +43,27 @@
 #endif
 // ----------------------------------------------------------------------------------
 #ifdef STARTEK_43INCH
-#define  ST7701_VSYNC             			((uint16_t)4)		// 4
-#define  ST7701_VBP               			((uint16_t)20)		// 20
-#define  ST7701_VFP            		   		((uint16_t)10)		// 10
+#define  ST7701_VSYNC             			8		// 8
+#define  ST7701_VBP               			40		// 40
+#define  ST7701_VFP            		   		20		// 20
 #define  ST7701_HEIGHT            			800
 //
-#define  ST7701_HSYNC			            ((uint16_t)4)		// 4
-#define  ST7701_HBP               			((uint16_t)10)		// 10
-#define  ST7701_HFP               			((uint16_t)45)		// 45
+#define  ST7701_HSYNC			            60		// 4
+#define  ST7701_HBP               			20		// 10
+#define  ST7701_HFP               			8		// 56
+#define  ST7701_WIDTH             			480
+#endif
+
+// Startek 3.5 inch
+#ifdef STARTEK_35INCH
+#define  ST7701_VSYNC             			((uint16_t)18)
+#define  ST7701_VBP               			((uint16_t)80)
+#define  ST7701_VFP            		   		((uint16_t)40)
+#define  ST7701_HEIGHT            			800
+//
+#define  ST7701_HSYNC			            ((uint16_t)8)
+#define  ST7701_HBP               			((uint16_t)10)
+#define  ST7701_HFP               			((uint16_t)56)
 #define  ST7701_WIDTH             			480
 #endif
 

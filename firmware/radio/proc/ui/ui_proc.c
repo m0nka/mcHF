@@ -125,7 +125,7 @@ static void ui_proc_add_menu_items(void)
 
 static void ui_proc_cb(void)
 {
-	ui_controls_frequency_refresh(0);
+//!	ui_controls_frequency_refresh(0);
 	//ui_controls_volume_refresh();	// blink on constant refresh , ToDo: restore orig code
 }
 
@@ -580,16 +580,16 @@ static void ui_proc_init_desktop(void)
 
 	//ui_proc_test_lcd();
 	#else
-	ui_controls_volume_init	  (WM_HBKWIN);
+//	ui_controls_volume_init	  (WM_HBKWIN);
 	ui_controls_clock_panel_init();
-	ui_controls_spectrum_init (WM_HBKWIN);
-	ui_controls_frequency_init(WM_HBKWIN);
+//!	ui_controls_spectrum_init (WM_HBKWIN);
+//!	ui_controls_frequency_init(WM_HBKWIN);
 	ui_controls_smeter_init();
 	ui_controls_filter_init();
 	ui_controls_cpu_stat_init();
 	//ui_controls_dsp_stat_init();
 	ui_controls_battery_init();
-	ui_controls_tx_stat_init();
+//!	ui_controls_tx_stat_init();
 	//--ui_controls_menu_button_init();
 
 	#if 0
@@ -643,13 +643,13 @@ static void ui_proc_change_mode(void)
 			printf("Entering Menu mode...\r\n");
 
 			// Destroy desktop controls
-			ui_controls_volume_quit();
+//!			ui_controls_volume_quit();
 			ui_controls_clock_panel_quit();
-			ui_controls_spectrum_quit();
-			ui_controls_frequency_quit();
+//!			ui_controls_spectrum_quit();
+//!			ui_controls_frequency_quit();
 
 			ui_controls_smeter_quit();
-			ui_controls_spectrum_quit();
+//!			ui_controls_spectrum_quit();
 
 			WM_SetCallback		(WM_HBKWIN, 0);
 			WM_InvalidateWindow	(WM_HBKWIN);
@@ -700,13 +700,13 @@ static void ui_proc_change_mode(void)
 			printf("Entering FT8 mode...\r\n");
 
 			// Destroy desktop controls
-			ui_controls_volume_quit();
-			ui_controls_clock_panel_quit();
-			ui_controls_spectrum_quit();
-			ui_controls_frequency_quit();
+//!			ui_controls_volume_quit();
+//!			ui_controls_clock_panel_quit();
+//!			ui_controls_spectrum_quit();
+//!			ui_controls_frequency_quit();
 
 			ui_controls_smeter_quit();
-			ui_controls_spectrum_quit();
+//!			ui_controls_spectrum_quit();
 
 			WM_SetCallback		(WM_HBKWIN, 0);
 			WM_InvalidateWindow	(WM_HBKWIN);
@@ -854,15 +854,15 @@ static void ui_proc_periodic(void)
 	if(ui_s.cur_state != MODE_DESKTOP)
 		return;
 
-	ui_controls_frequency_refresh(0);
-	ui_controls_clock_panel_refresh();
+//!	ui_controls_frequency_refresh(0);
+//!	ui_controls_clock_panel_refresh();
 
 	//--ui_controls_volume_refresh();
 	ui_controls_cpu_stat_refresh();
 	//ui_controls_dsp_stat_refresh();
 	ui_controls_battery_refresh();
 	ui_controls_filter_refresh();
-	ui_controls_tx_stat_refresh();
+//!	ui_controls_tx_stat_refresh();
 
 	//--on_screen_keyboard_refresh();	// will not allow transparent dialog with moving background
 
@@ -872,7 +872,7 @@ static void ui_proc_periodic(void)
 	if((tsu.rxtx) && (tsu.band[tsu.curr_band].demod_mode == DEMOD_CW)) // && keyer shown
 		return;
 
-	ui_controls_spectrum_refresh(ui_proc_cb);
+//!	ui_controls_spectrum_refresh(ui_proc_cb);
 	//--ui_controls_smeter_refresh  (ui_proc_cb_sm);
 
 	#ifdef CONTEXT_BMS
@@ -988,7 +988,7 @@ ui_proc_loop:
 				cntr_id = 1;
 				WM_InvalidateWindow(WM_HBKWIN);
 				#else
-				ui_controls_frequency_refresh(0);
+//!				ui_controls_frequency_refresh(0);
 				#endif
 
 				break;
@@ -996,7 +996,7 @@ ui_proc_loop:
 
 			case UI_NEW_AUDIO_EVENT:
 				//printf("UI_NEW_AUDIO_EVENT\r\n");
-				ui_controls_volume_refresh();
+//!				ui_controls_volume_refresh();
 				break;
 
 			default:

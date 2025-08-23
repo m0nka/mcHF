@@ -33,7 +33,11 @@
 // GUIDRV_LIN_OSX_32 - 32bpp, X axis mirrored, X and Y swapped
 #ifdef LCD_LANDSCAPE
 //
+#ifdef STARTEK_43INCH
+#define DISPLAY_DRIVER_0   		GUIDRV_LIN_OSX_32
+#else
 #define DISPLAY_DRIVER_0   		GUIDRV_LIN_OSY_32
+#endif
 #else
 #define DISPLAY_DRIVER_0   		GUIDRV_LIN_32
 #endif
@@ -44,7 +48,11 @@
 #if (GUI_NUM_LAYERS > 1)
 //
 #ifdef LCD_LANDSCAPE
+#ifdef STARTEK_43INCH
+#define DISPLAY_DRIVER_1   		GUIDRV_LIN_OSX_32
+#else
 #define DISPLAY_DRIVER_1   		GUIDRV_LIN_OSY_32
+#endif
 #else
 #define DISPLAY_DRIVER_1   		GUIDRV_LIN_32
 #endif

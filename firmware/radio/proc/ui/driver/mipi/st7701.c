@@ -16,6 +16,7 @@
 #include <stddef.h>
 
 // Vendor specific/not documented
+#ifdef STARTEK_5INCH
 static const uint8_t cmd2_bk1_e0[] = {0x00, 0x00, 0x02};
 static const uint8_t cmd2_bk1_e1[] = {0x08, 0x00, 0x0A, 0x00, 0x07, 0x00, 0x09, 0x00, 0x00, 0x33, 0x33};
 static const uint8_t cmd2_bk1_e2[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -28,6 +29,24 @@ static const uint8_t cmd2_bk1_e8[] = {0x0D, 0x60, 0xA0, 0xA0, 0x0F, 0x60, 0xA0, 
 static const uint8_t cmd2_bk1_eb[] = {0x02, 0x01, 0xE4, 0xE4, 0x44, 0x00, 0x40};
 static const uint8_t cmd2_bk1_ec[] = {0x02, 0x01};
 static const uint8_t cmd2_bk1_ed[] = {0xAB, 0x89, 0x76, 0x54, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x10, 0x45, 0x67, 0x98, 0xBA};
+#endif
+
+#ifdef STARTEK_35INCH
+static const uint8_t gamma1[] = {0xC0,0x0C,0x92,0x0C,0x10,0x05,0x02,0x0D,0x07,0x21,0x04,0x53,0x11,0x6A,0x32,0x1F};
+static const uint8_t gamma2[] = {0xC0,0x87,0xCF,0x0C,0x10,0x06,0x00,0x03,0x08,0x1D,0x06,0x54,0x12,0xE6,0xEC,0x0F};
+static const uint8_t cmd2_bk1_e0[] = {0x00, 0x00, 0x02};
+static const uint8_t cmd2_bk1_e1[] = {0x04,0xA0,0x06,0xA0,0x05,0xA0,0x07,0xA0,0x00,0x44,0x44};
+static const uint8_t cmd2_bk1_e2[] = {0x00,0x00,0x33,0x33,0x01,0xA0,0x00,0x00,0x01,0xA0,0x00,0x00};
+static const uint8_t cmd2_bk1_e3[] = {0x00, 0x00, 0x33, 0x33};
+static const uint8_t cmd2_bk1_e4[] = {0x44, 0x44};
+static const uint8_t cmd2_bk1_e5[] = {0x0C,0x30,0xA0,0xA0,0x0E,0x32,0xA0,0xA0,0x08,0x2C,0xA0,0xA0,0x0A,0x2E,0xA0,0xA0};
+static const uint8_t cmd2_bk1_e6[] = {0x00, 0x00, 0x33, 0x33};
+static const uint8_t cmd2_bk1_e7[] = {0x44, 0x44};
+static const uint8_t cmd2_bk1_e8[] = {0x0D,0x31,0xA0,0xA0,0x0F,0x33,0xA0,0xA0,0x09,0x2D,0xA0,0xA0,0x0B,0x2F,0xA0,0xA0};
+static const uint8_t cmd2_bk1_eb[] = {0x00,0x01,0xE4,0xE4,0x44,0x88,0x00};
+static const uint8_t cmd2_bk1_ed[] = {0xFF,0xF5,0x47,0x6F,0x0B,0xA1,0xA2,0xBF,0xFB,0x2A,0x1A,0xB0,0xF6,0x74,0x5F,0xFF};
+static const uint8_t cmd2_bk1_ef[] = {0x08,0x08,0x08,0x40,0x3F,0x64};
+#endif
 
 const uint8_t sleep_out[] = {OTM8009A_CMD_SLPOUT, 0x00};
 
@@ -53,9 +72,7 @@ void mipi_change_page(unsigned char page)
 	print_hex_array(lcd_reg_data,6);
 	#endif
 }
-#endif
-
-#ifdef STARTEK_43INCH
+#else
 void mipi_change_page(unsigned long controller_id, unsigned char page)
 {
 	//static const uint8_t lcd_reg_data00[] =   {0x77, 0x01, 0x00, 0x00, 0x00};
@@ -423,7 +440,7 @@ int ST7701S_Init(unsigned long ColorCoding)
 	mipi_write_short(0x3A, 0x70);
 
 	// Backlight control off
-	mipi_write_short(0x53, 0x00);
+	//mipi_write_short(0x53, 0x00);
 
 	mipi_write_short(0x11, 0);
 	HAL_Delay(120);
@@ -432,5 +449,183 @@ int ST7701S_Init(unsigned long ColorCoding)
 
 	printf("ST7701_Init done.\r\n");
 	return 0;
+}
+#endif
+
+#ifdef STARTEK_35INCH
+int ST7701S_Init(unsigned long ColorCoding)
+{
+	static const uint8_t lcd_reg_data03[] = {0x02, 0x00, 0x00};
+	unsigned char buff[40];
+
+	printf("ST7701_Init...\r\n");
+
+	// After reset delay	-	 ToDo: check if kernel running, if yes, use OS delay!
+	HAL_Delay(200);
+
+	//mipi_write_long(  MIPI_DCS_EXIT_SLEEP_MODE, buff, 0);
+	//DSI_IO_WriteCmd(0, (uint8_t *)sleep_out);
+	mipi_write_short(MIPI_DCS_EXIT_SLEEP_MODE, 0);
+
+	// After sleep delay	-	 ToDo: check if kernel running, if yes, use OS delay!
+	HAL_Delay(120);
+
+	// -------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+	// Change to Page
+	mipi_change_page(0x77010000, 0x13);
+
+	mipi_write_short(0xEF, 0x08);
+
+	// -------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+	// Change to Page
+	mipi_change_page(0x77010000, 0x10);
+
+	// -------------------------------------------------------------------------------
+	// Display Line setting (0xC0)
+	//
+	// EX:(C0:0x6b,0x00) ((0x6b+1) x 8) = 864;
+	// EX:(C0:0xe9,0x03) ((0x69+1) x 8) + ( 3x2 ) = 854
+	//
+	buff[0] = DSI_CMD2_BK0_LNESET_B0;
+	buff[1] = DSI_CMD2_BK0_LNESET_B1;
+	//printf("lineset: %02x %02x \r\n",buff[0],buff[1]);
+	mipi_write_long(DSI_CMD2_BK0_LNESET, buff, 2);
+
+	// -------------------------------------------------------------------------------
+	// Porch control (0xC1)
+	//
+	buff[0] = DSI_CMD2_BK0_PORCTRL_B0;
+	buff[1] = DSI_CMD2_BK0_PORCTRL_B1;
+	mipi_write_long(DSI_CMD2_BK0_PORCTRL, buff, 2);
+
+	// -------------------------------------------------------------------------------
+	// Inversion selection and frame rate control
+	//
+	// Densitron: 	0x37 0x08
+	// Linux:		0x37 0x06
+	//
+	buff[0] = DSI_CMD2_BK0_INVSEL_B0;
+	buff[1] = DSI_CMD2_BK0_INVSEL_B1;
+	mipi_write_long(0xC2, buff, 2);
+	mipi_write_long(0xC3, &lcd_reg_data03[0], sizeof(lcd_reg_data03));
+
+	// Rotate LCD 180deg for v 0.9
+//!	mipi_write_short(0xC7, 0x04);
+
+	// WTF ??
+	mipi_write_short(0xCC, 0x10);
+
+	// GAMMA SET
+	mipi_write_long(0xB0, &gamma1[0], sizeof(gamma1));
+	mipi_write_long(0xB1, &gamma2[0], sizeof(gamma2));
+
+	/*-----------------------------End Gamma Setting------------------------------*/
+	/*------------------------End Display Control setting-------------------------*/
+	/*-----------------------------Bank0 Setting  End-----------------------------*/
+	/*-------------------------------Bank1 Setting--------------------------------*/
+
+	// -------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+	// Change to Page
+	mipi_change_page(0x77010000, 0x11);
+
+	//VOP
+	mipi_write_short(0xB0, 0x5D);
+
+   //VCOM
+	mipi_write_short(0xB1, 0x62);
+
+	//VGH 15V
+	mipi_write_short(0xB2, 0x87);
+
+	mipi_write_short(0xB3, 0x80);
+
+	//VGL ~-10V 2023.06.17¸üÐÂ
+	mipi_write_short(0xB5, 0x49);
+
+	mipi_write_short(0xB7, 0x85);
+
+	//avdd
+	mipi_write_short(0xB8, 0x22);
+
+	mipi_write_short(0xC0, 0x09);
+	mipi_write_short(0xC1, 0x78);
+	mipi_write_short(0xC2, 0x78);
+	mipi_write_short(0xD0, 0x88);
+	mipi_write_short(0xEE, 0x42);
+
+	HAL_Delay(100);
+	/*--------------------End Power Control Registers Initial --------------------*/
+	//********GIP SET********************///
+	mipi_write_long(0xE0, &cmd2_bk1_e0[0], sizeof(cmd2_bk1_e0));
+	mipi_write_long(0xE1, &cmd2_bk1_e1[0], sizeof(cmd2_bk1_e1));
+	mipi_write_long(0xE2, &cmd2_bk1_e2[0], sizeof(cmd2_bk1_e2));
+	mipi_write_long(0xE3, &cmd2_bk1_e3[0], sizeof(cmd2_bk1_e3));
+	mipi_write_long(0xE4, &cmd2_bk1_e4[0], sizeof(cmd2_bk1_e4));
+	mipi_write_long(0xE5, &cmd2_bk1_e5[0], sizeof(cmd2_bk1_e5));
+	mipi_write_long(0xE6, &cmd2_bk1_e6[0], sizeof(cmd2_bk1_e6));
+	mipi_write_long(0xE7, &cmd2_bk1_e7[0], sizeof(cmd2_bk1_e7));
+	mipi_write_long(0xE8, &cmd2_bk1_e8[0], sizeof(cmd2_bk1_e8));
+	mipi_write_long(0xEB, &cmd2_bk1_eb[0], sizeof(cmd2_bk1_eb));
+	mipi_write_long(0xED, &cmd2_bk1_ed[0], sizeof(cmd2_bk1_ed));
+	mipi_write_long(0xEF, &cmd2_bk1_ef[0], sizeof(cmd2_bk1_ef));
+
+	// -------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+	// Change to Page
+	mipi_change_page(0x77010000, 0x13);
+
+	buff[0] = 0x00;
+	buff[1] = 0x0E;
+	mipi_write_long(0xE8, buff, 2);
+
+	// -------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+	// Change to Page
+	mipi_change_page(0x77010000, 0x00);
+
+	mipi_write_short(0x11, 0);
+	HAL_Delay(120);
+
+	// -------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+	// Change to Page
+	mipi_change_page(0x77010000, 0x13);
+
+	buff[0] = 0x00;
+	buff[1] = 0x0C;
+	mipi_write_long(0xE8, buff, 2);
+
+	HAL_Delay(10);
+
+	buff[0] = 0x00;
+	buff[1] = 0x00;
+	mipi_write_long(0xE8, buff, 2);
+
+	// -------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------
+	// Change to Page 0 CMD for Normal command
+	mipi_change_page(0x77010000, 0x00);
+
+	// Rotate LCD 180deg for v 0.9
+//!	mipi_write_short(0x36, 0x10);
+
+	mipi_write_short(0x3A, 0x70);
+
+	mipi_write_short(0x29, 0);
+	HAL_Delay(20);
+
+	printf("ST7701_Init done.\r\n");
+	return 0;
+
 }
 #endif
