@@ -22,7 +22,11 @@
 #include "ui_controls_cpu_stat.h"
 #include "desktop\ui_controls_layout.h"
 
-#define SPROG_X				(SPEAKER_X - 64)
+#ifdef STARTEK_5INCH
+#define SPROG_X				(PROG_PANEL_X + 16)
+#else
+#define SPROG_X				(PROG_PANEL_X + 7)
+#endif
 
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
