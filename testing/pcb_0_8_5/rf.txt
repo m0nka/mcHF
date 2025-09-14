@@ -9,14 +9,14 @@
 - C89/M21/R38a too close to inductor, not easy for rework
 - R34h is under D2a!!!
 - RFC4 under heatsink not optimal! Also touches speaker terminal pad(needs new location!)
-- USB connector body not connected to GND
+- [USB connector body not connected to GND]
 - R13e needs to be 10k(not 1k)
 - add cutout for paddle connector access
 - FWD and REV are swapped
-- Q6 gate and drain swapped ;(
-- D6 is overkill, use smaller diode
-- Add SS34 in paralled to Q6
-- R500/R501, current draw too high, increase to 56k/10k(280uA)
+- [Q6 gate and drain swapped]
+- [D6 is overkill, use smaller diode]
+- [Add SS34 in paralled to Q6]
+- [R500/R501, current draw too high, increase to 56k/10k(280uA)]
 - add two diodes infront of VBAT div, to PACK_P and BATT_F rails(otherwise radio will not start if BMS fails, 
   or no cells installed, and using USB power)
 - dedicate ANT2 for LORA, so uf.l connector  

@@ -179,37 +179,39 @@ uint32_t 			uhPrescalerValue = 0;
 
 void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
 {
-  GPIO_InitTypeDef   GPIO_InitStruct;
-  /*##-1- Enable peripherals and GPIO Clocks #################################*/
-  /* TIMx Peripheral clock enable */
-  __HAL_RCC_TIM1_CLK_ENABLE();
+	GPIO_InitTypeDef   GPIO_InitStruct;
+	/*##-1- Enable peripherals and GPIO Clocks #################################*/
+	/* TIMx Peripheral clock enable */
+	__HAL_RCC_TIM1_CLK_ENABLE();
 
-  /* Enable GPIO Channels Clock */
-  //TIMx_CHANNEL_GPIO_PORT();
+	/* Enable GPIO Channels Clock */
+	//TIMx_CHANNEL_GPIO_PORT();
 
-  /* Configure PE.09 (TIM1_Channel1), PE.11(TIM1_Channel2), PE.13 (TIM1_Channel3),
+	/* Configure PE.09 (TIM1_Channel1), PE.11(TIM1_Channel2), PE.13 (TIM1_Channel3),
      PA.11(TIM1_Channel4) in output, push-pull, alternate function mode
-  */
-  /* Common configuration for all channels */
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	 */
+	/* Common configuration for all channels */
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 
-  GPIO_InitStruct.Alternate = GPIO_AF1_TIM1;
-  GPIO_InitStruct.Pin = BMS_PWM_PIN;
-  HAL_GPIO_Init(BMS_PWM_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Alternate = GPIO_AF1_TIM1;
+	#ifndef PCB_V9_REV_A
+	GPIO_InitStruct.Pin = BMS_PWM_PIN;
+	HAL_GPIO_Init(BMS_PWM_PORT, &GPIO_InitStruct);
+	#endif
 
-  GPIO_InitStruct.Alternate = GPIO_AF1_TIM1;
-  GPIO_InitStruct.Pin = LCD_BL_CTRL_PIN;
-  HAL_GPIO_Init(LCD_BL_CTRL_GPIO_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Alternate = GPIO_AF1_TIM1;
+	GPIO_InitStruct.Pin = LCD_BL_CTRL_PIN;
+	HAL_GPIO_Init(LCD_BL_CTRL_GPIO_PORT, &GPIO_InitStruct);
 
-  //GPIO_InitStruct.Alternate = TIMx_GPIO_AF_CHANNEL3;
-  //GPIO_InitStruct.Pin = TIMx_GPIO_PIN_CHANNEL3;
-  //HAL_GPIO_Init(TIMx_GPIO_PORT_CHANNEL3, &GPIO_InitStruct);
+	//GPIO_InitStruct.Alternate = TIMx_GPIO_AF_CHANNEL3;
+	//GPIO_InitStruct.Pin = TIMx_GPIO_PIN_CHANNEL3;
+	//HAL_GPIO_Init(TIMx_GPIO_PORT_CHANNEL3, &GPIO_InitStruct);
 
-  //GPIO_InitStruct.Alternate = TIMx_GPIO_AF_CHANNEL4;
-  //GPIO_InitStruct.Pin = TIMx_GPIO_PIN_CHANNEL4;
-  //HAL_GPIO_Init(TIMx_GPIO_PORT_CHANNEL4, &GPIO_InitStruct);
+	//GPIO_InitStruct.Alternate = TIMx_GPIO_AF_CHANNEL4;
+	//GPIO_InitStruct.Pin = TIMx_GPIO_PIN_CHANNEL4;
+	//HAL_GPIO_Init(TIMx_GPIO_PORT_CHANNEL4, &GPIO_InitStruct);
 }
 
 #endif
