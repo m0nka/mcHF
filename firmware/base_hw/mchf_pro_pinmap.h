@@ -1001,8 +1001,8 @@
 //
 
 // PF6			ADC3_INP8, Ambient light sensor
-#define POWER_LED						LL_GPIO_PIN_6
-#define POWER_LED_PORT            		GPIOF
+#define TX_LED							LL_GPIO_PIN_6
+#define TX_LED_PORT            			GPIOF
 
 // PF7			ADC3_INP3, PA Temperature
 #define ADC3_INP3						LL_GPIO_PIN_7

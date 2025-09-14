@@ -378,7 +378,7 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
         (void)HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
 
         ulong type = mipi_get_type();
-        printf("LCD type: %08x  \r\n", type);
+        printf("LCD type: 0x%08x  \r\n", type);
 
         ST7701S_Init(DSI_RGB565);
       }

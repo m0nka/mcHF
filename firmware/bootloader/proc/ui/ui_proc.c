@@ -28,6 +28,7 @@
 #include "hw_flash.h"
 
 #include "selftest_proc.h"
+#include "keypad_proc.h"
 
 #include "ui_proc.h"
 
@@ -276,6 +277,41 @@ void ui_proc_show_charge_data(void)
 	lcd_low_DisplayStringAt(LINE(27), 100,  (uchar *)buff, LEFT_MODE);
 }
 
+void ui_proc_show_keyboard(void)
+{
+	char 	buff[50];
+	static ulong keyb_timer = 0;
+
+	// Get last key
+	uchar key = keypad_proc_get(0);
+
+	if(key == 0)
+		return;
+
+    // Text attributes
+	lcd_low_SetBackColor(lcd_low_COLOR_BLACK);
+	lcd_low_SetTextColor(lcd_low_COLOR_GREEN);
+	lcd_low_SetFont(&Font16);
+
+	// Run timer
+	if(keyb_timer == 0)
+		keyb_timer = sys_timer;
+	else if((keyb_timer + 4000) < sys_timer)
+	{
+		keyb_timer = sys_timer;
+		keypad_proc_get(1);
+
+		lcd_low_SetTextColor(lcd_low_COLOR_BLACK);
+		lcd_low_DisplayStringAt(LINE(24), 15,  (uchar *)"                         ", LEFT_MODE);
+		return;
+	}
+
+	lcd_low_DisplayStringAt(LINE(24), 15,  (uchar *)"KEY:", LEFT_MODE);
+
+	sprintf(buff, "x=%d, y=%d", key >> 4, key & 0x0F);
+	lcd_low_DisplayStringAt(LINE(24), 80,  (uchar *)buff, LEFT_MODE);
+}
+
 void ui_proc_bootup(void)
 {
 	char 	buff[200];
@@ -295,7 +331,7 @@ void ui_proc_bootup(void)
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	sprintf(buff, "%s", DEVICE_STRING);
-	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)buff, LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)buff, LEFT_MODE);
 	line += 2;
 	sprintf(buff, "%d.%d.%d.%d", MCHF_L_VER_MAJOR, MCHF_L_VER_MINOR, MCHF_L_VER_RELEASE, MCHF_L_VER_BUILD);
 	lcd_low_DisplayStringAt(LINE(1) + 1, 350, (uint8_t *)buff, LEFT_MODE);	// label
@@ -311,97 +347,97 @@ void ui_proc_bootup(void)
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	// Test for general boot error (clocks, lcd, etc)
-	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing BOOT UP....", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing BOOT UP....", LEFT_MODE);
 
 	if(gen_boot_reason_err == 0)
 	{
 		//HAL_Delay(500);
-		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing BOOT UP....PASS", LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing BOOT UP....PASS", LEFT_MODE);
 	}
 	else
 	{
 		//HAL_Delay(500);
 		sprintf(buff, "Update Firmware....FAIL(%d)", gen_boot_reason_err);
-		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)buff, LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)buff, LEFT_MODE);
 	}
 	line++;
 
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	// Test BMS
-	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing BMS........", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing BMS........", LEFT_MODE);
 
 	if((batt_status != 0xFFFF)&&(batt_status != 0))
 	{
 		//HAL_Delay(500);
-		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing BMS........PASS", LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing BMS........PASS", LEFT_MODE);
 	}
 	else
 	{
 		//HAL_Delay(500);
 		sprintf(buff, "Testing BMS........FAIL(%04x)", batt_status);
-		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)buff, LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)buff, LEFT_MODE);
 	}
 	line++;
 
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	// SDRAM test
-	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SDRAM......", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing SDRAM......", LEFT_MODE);
 
 	if(sdram_test() != 0)
 	{
 		//HAL_Delay(500);
-		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SDRAM......FAIL.", LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing SDRAM......FAIL.", LEFT_MODE);
 		goto stall;
 	}
 	else
 	{
 		//HAL_Delay(500);
-		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SDRAM......PASS", LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing SDRAM......PASS", LEFT_MODE);
 	}
 	line++;
 
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	// SD Card test
-	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SD Card....", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing SD Card....", LEFT_MODE);
 
 	if(test_sd_card() == 0)
 	{
 		//HAL_Delay(500);
-		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SD Card....PASS", LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing SD Card....PASS", LEFT_MODE);
 		line++;
 
 		if(reset_reason == RESET_UPDATE_FW)
 		{
 			//HAL_Delay(500);
-			lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Update Firmware....", LEFT_MODE);
+			lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Update Firmware....", LEFT_MODE);
 
 			uchar res = 0;//update_radio();
 			if(res == 0)
 			{
 				//HAL_Delay(500);
-				lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Update Firmware....PASS", LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Update Firmware....PASS", LEFT_MODE);
 			}
 			else
 			{
 				//HAL_Delay(500);
 				sprintf(buff, "Update Firmware....FAIL(%d)", res);
-				lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)buff, LEFT_MODE);
+				lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)buff, LEFT_MODE);
 			}
 			line++;
 		}
 
 		#if 0
-		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Upload DSP Core....", LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Upload DSP Core....", LEFT_MODE);
 		uchar d_res = load_default_dsp_core(1);
 		if(d_res == 0)
-			lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Upload DSP Core....PASS", LEFT_MODE);
+			lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Upload DSP Core....PASS", LEFT_MODE);
 		else
 		{
 			sprintf(buff, "Upload DSP Core....FAIL(%d)", d_res);
-			lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)buff, LEFT_MODE);
+			lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)buff, LEFT_MODE);
 		}
 		line++;
 		#endif
@@ -412,14 +448,14 @@ void ui_proc_bootup(void)
 	else
 	{
 		//HAL_Delay(500);
-		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing SD Card....FAIL", LEFT_MODE);
+		lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing SD Card....FAIL", LEFT_MODE);
 		line++;
 	}
 
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
 	// Firmware test
-//!	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing Firmware...", LEFT_MODE);
+//!	lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing Firmware...", LEFT_MODE);
 
 run_radio:
 	return;
@@ -432,10 +468,10 @@ stall:
 	if(is_firmware_valid() == 0)
 	{
 		//HAL_Delay(500);
-//!		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing Firmware...PASS", LEFT_MODE);
+//!		lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing Firmware...PASS", LEFT_MODE);
 		line++;
 
-//!		lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Booting to radio...", LEFT_MODE);
+//!		lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Booting to radio...", LEFT_MODE);
 		//HAL_Delay(2000);
 
 		// Jump
@@ -443,7 +479,7 @@ stall:
 	}
 
 	HAL_Delay(500);
-	lcd_low_DisplayStringAt(LINE(line), 40, (uchar *)"Testing Firmware...FAIL", LEFT_MODE);
+	lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing Firmware...FAIL", LEFT_MODE);
 	line++;
 
 	// Test - chip blank programming
@@ -504,6 +540,7 @@ void ui_proc(void)
 	ui_proc_show_charge_msg();
 	ui_proc_show_soc();
 	ui_proc_show_charge_data();
+	ui_proc_show_keyboard();
 }
 
 void ui_proc_init(void)

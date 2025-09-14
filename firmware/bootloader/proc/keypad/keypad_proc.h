@@ -132,6 +132,9 @@ __attribute__((__common__)) struct KEYPAD_STATE {
 	uchar	tap_id;
 	uchar	irq_id;
 
+	uchar 	curr_x;
+	uchar	curr_y;
+
 } KEYPAD_STATE;
 
 void keypad_proc_irq(uchar id);
@@ -139,5 +142,7 @@ void keypad_proc_init(void);
 
 uchar keypad_proc_is_held_on_start(void);
 void keypad_proc(void);
+
+uchar keypad_proc_get(uchar clear);
 
 #endif

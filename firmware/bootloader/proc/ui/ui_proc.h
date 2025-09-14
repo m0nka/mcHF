@@ -4,6 +4,8 @@
 #define BMS_FLAGS_X1	350
 #define BMS_FLAGS_X2	420
 
+#define LEFT_POS		10
+
 void ui_proc(void);
 void ui_proc_init(void);
 

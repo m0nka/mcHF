@@ -186,7 +186,7 @@ static void keypad_handle_multitap(uchar max_ids)
 //*----------------------------------------------------------------------------
 static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 {
-	//--printf("x=%d, y=%d, hld=%d, rel=%d\r\n", x, y, hold, release);
+	//printf("x=%d, y=%d, hld=%d, rel=%d\r\n", x, y, hold, release);
 
 	// Button held on start
 	if((x == 1)&&(y == 4)&&(hold == 1)&&(release == 1))
@@ -200,6 +200,12 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 	{
 		//printf("leave boot request  \r\n");
 		stay_in_boot = 0;
+	}
+
+	if((hold == 0)&&(release == 0))
+	{
+		ks.curr_x = x;
+		ks.curr_y = y;
 	}
 }
 
@@ -376,6 +382,19 @@ void keypad_proc(void)
 		NVIC_EnableIRQ	(EXTI15_10_IRQn);
 		ks.irq_id = 0;
 	}
+}
+
+uchar keypad_proc_get(uchar clear)
+{
+	if(clear)
+	{
+		ks.curr_x = 0;
+		ks.curr_y = 0;
+		return 0;
+	}
+
+	//printf("x=%d, y=%d\r\n", ks.curr_x, ks.curr_y);
+	return ((ks.curr_x << 4)|ks.curr_y);
 }
 
 
