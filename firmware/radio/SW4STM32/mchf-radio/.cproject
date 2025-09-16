@@ -365,10 +365,11 @@
 									<listOptionValue builtIn="false" value="BOARD_TEST_CODEC__"/>
 									<listOptionValue builtIn="false" value="BOARD_TEST_BMS__"/>
 									<listOptionValue builtIn="false" value="RADIO"/>
-									<listOptionValue builtIn="false" value="REV_0_8_4_PATCH"/>
+									<listOptionValue builtIn="false" value="REV_0_8_4_PATCH__"/>
 									<listOptionValue builtIn="false" value="STARTEK_5INCH__"/>
 									<listOptionValue builtIn="false" value="STARTEK_43INCH"/>
 									<listOptionValue builtIn="false" value="STARTEK_35INCH__"/>
+									<listOptionValue builtIn="false" value="PCB_V9_REV_A"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="true" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.otherflags.211633042" name="Other flags" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.otherflags" useByScannerDiscovery="true" valueType="stringList"/>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.languagestandard.2074062857" name="Language standard" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.languagestandard" useByScannerDiscovery="true" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.languagestandard.value.gnu11" valueType="enumerated"/>

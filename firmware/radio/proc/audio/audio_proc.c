@@ -167,7 +167,7 @@ static void btm_proc_task(void *arg)
 
 	for(;;)
 	{
-		new_bt_state = HAL_GPIO_ReadPin(BT_CONNECT_STATUS_PORT, BT_CONNECT_STATUS);
+		new_bt_state = HAL_GPIO_ReadPin(BT_COMM_STAT_PORT, BT_COMM_STAT_PIN);
 		if(new_bt_state != old_bt_state)
 		{
 			//

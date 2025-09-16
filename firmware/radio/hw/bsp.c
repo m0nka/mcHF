@@ -260,8 +260,8 @@ static void EXTI23_IRQHandler_Config(void)
 	GPIO_InitStructure.Pull 	= GPIO_PULLUP;
 	GPIO_InitStructure.Speed 	= GPIO_SPEED_FREQ_VERY_HIGH;
 
-	GPIO_InitStructure.Pin 		= PADDLE_DIT;
-	HAL_GPIO_Init(PADDLE_DIT_PIO, &GPIO_InitStructure);
+	GPIO_InitStructure.Pin 		= PADDLE_DIT_PIN;
+	HAL_GPIO_Init(PADDLE_DIT_PORT, &GPIO_InitStructure);
 
 	GPIO_InitStructure.Pin 		= PADDLE_DAH;
 	HAL_GPIO_Init(PADDLE_DAH_PIO, &GPIO_InitStructure);
@@ -548,7 +548,7 @@ uint8_t bsp_config(void)
 	printf("-->%s v: %d.%d.%d\r\n", DEVICE_STRING, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE, MCHF_R_VER_BUILD);
 
 	// Useful during ushdr port
-	#ifndef REV_0_8_4_PATCH
+	#ifndef REV_0_8_4_PATCH__
 	printf("== allow m4 core to take control and stall application processor == \r\n");
 	HAL_Delay(500);
 	bsp_wake_second_core();

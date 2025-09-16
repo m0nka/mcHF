@@ -330,7 +330,7 @@ void ui_proc_bootup(void)
 
 	// -----------------------------------------------------------------------------------------------
 	// -----------------------------------------------------------------------------------------------
-	sprintf(buff, "%s", DEVICE_STRING);
+	sprintf(buff, "%s(via F4)", DEVICE_STRING);
 	lcd_low_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)buff, LEFT_MODE);
 	line += 2;
 	sprintf(buff, "%d.%d.%d.%d", MCHF_L_VER_MAJOR, MCHF_L_VER_MINOR, MCHF_L_VER_RELEASE, MCHF_L_VER_BUILD);

@@ -336,13 +336,14 @@ uchar keypad_proc_is_held_on_start(void)
 {
 	uchar res = 0;
 
-	#ifndef REV_0_8_4_PATCH__
+	#ifndef REV_0_8_4_PATCH
 	keypad_set_out_lines_a(0);
 
-	if(keypad_check_input_lines_a() == 4)
+	// F4, held on start
+	if(keypad_check_input_lines_a() == 3)
 	{
 		HAL_Delay(50);
-		if(keypad_check_input_lines_a() == 4)
+		if(keypad_check_input_lines_a() == 3)
 		{
 			res = 1;
 			stay_in_boot = 1;

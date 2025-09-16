@@ -471,9 +471,9 @@ void codec_hw_init(void)
 	gpio_init_structure.Pull  = GPIO_NOPULL;
 
 	// BT Connect input line
-	gpio_init_structure.Pin   = BT_CONNECT_STATUS;
+	gpio_init_structure.Pin   = BT_COMM_STAT_PIN;
 	gpio_init_structure.Mode  = GPIO_MODE_INPUT;
-	HAL_GPIO_Init(BT_CONNECT_STATUS_PORT, &gpio_init_structure);
+	HAL_GPIO_Init(BT_COMM_STAT_PORT, &gpio_init_structure);
 
 	// Reset line is PC14
 	gpio_init_structure.Pin   = CODEC_RESET;
