@@ -531,7 +531,11 @@ static void SDRAM_MspInit(SDRAM_HandleTypeDef  *hsdram)
 	HAL_GPIO_Init(GPIOG, &gpio_init_structure);
 	#endif
 	#ifdef BOARD_MCHF_PRO
+	#ifndef PCB_V9_REV_A
 	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_8 | GPIO_PIN_15;
+	#else
+	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_8 | GPIO_PIN_15;
+	#endif
 	HAL_GPIO_Init(GPIOG, &gpio_init_structure);
 	#endif
 

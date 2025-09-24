@@ -17,6 +17,12 @@
 #define GT911_I2C_ADDRESS 		0xBA
 //#define GT911_I2C_ADDRESS 	0x28
 
+#ifndef PCB_V9_REV_A
+#define TOUCH_X_SIZE			854
+#else
+#define TOUCH_X_SIZE			800
+#endif
+
 __attribute__((__common__)) struct GT911_CONFIG {
 
 	ushort	x_max;

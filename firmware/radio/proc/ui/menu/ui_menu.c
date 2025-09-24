@@ -173,7 +173,11 @@ static void _cbBk(WM_MESSAGE * pMsg)
 				GUI_SetColor(menu_layout[ui_s.theme_id].mbar_bkg_clr);
 				GUI_FillRect(menu_layout[ui_s.theme_id].mbar_x,
 							(menu_layout[ui_s.theme_id].mbar_y),
+							#ifndef PCB_V9_REV_A
 							(menu_layout[ui_s.theme_id].mbar_sz_x + 535),
+							#else
+							(menu_layout[ui_s.theme_id].mbar_sz_x + 481),
+							#endif
 							(menu_layout[ui_s.theme_id].mbar_y + menu_layout[ui_s.theme_id].mbar_sz_y - 2));
 				#endif
 
@@ -477,7 +481,11 @@ void ui_menu_init(void)
     //hKeypad = GUI_CreateKeyPad(WM_GetDesktopWindowEx(0));
 
 	// Create Exit button
+	#ifndef PCB_V9_REV_A
     hButton = BUTTON_CreateEx(800, menu_layout[ui_s.theme_id].mbar_y, 45, 30, WM_GetDesktopWindowEx(0), WM_CF_SHOW, 0, ID_BUTTON_EXIT);
+	#else
+    hButton = BUTTON_CreateEx(746, menu_layout[ui_s.theme_id].mbar_y, 45, 30, WM_GetDesktopWindowEx(0), WM_CF_SHOW, 0, ID_BUTTON_EXIT);
+	#endif
     BUTTON_SetText(hButton, "X");
 
     WM_SetFocus(hIcon);

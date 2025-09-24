@@ -236,17 +236,17 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 			}
 			#endif
 
-			#if 0
+			#if 1
 			// Is it top part of screen (above combined control ?)
 			if(TS_State.y < (SW_FRAME_Y - 5))
 			{
-				//printf("Top part of LCD touched.\r\n");
+				printf("Top part of LCD touched.\r\n");
 
 				// Is it the Menu ?
-				touch_id = ui_controls_menu_button_is_touch(TS_State.x, TS_State.y);
+				touch_id = 1;//ui_controls_menu_button_is_touch(TS_State.x, TS_State.y);
 				if(touch_id)
 				{
-					//printf("== Menu touch ==\r\n");
+					printf("== Menu touch ==\r\n");
 
 					if(!active_control_shown)
 					{

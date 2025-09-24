@@ -348,11 +348,11 @@ static void touch_proc_ts_update_a(struct GT911_TS ts_g)
 		return;
 
 	// Overflow protect from garbage on the bus
-	if((ts_g.t[0].x > 854)||(ts_g.t[0].y > 854))
+	if((ts_g.t[0].x > TOUCH_X_SIZE)||(ts_g.t[0].y > TOUCH_X_SIZE))
 		return;
 
 	// Swap coordinates
-	TS_State.x 		= (854 - ts_g.t[0].y);
+	TS_State.x 		= (TOUCH_X_SIZE - ts_g.t[0].y);
 	TS_State.y 		= ts_g.t[0].x;
 	TS_State.Layer 	= 0;
 
