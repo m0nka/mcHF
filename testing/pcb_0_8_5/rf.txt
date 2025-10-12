@@ -1,23 +1,26 @@
-- BH1 still need a bit of offset on the pins, also NTC holes not centered
+- [BH1 still need a bit of offset on the pins, also NTC holes not centered]
+- [USB connector body not connected to GND]
+- [R13e needs to be 10k(not 1k)]
+- [FWD and REV are swapped]
+- [Q6 gate and drain swapped]
+- [D6 is overkill, use smaller diode]
+- [Add SS34 in paralled to Q6]
+- [R500/R501, current draw too high, increase to 56k/10k(280uA)]
+- [dedicate ANT2 for LORA, so uf.l connector]  
+- [remove 6pin transverter connectors]
+
+ignore:
+
 - RFC1 touches LORA module
 - RFC2, need bigger inductor/footprint, to handle 1A
 - U200, the MT3608 has diff footprint than RT9293, use same type for both ?
 - U200 control ok via 3V logic levels ? Is there feedtrough of 20V to the cpu ?
-- SS34 footrpint needs to be wider, and pads need spacing out!
+- SS34 footrpint needs to be wider, and pads need spacing out!(replace with SS24)
 - C27/C28 possible wrong placement
 - C114/C115 needs to be next to R50/R51
 - C89/M21/R38a too close to inductor, not easy for rework
 - R34h is under D2a!!!
 - RFC4 under heatsink not optimal! Also touches speaker terminal pad(needs new location!)
-- [USB connector body not connected to GND]
-- R13e needs to be 10k(not 1k)
 - add cutout for paddle connector access
-- FWD and REV are swapped
-- [Q6 gate and drain swapped]
-- [D6 is overkill, use smaller diode]
-- [Add SS34 in paralled to Q6]
-- [R500/R501, current draw too high, increase to 56k/10k(280uA)]
 - add two diodes infront of VBAT div, to PACK_P and BATT_F rails(otherwise radio will not start if BMS fails, 
   or no cells installed, and using USB power)
-- dedicate ANT2 for LORA, so uf.l connector  
-- remove 6pin transverter connectors

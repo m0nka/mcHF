@@ -781,8 +781,8 @@ void radio_init_on_reset(void)
 	// ToDo: Are we going to send those to the DSP core at all ?
 	radio_init_load_dsp_values();
 
-	if(res == 0)
-		return;
+	//if(res == 0)
+	//	return;
 
 	// Restore eeprom
 	radio_init_eep_defaults();
@@ -796,12 +796,13 @@ void radio_init_on_reset(void)
 	tsu.tune				= 0;
 	tsu.bias0				= 0;
 	tsu.bias1				= 0;
+	tsu.demo_mode			= 1;
 
 	// Enforce 20m on eeprom on error
 	tsu.curr_band 						= BAND_MODE_20;
-	tsu.band[tsu.curr_band].volume 		= 0;
+	tsu.band[tsu.curr_band].volume 		= 14;
 	tsu.band[tsu.curr_band].active_vfo  = VFO_A;
-	tsu.band[tsu.curr_band].vfo_a 		= 14074*1000 + 000;
+	tsu.band[tsu.curr_band].vfo_a 		= 14200*1000 + 000;
 	tsu.band[tsu.curr_band].fixed_mode 	= 0;
 	tsu.band[tsu.curr_band].nco_freq	= 0;
 	tsu.band[tsu.curr_band].demod_mode	= DEMOD_USB;

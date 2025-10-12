@@ -478,122 +478,262 @@ static void SDRAM_MspInit(SDRAM_HandleTypeDef  *hsdram)
 	gpio_init_structure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
 	gpio_init_structure.Alternate = GPIO_AF12_FMC;
 
-	/* GPIOC configuration */
-	#ifdef BOARD_MCHF_PRO
+	// GPIOC configuration
+	#ifndef PCB_V9_REV_A
 	gpio_init_structure.Pin   = GPIO_PIN_0;
 	HAL_GPIO_Init(GPIOC, &gpio_init_structure);
+	#else
+	gpio_init_structure.Pin   = FMC_SDNWE_PIN;
+	HAL_GPIO_Init(FMC_SDNWE_PORT, &gpio_init_structure);
 	#endif
 
-	/* GPIOD configuration */
-	#ifdef BOARD_EVAL_747
-	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_8| GPIO_PIN_9 | GPIO_PIN_10 |\
-                              	  GPIO_PIN_14 | GPIO_PIN_15;
-	HAL_GPIO_Init(GPIOD, &gpio_init_structure);
-  	#endif
-	#ifdef BOARD_MCHF_PRO
+	// GPIOD configuration
+	#ifndef PCB_V9_REV_A
 	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_8| GPIO_PIN_9 | GPIO_PIN_10 |\
                           	  GPIO_PIN_14 | GPIO_PIN_15;
 	HAL_GPIO_Init(GPIOD, &gpio_init_structure);
+	#else
+	// PD0
+	gpio_init_structure.Pin = FMC_D2_PIN;
+	HAL_GPIO_Init(FMC_D2_PORT, &gpio_init_structure);
+	// PD1
+	gpio_init_structure.Pin = FMC_D3_PIN;
+	HAL_GPIO_Init(FMC_D3_PORT, &gpio_init_structure);
+	// PD8
+	gpio_init_structure.Pin = FMC_D13_PIN;
+	HAL_GPIO_Init(FMC_D13_PORT, &gpio_init_structure);
+	// PD9
+	gpio_init_structure.Pin = FMC_D14_PIN;
+	HAL_GPIO_Init(FMC_D14_PORT, &gpio_init_structure);
+	// PD10
+	gpio_init_structure.Pin = FMC_D15_PIN;
+	HAL_GPIO_Init(FMC_D15_PORT, &gpio_init_structure);
+	// PD14
+	gpio_init_structure.Pin = FMC_D0_PIN;
+	HAL_GPIO_Init(FMC_D0_PORT, &gpio_init_structure);
+	// PD15
+	gpio_init_structure.Pin = FMC_D1_PIN;
+	HAL_GPIO_Init(FMC_D1_PORT, &gpio_init_structure);
 	#endif
 
-	/* GPIOE configuration */
-	#ifdef BOARD_EVAL_747
+	// GPIOE configuration
+	#ifndef PCB_V9_REV_A
 	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_7| GPIO_PIN_8 | GPIO_PIN_9 |\
                               GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |\
                               GPIO_PIN_15;
 	HAL_GPIO_Init(GPIOE, &gpio_init_structure);
-	#endif
-	#ifdef BOARD_MCHF_PRO
-	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_7| GPIO_PIN_8 | GPIO_PIN_9 |\
-                              GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |\
-                              GPIO_PIN_15;
-	HAL_GPIO_Init(GPIOE, &gpio_init_structure);
+	#else
+	// PE0
+	gpio_init_structure.Pin = FMC_NBL0_PIN;
+	HAL_GPIO_Init(FMC_NBL0_PORT, &gpio_init_structure);
+	// PE1
+	gpio_init_structure.Pin = FMC_NBL1_PIN;
+	HAL_GPIO_Init(FMC_NBL1_PORT, &gpio_init_structure);
+	// PE7
+	gpio_init_structure.Pin = FMC_D4_PIN;
+	HAL_GPIO_Init(FMC_D4_PORT, &gpio_init_structure);
+	// PE8
+	gpio_init_structure.Pin = FMC_D5_PIN;
+	HAL_GPIO_Init(FMC_D5_PORT, &gpio_init_structure);
+	// PE9
+	gpio_init_structure.Pin = FMC_D6_PIN;
+	HAL_GPIO_Init(FMC_D6_PORT, &gpio_init_structure);
+	// PE10
+	gpio_init_structure.Pin = FMC_D7_PIN;
+	HAL_GPIO_Init(FMC_D7_PORT, &gpio_init_structure);
+	// PE11
+	gpio_init_structure.Pin = FMC_D8_PIN;
+	HAL_GPIO_Init(FMC_D8_PORT, &gpio_init_structure);
+	// PE12
+	gpio_init_structure.Pin = FMC_D9_PIN;
+	HAL_GPIO_Init(FMC_D9_PORT, &gpio_init_structure);
+	// PE13
+	gpio_init_structure.Pin = FMC_D10_PIN;
+	HAL_GPIO_Init(FMC_D10_PORT, &gpio_init_structure);
+	// PE14
+	gpio_init_structure.Pin = FMC_D11_PIN;
+	HAL_GPIO_Init(FMC_D11_PORT, &gpio_init_structure);
+	// PE15
+	gpio_init_structure.Pin = FMC_D12_PIN;
+	HAL_GPIO_Init(FMC_D12_PORT, &gpio_init_structure);
 	#endif
 
-	/* GPIOF configuration */
-	#ifdef BOARD_EVAL_747
+	// GPIOF configuration
+	#ifndef PCB_V9_REV_A
 	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2| GPIO_PIN_3 | GPIO_PIN_4 |\
                               GPIO_PIN_5 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |\
                               GPIO_PIN_15;
 	HAL_GPIO_Init(GPIOF, &gpio_init_structure);
-	#endif
-	#ifdef BOARD_MCHF_PRO
-	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2| GPIO_PIN_3 | GPIO_PIN_4 |\
-                              GPIO_PIN_5 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |\
-                              GPIO_PIN_15;
-	HAL_GPIO_Init(GPIOF, &gpio_init_structure);
+	#else
+	// PF0
+	gpio_init_structure.Pin = FMC_A0_PIN;
+	HAL_GPIO_Init(FMC_A0_PORT, &gpio_init_structure);
+	// PF1
+	gpio_init_structure.Pin = FMC_A1_PIN;
+	HAL_GPIO_Init(FMC_A1_PORT, &gpio_init_structure);
+	// PF2
+	gpio_init_structure.Pin = FMC_A2_PIN;
+	HAL_GPIO_Init(FMC_A2_PORT, &gpio_init_structure);
+	// PF3
+	gpio_init_structure.Pin = FMC_A3_PIN;
+	HAL_GPIO_Init(FMC_A3_PORT, &gpio_init_structure);
+	// PF4
+	gpio_init_structure.Pin = FMC_A4_PIN;
+	HAL_GPIO_Init(FMC_A4_PORT, &gpio_init_structure);
+	// PF5
+	gpio_init_structure.Pin = FMC_A5_PIN;
+	HAL_GPIO_Init(FMC_A5_PORT, &gpio_init_structure);
+	// PF11
+	gpio_init_structure.Pin = FMC_SDNRAS_PIN;
+	HAL_GPIO_Init(FMC_SDNRAS_PORT, &gpio_init_structure);
+	// PF12
+	gpio_init_structure.Pin = FMC_A6_PIN;
+	HAL_GPIO_Init(FMC_A6_PORT, &gpio_init_structure);
+	// PF13
+	gpio_init_structure.Pin = FMC_A7_PIN;
+	HAL_GPIO_Init(FMC_A7_PORT, &gpio_init_structure);
+	// PF14
+	gpio_init_structure.Pin = FMC_A8_PIN;
+	HAL_GPIO_Init(FMC_A8_PORT, &gpio_init_structure);
+	// PF15
+	gpio_init_structure.Pin = FMC_A9_PIN;
+	HAL_GPIO_Init(FMC_A9_PORT, &gpio_init_structure);
 	#endif
 
-	/* GPIOG configuration */
-	#ifdef BOARD_EVAL_747
-	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 /*| GPIO_PIN_3 */|\
-                              GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_8 | GPIO_PIN_15;
-	HAL_GPIO_Init(GPIOG, &gpio_init_structure);
-	#endif
-	#ifdef BOARD_MCHF_PRO
+	// GPIOG configuration
 	#ifndef PCB_V9_REV_A
 	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_8 | GPIO_PIN_15;
-	#else
-	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_8 | GPIO_PIN_15;
-	#endif
 	HAL_GPIO_Init(GPIOG, &gpio_init_structure);
+	#else
+	// PG0
+	gpio_init_structure.Pin = FMC_A10_PIN;
+	HAL_GPIO_Init(FMC_A10_PORT, &gpio_init_structure);
+	// PG1
+	gpio_init_structure.Pin = FMC_A11_PIN;
+	HAL_GPIO_Init(FMC_A11_PORT, &gpio_init_structure);
+	// PG2
+	gpio_init_structure.Pin = FMC_A12_PIN;
+	HAL_GPIO_Init(FMC_A12_PORT, &gpio_init_structure);
+	// PG4
+	gpio_init_structure.Pin = FMC_BA0_PIN;
+	HAL_GPIO_Init(FMC_BA0_PORT, &gpio_init_structure);
+	// PG5
+	gpio_init_structure.Pin = FMC_BA1_PIN;
+	HAL_GPIO_Init(FMC_BA1_PORT, &gpio_init_structure);
+	// PG8
+	gpio_init_structure.Pin = FMC_SDCLK_PIN;
+	HAL_GPIO_Init(FMC_SDCLK_PORT, &gpio_init_structure);
+	// PG15
+	gpio_init_structure.Pin = FMC_SDNCAS_PIN;
+	HAL_GPIO_Init(FMC_SDNCAS_PORT, &gpio_init_structure);
 	#endif
 
-	/* GPIOH configuration */
-	#ifdef BOARD_EVAL_747
-	gpio_init_structure.Pin   = GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 |\
-                              GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |\
-                              GPIO_PIN_15;
+	// GPIOH configuration
+	#ifndef PCB_V9_REV_A
+	gpio_init_structure.Pin   = GPIO_PIN_2  | GPIO_PIN_3  | GPIO_PIN_8  | GPIO_PIN_9  |\
+                                GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 |\
+								GPIO_PIN_14 |GPIO_PIN_15;
 	HAL_GPIO_Init(GPIOH, &gpio_init_structure);
-	#endif
-	#ifdef BOARD_MCHF_PRO
-	gpio_init_structure.Pin   = GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_8 | GPIO_PIN_9 |\
-                              GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |\
-                              GPIO_PIN_15;
-	HAL_GPIO_Init(GPIOH, &gpio_init_structure);
+	#else
+	// PH2
+	gpio_init_structure.Pin = FMC_SDCKE0_PIN;
+	HAL_GPIO_Init(FMC_SDCKE0_PORT, &gpio_init_structure);
+	// PH3
+	gpio_init_structure.Pin = FMC_SDNE0_PIN;
+	HAL_GPIO_Init(FMC_SDNE0_PORT, &gpio_init_structure);
+	// PH8
+	gpio_init_structure.Pin = FMC_D16_PIN;
+	HAL_GPIO_Init(FMC_D16_PORT, &gpio_init_structure);
+	// PH9
+	gpio_init_structure.Pin = FMC_D17_PIN;
+	HAL_GPIO_Init(FMC_D17_PORT, &gpio_init_structure);
+	// PH10
+	gpio_init_structure.Pin = FMC_D18_PIN;
+	HAL_GPIO_Init(FMC_D18_PORT, &gpio_init_structure);
+	// PH11
+	gpio_init_structure.Pin = FMC_D19_PIN;
+	HAL_GPIO_Init(FMC_D19_PORT, &gpio_init_structure);
+	// PH12
+	gpio_init_structure.Pin = FMC_D20_PIN;
+	HAL_GPIO_Init(FMC_D20_PORT, &gpio_init_structure);
+	// PH13
+	gpio_init_structure.Pin = FMC_D21_PIN;
+	HAL_GPIO_Init(FMC_D21_PORT, &gpio_init_structure);
+	// PH14
+	gpio_init_structure.Pin = FMC_D22_PIN;
+	HAL_GPIO_Init(FMC_D22_PORT, &gpio_init_structure);
+	// PH15
+	gpio_init_structure.Pin = FMC_D23_PIN;
+	HAL_GPIO_Init(FMC_D23_PORT, &gpio_init_structure);
 	#endif
 
-	/* GPIOI configuration */
-	#ifdef BOARD_EVAL_747
+	// GPIOI configuration
+	#ifndef PCB_V9_REV_A
 	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 |\
                               GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_9 | GPIO_PIN_10;
 	HAL_GPIO_Init(GPIOI, &gpio_init_structure);
+	#else
+	// PI0
+	gpio_init_structure.Pin = FMC_D24_PIN;
+	HAL_GPIO_Init(FMC_D24_PORT, &gpio_init_structure);
+	// PI1
+	gpio_init_structure.Pin = FMC_D25_PIN;
+	HAL_GPIO_Init(FMC_D25_PORT, &gpio_init_structure);
+	// PI2
+	gpio_init_structure.Pin = FMC_D26_PIN;
+	HAL_GPIO_Init(FMC_D26_PORT, &gpio_init_structure);
+	// PI3
+	gpio_init_structure.Pin = FMC_D27_PIN;
+	HAL_GPIO_Init(FMC_D27_PORT, &gpio_init_structure);
+	// PI4
+	gpio_init_structure.Pin = FMC_NBL2_PIN;
+	HAL_GPIO_Init(FMC_NBL2_PORT, &gpio_init_structure);
+	// PI5
+	gpio_init_structure.Pin = FMC_NBL3_PIN;
+	HAL_GPIO_Init(FMC_NBL3_PORT, &gpio_init_structure);
+	// PI6
+	gpio_init_structure.Pin = FMC_D28_PIN;
+	HAL_GPIO_Init(FMC_D28_PORT, &gpio_init_structure);
+	// PI7
+	gpio_init_structure.Pin = FMC_D29_PIN;
+	HAL_GPIO_Init(FMC_D29_PORT, &gpio_init_structure);
+	// PI9
+	gpio_init_structure.Pin = FMC_D30_PIN;
+	HAL_GPIO_Init(FMC_D30_PORT, &gpio_init_structure);
+	// PI10
+	gpio_init_structure.Pin = FMC_D31_PIN;
+	HAL_GPIO_Init(FMC_D31_PORT, &gpio_init_structure);
 	#endif
-	#ifdef BOARD_MCHF_PRO
-	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 |\
-                              GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_9 | GPIO_PIN_10;
-	HAL_GPIO_Init(GPIOI, &gpio_init_structure);
-	#endif
 
-  /* Configure common MDMA parameters */
-  mdma_handle.Init.Request                  = MDMA_REQUEST_SW;
-  mdma_handle.Init.TransferTriggerMode      = MDMA_BLOCK_TRANSFER;
-  mdma_handle.Init.Priority                 = MDMA_PRIORITY_HIGH;
-  mdma_handle.Init.Endianness               = MDMA_LITTLE_ENDIANNESS_PRESERVE;
-  mdma_handle.Init.SourceInc                = MDMA_SRC_INC_WORD;
-  mdma_handle.Init.DestinationInc           = MDMA_DEST_INC_WORD;
-  mdma_handle.Init.SourceDataSize           = MDMA_SRC_DATASIZE_WORD;
-  mdma_handle.Init.DestDataSize             = MDMA_DEST_DATASIZE_WORD;
-  mdma_handle.Init.DataAlignment            = MDMA_DATAALIGN_PACKENABLE;
-  mdma_handle.Init.SourceBurst              = MDMA_SOURCE_BURST_SINGLE;
-  mdma_handle.Init.DestBurst                = MDMA_DEST_BURST_SINGLE;
-  mdma_handle.Init.BufferTransferLength     = 128;
-  mdma_handle.Init.SourceBlockAddressOffset = 0;
-  mdma_handle.Init.DestBlockAddressOffset   = 0;
-  mdma_handle.Instance                      = SDRAM_MDMAx_CHANNEL;
+	/* Configure common MDMA parameters */
+	mdma_handle.Init.Request                  = MDMA_REQUEST_SW;
+	mdma_handle.Init.TransferTriggerMode      = MDMA_BLOCK_TRANSFER;
+	mdma_handle.Init.Priority                 = MDMA_PRIORITY_HIGH;
+	mdma_handle.Init.Endianness               = MDMA_LITTLE_ENDIANNESS_PRESERVE;
+	mdma_handle.Init.SourceInc                = MDMA_SRC_INC_WORD;
+	mdma_handle.Init.DestinationInc           = MDMA_DEST_INC_WORD;
+	mdma_handle.Init.SourceDataSize           = MDMA_SRC_DATASIZE_WORD;
+	mdma_handle.Init.DestDataSize             = MDMA_DEST_DATASIZE_WORD;
+	mdma_handle.Init.DataAlignment            = MDMA_DATAALIGN_PACKENABLE;
+	mdma_handle.Init.SourceBurst              = MDMA_SOURCE_BURST_SINGLE;
+	mdma_handle.Init.DestBurst                = MDMA_DEST_BURST_SINGLE;
+	mdma_handle.Init.BufferTransferLength     = 128;
+	mdma_handle.Init.SourceBlockAddressOffset = 0;
+	mdma_handle.Init.DestBlockAddressOffset   = 0;
+	mdma_handle.Instance                      = SDRAM_MDMAx_CHANNEL;
 
-   /* Associate the MDMA handle */
-  __HAL_LINKDMA(hsdram, hmdma, mdma_handle);
+	/* Associate the MDMA handle */
+	__HAL_LINKDMA(hsdram, hmdma, mdma_handle);
 
-  /* Deinitialize the stream for new transfer */
-  (void)HAL_MDMA_DeInit(&mdma_handle);
+	/* Deinitialize the stream for new transfer */
+	(void)HAL_MDMA_DeInit(&mdma_handle);
 
-  /* Configure the MDMA stream */
-  (void)HAL_MDMA_Init(&mdma_handle);
+	/* Configure the MDMA stream */
+	(void)HAL_MDMA_Init(&mdma_handle);
 
-  /* NVIC configuration for DMA transfer complete interrupt */
-  HAL_NVIC_SetPriority(SDRAM_MDMAx_IRQn, BSP_SDRAM_IT_PRIORITY, 0);
-  HAL_NVIC_EnableIRQ(SDRAM_MDMAx_IRQn);
+	/* NVIC configuration for DMA transfer complete interrupt */
+	HAL_NVIC_SetPriority(SDRAM_MDMAx_IRQn, BSP_SDRAM_IT_PRIORITY, 0);
+	HAL_NVIC_EnableIRQ(SDRAM_MDMAx_IRQn);
 }
 
 /**
