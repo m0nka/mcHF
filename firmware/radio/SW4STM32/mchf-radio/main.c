@@ -86,12 +86,12 @@ void HardFault_Handler(void)
 	printf( "=     %s     =\r\n", pcTaskGetName(NULL));
 	printf( "====================\r\n");
 
-	//--NVIC_SystemReset();
-	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+	NVIC_SystemReset();
+	//HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
 
 	while(1)
 	{
-		LL_GPIO_ResetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
+		//LL_GPIO_ResetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
 	}
 }
 
@@ -258,12 +258,12 @@ void SPI1_IRQHandler(void)
 
 void Error_Handler(int err)
 {
-  /* Turn LED RED on */
-  //if(BSP_Initialized)
-  //	BSP_LED_On(LED_RED);
+	__disable_irq();
 
-  printf( " Error Handler %d\n",err);
-  //configASSERT (0);
+	printf( " Error Handler %d\n", err);
+
+	NVIC_SystemReset();
+	while(1);
 }
 
 void BSP_ErrorHandler(void)

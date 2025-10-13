@@ -390,7 +390,9 @@ void bsp_power_off(void)
 	// Tasks hw cleanup
 	audio_proc_power_cleanup();
 	band_proc_power_cleanup();
+	#ifdef CONTEXT_ROTARY
 	rotary_proc_power_cleanup();
+	#endif
 	touch_proc_power_cleanup();
 	trx_proc_power_clean_up();
 	vfo_proc_power_cleanup();

@@ -796,7 +796,9 @@ void radio_init_on_reset(void)
 	tsu.tune				= 0;
 	tsu.bias0				= 0;
 	tsu.bias1				= 0;
-	tsu.demo_mode			= 1;
+
+	tsu.demo_mode			= 0;
+	tsu.bt_enabled 			= 0;
 
 	// Enforce 20m on eeprom on error
 	tsu.curr_band 						= BAND_MODE_20;

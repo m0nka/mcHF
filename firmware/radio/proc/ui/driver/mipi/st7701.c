@@ -241,7 +241,7 @@ int ST7701S_Init(unsigned long ColorCoding)
 {
 	//unsigned char buff[40];
 
-	printf("ST7701_Init...\r\n");
+	//printf("ST7701_Init...\r\n");
 
 	//mipi_exit_sleep();
 
@@ -447,7 +447,7 @@ int ST7701S_Init(unsigned long ColorCoding)
 	mipi_write_short(0x29, 0);
 	HAL_Delay(25);
 
-	printf("ST7701_Init done.\r\n");
+	//printf("ST7701_Init done.\r\n");
 	return 0;
 }
 #endif

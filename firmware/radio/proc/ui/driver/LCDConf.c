@@ -728,7 +728,7 @@ static void LCD_LL_Init(void)
 	// Read ID
 	if(LCDConf_ReadID(id) != 0)
 	{
-		printf("== unable to read LCD ID! ==\r\n");
+		//printf("== unable to read LCD ID! ==\r\n");
 		//Error_Handler(222);
 	}
 	else
@@ -736,7 +736,7 @@ static void LCD_LL_Init(void)
 		// Check if supported
 		if((id[0] != 0x40)&&(id[0] != 0xFF))
 		{
-			printf("== not supported lcd! ==\r\n");
+			//printf("== not supported lcd! ==\r\n");
 			//Error_Handler(222);
 		}
 	}
@@ -795,6 +795,7 @@ static void LCD_LL_Init(void)
     	Clockratio 	= LCD_LANE_CLK/ST7701_PIXEL_CLK;
     }
 
+	#if 0
     // The reference value given by the manufacturer is 58.2MHz,  then fps is :
     // fps = 58200000 / (480 + 160 + 160 +24) * (1280 + 12 + 10 + 2) = 54Hz
     int refresh_rate   = (ST7701_PIXEL_CLK * 1000)/((lcd_x_size + HSYNC + HBP + HFP)*(VSYNC + lcd_y_size + VBP + VFP));
@@ -806,6 +807,7 @@ static void LCD_LL_Init(void)
     int dsi_bandwidth = (((lcd_x_size + HSYNC + HBP + HFP)*(VSYNC + lcd_y_size + VBP + VFP)) * refresh_rate * 24)/2;
 
     printf("== LCD CLK: %dkHz, FPS: %d.%dHz, bandwidth 2x%dMbps ==\r\n", ST7701_PIXEL_CLK, refresh_rate, refresh_rate_m/10000, dsi_bandwidth/(1000*1000));
+	#endif
 
     hdsivideo_handle.VirtualChannelID 					= 0;
     hdsivideo_handle.ColorCoding 						= DSI_COLOR;

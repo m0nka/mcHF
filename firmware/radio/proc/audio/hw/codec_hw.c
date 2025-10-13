@@ -485,9 +485,15 @@ void codec_hw_init(void)
 	HAL_GPIO_WritePin(CODEC_RESET_PORT, CODEC_RESET, GPIO_PIN_RESET);
 
 	// BT Power Control
+	#ifndef PCB_V9_REV_A
 	gpio_init_structure.Pin   = RFM_DIO2;
 	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
 	HAL_GPIO_Init(RFM_DIO2_PORT, &gpio_init_structure);
+	#else
+	gpio_init_structure.Pin   = BT_EN_PIN;
+	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	HAL_GPIO_Init(BT_EN_PORT, &gpio_init_structure);
+	#endif
 
 	// 5V on is PG10 - done in bsp.c
 	//gpio_init_structure.Pin   = GPIO_PIN_10;
@@ -514,7 +520,11 @@ void codec_hw_init(void)
 	#if 1
 	gpio_init_structure.Pin   = CODEC_MUTE;
 	HAL_GPIO_Init(CODEC_MUTE_PORT, &gpio_init_structure);
+	#ifndef PCB_V9_REV_A
 	HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);	// unmute
+	#else
+	HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);	// unmute
+	#endif
 	#endif
 }
 
@@ -537,7 +547,11 @@ void codec_hw_power_cleanup(void)
 	#if 1
 	gpio_init_structure.Pin   = CODEC_MUTE;
 	HAL_GPIO_Init(CODEC_MUTE_PORT, &gpio_init_structure);
+	#ifndef PCB_V9_REV_A
 	HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);	// mute
+	#else
+	HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);	// mute
+	#endif
 	#endif
 
 //!	BSP_I2C1_DeInit();

@@ -265,7 +265,7 @@ static uchar icc_proc_cmd_xchange(uchar cmd, uchar *buff, ushort size)
 	}
 	message_received = 0;
 
-	//printf("data: %02x\r\n", received_data);
+	//printf("data \r\n");
 	return 0;
 }
 

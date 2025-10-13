@@ -839,7 +839,7 @@ static void ui_proc_emwin_init(void)
 	// Limit desktop window to display size
 	WM_SetSize(WM_HBKWIN, xSize, ySize);
 
-	printf("ui_driver_emwin_init...ok\r\n");
+	//printf("ui_driver_emwin_init...ok\r\n");
 }
 
 //*----------------------------------------------------------------------------
@@ -851,11 +851,6 @@ static void ui_proc_emwin_init(void)
 //*----------------------------------------------------------------------------
 static void ui_proc_periodic(void)
 {
-
-	return;
-
-
-
 	if(ui_s.cur_state != MODE_DESKTOP)
 		return;
 

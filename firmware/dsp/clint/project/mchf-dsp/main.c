@@ -403,5 +403,16 @@ int main(void)
 		icc_proc_task(NULL);
 		audio_driver_thread();
 		ui_driver_thread();
+
+		#if 0
+		static ulong skip = 0;
+
+		skip++;
+		if(skip > 90000)
+		{
+			HAL_GPIO_TogglePin(TX_LED_PORT, TX_LED);
+			skip  = 0;
+		}
+		#endif
 	}
 }

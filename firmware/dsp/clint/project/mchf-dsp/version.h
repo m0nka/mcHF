@@ -23,6 +23,6 @@
 #define	MCHF_D_VER_MAJOR			0
 #define	MCHF_D_VER_MINOR			0
 #define	MCHF_D_VER_RELEASE			0
-#define	MCHF_D_VER_BUILD			87
+#define	MCHF_D_VER_BUILD			88
 // -----------------------------------------------------------------------------
 #endif

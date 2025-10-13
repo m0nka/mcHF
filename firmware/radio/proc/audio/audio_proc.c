@@ -63,7 +63,11 @@ static void audio_proc_worker(ulong ulCmd)
 			//printf("->%s<-notified of DSP core reload...\r\n", pcTaskGetName(NULL));
 
 			// Mute audio path
+			#ifndef PCB_V9_REV_A
 			HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);
+			#else
+			HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);
+			#endif
 
 			// Keep the coded in reset for SAI re-init
 			HAL_GPIO_WritePin(CODEC_RESET_PORT, CODEC_RESET, GPIO_PIN_RESET);
@@ -165,6 +169,8 @@ static void btm_proc_task(void *arg)
 	uchar new_bt_state;
 	uchar loc_bt_enabled = 0xFF;
 
+	//printf("bt proc start\r\n");
+
 	for(;;)
 	{
 		new_bt_state = HAL_GPIO_ReadPin(BT_COMM_STAT_PORT, BT_COMM_STAT_PIN);
@@ -177,12 +183,20 @@ static void btm_proc_task(void *arg)
 			if(new_bt_state)
 			{
 				printf("== bt connected ==\r\n");
+				#ifndef PCB_V9_REV_A
 				HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);	// mute
+				#else
+				HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);	// mute
+				#endif
 			}
 			else
 			{
 				printf("== bt disconnected ==\r\n");
+				#ifndef PCB_V9_REV_A
 				HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);	// unmute
+				#else
+				HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);	// unmute
+				#endif
 			}
 			old_bt_state = new_bt_state;
 		}
@@ -191,10 +205,17 @@ static void btm_proc_task(void *arg)
 		if(tsu.bt_enabled != loc_bt_enabled)
 		{
 			// Power state update
+			#ifndef PCB_V9_REV_A
 			if(tsu.bt_enabled)
 				HAL_GPIO_WritePin(RFM_DIO2_PORT, RFM_DIO2, GPIO_PIN_RESET);
 			else
 				HAL_GPIO_WritePin(RFM_DIO2_PORT, RFM_DIO2, GPIO_PIN_SET);
+			#else
+			if(tsu.bt_enabled)
+				HAL_GPIO_WritePin(BT_EN_PORT, BT_EN_PIN, GPIO_PIN_RESET);
+			else
+				HAL_GPIO_WritePin(BT_EN_PORT, BT_EN_PIN, GPIO_PIN_SET);
+			#endif
 
 			loc_bt_enabled = tsu.bt_enabled;
 		}
@@ -242,7 +263,7 @@ audio_proc_loop:
 	}
 	goto audio_proc_loop;
 
-audio_proc_exit:
+//audio_proc_exit:
 	vTaskDelete(NULL);
 }
 #endif

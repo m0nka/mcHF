@@ -70,6 +70,7 @@ static void ui_controls_battery_progress(uchar val)
 	else if(val < 100)
 		x += 5;
 
+	#ifdef CONTEXT_BMS
 	if(bmss.run_on_dc)
 		GUI_SetColor(GUI_BLACK);		// on USB suppy
 	else
@@ -79,6 +80,9 @@ static void ui_controls_battery_progress(uchar val)
 		else
 			GUI_SetColor(GUI_RED);		// on battery, low SOC, need contrast
 	}
+	#else
+	GUI_SetColor(GUI_BLACK);		// on USB suppy
+	#endif
 
 	GUI_SetFont(&GUI_Font20B_ASCII);
 
@@ -105,7 +109,7 @@ static void ui_controls_battery_progress(uchar val)
 	else
 		GUI_DispStringAt("      ", x - 6, BATTERY_Y + BATTERY_SIZE_Y - 62);
 	#else
-	GUI_DispStringAt("offline", x - 12, BATTERY_Y + BATTERY_SIZE_Y - 33);
+	GUI_DispStringAt("offline", x - 16, BATTERY_Y + BATTERY_SIZE_Y - 33);
 	#endif
 }
 
