@@ -99,7 +99,7 @@
 // Physical keyboard
 //
 //
-//#define CONTEXT_KEYPAD
+#define CONTEXT_KEYPAD
 //
 // -----------------------------------------------------------------------------------------------
 // Lora transceiver - wip

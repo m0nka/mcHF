@@ -70,7 +70,11 @@ extern struct	UI_DRIVER_STATE			ui_s;
 
 #define ID_BUTTON_ADD            	(GUI_ID_USER + 0x18)
 
+#ifndef PCB_V9_REV_A
 #define QL_X						254
+#else
+#define QL_X						200
+#endif
 #define QL_Y						138
 
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate[] =

@@ -36,8 +36,12 @@
 #define GUI_ID_BTN4 			  	(GUI_ID_USER + 0x57)
 #define GUI_ID_BTN5 			  	(GUI_ID_USER + 0x58)
 
-#define AUD_X						254
-#define AUD_Y						208
+#ifndef PCB_V9_REV_A
+#define AGC_X						254
+#else
+#define AGC_X						200
+#endif
+#define AGC_Y						208
 
 #define AUD_SIZE_X				 	595
 #define AUD_SIZE_Y					250
@@ -459,7 +463,7 @@ uchar on_screen_agc_att_init(WM_HWIN hParent)
 		// Side encoder changes key msg
 		tsu.active_side_enc_id = 1;
 
-		hAgcDialog = GUI_CreateDialogBox(AgcDialog, GUI_COUNTOF(AgcDialog), AgcHandler, hParent, AUD_X, AUD_Y);
+		hAgcDialog = GUI_CreateDialogBox(AgcDialog, GUI_COUNTOF(AgcDialog), AgcHandler, hParent, AGC_X, AGC_Y);
 		return 1;
 	}
 	//else

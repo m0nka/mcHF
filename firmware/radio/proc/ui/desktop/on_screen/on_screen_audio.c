@@ -41,7 +41,11 @@
 #define GUI_ID_BTN6 			  	(GUI_ID_USER + 0x59)
 //#define GUI_ID_BTN7 			  	(GUI_ID_USER + 0x60)
 
+#ifndef PCB_V9_REV_A
 #define AUD_X						254
+#else
+#define AUD_X						200
+#endif
 #define AUD_Y						208
 
 #define AUD_SIZE_X				 	595
