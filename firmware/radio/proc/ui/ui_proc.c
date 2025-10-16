@@ -493,11 +493,29 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        	break;
 
 		        case '+':
+		        {
+					#ifndef PCB_V9_REV_A
 		        	ui_actions_change_step(1);
+					#else
+					(tsu.curr_band)++;
+					if(tsu.curr_band > BAND_MODE_10)
+						tsu.curr_band = BAND_MODE_10;
+					ui_actions_change_band(tsu.curr_band, 0);
+					#endif
 		        	break;
+		        }
+
 		        case '-':
+		        {
+					#ifndef PCB_V9_REV_A
 		        	ui_actions_change_step(0);
+					#else
+					if(tsu.curr_band > BAND_MODE_160)
+						(tsu.curr_band)--;
+					ui_actions_change_band(tsu.curr_band, 0);
+					#endif
 		        	break;
+		        }
 
 				case 'F':
 				{

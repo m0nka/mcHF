@@ -444,7 +444,7 @@ static void ptt_init(void)
 
 	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
 	gpio_init_structure.Pull  = GPIO_NOPULL;
-	gpio_init_structure.Speed = GPIO_SPEED_FREQ_HIGH;
+	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
 
 	// PTT line
 	gpio_init_structure.Pin   = PTT_PIN;
@@ -452,6 +452,22 @@ static void ptt_init(void)
 
 	// RX on start
 	HAL_GPIO_WritePin(PTT_PIN_PORT, PTT_PIN, GPIO_PIN_RESET);
+}
+
+static void power_led_init(void)
+{
+	GPIO_InitTypeDef  gpio_init_structure;
+
+	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	gpio_init_structure.Pull  = GPIO_NOPULL;
+	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
+
+	// PTT line
+	gpio_init_structure.Pin   = ON_LED;
+	HAL_GPIO_Init(ON_LED_PORT, &gpio_init_structure);
+
+	// On
+	HAL_GPIO_WritePin(ON_LED_PORT, ON_LED, GPIO_PIN_SET);
 }
 
 void bsp_hold_power(void)
@@ -558,6 +574,8 @@ uint8_t bsp_config(void)
 	#endif
 
 	power_cntr_init();
+
+	power_led_init();
 
 	ptt_init();
 

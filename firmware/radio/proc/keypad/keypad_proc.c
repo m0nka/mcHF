@@ -543,7 +543,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		if(!hold)
 		{
 			printf("Band-\r\n");
-
+			GUI_StoreKeyMsg('-', 1);
 		}
 		else
 		{
@@ -558,7 +558,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		if(!hold)
 		{
 			printf("Band+\r\n");
-
+			GUI_StoreKeyMsg('+', 1);
 		}
 		else
 		{
