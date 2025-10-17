@@ -22,6 +22,15 @@
 #define ID_RADIO_0         			(GUI_ID_USER + 0x03)
 #define ID_RADIO_1         			(GUI_ID_USER + 0x04)
 
+//#define ID_BUTTON_DSP	          	(GUI_ID_USER + 0x51)
+#define ID_BUTTON_SPLIT          	(GUI_ID_USER + 0x52)
+#define ID_PROGBAR_0 				(GUI_ID_USER + 0x53)
+#define ID_HEADER_0      			(GUI_ID_USER + 0x58)
+
+#define ID_BUTTON_UI_RESET		  	(GUI_ID_USER + 0x59)
+#define ID_BUTTON_DSP_RESET		  	(GUI_ID_USER + 0x60)
+#define ID_BUTTON_EEP_RESET		  	(GUI_ID_USER + 0x61)
+
 #define SOPTS						SLIDER_CF_HORIZONTAL
 
 #define BATT_MAX_COLUMN				8
@@ -48,5 +57,13 @@
 #define ROW_CELL2T					8
 #define ROW_CELL3T					9
 #define ROW_CELL4T					10
+
+#ifndef PCB_V9_REV_A
+#define TBL1X						790
+#define TBL2X						780
+#else
+#define TBL1X						736
+#define TBL2X						726
+#endif
 
 #endif
