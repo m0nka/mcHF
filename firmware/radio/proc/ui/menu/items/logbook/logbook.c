@@ -16,78 +16,38 @@
 #include "ui_proc.h"
 #include "gui.h"
 #include "dialog.h"
-//#include "ST_GUI_Addons.h"
 #include "desktop\ui_controls_layout.h"
-
+#include "ui_menu_layout.h"
 #include "ui_menu_module.h"
 
+#include "logbook.h"
+
 extern GUI_CONST_STORAGE GUI_BITMAP bmicon_gps;
+
+// Menu layout definitions from Flash
+extern const struct UIMenuLayout menu_layout[];
+
+// UI driver public state
+extern struct	UI_DRIVER_STATE			ui_s;
 
 const GUI_BITMAP * logbook_anim[] = {
   &bmicon_gps,   &bmicon_gps,   &bmicon_gps,   &bmicon_gps, &bmicon_gps
 };
   
 static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos);
-/*
-K_ModuleItem_Typedef  logbook =
-{
-  5,
-  "Logbook Viewer",
-  logbook_anim,
-  &bmicon_gps,
-  0,
-  Startup,
-  NULL,
-};*/
+static void KillLogbook(void);
 
 K_ModuleItem_Typedef  logbook =
 {
   9,
   "Logbook Viewer",
   &bmicon_gps,
-  0,
   Startup,
-  NULL
+  NULL,
+  KillLogbook
 };
 
-#define ID_WINDOW_0				(GUI_ID_USER + 0x00)
-#define ID_BUTTON_EXIT			(GUI_ID_USER + 0x01)
-
-#define ID_BUTTON_UPDATE		(GUI_ID_USER + 0x02)
-#define ID_BUTTON_PAGEU			(GUI_ID_USER + 0x03)
-#define ID_BUTTON_PAGED			(GUI_ID_USER + 0x04)
-
-#define ID_LISTVIEW				(GUI_ID_USER + 0x05)
-
-#define ID_TEXT_DX_CALL			(GUI_ID_USER + 0x06)
-#define ID_EDIT_DX_CALL			(GUI_ID_USER + 0x07)
-
-#define ID_TEXT_DATE			(GUI_ID_USER + 0x08)
-#define ID_EDIT_DATE			(GUI_ID_USER + 0x09)
-
-#define ID_TEXT_TIME			(GUI_ID_USER + 0x0A)
-#define ID_EDIT_TIME			(GUI_ID_USER + 0x0B)
-
-#define ID_TEXT_BAND			(GUI_ID_USER + 0x0C)
-#define ID_EDIT_BAND			(GUI_ID_USER + 0x0D)
-
-#define ID_TEXT_MODE			(GUI_ID_USER + 0x0E)
-#define ID_EDIT_MODE			(GUI_ID_USER + 0x0F)
-
-#define ID_TEXT_NAME			(GUI_ID_USER + 0x10)
-#define ID_EDIT_NAME			(GUI_ID_USER + 0x11)
-
-#define ID_TEXT_LOC				(GUI_ID_USER + 0x12)
-#define ID_EDIT_LOC				(GUI_ID_USER + 0x13)
-
-#define ID_TEXT_FREQ			(GUI_ID_USER + 0x14)
-#define ID_EDIT_FREQ			(GUI_ID_USER + 0x15)
-
-#define ID_TEXT_RSTR			(GUI_ID_USER + 0x16)
-#define ID_EDIT_RSTR			(GUI_ID_USER + 0x17)
-
-#define ID_TEXT_RSTS			(GUI_ID_USER + 0x18)
-#define ID_EDIT_RSTS			(GUI_ID_USER + 0x19)
+WM_HWIN   	hLogDialog;
 
 static const GUI_WIDGET_CREATE_INFO _aDialog[] = 
 {
@@ -97,7 +57,8 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 	// Self
 	{ WINDOW_CreateIndirect,	"", 						ID_WINDOW_0,		0,    	0,		800,	430, 	0, 		0x64, 	0 },
 	// Back Button
-	{ BUTTON_CreateIndirect, 	"Back",			 			ID_BUTTON_EXIT, 	670, 	375, 	120, 	45, 	0, 		0x0, 	0 },
+	//{ BUTTON_CreateIndirect, 	"Back",			 			ID_BUTTON_EXIT, 	670, 	375, 	120, 	45, 	0, 		0x0, 	0 },
+
 	// Other buttons
 	{ BUTTON_CreateIndirect, 	"Update",			 		ID_BUTTON_UPDATE, 	460, 	375, 	120, 	45, 	0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"PageUp",			 		ID_BUTTON_PAGEU, 	310, 	375, 	120, 	45, 	0, 		0x0, 	0 },
@@ -167,6 +128,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 
 	switch(Id)
 	{
+#if 0
 		// -------------------------------------------------------------
 		// Button
 		case ID_BUTTON_EXIT:
@@ -179,11 +141,12 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			}
 			break;
 		}
-
+#endif
 		// -------------------------------------------------------------
 		default:
 			break;
 	}
+
 }
 
 static void _cbDialog(WM_MESSAGE * pMsg)
@@ -330,5 +293,30 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos)
 {
-	GUI_CreateDialogBox(_aDialog, GUI_COUNTOF(_aDialog), _cbDialog, hWin, xpos, ypos);
+	// Does the current theme require shift of the window ?
+	if(menu_layout[ui_s.theme_id].iconview_y == 0)
+		goto use_const_decl;
+
+	GUI_WIDGET_CREATE_INFO *p_widget = malloc(sizeof(_aDialog));
+	if(p_widget == NULL)
+		goto use_const_decl;	// looking ugly is the least of our problems now
+
+	memcpy(p_widget, _aDialog,sizeof(_aDialog));
+	p_widget[0].y0 = menu_layout[ui_s.theme_id].iconview_y;	// shift
+
+	//LISTBOX_SetDefaultBkColor(LISTBOX_CI_UNSEL,GUI_STCOLOR_LIGHTBLUE);
+
+	hLogDialog = GUI_CreateDialogBox(p_widget, GUI_COUNTOF(_aDialog), _cbDialog, hWin, xpos, ypos);
+
+	free(p_widget);
+	return;
+
+use_const_decl:
+	hLogDialog = GUI_CreateDialogBox(_aDialog, GUI_COUNTOF(_aDialog), _cbDialog, hWin, xpos, ypos);
+}
+
+static void KillLogbook(void)
+{
+	//printf("kill logbook\r\n");
+	GUI_EndDialog(hLogDialog, 0);
 }

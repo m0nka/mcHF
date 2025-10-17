@@ -100,7 +100,7 @@ extern K_ModuleItem_Typedef  	logbook;			// Logbook
 extern K_ModuleItem_Typedef  	menu_batt;			// Battery
 extern K_ModuleItem_Typedef  	info;				// System Information
 extern K_ModuleItem_Typedef  	lora;				// Lora module control
-//extern K_ModuleItem_Typedef  	file_b;				// File Browser
+extern K_ModuleItem_Typedef  	file_b;				// File Browser
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_add_menu_items
@@ -118,9 +118,9 @@ static void ui_proc_add_menu_items(void)
 	k_ModuleAdd(&clock);				// Clock Settings
 	k_ModuleAdd(&menu_batt);			// Battery
 	k_ModuleAdd(&logbook);				// Logbook
+	//k_ModuleAdd(&file_b);				// File Browser
 	k_ModuleAdd(&lora);					// Lora
 	k_ModuleAdd(&info);					// About
-	//k_ModuleAdd(&file_b);				// File Browser
 }
 
 static void ui_proc_cb(void)

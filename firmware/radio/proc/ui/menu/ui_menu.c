@@ -244,7 +244,7 @@ static void _cbBk(WM_MESSAGE * pMsg)
 							#else
 							int cnt = HEADER_GetItemText(hItem, 0, buff, sizeof(buff));
 							#endif
-							printf("exit menu %s, %d\r\n", buff, cnt);
+							//printf("exit menu %s, %d\r\n", buff, cnt);
 
 							if(cnt == 0)
 								break;

@@ -49,7 +49,7 @@ extern GUI_CONST_STORAGE GUI_BITMAP bmgeneralinfoA;
 K_ModuleItem_Typedef  info =
 {
   0,
-  "About",
+  "About mcHF",
   &bmgeneralinfoA,
   Startup,
   NULL,
@@ -82,9 +82,9 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 #else
 { WINDOW_CreateIndirect,	"", 		ID_WINDOW_0,			0,    	0,		796,	430, 	0, 		0x64, 	0 },
 // Buttons
-{ BUTTON_CreateIndirect, 	"Update",	ID_BUTTON_FW_UPDATE,	646, 	55, 	120, 	45, 	0, 		0x0, 	0 },
-{ BUTTON_CreateIndirect, 	"Restart",	ID_BUTTON_SYS_RESTART,	646, 	115, 	120, 	45, 	0, 		0x0, 	0 },
-{ BUTTON_CreateIndirect, 	"Defaults",	ID_BUTTON_EEP_RESET,	646, 	175, 	120, 	45, 	0, 		0x0, 	0 },
+{ BUTTON_CreateIndirect, 	"Update",	ID_BUTTON_FW_UPDATE,	660, 	55, 	120, 	45, 	0, 		0x0, 	0 },
+{ BUTTON_CreateIndirect, 	"Restart",	ID_BUTTON_SYS_RESTART,	660, 	115, 	120, 	45, 	0, 		0x0, 	0 },
+{ BUTTON_CreateIndirect, 	"Defaults",	ID_BUTTON_EEP_RESET,	660, 	175, 	120, 	45, 	0, 		0x0, 	0 },
 #endif
 
 // List boxes
