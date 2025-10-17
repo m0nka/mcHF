@@ -51,35 +51,24 @@ K_ModuleItem_Typedef  clock =
 
 WM_HWIN   	hCdialog;
 
-#define ID_WINDOW_0               	(GUI_ID_USER + 0x00)
-//#define ID_BUTTON_EXIT            	(GUI_ID_USER + 0x01)
-
-#define ID_SPINBOX_HOUR          	(GUI_ID_USER + 0x02)
-#define ID_SPINBOX_MINUTE        	(GUI_ID_USER + 0x03)
-#define ID_BUTTON_APPLY			  	(GUI_ID_USER + 0x04)
-#define ID_CALENDAR              	(GUI_ID_USER + 0x05)
-#define ID_SPINBOX_SEC           	(GUI_ID_USER + 0x06)
-#define ID_TEXT_SPIN_0             	(GUI_ID_USER + 0x07)
-#define ID_BUTTON_LOCK			  	(GUI_ID_USER + 0x08)
-
 static const GUI_WIDGET_CREATE_INFO _aDialog[] = 
 {
 	// -----------------------------------------------------------------------------------------------------------------------------
 	//							name			id					x		y		xsize	ysize	?		?		?
 	// -----------------------------------------------------------------------------------------------------------------------------
 	// Self
-	{ WINDOW_CreateIndirect,	"", 			ID_WINDOW_0,		0,    	0,		854,	430, 	0, 		0x64, 	0 },
+	{ WINDOW_CreateIndirect,	"", 			ID_WINDOW_0,		0,    	0,		CLK_X,	430, 	0, 		0x64, 	0 },
 	// Header text
-	{ TEXT_CreateIndirect, 		"Header1", 		ID_TEXT_SPIN_0,		485,	30,		360, 	50,  	0, 		0x0,	0 },
+	{ TEXT_CreateIndirect, 		"Header1", 		ID_TEXT_SPIN_0,		SP0X,	30,		360, 	50,  	0, 		0x0,	0 },
 	//
-	{ SPINBOX_CreateIndirect, 	"Spinbox", 		ID_SPINBOX_HOUR, 	485,    88, 	110, 	160, 	0, 		0x0, 	0 },
+	{ SPINBOX_CreateIndirect, 	"Spinbox", 		ID_SPINBOX_HOUR, 	SP0X,   88, 	110, 	160, 	0, 		0x0, 	0 },
 	//
-	{ SPINBOX_CreateIndirect, 	"Spinbox", 		ID_SPINBOX_MINUTE, 	610, 	88, 	110, 	160, 	0, 		0x0, 	0 },
+	{ SPINBOX_CreateIndirect, 	"Spinbox", 		ID_SPINBOX_MINUTE, 	SP1X, 	88, 	110, 	160, 	0, 		0x0, 	0 },
 	//
-	{ SPINBOX_CreateIndirect, 	"Spinbox", 		ID_SPINBOX_SEC, 	735, 	88, 	110, 	160, 	0, 		0x0, 	0 },
+	{ SPINBOX_CreateIndirect, 	"Spinbox", 		ID_SPINBOX_SEC, 	SP2X, 	88, 	110, 	160, 	0, 		0x0, 	0 },
 	//
-	{ BUTTON_CreateIndirect, 	"Update",		ID_BUTTON_APPLY, 	485, 	270, 	110, 	45, 	0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"Lock",			ID_BUTTON_APPLY, 	735, 	270, 	110, 	45, 	0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"Update",		ID_BUTTON_APPLY, 	SP0X, 	270, 	110, 	45, 	0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"Lock",			ID_BUTTON_APPLY, 	SP2X, 	270, 	110, 	45, 	0, 		0x0, 	0 },
 };
 
 GUI_POINT 		aPointsDest[3][4];
@@ -88,6 +77,7 @@ WM_HTIMER 		hTimerTime;
 uint8_t 		DisableAutoRefresh = 0;
 CALENDAR_DATE  	hDate;
 
+#ifndef PCB_V9_REV_A
 static const GUI_POINT aPoints[3][4] = {
 
   // Hour Needle
@@ -178,6 +168,7 @@ static void GUI_UpdateClock(uint16_t x0, uint16_t y0, uint8_t hour, uint8_t min,
 
   GUI_AA_DisableHiRes();
 }
+#endif
 
 static void _cbDialog(WM_MESSAGE * pMsg)
 {
@@ -186,6 +177,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 	RTC_DateTypeDef          Date;
 	RTC_TimeTypeDef          Time;
+
 	hItem = pMsg->hWin;
 	switch (pMsg->MsgId)
 	{
@@ -248,7 +240,9 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 				//printf("upd0 %d\r\n",Time.Seconds);
 
+				#ifndef PCB_V9_REV_A
 				GUI_UpdateClock(AN_CLOCK_X, AN_CLOCK_Y, Time.Hours, Time.Minutes, Time.Seconds);
+				#endif
       
 				hItem = WM_GetDialogItem(pMsg->hWin, ID_SPINBOX_HOUR);
 				SPINBOX_SetValue(hItem, Time.Hours);
@@ -275,7 +269,9 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 				hItem = WM_GetDialogItem(pMsg->hWin, ID_SPINBOX_SEC);
 				Time.Seconds = SPINBOX_GetValue(hItem);
       
+				#ifndef PCB_V9_REV_A
 				GUI_UpdateClock(AN_CLOCK_X, AN_CLOCK_Y, Time.Hours, Time.Minutes, Time.Seconds);
+				#endif
 			}
 			break;
 		}

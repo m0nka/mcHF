@@ -402,13 +402,19 @@ void ui_menu_set_gui_profile(void)
   	//RADIO_SetDefaultFocusColor(GUI_LIGHTBLUE);
   	//RADIO_SetDefaultTextColor(GUI_LIGHTBLUE);
 
+	#ifndef PCB_V9_REV_A
   	CALENDAR_SetDefaultSize(CALENDAR_SI_HEADER, 50);
-
   	CALENDAR_SetDefaultSize(CALENDAR_SI_CELL_X, 65);
   	CALENDAR_SetDefaultSize(CALENDAR_SI_CELL_Y, 45);
-
   	CALENDAR_SetDefaultFont(CALENDAR_FI_CONTENT,GUI_FONT_24_1 );
   	CALENDAR_SetDefaultFont(CALENDAR_FI_HEADER, GUI_FONT_24_1);
+	#else
+  	CALENDAR_SetDefaultSize(CALENDAR_SI_HEADER, 45);
+  	CALENDAR_SetDefaultSize(CALENDAR_SI_CELL_X, 60);
+  	CALENDAR_SetDefaultSize(CALENDAR_SI_CELL_Y, 40);
+  	CALENDAR_SetDefaultFont(CALENDAR_FI_CONTENT,GUI_FONT_20_1 );
+  	CALENDAR_SetDefaultFont(CALENDAR_FI_HEADER, GUI_FONT_20_1);
+  	#endif
 }
 
 void ui_menu_init(void)
