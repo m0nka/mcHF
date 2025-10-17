@@ -240,6 +240,7 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 			// Is it top part of screen (above combined control ?)
 			if(TS_State.y < (SW_FRAME_Y - 5))
 			{
+#if 0
 				printf("Top part of LCD touched.\r\n");
 
 				// Is it the Menu ?
@@ -268,7 +269,7 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 						#endif
 					}
 				}
-
+#endif
 				// ToDo: Check other controls - volume, etc...
 				// ...
 
