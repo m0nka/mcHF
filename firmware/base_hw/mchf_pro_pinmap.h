@@ -738,6 +738,7 @@
 // PB5
 #define BT_EN_PIN                   	LL_GPIO_PIN_5
 #define BT_EN_PORT               		GPIOB
+#define BT_EN_INV
 
 // PB6			TOUCH_SCK_I2C1
 #define TOUCH_SCK_SCL_PIN              	GPIO_PIN_6

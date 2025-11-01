@@ -62,7 +62,7 @@
 // -----------------------------------------------------------------------------------------------
 // Encoders input processing
 //
-//#define CONTEXT_ROTARY
+#define CONTEXT_ROTARY
 //
 // -----------------------------------------------------------------------------------------------
 // VFO control
@@ -105,7 +105,7 @@
 // Lora transceiver - wip
 //
 //
-//#define CONTEXT_LORA
+#define CONTEXT_LORA
 //
 
 // test

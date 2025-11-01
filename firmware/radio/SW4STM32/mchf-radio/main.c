@@ -229,7 +229,7 @@ void BDMA_Channel0_IRQHandler(void)
 //* Notes    			:
 //* Context    			: CONTEXT_IRQ
 //*----------------------------------------------------------------------------
-void SPI1_IRQHandler(void)
+/*void SPI1_IRQHandler(void)
 {
     if(LL_SPI_IsActiveFlag_OVR(SPI1) || LL_SPI_IsActiveFlag_UDR(SPI1))
     {
@@ -253,6 +253,23 @@ void SPI1_IRQHandler(void)
     	lora_spi_eot_callback();
     	return;
     }
+}*/
+extern SPI_HandleTypeDef SpiHandle1;
+extern DMA_HandleTypeDef hdma_tx;
+extern DMA_HandleTypeDef hdma_rx;
+void SPI1_IRQHandler(void)
+{
+  HAL_SPI_IRQHandler(&SpiHandle1);
+}
+
+void SPI1_DMA_RX_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(SpiHandle1.hdmarx);
+}
+
+void SPI1_DMA_TX_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(SpiHandle1.hdmatx);
 }
 #endif
 
