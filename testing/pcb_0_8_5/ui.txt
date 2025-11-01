@@ -7,19 +7,24 @@
 - C21b touches one of the LPF relays
 - move C51 as it prevents rework on the touch conn
 - add test points next to J8 connector, bottom layer for all touch signals
-- connect PE2(M46) to R19(pin3) together to have BT connection status in firmware
 - 'LORA ANT' text in the cutout
 - swap M12/M29 (Y1 and X4), (info in keypad_pins.txt)
 - swap M33/M28 (Y2 and X3)
-- add BT power control(RFM_DIO2 ?)
+------------------------------------------------------------------------------------ 
+- [connect PE2(M46) to R19(pin3) together to have BT connection status in firmware]
+- [add BT power control]
+- [hook LCD vdd to 3V rail, so bootloader mode can keep 5 and 8V off]
+- [D6/D7 are likely not needed, as the chip has internal switch(ToDo: investigate)]
+- [remove external VREF bandgap, use internal ?(nothing that needs precision, since BMS now does all critical ADC meas)]
+- [Maybe rethink the PROG_HOLD line, so we can do development with built in battery as well ?]
+- [add zero ohm links on the attenuator data lines]
+
 - increase R38/C39 to have delay in bootloader ?(hold power in hw on reset)
-- add zero ohm links on the attenuator data lines
-- Maybe rethink the PROG_HOLD line, so we can do development with built in battery as well ?
-- hook LCD vdd to 3V rail, so bootloader mode can keep 5 and 8V off
-- dual LCD supply via diodes(3V and 5V rails)
+
 - R38(DNP), to reduce voltage drop on cold power start
-- D6/D7 are likely not needed, as the chip has internal switch(ToDo: investigate)
+
 - isolate RTC osc crystal with ground plane
   (https://community.st.com/t5/stm32-mcus-products/stm32h7xx-rtc-accuracy-problems/td-p/263675/page/3)
-- remove external VREF bandgap, use internal ?(nothing that needs precision, since BMS now does all critical ADC meas) 
+
 - use 2W LORA module(E22-900T33S-V2), add break on the internal antenna line(verify power supply!)
+

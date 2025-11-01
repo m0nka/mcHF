@@ -13,9 +13,6 @@
 #ifndef __MCHF_PRO_PINMAP_H
 #define __MCHF_PRO_PINMAP_H
 
-
-#define REV_8_5
-
 // Changes between 0.8.4 and 0.8.5
 //
 //	NET					0.8.4		0.8.5
@@ -75,10 +72,15 @@
 #define BMS_PWM_AF         				LL_GPIO_AF_1
 
 // PA9			LCD_BL_CTRL (TIM1_CH2)
+#ifndef REV_0_8_4_PATCH
 #define LCD_BL_CTRL_PIN               	GPIO_PIN_9
 #define LCD_BL_CTRL_GPIO_PORT         	GPIOA
 #define LCD_BL_CTRL_AF         			LL_GPIO_AF_1
 #define LCD_BL_CTRL_TIM_CH				LL_TIM_CHANNEL_CH2
+#else
+#define LCD_BL_CTRL_PIN               	GPIO_PIN_1
+#define LCD_BL_CTRL_GPIO_PORT         	GPIOB
+#endif
 
 // PA10			FAN_ON
 #define FAN_CNTR						GPIO_PIN_10
@@ -626,6 +628,620 @@
 // EXTI_LINE_8 - SD Card detect
 
 
-#endif
+#endif	//REV_8_5
 
-#endif
+// Changes:	CODEC_RESET 	= PD4
+//			SD_DET 			= PB0
+//			GPS_EN 			= PB1
+//			BT_EN 			= PB5
+//			ON_LED			= PB11
+//			KEYPAD_Y1		= PD6
+//			BT_COMM_STAT	= PG13
+//			PADDLE_DIT		= PE2
+//			SDRAM_A12		= PG2
+//			GPS_RX			= PG9
+//			GPS_TX			= PG14
+//			KEYPAD_Y2		= PI8
+//			KEYPAD_Y3		= PI11
+//
+//
+#ifdef PCB_V9_REV_A
+// ----------------------------------------------------
+// ----------------------------------------------------
+// PortA
+
+// PA0			RFM_RST, Lora driver
+#define RFM_RST							LL_GPIO_PIN_0
+#define RFM_RST_PORT					GPIOA
+
+// PA1			ENC1_I
+#define ENC1_I							GPIO_PIN_1
+#define ENC1_I_PORT						GPIOA
+
+// PA2			LORA_POWER, Lora driver
+#define LORA_POWER						LL_GPIO_PIN_2
+#define LORA_POWER_PORT					GPIOA
+
+// PA3			RFM_DIO2, was Lora driver, now BT module power control
+#define RFM_DIO2						GPIO_PIN_3
+#define RFM_DIO2_PORT					GPIOA
+
+// PA4			DAC1_OUT1
+#define DAC1_OUT1						GPIO_PIN_4
+#define DAC1_OUTX_PORT					GPIOA
+
+// PA5			DAC1_OUT2
+#define DAC1_OUT2						GPIO_PIN_5
+
+// PA6			RFM_MISO_SPI1, Lora driver
+#define RFM_MISO_SPI1					LL_GPIO_PIN_6
+#define RFM_MISO_SPI1_PORT				GPIOA
+
+// PA7			RFM_MOSI_SPI1, Lora driver
+#define RFM_MOSI_SPI1					LL_GPIO_PIN_7
+#define RFM_MOSI_SPI1_PORT				GPIOA
+
+// PA8			BMS_PWM, BMS CC control (TIM1_CH1)
+//#define BMS_PWM_PIN               		GPIO_PIN_8
+//#define BMS_PWM_PORT         			GPIOA
+//#define BMS_PWM_AF         				LL_GPIO_AF_1
+#define GPS_PPS_PIN               		GPIO_PIN_8
+#define GPS_PPS_PORT         			GPIOA
+#define GPS_PPS_AF         				LL_GPIO_AF_1
+
+// PA9			LCD_BL_CTRL (TIM1_CH2)
+#define LCD_BL_CTRL_PIN               	GPIO_PIN_9
+#define LCD_BL_CTRL_GPIO_PORT         	GPIOA
+#define LCD_BL_CTRL_AF         			LL_GPIO_AF_1
+#define LCD_BL_CTRL_TIM_CH				LL_TIM_CHANNEL_CH2
+
+// PA10			FAN_ON
+#define FAN_CNTR						GPIO_PIN_10
+#define FAN_CNTR_PORT					GPIOA
+
+// ToDo: Allocate to DSP core for rig control and real time audio streaming
+// PA11			USB_DFU_N
+// PA12			USB_DFU_P
+
+// Programming port only
+// PA13			SWDIO
+// PA14			SWCLK
+
+// PA15			ENC1_Q
+#define ENC1_Q							GPIO_PIN_15
+#define ENC1_Q_PORT						GPIOA
+
+// ----------------------------------------------------
+// ----------------------------------------------------
+// PortB
+
+// PB0			CODEC_RESET
+#define SD_DET                   		GPIO_PIN_0
+#define SD_DET_PORT              		GPIOB
+
+// PB1			BST_EN -> ToDo: BMS step-up converter enable
+#define GPS_EN		               		GPIO_PIN_1
+#define GPS_EN_PORT         			GPIOB
+
+// PB2			ATT_CLK, Attenuator
+#define ATT_CLK               			LL_GPIO_PIN_2
+#define ATT_CLK_PORT         			GPIOB
+
+// PB3			RFM_SCK_SPI1, Lora driver
+#define RFM_SCK_SPI1               		LL_GPIO_PIN_3
+#define RFM_SCK_SPI1_PORT         		GPIOB
+
+// PB4			ENC2_I
+#define ENC2_I_PIN               		GPIO_PIN_4
+#define ENC2_I_PORT               		GPIOB
+
+// PB5
+#define BT_EN_PIN                   	LL_GPIO_PIN_5
+#define BT_EN_PORT               		GPIOB
+#define BT_EN_INV
+
+// PB6			TOUCH_SCK_I2C1
+#define TOUCH_SCK_SCL_PIN              	GPIO_PIN_6
+#define TOUCH_SCK_SCL_GPIO_PORT      	GPIOB
+#define TOUCH_SCK_SCL_AF             	GPIO_AF4_I2C4
+
+// PB7			TOUCH_SDA_I2C1
+#define TOUCH_SDA_SDA_PIN             	GPIO_PIN_7
+#define TOUCH_SDA_SDA_AF                GPIO_AF4_I2C4
+#define TOUCH_SDA_SDA_GPIO_PORT         GPIOB
+
+// PB8			CODEC_SCL_I2C4
+#define CODEC_SCL_I2C4_PIN             	GPIO_PIN_8
+#define CODEC_SCL_I2C4_PORT           	GPIOB
+#define CODEC_SCL_I2C4_AF            	GPIO_AF6_I2C4
+
+// PB9			CODEC_SDA_I2C4
+#define CODEC_SDA_I2C4_PIN           	GPIO_PIN_9
+#define CODEC_SDA_I2C4_PORT          	GPIOB
+#define CODEC_SDA_I2C4_AF            	GPIO_AF6_I2C4
+
+// PB10			ATT_LE, latch enable, Attenuator
+#define ATT_LE							LL_GPIO_PIN_10
+#define ATT_LE_PORT            			GPIOB
+
+// PB11			DSI_TE - reserved, future use
+#define ON_LED							LL_GPIO_PIN_11
+#define ON_LED_PORT            			GPIOB
+
+// PB12			PTT
+#define PTT_PIN							GPIO_PIN_12
+#define PTT_PIN_PORT            		GPIOB
+
+// PB13			VCC_5V_ON
+#define VCC_5V_ON						GPIO_PIN_13
+#define VCC_5V_ON_PORT            		GPIOB
+
+// Physical keyboard ? Allocate to DPS core ? Bootrom USB stick support ?
+// PB14			OTG_HS_DM
+// PB15			OTG_HS_DP
+
+// ----------------------------------------------------
+// ----------------------------------------------------
+// PortC
+
+// PC0			FMC_SDNWE
+#define FMC_SDNWE_PIN					GPIO_PIN_0
+#define FMC_SDNWE_PORT					GPIOC
+
+// PC1			RFM_NSS, Lora driver
+#define RFM_NSS							LL_GPIO_PIN_1
+#define RFM_NSS_PORT           			GPIOC
+
+// PC2			MUTE
+#define CODEC_MUTE						GPIO_PIN_2
+#define CODEC_MUTE_PORT           		GPIOC
+
+// PC3			ADC3_INP1, Reflected Power, from bridge
+#define ADC3_INP1						LL_GPIO_PIN_3
+#define ADC3_INP1_PORT           		GPIOC
+
+// PC4			RFM_DIO1, Lora driver
+#define RFM_DIO1						LL_GPIO_PIN_4
+#define RFM_DIO1_PORT           		GPIOC
+
+// PC5			RFM_DIO0, Lora driver
+#define RFM_DIO0						LL_GPIO_PIN_5
+#define RFM_DIO0_PORT           		GPIOC
+
+// PC6			BAND0
+#define BAND0_PIN						GPIO_PIN_6
+#define BAND0_PORT						GPIOC
+
+// PC7			ENC2_Q
+#define ENC2_Q_PIN               		GPIO_PIN_7
+#define ENC2_Q_PORT               		GPIOC
+
+// PC8			SDMMC1_D0
+#define SDMMC1_D0                   	GPIO_PIN_8
+#define SDMMC1_SDIO_PORTC              	GPIOC
+
+// PC9			SDMMC1_D1
+#define SDMMC1_D1                   	GPIO_PIN_9
+
+// PC10			SDMMC1_D2
+#define SDMMC1_D2                   	GPIO_PIN_10
+
+// PC11			SDMMC1_D3
+#define SDMMC1_D3                   	GPIO_PIN_11
+
+// PC12			SDMMC1_CK
+#define SDMMC1_CLK                   	GPIO_PIN_12
+
+// PC13			POWER_HOLD
+#define POWER_HOLD						LL_GPIO_PIN_13
+#define POWER_HOLD_PORT            		GPIOC
+
+// ----------------------------------------------------
+// ----------------------------------------------------
+// PortD
+
+// PD0			FMC_D2
+#define FMC_D2_PIN						GPIO_PIN_0
+#define FMC_D2_PORT						GPIOD
+
+// PD1			FMC_D3
+#define FMC_D3_PIN						GPIO_PIN_1
+#define FMC_D3_PORT						GPIOD
+
+// PD2			SDMMC1_CMD
+#define SDMMC1_CMD                   	GPIO_PIN_2
+#define SDMMC1_SDIO_PORTD              	GPIOD
+
+// PD3
+#define KEYPAD_X1_LL                   	LL_GPIO_PIN_3
+#define KEYPAD_X1_PORT              	GPIOD
+
+// PD4			SD_DET
+#define CODEC_RESET						GPIO_PIN_4
+#define CODEC_RESET_PORT           		GPIOD
+
+// PD5			USART2_TX - printf, on USB-C connector
+#define USART2_TX                   	GPIO_PIN_5
+#define USART2_TX_PORT              	GPIOD
+#define USART2_TX_AF                    GPIO_AF7_USART2
+
+// PD6
+#define KEYPAD_Y1_LL                   	LL_GPIO_PIN_6
+#define KEYPAD_Y1_PORT              	GPIOD
+
+// PD7
+#define KEYPAD_X2_LL                   	LL_GPIO_PIN_7
+#define KEYPAD_X2_PORT              	GPIOD
+
+// PD8			FMC_D13
+#define FMC_D13_PIN						GPIO_PIN_8
+#define FMC_D13_PORT					GPIOD
+
+// PD9			FMC_D14
+#define FMC_D14_PIN						GPIO_PIN_9
+#define FMC_D14_PORT					GPIOD
+
+// PD10			FMC_D15
+#define FMC_D15_PIN						GPIO_PIN_10
+#define FMC_D15_PORT					GPIOD
+
+// PD11			ATT_DATA, Attenuator
+#define ATT_DATA                   		LL_GPIO_PIN_11
+#define ATT_DATA_PORT              		GPIOD
+
+// PD12			BMS_SCL
+#define BMS_SCL_PIN                   	GPIO_PIN_12
+#define BMS_SCL_PORT              		GPIOD
+
+// PD13			BMS_SDA
+#define BMS_SDA_PIN                   	GPIO_PIN_13
+#define BMS_SDA_PORT              		GPIOD
+
+// PD14			FMC_D0
+#define FMC_D0_PIN						GPIO_PIN_14
+#define FMC_D0_PORT						GPIOD
+
+// PD15			FMC_D1
+#define FMC_D1_PIN						GPIO_PIN_15
+#define FMC_D1_PORT						GPIOD
+
+// ----------------------------------------------------
+// ----------------------------------------------------
+// PortE
+
+// PE0			FMC_NBL0
+#define FMC_NBL0_PIN					GPIO_PIN_0
+#define FMC_NBL0_PORT					GPIOE
+
+// PE1			FMC_NBL1
+#define FMC_NBL1_PIN					GPIO_PIN_1
+#define FMC_NBL1_PORT					GPIOE
+
+// PE2			BT_CONNECT_STATUS
+#define PADDLE_DIT_PIN					GPIO_PIN_2
+#define PADDLE_DIT_PORT          		GPIOE
+
+// PE3			SAI1_SD_B - in DSP core!!!
+//
+//
+
+// PE4			SAI1_FS_A
+//
+//
+
+// PE5			SAI1_SCK_A
+//
+//
+
+// PE6			SAI1_SD_B
+//
+//
+
+// PE7			FMC_D4
+#define FMC_D4_PIN						GPIO_PIN_7
+#define FMC_D4_PORT						GPIOE
+
+// PE8			FMC_D5
+#define FMC_D5_PIN						GPIO_PIN_8
+#define FMC_D5_PORT						GPIOE
+
+// PE9			FMC_D6
+#define FMC_D6_PIN						GPIO_PIN_9
+#define FMC_D6_PORT						GPIOE
+
+// PE10			FMC_D7
+#define FMC_D7_PIN						GPIO_PIN_10
+#define FMC_D7_PORT						GPIOE
+
+// PE11			FMC_D8
+#define FMC_D8_PIN						GPIO_PIN_11
+#define FMC_D8_PORT						GPIOE
+
+// PE12			FMC_D9
+#define FMC_D9_PIN						GPIO_PIN_12
+#define FMC_D9_PORT						GPIOE
+
+// PE13			FMC_D10
+#define FMC_D10_PIN						GPIO_PIN_13
+#define FMC_D10_PORT					GPIOE
+
+// PE14			FMC_D11
+#define FMC_D11_PIN						GPIO_PIN_14
+#define FMC_D11_PORT					GPIOE
+
+// PE15			FMC_D12
+#define FMC_D12_PIN						GPIO_PIN_15
+#define FMC_D12_PORT					GPIOE
+
+// ----------------------------------------------------
+// ----------------------------------------------------
+// PortF
+
+// PF0			FMC_A0
+#define FMC_A0_PIN						GPIO_PIN_0
+#define FMC_A0_PORT						GPIOF
+
+// PF1			FMC_A1
+#define FMC_A1_PIN						GPIO_PIN_1
+#define FMC_A1_PORT						GPIOF
+
+// PF2			FMC_A2
+#define FMC_A2_PIN						GPIO_PIN_2
+#define FMC_A2_PORT						GPIOF
+
+// PF3			FMC_A3
+#define FMC_A3_PIN						GPIO_PIN_3
+#define FMC_A3_PORT						GPIOF
+
+// PF4			FMC_A4
+#define FMC_A4_PIN						GPIO_PIN_4
+#define FMC_A4_PORT						GPIOF
+
+// PF5			FMC_A5
+#define FMC_A5_PIN						GPIO_PIN_5
+#define FMC_A5_PORT						GPIOF
+
+// PF6			ADC3_INP8, Ambient light sensor
+#define TX_LED							LL_GPIO_PIN_6
+#define TX_LED_PORT            			GPIOF
+
+// PF7			ADC3_INP3, PA Temperature
+#define ADC3_INP3						LL_GPIO_PIN_7
+#define ADC3_INP3_PORT            		GPIOF
+
+// PF8			SAI1_SCK_B
+//
+//
+
+// PF9			SAI1_FS_B
+//
+//
+
+// PF10			ADC3_INP6, Forward Power
+#define ADC3_INP6						LL_GPIO_PIN_10
+#define ADC3_INP6_PORT            		GPIOF
+
+// PF11			FMC_SDNRAS
+#define FMC_SDNRAS_PIN					GPIO_PIN_11
+#define FMC_SDNRAS_PORT					GPIOF
+
+// PF12			FMC_A6
+#define FMC_A6_PIN						GPIO_PIN_12
+#define FMC_A6_PORT						GPIOF
+
+// PF13			FMC_A7
+#define FMC_A7_PIN						GPIO_PIN_13
+#define FMC_A7_PORT						GPIOF
+
+// PF14			FMC_A8
+#define FMC_A8_PIN						GPIO_PIN_14
+#define FMC_A8_PORT						GPIOF
+
+// PF15			FMC_A9
+#define FMC_A9_PIN						GPIO_PIN_15
+#define FMC_A9_PORT						GPIOF
+
+// ----------------------------------------------------
+// ----------------------------------------------------
+// PortG
+
+// PG0			FMC_A10
+#define FMC_A10_PIN						GPIO_PIN_0
+#define FMC_A10_PORT					GPIOG
+
+// PG1			FMC_A11
+#define FMC_A11_PIN						GPIO_PIN_1
+#define FMC_A11_PORT					GPIOG
+
+// PG2			FMC_A12
+#define FMC_A12_PIN						GPIO_PIN_2
+#define FMC_A12_PORT					GPIOG
+
+// PG3			DAH_IRQ
+#define PADDLE_DAH_PIO 					GPIOG
+#define PADDLE_DAH						GPIO_PIN_3
+#define PADDLE_DAH_LL					LL_GPIO_PIN_3
+
+// PG4			FMC_BA0
+#define FMC_BA0_PIN						GPIO_PIN_4
+#define FMC_BA0_PORT					GPIOG
+
+// PG5			FMC_BA1
+#define FMC_BA1_PIN						GPIO_PIN_5
+#define FMC_BA1_PORT					GPIOG
+
+// PG6			BAND1
+#define BAND1_PIN						GPIO_PIN_6
+#define BAND1_PORT						GPIOG
+
+// PG7			SAI1_MCLK_A
+//
+//
+
+// PG8			FMC_SDCLK
+#define FMC_SDCLK_PIN					GPIO_PIN_8
+#define FMC_SDCLK_PORT					GPIOG
+
+// PG9
+#define GPS_RX_PIN                   	LL_GPIO_PIN_9
+#define GPS_RX_PORT              		GPIOG
+
+// PG10		SD_PWR_CNTR
+#define SD_PWR_CNTR                   	GPIO_PIN_10
+#define SD_PWR_CNTR_PORT              	GPIOG
+#define SD_PWR_SWAP_POLARITY
+
+// PG11		POWER_BUTTON
+#define POWER_BUTTON					GPIO_PIN_11
+#define POWER_BUTTON_PORT            	GPIOG
+
+// PG12
+#define KEYPAD_X3_LL                   	LL_GPIO_PIN_12
+#define KEYPAD_X3_PORT              	GPIOG
+
+// PG13		KEYPAD_Y1
+#define BT_COMM_STAT_PIN                LL_GPIO_PIN_13
+#define BT_COMM_STAT_PORT              	GPIOG
+
+// PG14
+#define GPS_TX_PIN                   	LL_GPIO_PIN_14
+#define GPS_TX_PORT		              	GPIOG
+
+// PG15		FMC_SDNCAS
+#define FMC_SDNCAS_PIN					GPIO_PIN_15
+#define FMC_SDNCAS_PORT					GPIOG
+
+// ----------------------------------------------------
+// ----------------------------------------------------
+// PortH
+
+// PH1			BAND3
+#define BAND3_PIN						GPIO_PIN_1
+#define BAND3_PORT						GPIOH
+
+// PH2			FMC_SDCKE0
+#define FMC_SDCKE0_PIN					GPIO_PIN_2
+#define FMC_SDCKE0_PORT					GPIOH
+
+// PH3			FMC_SDNE0
+#define FMC_SDNE0_PIN					GPIO_PIN_3
+#define FMC_SDNE0_PORT					GPIOH
+
+// PH4			LO_SCL_I2C2
+//
+//
+
+// PH5			LO_SDA_I2C2
+//
+//
+
+// PH6			TOUCH_INT
+#define TS_INT_PIN                 		GPIO_PIN_6
+#define TS_INT_GPIO_PORT            	GPIOH
+
+// PH7			DSI_RESET
+#define LCD_RESET_PIN             		GPIO_PIN_7
+#define LCD_RESET_PULL              	GPIO_NOPULL
+#define LCD_RESET_GPIO_PORT         	GPIOH
+
+// PH8			FMC_D16
+#define FMC_D16_PIN						GPIO_PIN_8
+#define FMC_D16_PORT					GPIOH
+
+// PH9			FMC_D17
+#define FMC_D17_PIN						GPIO_PIN_9
+#define FMC_D17_PORT					GPIOH
+
+// PH10			FMC_D18
+#define FMC_D18_PIN						GPIO_PIN_10
+#define FMC_D18_PORT					GPIOH
+
+// PH11			FMC_D19
+#define FMC_D19_PIN						GPIO_PIN_11
+#define FMC_D19_PORT					GPIOH
+
+// PH12			FMC_D20
+#define FMC_D20_PIN						GPIO_PIN_12
+#define FMC_D20_PORT					GPIOH
+
+// PH13			FMC_D21
+#define FMC_D21_PIN						GPIO_PIN_13
+#define FMC_D21_PORT					GPIOH
+
+// PH14			FMC_D22
+#define FMC_D22_PIN						GPIO_PIN_14
+#define FMC_D22_PORT					GPIOH
+
+// PH15			FMC_D23
+#define FMC_D23_PIN						GPIO_PIN_15
+#define FMC_D23_PORT					GPIOH
+
+// ----------------------------------------------------
+// ----------------------------------------------------
+// PortI
+
+// PI0			FMC_D24
+#define FMC_D24_PIN						GPIO_PIN_0
+#define FMC_D24_PORT					GPIOI
+
+// PI1			FMC_D25
+#define FMC_D25_PIN						GPIO_PIN_1
+#define FMC_D25_PORT					GPIOI
+
+// PI2			FMC_D26
+#define FMC_D26_PIN						GPIO_PIN_2
+#define FMC_D26_PORT					GPIOI
+
+// PI3			FMC_D27
+#define FMC_D27_PIN						GPIO_PIN_3
+#define FMC_D27_PORT					GPIOI
+
+// PI4			FMC_NBL2
+#define FMC_NBL2_PIN					GPIO_PIN_4
+#define FMC_NBL2_PORT					GPIOI
+
+// PI5			FMC_NBL3
+#define FMC_NBL3_PIN					GPIO_PIN_5
+#define FMC_NBL3_PORT					GPIOI
+
+// PI6			FMC_D28
+#define FMC_D28_PIN						GPIO_PIN_6
+#define FMC_D28_PORT					GPIOI
+
+// PI7			FMC_D29
+#define FMC_D29_PIN						GPIO_PIN_7
+#define FMC_D29_PORT					GPIOI
+
+// PI8
+#define KEYPAD_Y2_LL                   	LL_GPIO_PIN_8
+#define KEYPAD_Y2_PORT					GPIOI
+
+// PI9			FMC_D30
+#define FMC_D30_PIN						GPIO_PIN_9
+#define FMC_D30_PORT					GPIOI
+
+// PI10			FMC_D31
+#define FMC_D31_PIN						GPIO_PIN_10
+#define FMC_D31_PORT					GPIOI
+
+// PI11
+#define KEYPAD_Y3_LL                   	LL_GPIO_PIN_11
+#define KEYPAD_Y3_PORT					GPIOI
+
+// PI15			BAND2
+#define BAND2_PIN						GPIO_PIN_15
+#define BAND2_PORT						GPIOI
+
+// EXTI Line usage:
+//
+// EXTI_LINE2 - paddle
+// EXTI_LINE3 - paddle
+//
+// EXTI_LINE_6 - touch
+//
+// EXTI_LINE_8 - SD Card detect
+
+
+#endif	//PCB_V9_REV_A
+
+#endif	//__MCHF_PRO_PINMAP_H

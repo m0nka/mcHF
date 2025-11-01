@@ -11,7 +11,7 @@
  **  Last Modified:                                                                 **
  **  Licence:       GNU GPLv3                                                      **
  ************************************************************************************/
-
+#ifndef H7_M4_CORE
 // Common
 #include "uhsdr_board.h"
 #include "profiling.h"
@@ -67,3 +67,4 @@ void profileEventsTracePrint()
             }
 #endif
 }
+#endif

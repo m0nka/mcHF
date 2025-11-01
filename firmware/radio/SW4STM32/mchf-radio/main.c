@@ -86,12 +86,12 @@ void HardFault_Handler(void)
 	printf( "=     %s     =\r\n", pcTaskGetName(NULL));
 	printf( "====================\r\n");
 
-	//--NVIC_SystemReset();
-	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+	NVIC_SystemReset();
+	//HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
 
 	while(1)
 	{
-		LL_GPIO_ResetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
+		//LL_GPIO_ResetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
 	}
 }
 
@@ -229,7 +229,7 @@ void BDMA_Channel0_IRQHandler(void)
 //* Notes    			:
 //* Context    			: CONTEXT_IRQ
 //*----------------------------------------------------------------------------
-void SPI1_IRQHandler(void)
+/*void SPI1_IRQHandler(void)
 {
     if(LL_SPI_IsActiveFlag_OVR(SPI1) || LL_SPI_IsActiveFlag_UDR(SPI1))
     {
@@ -253,17 +253,34 @@ void SPI1_IRQHandler(void)
     	lora_spi_eot_callback();
     	return;
     }
+}*/
+extern SPI_HandleTypeDef SpiHandle1;
+extern DMA_HandleTypeDef hdma_tx;
+extern DMA_HandleTypeDef hdma_rx;
+void SPI1_IRQHandler(void)
+{
+  HAL_SPI_IRQHandler(&SpiHandle1);
+}
+
+void SPI1_DMA_RX_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(SpiHandle1.hdmarx);
+}
+
+void SPI1_DMA_TX_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(SpiHandle1.hdmatx);
 }
 #endif
 
 void Error_Handler(int err)
 {
-  /* Turn LED RED on */
-  //if(BSP_Initialized)
-  //	BSP_LED_On(LED_RED);
+	__disable_irq();
 
-  printf( " Error Handler %d\n",err);
-  //configASSERT (0);
+	printf( " Error Handler %d\n", err);
+
+	NVIC_SystemReset();
+	while(1);
 }
 
 void BSP_ErrorHandler(void)

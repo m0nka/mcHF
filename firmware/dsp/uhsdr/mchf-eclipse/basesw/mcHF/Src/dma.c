@@ -61,6 +61,7 @@
   */
 void MX_DMA_Init(void) 
 {
+#ifndef H7_M4_CORE
   /* DMA controller clock enable */
   __HAL_RCC_DMA1_CLK_ENABLE();
 
@@ -74,7 +75,7 @@ void MX_DMA_Init(void)
   /* DMA1_Stream5_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 14, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream5_IRQn);
-
+#endif
 }
 
 /* USER CODE BEGIN 2 */

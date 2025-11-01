@@ -77,7 +77,7 @@
 // -----------------------------------------------------------------------------------------------
 // Battery Management System
 //
-#define CONTEXT_BMS
+//#define CONTEXT_BMS
 //
 // -----------------------------------------------------------------------------------------------
 // Backlight control process
@@ -105,7 +105,7 @@
 // Lora transceiver - wip
 //
 //
-//#define CONTEXT_LORA
+#define CONTEXT_LORA
 //
 
 // test

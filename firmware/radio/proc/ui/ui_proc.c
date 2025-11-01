@@ -100,7 +100,7 @@ extern K_ModuleItem_Typedef  	logbook;			// Logbook
 extern K_ModuleItem_Typedef  	menu_batt;			// Battery
 extern K_ModuleItem_Typedef  	info;				// System Information
 extern K_ModuleItem_Typedef  	lora;				// Lora module control
-//extern K_ModuleItem_Typedef  	file_b;				// File Browser
+extern K_ModuleItem_Typedef  	file_b;				// File Browser
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_add_menu_items
@@ -118,9 +118,9 @@ static void ui_proc_add_menu_items(void)
 	k_ModuleAdd(&clock);				// Clock Settings
 	k_ModuleAdd(&menu_batt);			// Battery
 	k_ModuleAdd(&logbook);				// Logbook
+	//k_ModuleAdd(&file_b);				// File Browser
 	k_ModuleAdd(&lora);					// Lora
 	k_ModuleAdd(&info);					// About
-	//k_ModuleAdd(&file_b);				// File Browser
 }
 
 static void ui_proc_cb(void)
@@ -236,17 +236,18 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 			}
 			#endif
 
-			#if 0
+			#if 1
 			// Is it top part of screen (above combined control ?)
 			if(TS_State.y < (SW_FRAME_Y - 5))
 			{
-				//printf("Top part of LCD touched.\r\n");
+#if 0
+				printf("Top part of LCD touched.\r\n");
 
 				// Is it the Menu ?
-				touch_id = ui_controls_menu_button_is_touch(TS_State.x, TS_State.y);
+				touch_id = 1;//ui_controls_menu_button_is_touch(TS_State.x, TS_State.y);
 				if(touch_id)
 				{
-					//printf("== Menu touch ==\r\n");
+					printf("== Menu touch ==\r\n");
 
 					if(!active_control_shown)
 					{
@@ -268,7 +269,7 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 						#endif
 					}
 				}
-
+#endif
 				// ToDo: Check other controls - volume, etc...
 				// ...
 
@@ -493,11 +494,29 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        	break;
 
 		        case '+':
+		        {
+					#ifndef PCB_V9_REV_A
 		        	ui_actions_change_step(1);
+					#else
+					(tsu.curr_band)++;
+					if(tsu.curr_band > BAND_MODE_10)
+						tsu.curr_band = BAND_MODE_10;
+					ui_actions_change_band(tsu.curr_band, 0);
+					#endif
 		        	break;
+		        }
+
 		        case '-':
+		        {
+					#ifndef PCB_V9_REV_A
 		        	ui_actions_change_step(0);
+					#else
+					if(tsu.curr_band > BAND_MODE_160)
+						(tsu.curr_band)--;
+					ui_actions_change_band(tsu.curr_band, 0);
+					#endif
 		        	break;
+		        }
 
 				case 'F':
 				{
@@ -753,9 +772,9 @@ static void ui_proc_change_mode(void)
 
 			// Destroy any Window Manager items
 			ui_menu_destroy();
-//!			ui_side_enc_menu_destroy();
+			//ui_side_enc_menu_destroy();
 			ui_desktop_ft8_destroy();
-//!			ui_quick_log_destroy();
+			//ui_quick_log_destroy();
 
 			#ifdef PROC_USE_WM
 			WM_SetCallback		(WM_HBKWIN, 0);

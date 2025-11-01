@@ -45,7 +45,7 @@ static void adc_configure(void)
 
 	// -----------------------------------------------------------------
 	// ADC3_INP8, Ambient light sensor (PF6)
-	LL_GPIO_SetPinMode(POWER_LED_PORT, POWER_LED, LL_GPIO_MODE_ANALOG);
+	LL_GPIO_SetPinMode(TX_LED_PORT, TX_LED, LL_GPIO_MODE_ANALOG);
 
 	// -----------------------------------------------------------------
 	// ADC3_INP3, PA Temperature (PF7)

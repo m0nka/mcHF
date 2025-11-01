@@ -280,11 +280,11 @@ void EXTI15_10_IRQHandler(void)
 #else
 void EXTI2_IRQHandler(void)
 {
-	if(__HAL_GPIO_EXTID2_GET_IT(PADDLE_DIT) != 0x00U)
+	if(__HAL_GPIO_EXTID2_GET_IT(PADDLE_DIT_PIN) != 0x00U)
 	{
 		//printf("dit irq\r\n");
 
-		if((!LL_GPIO_IsInputPinSet(PADDLE_DIT_PIO, PADDLE_DIT_LL))||(ps.virtual_dit_down))
+		if((!LL_GPIO_IsInputPinSet(PADDLE_DIT_PORT, PADDLE_DIT_PIN))||(ps.virtual_dit_down))
 		{
 			if(ts.dmod_mode == DEMOD_CW)
 			{
@@ -292,7 +292,7 @@ void EXTI2_IRQHandler(void)
 			}
 		}
 
-		__HAL_GPIO_EXTID2_CLEAR_IT(PADDLE_DIT);
+		__HAL_GPIO_EXTID2_CLEAR_IT(PADDLE_DIT_PIN);
 	}
 }
 void EXTI3_IRQHandler(void)
@@ -403,5 +403,16 @@ int main(void)
 		icc_proc_task(NULL);
 		audio_driver_thread();
 		ui_driver_thread();
+
+		#if 0
+		static ulong skip = 0;
+
+		skip++;
+		if(skip > 90000)
+		{
+			HAL_GPIO_TogglePin(TX_LED_PORT, TX_LED);
+			skip  = 0;
+		}
+		#endif
 	}
 }

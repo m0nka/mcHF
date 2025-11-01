@@ -54,6 +54,7 @@ void Error_Handler(void);
 
 void HAL_HCD_MspInit(HCD_HandleTypeDef* hcdHandle)
 {
+#ifndef H7_M4_CORE
   GPIO_InitTypeDef GPIO_InitStruct;
   if(hcdHandle->Instance==USB_OTG_HS)
   {
@@ -82,10 +83,12 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef* hcdHandle)
 
   /* USER CODE END USB_OTG_HS_MspInit 1 */
   }
+#endif
 }
 
 void HAL_HCD_MspDeInit(HCD_HandleTypeDef* hcdHandle)
 {
+#ifndef H7_M4_CORE
   if(hcdHandle->Instance==USB_OTG_HS)
   {
   /* USER CODE BEGIN USB_OTG_HS_MspDeInit 0 */
@@ -107,6 +110,7 @@ void HAL_HCD_MspDeInit(HCD_HandleTypeDef* hcdHandle)
 
   /* USER CODE END USB_OTG_HS_MspDeInit 1 */
   }
+#endif
 }
 
 /**

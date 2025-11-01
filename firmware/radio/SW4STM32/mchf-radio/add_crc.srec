@@ -3,9 +3,9 @@
 
 # First create CRC checksum
 (
-mchf-radio_CM7.bin			               				# input file
+mchf_application.bin			               			# input file
 -binary                                  				# input format
--STM32 -maximum-address mchf-radio_CM7.bin -binary
+-STM32 -maximum-address mchf_application.bin -binary
 )
 
 # produce the output file

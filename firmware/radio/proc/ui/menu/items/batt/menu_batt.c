@@ -47,15 +47,6 @@ K_ModuleItem_Typedef  menu_batt =
   KillBatt
 };
 
-//#define ID_BUTTON_DSP	          	(GUI_ID_USER + 0x51)
-#define ID_BUTTON_SPLIT          	(GUI_ID_USER + 0x52)
-#define ID_PROGBAR_0 				(GUI_ID_USER + 0x53)
-#define ID_HEADER_0      			(GUI_ID_USER + 0x58)
-
-#define ID_BUTTON_UI_RESET		  	(GUI_ID_USER + 0x02)
-#define ID_BUTTON_DSP_RESET		  	(GUI_ID_USER + 0x03)
-#define ID_BUTTON_EEP_RESET		  	(GUI_ID_USER + 0x04)
-
 static const GUI_WIDGET_CREATE_INFO _aDialog[] = 
 {
 	// -----------------------------------------------------------------------------------------------------------------------------
@@ -71,7 +62,7 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate1[] =
 	//							name					id						x		y		xsize	ysize	?		?		?
 	// -----------------------------------------------------------------------------------------------------------------------------
 	// Self
- 	{ WINDOW_CreateIndirect,   	"", 		0,              	0,   	0, 		790, 	400, 		FRAMEWIN_CF_MOVEABLE 		  },
+ 	{ WINDOW_CreateIndirect,   	"", 		0,              	0,   	0, 		TBL1X, 	400, 		FRAMEWIN_CF_MOVEABLE 		  },
 	//
 	// Balancer state header
 	{ HEADER_CreateIndirect, 	"", 		ID_HEADER_0, 		10, 	10, 	565, 			25, 				0, 		0x0, 	0 },
@@ -95,11 +86,11 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate2[] =
 	//							name		id					x		y		xsize	ysize		?		?		?
 	// -----------------------------------------------------------------------------------------------------------------------------
 	// Self
-   	{ WINDOW_CreateIndirect,   	"", 		0,              	0,   	0, 		790, 	430, 		FRAMEWIN_CF_MOVEABLE 		  },
+   	{ WINDOW_CreateIndirect,   	"", 		0,              	0,   	0, 		TBL1X, 	430, 		FRAMEWIN_CF_MOVEABLE 		  },
 	//
-	{ LISTVIEW_CreateIndirect, 	"", 		ID_LISTVIEW, 		5, 		5, 		780, 	300, 		0, 			0, 				0 },
+	{ LISTVIEW_CreateIndirect, 	"", 		ID_LISTVIEW, 		5, 		5, 		TBL2X, 	300, 		0, 			0, 				0 },
 	//
-	{ SLIDER_CreateIndirect, 	"", 		GUI_ID_SLIDER0, 	5, 		370,  	780, 	40, 		SOPTS, 		0, 				0 },
+	{ SLIDER_CreateIndirect, 	"", 		GUI_ID_SLIDER0, 	5, 		370,  	TBL2X, 	40, 		SOPTS, 		0, 				0 },
 	// Radio box
 	{ RADIO_CreateIndirect, 	"", 		ID_RADIO_0, 		5, 		315, 	140, 	40, 		0, 			0x1002,			0 },
 	{ RADIO_CreateIndirect, 	"", 		ID_RADIO_1, 		160, 	315, 	140, 	40, 		0, 			0x1002,			0 },
@@ -111,7 +102,7 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate3[] =
 	//							name					id						x		y		xsize	ysize	?		?		?
 	// -----------------------------------------------------------------------------------------------------------------------------
 	// Self
-   	{ WINDOW_CreateIndirect,   	"", 		0,              	0,   	0, 		790, 	400, 		FRAMEWIN_CF_MOVEABLE 		  },
+   	{ WINDOW_CreateIndirect,   	"", 		0,              	0,   	0, 		TBL1X, 	400, 		FRAMEWIN_CF_MOVEABLE 		  },
 	//
 	{ BUTTON_CreateIndirect, 	"Restart UI",	 		ID_BUTTON_UI_RESET,		40, 	40, 	120, 	45, 	0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"Power OFF",		 	ID_BUTTON_DSP_RESET,	40, 	120, 	120, 	45, 	0, 		0x0, 	0 },
@@ -908,7 +899,11 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			WM_HWIN hDialog;
 
 		    // Create multipage widget
+			#ifndef PCB_V9_REV_A
 		    hMulti = MULTIPAGE_CreateEx(5, 40, 830, 430, WM_HBKWIN, WM_CF_SHOW, 0, GUI_ID_MULTIPAGE0);
+			#else
+		    hMulti = MULTIPAGE_CreateEx(5, 40, 776, 430, WM_HBKWIN, WM_CF_SHOW, 0, GUI_ID_MULTIPAGE0);
+			#endif
 
 		    // Create dialog windows to add them as pages
 		    hDialog = GUI_CreateDialogBox(_aDialogCreate1, GUI_COUNTOF(_aDialogCreate1), _cbDialog1, WM_UNATTACHED, 0, 0);
@@ -918,7 +913,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 		    MULTIPAGE_AddPage(hMulti, hDialog, "Calibration");
 
 		    hDialog = GUI_CreateDialogBox(_aDialogCreate3, GUI_COUNTOF(_aDialogCreate3), _cbDialog3, WM_UNATTACHED, 0, 0);
-		    MULTIPAGE_AddPage(hMulti, hDialog, "Settings");
+		    MULTIPAGE_AddPage(hMulti, hDialog, "Charger");
 
 		    // Set alignment of tabs
 		    MULTIPAGE_SetRotation(hMulti, MULTIPAGE_CF_ROTATE_CW);

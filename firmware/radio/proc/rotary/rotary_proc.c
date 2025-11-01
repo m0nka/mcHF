@@ -181,23 +181,23 @@ static void rotary_update_side_enc_menu_publics(int pot_diff)
 	}
 }
 
-#if 0
+#ifdef PCB_V9_REV_A
 static void rotary_check_side_enc(void)
 {
 	ushort 	cnt;
 	int		pot_diff = 0;
 
-	cnt = __HAL_TIM_GET_COUNTER(&htim2);
+	cnt = __HAL_TIM_GET_COUNTER(&htim3);
 	if(audio_old == cnt)
 		return;
 
 	//printf("---------------------------------\r\n");
 	//printf("cnt = %d\r\n",cnt);
 
-	if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2))
-		pot_diff = +1;
-	else
+	if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim3))
 		pot_diff = -1;
+	else
+		pot_diff = +1;
 
 	//printf("pot_diff = %d\r\n",pot_diff);
 
@@ -391,17 +391,17 @@ static void rotary_check_front_enc(void)
 	if(tsu.band[tsu.curr_band].step == 0xFFFFFFFF)
 		return;
 
-	cnt = __HAL_TIM_GET_COUNTER(&htim3);
+	cnt = __HAL_TIM_GET_COUNTER(&htim2);
 	if(freq_old == cnt)
 		return;
 
 	//printf("---------------------------------\r\n");
 	//printf("cnt = %d\r\n",cnt);
 
-	if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim3))
-		pot_diff = +1;
-	else
+	if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2))
 		pot_diff = -1;
+	else
+		pot_diff = +1;
 
 	//printf("pot_diff = %d\r\n",pot_diff);
 
@@ -418,7 +418,7 @@ static void rotary_check_front_enc(void)
 	freq_old = cnt;
 }
 
-#if 0
+#ifdef PCB_V9_REV_A
 uchar rotary_side_enc_init(void)
 {
 	TIM_Encoder_InitTypeDef 	tim_config;

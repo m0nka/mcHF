@@ -49,7 +49,7 @@ extern GUI_CONST_STORAGE GUI_BITMAP bmgeneralinfoA;
 K_ModuleItem_Typedef  info =
 {
   0,
-  "About",
+  "About mcHF",
   &bmgeneralinfoA,
   Startup,
   NULL,
@@ -65,7 +65,7 @@ WM_HWIN   	hIdialog;
 #define ID_BUTTON_EEP_RESET           	(GUI_ID_USER + 0x03)
 
 #define ID_LISTBOX1           			(GUI_ID_USER + 0x04)
-#define ID_LISTBOX2           		(GUI_ID_USER + 0x05)
+#define ID_LISTBOX2           			(GUI_ID_USER + 0x05)
 
 static const GUI_WIDGET_CREATE_INFO _aDialog[] = 
 {
@@ -73,12 +73,19 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 //							name		id						x		y		xsize	ysize	?		?		?
 // -----------------------------------------------------------------------------------------------------------------------------
 // Self
+#ifndef PCB_V9_REV_A
 { WINDOW_CreateIndirect,	"", 		ID_WINDOW_0,			0,    	0,		854,	430, 	0, 		0x64, 	0 },
-
 // Buttons
 { BUTTON_CreateIndirect, 	"Update",	ID_BUTTON_FW_UPDATE,	690, 	55, 	120, 	45, 	0, 		0x0, 	0 },
 { BUTTON_CreateIndirect, 	"Restart",	ID_BUTTON_SYS_RESTART,	690, 	115, 	120, 	45, 	0, 		0x0, 	0 },
 { BUTTON_CreateIndirect, 	"Defaults",	ID_BUTTON_EEP_RESET,	690, 	175, 	120, 	45, 	0, 		0x0, 	0 },
+#else
+{ WINDOW_CreateIndirect,	"", 		ID_WINDOW_0,			0,    	0,		796,	430, 	0, 		0x64, 	0 },
+// Buttons
+{ BUTTON_CreateIndirect, 	"Update",	ID_BUTTON_FW_UPDATE,	660, 	55, 	120, 	45, 	0, 		0x0, 	0 },
+{ BUTTON_CreateIndirect, 	"Restart",	ID_BUTTON_SYS_RESTART,	660, 	115, 	120, 	45, 	0, 		0x0, 	0 },
+{ BUTTON_CreateIndirect, 	"Defaults",	ID_BUTTON_EEP_RESET,	660, 	175, 	120, 	45, 	0, 		0x0, 	0 },
+#endif
 
 // List boxes
 { LISTBOX_CreateIndirect, 	"Listbox",	ID_LISTBOX1, 		 	5, 	 	10, 	640, 	300, 	0, 		0x0, 	0 },

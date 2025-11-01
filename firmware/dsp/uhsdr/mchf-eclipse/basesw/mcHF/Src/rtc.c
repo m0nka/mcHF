@@ -47,14 +47,14 @@
 
 /* USER CODE BEGIN 0 */
 
-/* USER CODE END 0 */
+// ToDo: Check if we want this core to access the RTC ???
 
 RTC_HandleTypeDef hrtc;
 
 /* RTC init function */
 void MX_RTC_Init(void)
 {
-
+#ifndef H7_M4_CORE
     /**Initialize RTC Only 
     */
   hrtc.Instance = RTC;
@@ -69,11 +69,12 @@ void MX_RTC_Init(void)
     // we ignore the problem here, since not all mcHF have a RTC
     // Error_Handler();
   }
+#endif
 }
 
 void HAL_RTC_MspInit(RTC_HandleTypeDef* rtcHandle)
 {
-
+#ifndef H7_M4_CORE
   if(rtcHandle->Instance==RTC)
   {
   /* USER CODE BEGIN RTC_MspInit 0 */
@@ -85,11 +86,12 @@ void HAL_RTC_MspInit(RTC_HandleTypeDef* rtcHandle)
 
   /* USER CODE END RTC_MspInit 1 */
   }
+#endif
 }
 
 void HAL_RTC_MspDeInit(RTC_HandleTypeDef* rtcHandle)
 {
-
+#ifndef H7_M4_CORE
   if(rtcHandle->Instance==RTC)
   {
   /* USER CODE BEGIN RTC_MspDeInit 0 */
@@ -101,6 +103,7 @@ void HAL_RTC_MspDeInit(RTC_HandleTypeDef* rtcHandle)
   /* USER CODE BEGIN RTC_MspDeInit 1 */
 
   /* USER CODE END RTC_MspDeInit 1 */
+#endif
 } 
 
 /* USER CODE BEGIN 1 */

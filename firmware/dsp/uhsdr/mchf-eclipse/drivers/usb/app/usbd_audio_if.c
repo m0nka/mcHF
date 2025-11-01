@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
  ******************************************************************************
  * @file           : usbd_audio_if.c
@@ -514,4 +515,4 @@ static int8_t  AUDIO_InVolumeCtl_FS    (uint8_t vol)
     ts.rx_gain[RX_AUDIO_DIG].value = vol;
     return USBD_OK;
 }
-
+#endif

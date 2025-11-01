@@ -16,6 +16,7 @@
 
 #include "uhsdr_board_config.h"
 
+#ifndef H7_M4_CORE
 typedef enum {
     CPU_NONE = 0,
     CPU_STM32F4 = 1,
@@ -60,4 +61,5 @@ inline static mchf_cpu_t MchfHW_Cpu()
 inline static void GPIO_ToggleBits(GPIO_TypeDef *PORT, uint32_t PINS) { (PORT)->ODR ^= (PINS); }
 inline static void GPIO_ReadInputDataBit(GPIO_TypeDef *PORT, uint32_t PINS) { (PORT)->IDR = (PINS); }
 
+#endif
 #endif

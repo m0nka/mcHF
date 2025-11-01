@@ -52,8 +52,13 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#ifndef H7_M4_CORE
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal.h"
+#else
+#include "stm32h7xx.h"
+#include "stm32h7xx_hal.h"
+#endif
 
 /**
 	MiddleWare name : USB_HOST
@@ -190,4 +195,3 @@
   * @}
   */ 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-

@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
  **                                                                                 **
@@ -2822,3 +2823,4 @@ void UiLcdHy28_TouchscreenInit(uint8_t mirror)
     mchf_touchscreen.hr_y = 0x7FFF;                        // invalid position
     mchf_touchscreen.present = UiLcdHy28_TouchscreenPresenceDetection();
 }
+#endif

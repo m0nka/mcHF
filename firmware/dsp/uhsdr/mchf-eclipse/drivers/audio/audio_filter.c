@@ -1303,8 +1303,3 @@ float32_t AudioFilter_GoertzelEnergy(Goertzel* goertzel)
 	goertzel->buf[2] = 0;
 	return sqrtf(a * a + b * b);
 }
-
-
-
-
-

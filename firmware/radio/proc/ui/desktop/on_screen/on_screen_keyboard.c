@@ -59,7 +59,11 @@
 // NA
 #define ID_BUTTON_X6Y4          	(GUI_ID_USER + 0x67)
 
+#ifndef PCB_V9_REV_A
 #define KEYB_X						254
+#else
+#define KEYB_X						200
+#endif
 #define KEYB_Y						208
 
 #define KEYB_SIZE_X					595

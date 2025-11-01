@@ -55,6 +55,7 @@ SRAM_HandleTypeDef hsram1;
 /* FSMC initialization function */
 void MX_FSMC_Init(void)
 {
+#ifndef H7_M4_CORE
   FSMC_NORSRAM_TimingTypeDef Timing;
 
   /** Perform the SRAM1 memory initialization sequence
@@ -90,7 +91,7 @@ void MX_FSMC_Init(void)
   {
     Error_Handler();
   }
-
+#endif
 }
 
 static uint32_t FSMC_Initialized = 0;
@@ -98,7 +99,7 @@ static uint32_t FSMC_DeInitialized = 0;
 
 static void HAL_FSMC_MspInit(void){
   /* USER CODE BEGIN FSMC_MspInit 0 */
-
+#ifndef H7_M4_CORE
   /* USER CODE END FSMC_MspInit 0 */
   GPIO_InitTypeDef GPIO_InitStruct;
   if (FSMC_Initialized) {
@@ -154,24 +155,24 @@ static void HAL_FSMC_MspInit(void){
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /* USER CODE BEGIN FSMC_MspInit 1 */
-
+#endif
   /* USER CODE END FSMC_MspInit 1 */
 }
 
 void HAL_SRAM_MspInit(SRAM_HandleTypeDef* sramHandle){
   /* USER CODE BEGIN SRAM_MspInit 0 */
-
+#ifndef H7_M4_CORE
   /* USER CODE END SRAM_MspInit 0 */
   HAL_FSMC_MspInit();
   /* USER CODE BEGIN SRAM_MspInit 1 */
-
+#endif
   /* USER CODE END SRAM_MspInit 1 */
 }
 
 
 static void HAL_FSMC_MspDeInit(void){
   /* USER CODE BEGIN FSMC_MspDeInit 0 */
-
+#ifndef H7_M4_CORE
   /* USER CODE END FSMC_MspDeInit 0 */
   if (FSMC_DeInitialized) {
     return;
@@ -213,7 +214,7 @@ static void HAL_FSMC_MspDeInit(void){
                           |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_7);
 
   /* USER CODE BEGIN FSMC_MspDeInit 1 */
-
+#endif
   /* USER CODE END FSMC_MspDeInit 1 */
 }
 

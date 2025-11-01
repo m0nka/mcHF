@@ -10,6 +10,7 @@
  **  Licence:		GNU GPLv3                                                      **
  ************************************************************************************/
 
+#ifdef USE_CONVOLUTION
 #include "audio_convolution.h"
 #include "audio_driver.h"
 #include "arm_const_structs.h"
@@ -20,7 +21,6 @@
 // use FreeDV buffers, if we switch on digital voice mode FreeDV
 // user code
 
-#ifdef USE_CONVOLUTION
 __IO int32_t Sample_in_head = 0;
 __IO int32_t Sample_in_tail = 0;
 __IO int32_t Sample_out_head = 0;
@@ -921,7 +921,7 @@ void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t
 
     // interpolation
 
-// TODO: at this point we have 128 real audio samples filtered and AGC´ed in the variable 	 (for mono modes)
+// TODO: at this point we have 128 real audio samples filtered and AGCï¿½ed in the variable 	 (for mono modes)
     // for stereo modes (not yet implemented), the other channel is in cob.q_buffer_convolution
 
     // now we have to make blocks of 32 samples out of that for further processing
@@ -1034,4 +1034,3 @@ void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t
 
 
 #endif
-

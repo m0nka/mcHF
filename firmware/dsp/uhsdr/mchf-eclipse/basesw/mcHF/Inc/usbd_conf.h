@@ -51,8 +51,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef H7_M4_CORE
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal.h"
+#else
+#include "stm32h7xx.h"
+#include "stm32h7xx_hal.h"
+#endif
 
 /** @addtogroup USBD_OTG_DRIVER
   * @{
@@ -180,4 +186,3 @@
   * @}
   */ 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-

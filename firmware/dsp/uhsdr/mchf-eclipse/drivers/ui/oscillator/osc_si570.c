@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
  **                                                                                 **
@@ -774,3 +775,4 @@ static Oscillator_ResultCodes_t Si570_PrepareNextFrequency(ulong freq, int temp_
     }
     return retval;
 }
+#endif

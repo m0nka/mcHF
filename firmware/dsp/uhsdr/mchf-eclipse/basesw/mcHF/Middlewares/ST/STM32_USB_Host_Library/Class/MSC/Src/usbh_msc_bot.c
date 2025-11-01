@@ -630,4 +630,3 @@ static BOT_CSWStatusTypeDef USBH_MSC_DecodeCSW(USBH_HandleTypeDef *phost)
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
 
-

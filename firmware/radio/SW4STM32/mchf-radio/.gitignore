@@ -9,3 +9,4 @@
 /STM32H747I-DISCO.xml
 /mchf-radio Debug_CM7.cfg
 srec_cat.exe
+/Release/

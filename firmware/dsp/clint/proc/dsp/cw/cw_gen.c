@@ -54,7 +54,7 @@ uchar cw_gen_get_line_state(GPIO_TypeDef *GPIOx, uint32_t PinMask)	//(GPIO_TypeD
 	if((PinMask == PADDLE_DAH)&&(ps.virtual_dah_down))
 		return 0;
 
-	if((PinMask == PADDLE_DIT)&&(ps.virtual_dit_down))
+	if((PinMask == PADDLE_DIT_PIN)&&(ps.virtual_dit_down))
 		return 0;
 
 	return LL_GPIO_IsInputPinSet(GPIOx, PinMask);
@@ -173,14 +173,14 @@ void cw_gen_check_keyer_state(void)
 		if(!cw_gen_get_line_state(PADDLE_DAH_PIO,PADDLE_DAH))
 			ps.port_state |= CW_DAH_L;
 
-		if(!cw_gen_get_line_state(PADDLE_DIT_PIO,PADDLE_DIT))
+		if(!cw_gen_get_line_state(PADDLE_DIT_PORT, PADDLE_DIT_PIN))
 			ps.port_state |= CW_DIT_L;
 	}
 	else	{	// Paddles ARE reversed
-		if(!cw_gen_get_line_state(PADDLE_DAH_PIO,PADDLE_DAH))
+		if(!cw_gen_get_line_state(PADDLE_DAH_PIO, PADDLE_DAH))
 			ps.port_state |= CW_DIT_L;
 
-		if(!cw_gen_get_line_state(PADDLE_DIT_PIO,PADDLE_DIT))
+		if(!cw_gen_get_line_state(PADDLE_DIT_PORT, PADDLE_DIT_PIN))
 			ps.port_state |= CW_DAH_L;
 	}
 #endif
@@ -288,8 +288,8 @@ ulong cw_gen_process_iamb(float32_t *i_buffer,float32_t *q_buffer,ulong size)
 	{
 		case CW_IDLE:
 		{
-			if( (!cw_gen_get_line_state(PADDLE_DAH_PIO,PADDLE_DAH)) ||
-				(!cw_gen_get_line_state(PADDLE_DIT_PIO,PADDLE_DIT))	||
+			if( (!cw_gen_get_line_state(PADDLE_DAH_PIO, PADDLE_DAH)) ||
+				(!cw_gen_get_line_state(PADDLE_DIT_PORT, PADDLE_DIT_PIN))	||
 				(ps.port_state & 3))
 			{
 				cw_gen_check_keyer_state();

@@ -1083,7 +1083,11 @@ static void ui_controls_create_bottom_bar(void)
 	for (i = 0, j = sm; i < 7; i++)
 	{
 		// Pixels spread
+		#ifdef STARTEK_5INCH
 	    x0 = 36 + i*128;
+		#else
+	    x0 = 36 + i*120;
+		#endif
 
 	    y0 = (WATERFALL_Y + WATERFALL_Y_SIZE) + 4;
 	    GUI_GotoXY(x0 + 8, y0 + 7 - FontSizeY / 2);

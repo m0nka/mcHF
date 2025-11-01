@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
 **                                                                                 **
@@ -252,3 +253,4 @@ void Rtc_GetTime(RTC_HandleTypeDef *hrtc, RTC_TimeTypeDef *sTime, uint32_t Forma
     sTime->Seconds = (uint8_t)RTC_Bcd2ToByte(sTime->Seconds);
   }
 }
+#endif

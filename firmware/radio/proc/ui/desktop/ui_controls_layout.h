@@ -71,7 +71,11 @@
 // -- big size version
 // frame position - bottom of the screen
 //
+#ifdef STARTEK_5INCH
 #define LCD_WIDTH					854
+#else
+#define LCD_WIDTH					800
+#endif
 //
 #define SW_FRAME_X					0
 #define SW_FRAME_Y					202		//112
@@ -253,7 +257,11 @@
 // ----------------------------------------------------------------------------
 
 //#ifdef CLASSIC_LAYOUT
+#ifdef STARTEK_5INCH
 #define M_FREQ_X					450
+#else
+#define M_FREQ_X					400
+#endif
 #define M_FREQ_Y					130
 
 #define M_FREQ1_X					365
@@ -339,17 +347,43 @@
 #define SD_CARD_Y					35
 //
 // ----------------------------------------------------------------------------
+// Holder for all progress bars
+#ifdef STARTEK_5INCH
+#define PROG_PANEL_X				565
+#else
+#define PROG_PANEL_X				560
+#endif
+#define PROG_PANEL_Y				50
+//
+#ifdef STARTEK_5INCH
+#define PROG_PANEL_SZ_X				280
+#else
+#define PROG_PANEL_SZ_X				240
+#endif
+//
 // Speaker control
+#ifdef STARTEK_5INCH
 #define SPEAKER_X					645
+#else
+#define SPEAKER_X					624
+#endif
 #define SPEAKER_Y					50
 //
 #define SPEAKER_SIZE_X				62
 #define SPEAKER_SIZE_Y				50
 
+#ifdef STARTEK_5INCH
 #define RF_GAIN_X					725
+#else
+#define RF_GAIN_X					690
+#endif
 #define RF_GAIN_Y					50
 
+#ifdef STARTEK_5INCH
 #define TX_STAT_X					805
+#else
+#define TX_STAT_X					760
+#endif
 #define TX_STAT_Y					50
 
 #define TX_STAT_SIZE_X				60
@@ -368,7 +402,7 @@
 #define BATTERY_X					365
 #define BATTERY_Y					110
 //
-#define BATTERY_SIZE_X				75
+#define BATTERY_SIZE_X				55
 #define BATTERY_SIZE_Y				72
 //
 // ----------------------------------------------------------------------------

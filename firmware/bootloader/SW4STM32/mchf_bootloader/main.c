@@ -371,10 +371,15 @@ void MPU_Config(void)
 	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_ENABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
+	#ifndef PCB_V9_REV_A
+	MPU_InitStruct.Size             = MPU_REGION_SIZE_4MB;
+	#else
+	MPU_InitStruct.Size             = MPU_REGION_SIZE_16MB;
+	#endif
+
 	// Setup SDRAM - emWin video buffers
 	MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
-	MPU_InitStruct.BaseAddress      = SDRAM_DEVICE_ADDR;			// 0xD0000000
-	MPU_InitStruct.Size             = MPU_REGION_SIZE_4MB;			// 32MB
+	MPU_InitStruct.BaseAddress      = SDRAM_DEVICE_ADDR;
 	MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
 	MPU_InitStruct.IsBufferable     = MPU_ACCESS_NOT_BUFFERABLE;
 	MPU_InitStruct.IsCacheable      = MPU_ACCESS_CACHEABLE;
@@ -527,7 +532,7 @@ void show_alive(void)
 		led_timer = sys_timer;
 	else if((led_timer + 500) < sys_timer)
 	{
-		HAL_GPIO_TogglePin(POWER_LED_PORT, POWER_LED);
+		HAL_GPIO_TogglePin(TX_LED_PORT, TX_LED);
 
 		led_timer = sys_timer;
 	}
@@ -562,34 +567,48 @@ int main(void)
     SystemClock_Config();
 
     // Keyboard early init
+	#ifndef REV_0_8_4_PATCH
     keypad_proc_init();
-	//keypad_proc();
+	#endif
 
 	// Init hw
     critical_hw_init_and_run_fw();
 
 	// Proc init
 	mchf_pro_board_init();
-    bms_proc_init();
+
+	#ifndef REV_0_8_4_PATCH
+	bms_proc_init();
     shared_tim_init();
+	#endif
+
     ui_proc_init();
+
+	#ifndef REV_0_8_4_PATCH
     selftest_proc_init();
+	#endif
 
     while(1)
     {
     	// BMS comms
+		#ifndef REV_0_8_4_PATCH
     	bms_proc();
+		#endif
 
     	// UI repaint
     	ui_proc();
 
     	// Self test state machine
+		#ifndef REV_0_8_4_PATCH
     	selftest_proc();
+		#endif
 
     	// Blink the speaker LED
     	show_alive();
 
     	// Scan keyboard
+		#ifndef REV_0_8_4_PATCH
     	keypad_proc();
+		#endif
     }
 }

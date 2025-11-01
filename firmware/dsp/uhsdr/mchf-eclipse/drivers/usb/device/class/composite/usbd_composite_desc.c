@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
  ******************************************************************************
  * @file    USBD_COMP.c
@@ -520,4 +521,4 @@ USBD_ClassCompInfo dev_instance[CLASS_NUM] =
                 .maxIf = CDC_DATA_IF
         }
 };
-
+#endif

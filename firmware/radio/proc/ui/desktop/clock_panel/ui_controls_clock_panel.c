@@ -199,7 +199,12 @@ static void ui_controls_clock_panel_dsp_details(void)
 static void ui_controls_clock_panel_btm_part(void)
 {
 	GUI_SetColor(CLOCK_PANEL_COL);
+
+	#ifndef STARTEK_43INCH
 	GUI_FillRoundedRect(2, 188, 849, 203, 3);
+	#else
+	GUI_FillRoundedRect(2, 188, 799, 203, 3);
+	#endif
 }
 
 static void ui_controls_clock_panel_top_part(void)

@@ -71,19 +71,24 @@ void keypad_proc_init(void)
 	LL_GPIO_SetPinMode(KEYPAD_Y1_PORT, KEYPAD_Y1_LL, LL_GPIO_MODE_INPUT);
 	LL_GPIO_SetPinMode(KEYPAD_Y2_PORT, KEYPAD_Y2_LL, LL_GPIO_MODE_INPUT);
 	LL_GPIO_SetPinMode(KEYPAD_Y3_PORT, KEYPAD_Y3_LL, LL_GPIO_MODE_INPUT);
+	#ifndef PCB_V9_REV_A
 	LL_GPIO_SetPinMode(KEYPAD_Y4_PORT, KEYPAD_Y4_LL, LL_GPIO_MODE_INPUT);
-
+	#endif
 	// All with pullups
 	LL_GPIO_SetPinPull(KEYPAD_Y1_PORT, KEYPAD_Y1_LL, LL_GPIO_PULL_UP);
 	LL_GPIO_SetPinPull(KEYPAD_Y2_PORT, KEYPAD_Y2_LL, LL_GPIO_PULL_UP);
 	LL_GPIO_SetPinPull(KEYPAD_Y3_PORT, KEYPAD_Y3_LL, LL_GPIO_PULL_UP);
+	#ifndef PCB_V9_REV_A
 	LL_GPIO_SetPinPull(KEYPAD_Y4_PORT, KEYPAD_Y4_LL, LL_GPIO_PULL_UP);
+	#endif
 
 	// Slow speed
 	LL_GPIO_SetPinSpeed(KEYPAD_Y1_PORT, KEYPAD_Y1_LL, LL_GPIO_SPEED_FREQ_LOW);
 	LL_GPIO_SetPinSpeed(KEYPAD_Y2_PORT, KEYPAD_Y2_LL, LL_GPIO_SPEED_FREQ_LOW);
 	LL_GPIO_SetPinSpeed(KEYPAD_Y3_PORT, KEYPAD_Y3_LL, LL_GPIO_SPEED_FREQ_LOW);
+	#ifndef PCB_V9_REV_A
 	LL_GPIO_SetPinSpeed(KEYPAD_Y4_PORT, KEYPAD_Y4_LL, LL_GPIO_SPEED_FREQ_LOW);
+	#endif
 
 	// This clock already set ?
 	LL_APB4_GRP1_EnableClock(LL_APB4_GRP1_PERIPH_SYSCFG);
@@ -110,23 +115,29 @@ void keypad_proc_init(void)
 	LL_GPIO_SetPinMode(KEYPAD_X1_PORT, KEYPAD_X1_LL, LL_GPIO_MODE_OUTPUT);
 	LL_GPIO_SetPinMode(KEYPAD_X2_PORT, KEYPAD_X2_LL, LL_GPIO_MODE_OUTPUT);
 	LL_GPIO_SetPinMode(KEYPAD_X3_PORT, KEYPAD_X3_LL, LL_GPIO_MODE_OUTPUT);
+	#ifndef PCB_V9_REV_A
 	LL_GPIO_SetPinMode(KEYPAD_X4_PORT, KEYPAD_X4_LL, LL_GPIO_MODE_OUTPUT);
 	LL_GPIO_SetPinMode(KEYPAD_X5_PORT, KEYPAD_X5_LL, LL_GPIO_MODE_OUTPUT);
 	LL_GPIO_SetPinMode(KEYPAD_X6_PORT, KEYPAD_X6_LL, LL_GPIO_MODE_OUTPUT);
+	#endif
 	//
 	LL_GPIO_SetPinSpeed(KEYPAD_X1_PORT, KEYPAD_X1_LL, LL_GPIO_SPEED_FREQ_LOW);
 	LL_GPIO_SetPinSpeed(KEYPAD_X2_PORT, KEYPAD_X2_LL, LL_GPIO_SPEED_FREQ_LOW);
 	LL_GPIO_SetPinSpeed(KEYPAD_X3_PORT, KEYPAD_X3_LL, LL_GPIO_SPEED_FREQ_LOW);
+	#ifndef PCB_V9_REV_A
 	LL_GPIO_SetPinSpeed(KEYPAD_X4_PORT, KEYPAD_X4_LL, LL_GPIO_SPEED_FREQ_LOW);
 	LL_GPIO_SetPinSpeed(KEYPAD_X5_PORT, KEYPAD_X5_LL, LL_GPIO_SPEED_FREQ_LOW);
 	LL_GPIO_SetPinSpeed(KEYPAD_X6_PORT, KEYPAD_X6_LL, LL_GPIO_SPEED_FREQ_LOW);
+	#endif
 	//
 	LL_GPIO_ResetOutputPin(KEYPAD_X1_PORT, KEYPAD_X1_LL);
 	LL_GPIO_ResetOutputPin(KEYPAD_X2_PORT, KEYPAD_X2_LL);
 	LL_GPIO_ResetOutputPin(KEYPAD_X3_PORT, KEYPAD_X3_LL);
+	#ifndef PCB_V9_REV_A
 	LL_GPIO_ResetOutputPin(KEYPAD_X4_PORT, KEYPAD_X4_LL);
 	LL_GPIO_ResetOutputPin(KEYPAD_X5_PORT, KEYPAD_X5_LL);
 	LL_GPIO_ResetOutputPin(KEYPAD_X6_PORT, KEYPAD_X6_LL);
+	#endif
 
 	// Multitap publics
 	ks.tap_cnt 	= 0;
@@ -175,7 +186,7 @@ static void keypad_handle_multitap(uchar max_ids)
 //*----------------------------------------------------------------------------
 static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 {
-	//--printf("x=%d, y=%d, hld=%d, rel=%d\r\n", x, y, hold, release);
+	//printf("x=%d, y=%d, hld=%d, rel=%d\r\n", x, y, hold, release);
 
 	// Button held on start
 	if((x == 1)&&(y == 4)&&(hold == 1)&&(release == 1))
@@ -189,6 +200,12 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 	{
 		//printf("leave boot request  \r\n");
 		stay_in_boot = 0;
+	}
+
+	if((hold == 0)&&(release == 0))
+	{
+		ks.curr_x = x;
+		ks.curr_y = y;
 	}
 }
 
@@ -208,8 +225,10 @@ static uchar keypad_check_input_lines_a(void)
 		return 2;
 	if((KEYPAD_Y3_PORT->IDR & KEYPAD_Y3_LL) != KEYPAD_Y3_LL)
 		return 3;
+	#ifndef PCB_V9_REV_A
 	if((KEYPAD_Y4_PORT->IDR & KEYPAD_Y4_LL) != KEYPAD_Y4_LL)
 		return 4;
+	#endif
 
 	return 0;
 }
@@ -275,7 +294,7 @@ static void keypad_scan_a(void)
 	if(ks.tap_cnt > 20) ks.tap_id = 0;						// Reset multi-tap char id
 
 	// Line scan
-	for(i = 0; i < 6; i++)
+	for(i = 0; i < SCAN_MAX; i++)
 	{
 		keypad_set_out_lines_a(i);							// Rotate output state
 
@@ -316,13 +335,15 @@ static void keypad_scan_a(void)
 uchar keypad_proc_is_held_on_start(void)
 {
 	uchar res = 0;
-#if 1
+
+	#ifndef REV_0_8_4_PATCH
 	keypad_set_out_lines_a(0);
 
-	if(keypad_check_input_lines_a() == 4)
+	// F4, held on start
+	if(keypad_check_input_lines_a() == 3)
 	{
 		HAL_Delay(50);
-		if(keypad_check_input_lines_a() == 4)
+		if(keypad_check_input_lines_a() == 3)
 		{
 			res = 1;
 			stay_in_boot = 1;
@@ -330,8 +351,11 @@ uchar keypad_proc_is_held_on_start(void)
 	}
 
 	keypad_set_out_lines_a(8);
+	#else
+	res = 1;
+	stay_in_boot = 1;
+	#endif
 
-#endif
 	return res;
 }
 
@@ -359,6 +383,19 @@ void keypad_proc(void)
 		NVIC_EnableIRQ	(EXTI15_10_IRQn);
 		ks.irq_id = 0;
 	}
+}
+
+uchar keypad_proc_get(uchar clear)
+{
+	if(clear)
+	{
+		ks.curr_x = 0;
+		ks.curr_y = 0;
+		return 0;
+	}
+
+	//printf("x=%d, y=%d\r\n", ks.curr_x, ks.curr_y);
+	return ((ks.curr_x << 4)|ks.curr_y);
 }
 
 

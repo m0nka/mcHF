@@ -42,7 +42,7 @@ static void KillLora(void);
 K_ModuleItem_Typedef  lora =
 {
   2,
-  "GHz Radios",
+  "Sub-GHz",
   &bmheliumhntlogo,
   Startup,
   NULL,

@@ -15,6 +15,9 @@
 #if defined(CORTEX_M4)
     #include "stm32f4xx.h"
     #include "core_cm4.h"
+#elif defined(CORE_CM4)
+	#include "stm32h7xx_hal.h"
+	#include "core_cm4.h"
 #else
     #error McHF boards support only CORTEX_M4 MCU!
 #endif

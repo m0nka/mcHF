@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
  ******************************************************************************
  * @file    USBD_COMP.c
@@ -553,3 +554,4 @@ uint8_t  USBD_COMP_RegisterInterface  (USBD_HandleTypeDef   *pdev,
  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

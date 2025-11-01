@@ -260,8 +260,8 @@ static void EXTI23_IRQHandler_Config(void)
 	GPIO_InitStructure.Pull 	= GPIO_PULLUP;
 	GPIO_InitStructure.Speed 	= GPIO_SPEED_FREQ_VERY_HIGH;
 
-	GPIO_InitStructure.Pin 		= PADDLE_DIT;
-	HAL_GPIO_Init(PADDLE_DIT_PIO, &GPIO_InitStructure);
+	GPIO_InitStructure.Pin 		= PADDLE_DIT_PIN;
+	HAL_GPIO_Init(PADDLE_DIT_PORT, &GPIO_InitStructure);
 
 	GPIO_InitStructure.Pin 		= PADDLE_DAH;
 	HAL_GPIO_Init(PADDLE_DAH_PIO, &GPIO_InitStructure);
@@ -390,7 +390,9 @@ void bsp_power_off(void)
 	// Tasks hw cleanup
 	audio_proc_power_cleanup();
 	band_proc_power_cleanup();
+	#ifdef CONTEXT_ROTARY
 	rotary_proc_power_cleanup();
+	#endif
 	touch_proc_power_cleanup();
 	trx_proc_power_clean_up();
 	vfo_proc_power_cleanup();
@@ -442,7 +444,7 @@ static void ptt_init(void)
 
 	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
 	gpio_init_structure.Pull  = GPIO_NOPULL;
-	gpio_init_structure.Speed = GPIO_SPEED_FREQ_HIGH;
+	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
 
 	// PTT line
 	gpio_init_structure.Pin   = PTT_PIN;
@@ -450,6 +452,22 @@ static void ptt_init(void)
 
 	// RX on start
 	HAL_GPIO_WritePin(PTT_PIN_PORT, PTT_PIN, GPIO_PIN_RESET);
+}
+
+static void power_led_init(void)
+{
+	GPIO_InitTypeDef  gpio_init_structure;
+
+	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	gpio_init_structure.Pull  = GPIO_NOPULL;
+	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
+
+	// PTT line
+	gpio_init_structure.Pin   = ON_LED;
+	HAL_GPIO_Init(ON_LED_PORT, &gpio_init_structure);
+
+	// On
+	HAL_GPIO_WritePin(ON_LED_PORT, ON_LED, GPIO_PIN_SET);
 }
 
 void bsp_hold_power(void)
@@ -518,6 +536,23 @@ static void MX_CRC_Init(void)
 }
 #endif
 
+static ulong bsp_wake_second_core(void)
+{
+	int32_t timeout = 0xFFFF;
+
+	HAL_HSEM_FastTake(HSEM_ID_0);
+
+	// Release HSEM in order to notify the CPU2(CM4)
+	HAL_HSEM_Release(HSEM_ID_0, 0);
+
+	// wait until CPU2 wakes up from stop mode
+	while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) == RESET) && (timeout-- > 0));
+	if(timeout < 0)
+		return 1;
+
+	return 0;
+}
+
 uint8_t bsp_config(void)
 {
 	//LL_GPIO_InitTypeDef 		GPIO_InitStruct = {0};
@@ -530,7 +565,17 @@ uint8_t bsp_config(void)
 	printf("----------------------------------------------  \r\n");
 	printf("-->%s v: %d.%d.%d\r\n", DEVICE_STRING, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE, MCHF_R_VER_BUILD);
 
+	// Useful during ushdr port
+	#ifndef REV_0_8_4_PATCH__
+	printf("== allow m4 core to take control and stall application processor == \r\n");
+	HAL_Delay(500);
+	bsp_wake_second_core();
+	while(1);
+	#endif
+
 	power_cntr_init();
+
+	power_led_init();
 
 	ptt_init();
 

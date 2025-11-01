@@ -17,56 +17,47 @@
 
 #include "lora_spi.h"
 
-uint32_t timeout = 0;
+SPI_HandleTypeDef SpiHandle1;
+DMA_HandleTypeDef hdma_tx;
+DMA_HandleTypeDef hdma_rx;
 
-/* SPI Init Structure */
-LL_SPI_InitTypeDef   SPI_InitStruct;
+const uint8_t LoraTxBuffer[] = "****-----------------------------*********";
 
-/* GPIO Init Structure */
-LL_GPIO_InitTypeDef  GPIO_InitStruct;
+#define BUFFER_ALIGNED_SIZE (((BUFFERSIZE+31)/32)*32)
+ALIGN_32BYTES(uint8_t LoraRxBuffer[BUFFER_ALIGNED_SIZE]);
 
-uint8_t    SPIx_TxBuffer[] = "**** SPI_OneBoard_IT communication **** SPI_OneBoard_IT communication **** SPI_OneBoard_IT communication ****";
-uint32_t   SPIx_NbDataToTransmit = ((sizeof(SPIx_TxBuffer)/ sizeof(*SPIx_TxBuffer)) - 1);
+__IO uint32_t wTransferState = TRANSFER_WAIT;
 
-uint8_t    SPI1_RxBuffer[sizeof(SPIx_TxBuffer)];
-uint32_t   SPI1_ReceiveIndex = 0;
-uint32_t   SPI1_TransmitIndex = 0;
-
-void lora_spi_rx_callback(void)
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-	SPI1_RxBuffer[SPI1_ReceiveIndex++] = LL_SPI_ReceiveData8(SPI1);
+  wTransferState = TRANSFER_COMPLETE;
 }
 
-void lora_spi_tx_callback(void)
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 {
-	LL_SPI_TransmitData8(SPI1, SPIx_TxBuffer[SPI1_TransmitIndex++]);
+  wTransferState = TRANSFER_ERROR;
 }
 
-void lora_spi_eot_callback(void)
+static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength)
 {
-	LL_SPI_Disable(SPI1);
-	LL_SPI_DisableIT_TXP(SPI1);
-	LL_SPI_DisableIT_RXP(SPI1);
-	LL_SPI_DisableIT_CRCERR(SPI1);
-	LL_SPI_DisableIT_OVR(SPI1);
-	LL_SPI_DisableIT_UDR(SPI1);
-	LL_SPI_DisableIT_EOT(SPI1);
+  while (BufferLength--)
+  {
+    if((*pBuffer1) != *pBuffer2)
+    {
+      return BufferLength;
+    }
+    pBuffer1++;
+    pBuffer2++;
+  }
+
+  return 0;
 }
 
-void lora_spi_err_callback(void)
-{
-	LL_SPI_DisableIT_TXP(SPI1);
-	LL_SPI_DisableIT_RXP(SPI1);
-	LL_SPI_DisableIT_CRCERR(SPI1);
-	LL_SPI_DisableIT_OVR(SPI1);
-	LL_SPI_DisableIT_UDR(SPI1);
-	LL_SPI_DisableIT_EOT(SPI1);
 
-	LL_SPI_Disable(SPI1);
-}
-
-static void lora_misc_gpio_config(void)
+static void lora_spi_misc_gpio_config(void)
 {
+	LL_GPIO_InitTypeDef  GPIO_InitStruct;
+
 	// ToDo: Set initial state
 	// ...
 
@@ -92,6 +83,8 @@ static void lora_misc_gpio_config(void)
 
 static void lora_spi_gpio_config(void)
 {
+	LL_GPIO_InitTypeDef  GPIO_InitStruct;
+
 	GPIO_InitStruct.Mode      = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitStruct.Pull      = LL_GPIO_PULL_DOWN;
 	GPIO_InitStruct.Speed     = LL_GPIO_SPEED_HIGH;
@@ -112,68 +105,120 @@ static void lora_spi_gpio_config(void)
 	NVIC_EnableIRQ(SPI1_IRQn);
 }
 
-static void lora_spi_config (void)
+void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 {
-  /* Configure SPI MASTER ****************************************************/
-  /* Enable SPI1 Clock */
-  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SPI1);
+  if (hspi->Instance == SPI1)
+  {
+    SPI1_SCK_GPIO_CLK_ENABLE();
+    SPI1_MISO_GPIO_CLK_ENABLE();
+    SPI1_MOSI_GPIO_CLK_ENABLE();
 
-  /* Configure the SPI1 parameters */
-  SPI_InitStruct.BaudRate          = LL_SPI_BAUDRATEPRESCALER_DIV256;
-  SPI_InitStruct.TransferDirection = LL_SPI_FULL_DUPLEX;
-  SPI_InitStruct.ClockPhase        = LL_SPI_PHASE_2EDGE;
-  SPI_InitStruct.ClockPolarity     = LL_SPI_POLARITY_HIGH;
-  SPI_InitStruct.BitOrder          = LL_SPI_MSB_FIRST;
-  SPI_InitStruct.DataWidth         = LL_SPI_DATAWIDTH_8BIT;
-  SPI_InitStruct.NSS               = LL_SPI_NSS_SOFT;
-  SPI_InitStruct.CRCCalculation    = LL_SPI_CRCCALCULATION_DISABLE;
-  SPI_InitStruct.Mode              = LL_SPI_MODE_MASTER;
+    SPI1_CLK_ENABLE();
+    DMA1_CLK_ENABLE();
 
-  LL_SPI_Init(SPI1, &SPI_InitStruct);
+    lora_spi_gpio_config();
 
-  /* Lock GPIO for master to avoid glitches on the clock output */
-  LL_SPI_EnableGPIOControl(SPI1);
-  LL_SPI_EnableMasterRxAutoSuspend(SPI1);
+    hdma_tx.Instance                 = SPI1_TX_DMA_STREAM;
+    hdma_tx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
+    hdma_tx.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
+    hdma_tx.Init.MemBurst            = DMA_MBURST_INC4;
+    hdma_tx.Init.PeriphBurst         = DMA_PBURST_INC4;
+    hdma_tx.Init.Request             = SPI1_TX_DMA_REQUEST;
+    hdma_tx.Init.Direction           = DMA_MEMORY_TO_PERIPH;
+    hdma_tx.Init.PeriphInc           = DMA_PINC_DISABLE;
+    hdma_tx.Init.MemInc              = DMA_MINC_ENABLE;
+    hdma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_tx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
+    hdma_tx.Init.Mode                = DMA_NORMAL;
+    hdma_tx.Init.Priority            = DMA_PRIORITY_LOW;
 
-  /* Set number of date to transmit */
-  LL_SPI_SetTransferSize(SPI1, SPIx_NbDataToTransmit);
+    HAL_DMA_Init(&hdma_tx);
 
-  /* Enable SPI1 */
-  LL_SPI_Enable(SPI1);
+    __HAL_LINKDMA(hspi, hdmatx, hdma_tx);
 
-  /* Enable TXP Interrupt */
-  LL_SPI_EnableIT_TXP(SPI1);
+    hdma_rx.Instance                 = SPI1_RX_DMA_STREAM;
+    hdma_rx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
+    hdma_rx.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
+    hdma_rx.Init.MemBurst            = DMA_MBURST_INC4;
+    hdma_rx.Init.PeriphBurst         = DMA_PBURST_INC4;
+    hdma_rx.Init.Request             = SPI1_RX_DMA_REQUEST;
+    hdma_rx.Init.Direction           = DMA_PERIPH_TO_MEMORY;
+    hdma_rx.Init.PeriphInc           = DMA_PINC_DISABLE;
+    hdma_rx.Init.MemInc              = DMA_MINC_ENABLE;
+    hdma_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_rx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
+    hdma_rx.Init.Mode                = DMA_NORMAL;
+    hdma_rx.Init.Priority            = DMA_PRIORITY_HIGH;
 
-  /* Enable RXP Interrupt */
-  LL_SPI_EnableIT_RXP(SPI1);
+    HAL_DMA_Init(&hdma_rx);
 
-  /* Enable SPI Errors Interrupt */
-  LL_SPI_EnableIT_CRCERR(SPI1);
-  LL_SPI_EnableIT_UDR(SPI1);
-  LL_SPI_EnableIT_OVR(SPI1);
-  LL_SPI_EnableIT_EOT(SPI1);
+    __HAL_LINKDMA(hspi, hdmarx, hdma_rx);
+
+    HAL_NVIC_SetPriority(SPI1_DMA_TX_IRQn, 1, 1);
+    HAL_NVIC_EnableIRQ(SPI1_DMA_TX_IRQn);
+
+    HAL_NVIC_SetPriority(SPI1_DMA_RX_IRQn, 1, 0);
+    HAL_NVIC_EnableIRQ(SPI1_DMA_RX_IRQn);
+
+    HAL_NVIC_SetPriority(SPI1_IRQn, 1, 0);
+    HAL_NVIC_EnableIRQ(SPI1_IRQn);
+  }
 }
 
-void lora_spi_go(void)
+uchar lora_spi_init(void)
 {
-	timeout = 0xFF;
+	lora_spi_misc_gpio_config();
 
-	lora_misc_gpio_config();
-	lora_spi_gpio_config();
-	lora_spi_config ();
+	SpiHandle1.Instance               = SPI1;
+	SpiHandle1.Init.Mode              = SPI_MODE_MASTER;
+	SpiHandle1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+	SpiHandle1.Init.Direction         = SPI_DIRECTION_2LINES;
+	SpiHandle1.Init.CLKPhase          = SPI_PHASE_1EDGE;
+	  SpiHandle1.Init.CLKPolarity       = SPI_POLARITY_LOW;
+	  SpiHandle1.Init.DataSize          = SPI_DATASIZE_8BIT;
+	  SpiHandle1.Init.FirstBit          = SPI_FIRSTBIT_MSB;
+	  SpiHandle1.Init.TIMode            = SPI_TIMODE_DISABLE;
+	  SpiHandle1.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
+	  SpiHandle1.Init.CRCPolynomial     = 7;
+	  SpiHandle1.Init.CRCLength         = SPI_CRC_LENGTH_8BIT;
+	  SpiHandle1.Init.NSS               = SPI_NSS_SOFT;
+	  SpiHandle1.Init.NSSPMode          = SPI_NSS_PULSE_DISABLE;
+	  SpiHandle1.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_ENABLE;  // Recommended setting to avoid glitches
 
-	/* 1 - Start Master Transfer(SPI1) ******************************************/
-	  LL_SPI_StartMasterTransfer(SPI1);
-
-	  /* 2 - Wait end of transfer *************************************************/
-	  while ((timeout != 0))
+	  if(HAL_SPI_Init(&SpiHandle1) != HAL_OK)
 	  {
-	    if (SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk)
-	    {
-	      timeout--;
-	    }
+	    return 1;
 	  }
+
+	  if(HAL_SPI_TransmitReceive_DMA(&SpiHandle1, (uint8_t*)LoraTxBuffer, (uint8_t *)LoraRxBuffer, BUFFERSIZE) != HAL_OK)
+	  {
+	    return 2;
+	  }
+
+	  while (wTransferState == TRANSFER_WAIT)
+	  {
+	  }
+
+	  // Invalidate cache prior to access by CPU
+	  SCB_InvalidateDCache_by_Addr ((uint32_t *)LoraRxBuffer, BUFFERSIZE);
+
+	  switch(wTransferState)
+	  {
+	    case TRANSFER_COMPLETE :
+	      if(Buffercmp((uint8_t*)LoraTxBuffer, (uint8_t*)LoraRxBuffer, BUFFERSIZE))
+	      {
+	        return 3;
+	      }
+	      break;
+	    default :
+	      return 4;
+	      break;
+	  }
+
+	  return 0;
+
 }
+
 
 #endif
 

@@ -1157,7 +1157,7 @@ static void ui_controls_frequency_vfo_a_initial_paint(uchar is_init)
 		GUI_SetColor(GUI_GRAY);
 
 	GUI_SetFont(&GUI_Font20B_1);
-	GUI_DispStringAt("VFO A",VFO_A_X, VFO_A_Y);
+	GUI_DispStringAt("VFO A", VFO_A_X, VFO_A_Y);
 
 	// Digits colour
 	GUI_SetFont(FREQ_FONT);

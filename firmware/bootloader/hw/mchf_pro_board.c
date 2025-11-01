@@ -131,7 +131,7 @@ static void power_off_x(uchar reset_reason)
 void power_off_x(uchar reset_reason)
 {
 	// LED off
-	HAL_GPIO_WritePin(POWER_LED_PORT, POWER_LED, 0);
+	HAL_GPIO_WritePin(ON_LED_PORT, ON_LED, 0);
 
 	// Backlight off
 	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
@@ -682,18 +682,25 @@ void critical_hw_init_and_run_fw(void)
 		//power_off_x(RESET_POWER_OFF);
 	//}
 
-	// PF6 is LED - ack boot up, in firmware should be ambient sensor, not GPIO!
-	GPIO_InitStruct.Pin   = POWER_LED;
-	HAL_GPIO_Init(POWER_LED_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin   = TX_LED;
+	HAL_GPIO_Init(TX_LED_PORT, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin   = ON_LED;
+	HAL_GPIO_Init(ON_LED_PORT, &GPIO_InitStruct);
 
 	// Hold power
-	HAL_GPIO_WritePin(POWER_LED_PORT,POWER_LED, 1);		// led on
+	HAL_GPIO_WritePin(ON_LED_PORT, ON_LED, 1);			// led on
 	HAL_GPIO_WritePin(POWER_HOLD_PORT,POWER_HOLD, 1);	// hold power, high
 
 	// Keep 5V and 8V rails off
 	GPIO_InitStruct.Pin   = VCC_5V_ON;
 	HAL_GPIO_Init(VCC_5V_ON_PORT, &GPIO_InitStruct);
+
+	#ifndef REV_0_8_4_PATCH
 	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, 0);
+	#else
+	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, 1);
+	#endif
 
 	//HAL_PWR_DisableBkUpAccess();
 

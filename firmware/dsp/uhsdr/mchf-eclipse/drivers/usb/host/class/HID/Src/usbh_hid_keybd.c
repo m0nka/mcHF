@@ -1,3 +1,4 @@
+#ifndef H7_M4_CORE
 /**
   ******************************************************************************
   * @file    usbh_hid_keybd.c 
@@ -415,4 +416,4 @@ uint8_t USBH_HID_GetASCIICode(HID_KEYBD_Info_TypeDef *info, uint32_t idx)
   return output;  
 }
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
+#endif

@@ -12,6 +12,8 @@
  **  Licence:		GNU GPLv3                                                      **
  ************************************************************************************/
 
+#ifndef H7_M4_CORE
+
 // Common
 #include "uhsdr_board.h"
 #include <stdio.h>
@@ -440,7 +442,6 @@ int mchfMain(void)
 
     Board_RedLed(LED_STATE_OFF);
 
-
     // Transceiver main loop
     for(;;)
     {
@@ -449,3 +450,4 @@ int mchfMain(void)
     }
     return 0;
 }
+#endif

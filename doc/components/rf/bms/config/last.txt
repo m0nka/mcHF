@@ -1,3 +1,0 @@
-last file to program, compatibe with 0.8.5 board and 1mOhm sense resistor:
-
-lychen_gold_1mOhm_PRES.gg.csv

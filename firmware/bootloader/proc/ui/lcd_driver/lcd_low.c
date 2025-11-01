@@ -191,7 +191,7 @@ static int32_t DSI_IO_Read(uint16_t Reg, uint8_t *pData, uint16_t Size)
 	return HAL_DSI_Read(&hdsi, 0, pData, Size, DSI_DCS_SHORT_PKT_READ, Reg, pData);
 }
 
-#if 1
+#if 0
 // Init DSI just to read ID
 //
 static int LCDConf_ReadID(uchar *id)
@@ -217,10 +217,10 @@ static int LCDConf_ReadID(uchar *id)
   	HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
 
   	// Read Controller ID
-  	if(DSI_IO_Read(0xDA, id, 1) != 0)
-  		return 2;
-
-  	//printf("LCD ID: %02x\r\n",id[0]);
+  	if(DSI_IO_Read(0xDA, id, 1) != HAL_OK)
+  		printf("failed to read id\r\n");
+  	else
+  		print_hex_array(id, 4);
 
   	HAL_DSI_Stop(&hdsi);
 
@@ -304,14 +304,18 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
    	__HAL_RCC_DSI_FORCE_RESET();
    	__HAL_RCC_DSI_RELEASE_RESET();
 
+	#if 0
     uchar id[4];
+    uchar id_res = 0;
 
     // Read ID
-    if(LCDConf_ReadID(id) != 0)
+    id_res = LCDConf_ReadID(id);
+    if(id_res != 0)
     {
-    	printf("== unable to read LCD ID! ==\r\n");
+    	//printf("== unable to read LCD ID(%d)! ==\r\n", id_res);
     	return 1;
     }
+	#endif
 
     /* Initializes peripherals instance value */
     hltdc.Instance = LTDC;
@@ -372,6 +376,9 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
 
         /* Enable the DSI BTW for read operations */
         (void)HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
+
+        ulong type = mipi_get_type();
+        printf("LCD type: 0x%08x  \r\n", type);
 
         ST7701S_Init(DSI_RGB565);
       }
@@ -520,74 +527,80 @@ HAL_StatusTypeDef HAL_DSI_InitA(DSI_HandleTypeDef *hdsi, DSI_PLLInitTypeDef *PLL
 //
 // -------------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------------
-__weak HAL_StatusTypeDef MX_DSIHOST_DSI_Init(DSI_HandleTypeDef *hdsi, uint32_t Width, uint32_t Height, uint32_t PixelFormat)
+HAL_StatusTypeDef MX_DSIHOST_DSI_Init(DSI_HandleTypeDef *hdsi, uint32_t Width, uint32_t Height, uint32_t PixelFormat)
 {
-  DSI_PLLInitTypeDef PLLInit;
-  DSI_VidCfgTypeDef VidCfg;
+	DSI_PLLInitTypeDef PLLInit;
+	DSI_VidCfgTypeDef VidCfg;
 
-  hdsi->Instance 						= DSI;
-  hdsi->Init.AutomaticClockLaneControl	= DSI_AUTO_CLK_LANE_CTRL_DISABLE;
-  hdsi->Init.TXEscapeCkdiv 				= 4;
-  hdsi->Init.NumberOfLanes 				= DSI_TWO_DATA_LANES;
-  PLLInit.PLLNDIV 						= 100;
-  PLLInit.PLLIDF 						= DSI_PLL_IN_DIV5;
-  PLLInit.PLLODF 						= DSI_PLL_OUT_DIV1;
+	hdsi->Instance 							= DSI;
+	hdsi->Init.AutomaticClockLaneControl	= DSI_AUTO_CLK_LANE_CTRL_DISABLE;
+	hdsi->Init.TXEscapeCkdiv 				= 4;
+	hdsi->Init.NumberOfLanes 				= DSI_TWO_DATA_LANES;
+	PLLInit.PLLNDIV 						= 100;
+	PLLInit.PLLIDF 							= DSI_PLL_IN_DIV5;
+	PLLInit.PLLODF 							= DSI_PLL_OUT_DIV1;
 
-  //
-  // Note: use local implementation from older hal release, as the latest rewrite of
-  //       of this function fails ;(
-  //
-  if (HAL_DSI_InitA(hdsi, &PLLInit) != HAL_OK)
-  {
-    return 1;//HAL_ERROR;
-  }
+	//
+	// Note: use local implementation from older hal release, as the latest rewrite of
+	//       of this function fails ;(
+	//
+	if (HAL_DSI_InitA(hdsi, &PLLInit) != HAL_OK)
+	{
+		return 1;//HAL_ERROR;
+	}
 
-  /* Timing parameters for all Video modes */
-  /*
-  The lane byte clock is set 62500 Khz
-  The pixel clock is set to 27429 Khz
-  */
-  VidCfg.VirtualChannelID 				= 0;
-  VidCfg.ColorCoding 					= PixelFormat;
-  VidCfg.LooselyPacked 					= DSI_LOOSELY_PACKED_DISABLE;
-  VidCfg.Mode 							= DSI_VID_MODE_BURST;
+	/* Timing parameters for all Video modes */
+	/*
+  	  The lane byte clock is set 62500 Khz
+  	  The pixel clock is set to 27429 Khz
+	 */
+	VidCfg.VirtualChannelID 			= 0;
+	VidCfg.ColorCoding 					= PixelFormat;
+	VidCfg.LooselyPacked 				= DSI_LOOSELY_PACKED_DISABLE;
+	VidCfg.Mode 						= DSI_VID_MODE_BURST;
 
-  VidCfg.PacketSize 					= Width;
+	VidCfg.PacketSize 					= Width;
 
-  VidCfg.NumberOfChunks 				= 0;
-  VidCfg.NullPacketSize 				= 0xFFFU;
-  VidCfg.HSPolarity 					= DSI_HSYNC_ACTIVE_HIGH;
-  VidCfg.VSPolarity 					= DSI_VSYNC_ACTIVE_HIGH;
-  VidCfg.DEPolarity 					= DSI_DATA_ENABLE_ACTIVE_HIGH;
-  VidCfg.HorizontalSyncActive 			= (ST7701_HSYNC * 62500U)/PIXEL_CLK;
-  VidCfg.HorizontalBackPorch 			= (ST7701_HBP * 62500U)/PIXEL_CLK;
-  VidCfg.HorizontalLine 				= ((Width + ST7701_HSYNC + ST7701_HBP + ST7701_HFP) * 62500U)/PIXEL_CLK;
-  VidCfg.VerticalSyncActive 			= ST7701_VSYNC;
-  VidCfg.VerticalBackPorch 				= ST7701_VBP;
-  VidCfg.VerticalFrontPorch 			= ST7701_VFP;
+	VidCfg.NumberOfChunks 				= 0;
+	VidCfg.NullPacketSize 				= 0xFFFU;
+	VidCfg.HSPolarity 					= DSI_HSYNC_ACTIVE_HIGH;
+	VidCfg.VSPolarity 					= DSI_VSYNC_ACTIVE_HIGH;
+	VidCfg.DEPolarity 					= DSI_DATA_ENABLE_ACTIVE_HIGH;
+	VidCfg.HorizontalSyncActive 		= (ST7701_HSYNC * 62500U)/PIXEL_CLK;
+	VidCfg.HorizontalBackPorch 			= (ST7701_HBP * 62500U)/PIXEL_CLK;
+	VidCfg.HorizontalLine 				= ((Width + ST7701_HSYNC + ST7701_HBP + ST7701_HFP) * 62500U)/PIXEL_CLK;
+	VidCfg.VerticalSyncActive 			= ST7701_VSYNC;
+	VidCfg.VerticalBackPorch 			= ST7701_VBP;
+	VidCfg.VerticalFrontPorch 			= ST7701_VFP;
 
-  VidCfg.VerticalActive					= Height;
+	VidCfg.VerticalActive				= Height;
 
-  VidCfg.LPCommandEnable 				= DSI_LP_COMMAND_ENABLE;
-  VidCfg.LPLargestPacketSize			= 4;
-  VidCfg.LPVACTLargestPacketSize		= 4;
+	VidCfg.LPCommandEnable 				= DSI_LP_COMMAND_ENABLE;
 
-  VidCfg.LPHorizontalFrontPorchEnable	= DSI_LP_HFP_ENABLE;
-  VidCfg.LPHorizontalBackPorchEnable	= DSI_LP_HBP_ENABLE;
-  VidCfg.LPVerticalActiveEnable			= DSI_LP_VACT_ENABLE;
-  VidCfg.LPVerticalFrontPorchEnable		= DSI_LP_VFP_ENABLE;
-  VidCfg.LPVerticalBackPorchEnable		= DSI_LP_VBP_ENABLE;
-  VidCfg.LPVerticalSyncActiveEnable		= DSI_LP_VSYNC_ENABLE;
+	#ifndef STARTEK_43INCH
+  	VidCfg.LPLargestPacketSize			= 4;
+  	VidCfg.LPVACTLargestPacketSize		= 4;
+	#else
+  	VidCfg.LPLargestPacketSize			= 2;
+  	VidCfg.LPVACTLargestPacketSize		= 2;
+	#endif
 
-  if (HAL_DSI_ConfigVideoMode(hdsi, &VidCfg) != HAL_OK)
-  {
-    return 2;//HAL_ERROR;
-  }
+  	VidCfg.LPHorizontalFrontPorchEnable	= DSI_LP_HFP_ENABLE;
+  	VidCfg.LPHorizontalBackPorchEnable	= DSI_LP_HBP_ENABLE;
+  	VidCfg.LPVerticalActiveEnable		= DSI_LP_VACT_ENABLE;
+  	VidCfg.LPVerticalFrontPorchEnable	= DSI_LP_VFP_ENABLE;
+  	VidCfg.LPVerticalBackPorchEnable	= DSI_LP_VBP_ENABLE;
+  	VidCfg.LPVerticalSyncActiveEnable	= DSI_LP_VSYNC_ENABLE;
 
-  return HAL_OK;
+  	if (HAL_DSI_ConfigVideoMode(hdsi, &VidCfg) != HAL_OK)
+  	{
+  		return 2;//HAL_ERROR;
+  	}
+
+  	return HAL_OK;
 }
 
-__weak HAL_StatusTypeDef MX_LTDC_Init(LTDC_HandleTypeDef *hltdc, uint32_t Width, uint32_t Height)
+HAL_StatusTypeDef MX_LTDC_Init(LTDC_HandleTypeDef *hltdc, uint32_t Width, uint32_t Height)
 {
 
 	//printf("Width=%d\r\n",Width);
@@ -622,7 +635,7 @@ __weak HAL_StatusTypeDef MX_LTDC_Init(LTDC_HandleTypeDef *hltdc, uint32_t Width,
   * @param  Config     Layer configuration
   * @retval HAL status
   */
-__weak HAL_StatusTypeDef MX_LTDC_ConfigLayer(LTDC_HandleTypeDef *hltdc, uint32_t LayerIndex, MX_LTDC_LayerConfig_t *Config)
+HAL_StatusTypeDef MX_LTDC_ConfigLayer(LTDC_HandleTypeDef *hltdc, uint32_t LayerIndex, MX_LTDC_LayerConfig_t *Config)
 {
   LTDC_LayerCfgTypeDef pLayerCfg;
 
@@ -650,7 +663,7 @@ __weak HAL_StatusTypeDef MX_LTDC_ConfigLayer(LTDC_HandleTypeDef *hltdc, uint32_t
   *         Being __weak it can be overwritten by the application
   * @retval HAL_status
   */
-__weak HAL_StatusTypeDef MX_LTDC_ClockConfig(LTDC_HandleTypeDef *hltdc)
+HAL_StatusTypeDef MX_LTDC_ClockConfig(LTDC_HandleTypeDef *hltdc)
 {
   RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct;
 
@@ -669,7 +682,7 @@ __weak HAL_StatusTypeDef MX_LTDC_ClockConfig(LTDC_HandleTypeDef *hltdc)
   *         Being __weak it can be overwritten by the application
   * @retval HAL_status
   */
-__weak HAL_StatusTypeDef MX_LTDC_ClockConfig2(LTDC_HandleTypeDef *hltdc)
+HAL_StatusTypeDef MX_LTDC_ClockConfig2(LTDC_HandleTypeDef *hltdc)
 {
   RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct;
 
