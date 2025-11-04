@@ -10,11 +10,7 @@
 **  Last Modified:                                                                 **
 **  Licence:                                                                       **
 ************************************************************************************/
-#ifndef __LORA_PROC_H
-#define __LORA_PROC_H
-
-void lora_proc_init(void);
-void lora_proc_power_cleanup(void);
-void lora_proc_task(void const * argument);
+#ifndef __DMA_CONF_H
+#define __DMA_CONF_H
 
 #endif

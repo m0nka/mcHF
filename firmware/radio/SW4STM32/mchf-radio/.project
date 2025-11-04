@@ -57,6 +57,11 @@
 			<locationURI>copy_PARENT123456/config/FreeRTOSConfig.h</locationURI>
 		</link>
 		<link>
+			<name>config/dma_config.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/config/dma_config.h</locationURI>
+		</link>
+		<link>
 			<name>config/ffconf.h</name>
 			<type>1</type>
 			<locationURI>copy_PARENT1234567/config/ffconf.h</locationURI>

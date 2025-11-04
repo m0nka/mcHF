@@ -661,6 +661,7 @@
 // PA2			LORA_POWER, Lora driver
 #define LORA_POWER						LL_GPIO_PIN_2
 #define LORA_POWER_PORT					GPIOA
+//#define LORA_POWER_INV
 
 // PA3			RFM_DIO2, was Lora driver, now BT module power control
 #define RFM_DIO2						GPIO_PIN_3

@@ -34,6 +34,8 @@
 #include "ui_proc.h"
 #include "bms_proc.h"
 #include "keypad_proc.h"
+#include "lora_proc.h"
+
 #include "radio_init.h"
 
 #include "version.h"
@@ -247,6 +249,10 @@ void tasks_pre_os_init(void)
 	#ifdef CONTEXT_KEYPAD
 	keypad_proc_init();
 	#endif
+
+	#ifdef CONTEXT_LORA
+	lora_proc_init();
+	#endif
 }
 
 #ifdef CONTEXT_ICC
@@ -399,6 +405,9 @@ void bsp_power_off(void)
 	radio_init_save_before_off();
 	#ifdef CONTEXT_BMS
 	bms_proc_power_cleanup();
+	#endif
+	#ifdef CONTEXT_LORA
+	lora_proc_power_cleanup();
 	#endif
 
 	HAL_Delay(3000);

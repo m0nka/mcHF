@@ -319,6 +319,7 @@
 									<listOptionValue builtIn="false" value="../../../proc/keypad"/>
 									<listOptionValue builtIn="false" value="../../../proc/lora"/>
 									<listOptionValue builtIn="false" value="../../../proc/lora/hw"/>
+									<listOptionValue builtIn="false" value="../../../proc/lora/drivers"/>
 									<listOptionValue builtIn="false" value="../../../proc/dsp"/>
 									<listOptionValue builtIn="false" value="../../../proc/dsp/digi/ft8_lib/"/>
 									<listOptionValue builtIn="false" value="../../../../"/>
