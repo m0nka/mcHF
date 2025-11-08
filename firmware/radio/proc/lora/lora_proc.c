@@ -16,6 +16,11 @@
 #ifdef CONTEXT_LORA
 
 #include "lora_spi.h"
+
+#ifdef MESHCORE_REPEATER
+#include "repeater_main.h"
+#endif
+
 #include "lora_proc.h"
 
 //*----------------------------------------------------------------------------
@@ -34,10 +39,17 @@ void lora_proc_task(void const * argument)
 	vTaskDelay(LORA_PROC_START_DELAY);
 
 	//printf("lora process start\r\n");
-
 	//lora_spi_init();
 
+	#ifdef MESHCORE_REPEATER
+	setup();
+	#endif
+
 lora_proc_loop:
+
+	#ifdef MESHCORE_REPEATER
+	loop();
+	#endif
 
 	// Wait key press
 	//ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, LORA_PROC_SLEEP_TIME);

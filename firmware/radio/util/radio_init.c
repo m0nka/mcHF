@@ -788,23 +788,24 @@ void radio_init_on_reset(void)
 	radio_init_eep_defaults();
 
 	// By default side encoder changes audio volume
-	tsu.active_side_enc_id 	= 0;
-	tsu.stereo_mode 		= 0;		// mono by default
-	tsu.agc_mode			= AGC_MED;
-	tsu.rf_gain				= 30;
-	tsu.keyer_mode 			= ts.keyer_mode;
-	tsu.tune				= 0;
-	tsu.bias0				= 0;
-	tsu.bias1				= 0;
+	tsu.active_side_enc_id 				= 0;
+	tsu.stereo_mode 					= 0;					// mono by default
+	tsu.agc_mode						= AGC_MED;
+	tsu.rf_gain							= 30;
+	tsu.keyer_mode 						= ts.keyer_mode;
+	tsu.tune							= 0;
+	tsu.bias0							= 0;
+	tsu.bias1							= 0;
 
-	tsu.demo_mode			= 0;
-	tsu.bt_enabled 			= 0;
+	tsu.demo_mode						= 0;
+	tsu.bt_enabled 						= 0;
+	tsu.brightness						= 30;
 
 	// Enforce 20m on eeprom on error
 	tsu.curr_band 						= BAND_MODE_20;
-	tsu.band[tsu.curr_band].volume 		= 14;
+	tsu.band[tsu.curr_band].volume 		= 0;
 	tsu.band[tsu.curr_band].active_vfo  = VFO_A;
-	tsu.band[tsu.curr_band].vfo_a 		= 14200*1000 + 000;
+	tsu.band[tsu.curr_band].vfo_a 		= 14205*1000 + 000;
 	tsu.band[tsu.curr_band].fixed_mode 	= 0;
 	tsu.band[tsu.curr_band].nco_freq	= 0;
 	tsu.band[tsu.curr_band].demod_mode	= DEMOD_USB;

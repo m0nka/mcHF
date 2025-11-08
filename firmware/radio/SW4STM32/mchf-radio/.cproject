@@ -319,7 +319,8 @@
 									<listOptionValue builtIn="false" value="../../../proc/keypad"/>
 									<listOptionValue builtIn="false" value="../../../proc/lora"/>
 									<listOptionValue builtIn="false" value="../../../proc/lora/hw"/>
-									<listOptionValue builtIn="false" value="../../../proc/lora/drivers"/>
+									<listOptionValue builtIn="false" value="../../../proc/lora/drivers/meshcore/repeater"/>
+									<listOptionValue builtIn="false" value="../../../proc/lora/drivers/meshcore/core"/>
 									<listOptionValue builtIn="false" value="../../../proc/dsp"/>
 									<listOptionValue builtIn="false" value="../../../proc/dsp/digi/ft8_lib/"/>
 									<listOptionValue builtIn="false" value="../../../../"/>
@@ -371,6 +372,7 @@
 									<listOptionValue builtIn="false" value="STARTEK_43INCH"/>
 									<listOptionValue builtIn="false" value="STARTEK_35INCH__"/>
 									<listOptionValue builtIn="false" value="PCB_V9_REV_A"/>
+									<listOptionValue builtIn="false" value="MESHCORE_REPEATER"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="true" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.otherflags.211633042" name="Other flags" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.otherflags" useByScannerDiscovery="true" valueType="stringList"/>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.languagestandard.2074062857" name="Language standard" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.languagestandard" useByScannerDiscovery="true" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.languagestandard.value.gnu11" valueType="enumerated"/>

@@ -58,6 +58,10 @@ void bms_proc_hw_init(void)
 {
 	GPIO_InitTypeDef  gpio_init_structure;
 
+	//gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	gpio_init_structure.Pull  = GPIO_PULLDOWN;
+	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
+
 	#ifndef PCB_V9_REV_A
 	gpio_init_structure.Pin   = BMS_PWM_PIN;
 	gpio_init_structure.Pull  = GPIO_NOPULL;
@@ -70,7 +74,48 @@ void bms_proc_hw_init(void)
 
 	// Disable charge FET
 	//HAL_GPIO_WritePin(BMS_PWM_PORT, BMS_PWM_PIN, GPIO_PIN_SET);
+
+	// Power button (encoder switch line)
+	gpio_init_structure.Pin   = POWER_BUTTON;
+	gpio_init_structure.Mode  = GPIO_MODE_INPUT;
+	HAL_GPIO_Init(POWER_BUTTON_PORT, &gpio_init_structure);
 }
+
+static void bms_proc_power_off(void)
+{
+	static uchar wait_radio_boot_up = 0;
+
+	// Wait for full bootup, before allowing power off
+	if(wait_radio_boot_up < 100)
+	{
+		wait_radio_boot_up++;
+		return;
+	}
+
+	// Check for power off
+   	if(HAL_GPIO_ReadPin(POWER_BUTTON_PORT, POWER_BUTTON))
+   	{
+   		// ToDo: Use power button hold as power off
+   		//       click as Mute...
+   		//
+   		HAL_Delay(200);
+
+   		if(HAL_GPIO_ReadPin(POWER_BUTTON_PORT, POWER_BUTTON))
+   		{
+   			printf("user held button, will power off, bye!\r\n");
+   			HAL_Delay(200);
+
+   			// Power off
+   			//HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+
+   			LL_GPIO_ResetOutputPin(ON_LED_PORT, ON_LED);
+   			LL_GPIO_ResetOutputPin(TX_LED_PORT, TX_LED);
+   			LL_GPIO_ResetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
+   			while(1);
+   		}
+   	}
+}
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       :
@@ -115,6 +160,8 @@ void bms_proc(void)
 {
 	static uchar soc_skip = 0;
 	static ulong bms_timer = 0;
+
+	bms_proc_power_off();
 
 	// Run timer
 	if(bms_timer == 0)
