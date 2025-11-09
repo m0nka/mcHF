@@ -63,10 +63,12 @@ static void audio_proc_worker(ulong ulCmd)
 			//printf("->%s<-notified of DSP core reload...\r\n", pcTaskGetName(NULL));
 
 			// Mute audio path
+			#ifdef USE_HARD_MUTE
 			#ifndef PCB_V9_REV_A
 			HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);
 			#else
 			HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);
+			#endif
 			#endif
 
 			// Keep the coded in reset for SAI re-init
@@ -183,19 +185,23 @@ static void btm_proc_task(void *arg)
 			if(new_bt_state)
 			{
 				printf("== bt connected ==\r\n");
+				#ifdef USE_HARD_MUTE
 				#ifndef PCB_V9_REV_A
 				HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);	// mute
 				#else
 				HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);	// mute
 				#endif
+				#endif
 			}
 			else
 			{
 				printf("== bt disconnected ==\r\n");
+				#ifdef USE_HARD_MUTE
 				#ifndef PCB_V9_REV_A
 				HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);	// unmute
 				#else
 				HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);	// unmute
+				#endif
 				#endif
 			}
 			old_bt_state = new_bt_state;

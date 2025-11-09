@@ -517,6 +517,7 @@ void codec_hw_init(void)
 	//HAL_GPIO_WritePin(PTT_PIN_PORT, PTT_PIN, GPIO_PIN_RESET);
 
 	// 8.2 PCB has MUTE line
+	#ifdef USE_HARD_MUTE
 	#if 1
 	gpio_init_structure.Pin   = CODEC_MUTE;
 	HAL_GPIO_Init(CODEC_MUTE_PORT, &gpio_init_structure);
@@ -524,6 +525,7 @@ void codec_hw_init(void)
 	HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);	// unmute
 	#else
 	HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);	// unmute
+	#endif
 	#endif
 	#endif
 }
@@ -544,6 +546,7 @@ void codec_hw_power_cleanup(void)
 	HAL_GPIO_WritePin(CODEC_RESET_PORT, CODEC_RESET, GPIO_PIN_RESET);
 
 	// 8.2 PCB has MUTE line
+	#ifdef USE_HARD_MUTE
 	#if 1
 	gpio_init_structure.Pin   = CODEC_MUTE;
 	HAL_GPIO_Init(CODEC_MUTE_PORT, &gpio_init_structure);
@@ -551,6 +554,7 @@ void codec_hw_power_cleanup(void)
 	HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);	// mute
 	#else
 	HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);	// mute
+	#endif
 	#endif
 	#endif
 

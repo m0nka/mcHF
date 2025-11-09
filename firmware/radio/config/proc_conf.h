@@ -74,6 +74,9 @@
 //
 #define CONTEXT_AUDIO
 //
+// Codec output to control final audio PA mute line(or CPU)
+//#define USE_HARD_MUTE
+//
 // -----------------------------------------------------------------------------------------------
 // Battery Management System
 //
