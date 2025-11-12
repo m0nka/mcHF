@@ -47,7 +47,7 @@
 #ifndef __FILEBROWSER_APP_H
 #define __FILEBROWSER_APP_H
 
-#include "storage.h"
+#include "storage_proc.h"
 
 void     FILEMGR_GetParentDir (char *dir);
 void     FILEMGR_GetFileOnly (char *file, char *path);

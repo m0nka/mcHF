@@ -1,26 +1,23 @@
-/**
-  ******************************************************************************
-  * @file    sd_diskio_dma.c
-  * @author  MCD Application Team
-  * @brief   SD Disk I/O DMA with RTOS driver template. This file needs to be
-             copied at user project alongside the respective header file.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
-  *
-  ******************************************************************************
-  */
+/************************************************************************************
+**                                                                                 **
+**                             mcHF Pro QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                                                                 **
+**---------------------------------------------------------------------------------**
+**                                                                                 **
+**  File name:                                                                     **
+**  Description:                                                                   **
+**  Last Modified:                                                                 **
+**  Licence:               GNU GPLv3                                               **
+************************************************************************************/
+#include "mchf_pro_board.h"
 
-/* Includes ------------------------------------------------------------------*/
+#ifdef CONTEXT_SD
+
 #include "ff_gen_drv.h"
 #include "sd_diskio.h"
+
+#include "stm32h747i_discovery_sd.h"
 
 #include <cmsis_os.h>
 
@@ -442,5 +439,6 @@ void BSP_SD_AbortCallback(uint32_t Instance)
    */
    osMessagePut(SDQueueID, RW_ABORT_MSG, osWaitForever);
 }
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+#endif
 

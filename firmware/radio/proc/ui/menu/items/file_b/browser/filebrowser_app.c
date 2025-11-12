@@ -46,7 +46,7 @@
 
 #include "mchf_pro_board.h"
 
-#ifdef CONTEXT_SD
+#ifdef CONTEXT_SD__
 
 //#include "C:\Projects\mcHFx\firmware\mchf_ui\drivers\sd\hw\k_storage.h"
 

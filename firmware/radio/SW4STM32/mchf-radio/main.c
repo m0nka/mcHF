@@ -14,28 +14,6 @@
 #include "mchf_pro_board.h"
 #include "main.h"
 
-#include "version.h"
-#include "radio_init.h"
-#include "rtc.h"
-
-#include "bsp.h"
-#include "adc.h"
-#include "att.h"
-#include "WM.h"
-
-#include "ipc_proc.h"
-#include "ui_proc.h"
-#include "icc_proc.h"
-#include "audio_proc.h"
-#include "touch_proc.h"
-#include "rotary_proc.h"
-#include "bms_proc.h"
-#include "vfo_proc.h"
-#include "band_proc.h"
-#include "trx_proc.h"
-#include "keypad_proc.h"
-#include "lora_proc.h"
-
 #if configAPPLICATION_ALLOCATED_HEAP == 1
 __attribute__((section("heap_mem"))) uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
 #endif
@@ -64,10 +42,6 @@ QueueHandle_t 							hEspMessage;
 #ifdef CONTEXT_DSP
 osMessageQId 							hDspMessage;
 #endif
-
-#if defined(USE_USB_FS) || defined(USE_USB_HS)
-extern HCD_HandleTypeDef hhcd;
-#endif /* USE_USB_FS | USE_USB_HS */
 
 // Combined LCD/Touch reset flag
 uchar lcd_touch_reset_done = 0;
@@ -120,191 +94,23 @@ void SysTick_Handler(void)
 	osSystickHandler();
 }
 
-#ifdef CONTEXT_TOUCH
-//*----------------------------------------------------------------------------
-//* Function Name       : EXTI9_5_IRQHandler
-//* Object              :
-//* Notes    			: Handle touch events
-//* Notes   			:
-//* Notes    			:
-//* Context    			: CONTEXT_IRQ
-//*----------------------------------------------------------------------------
-void EXTI9_5_IRQHandler(void)
-{
-	if (__HAL_GPIO_EXTI_GET_IT(TS_INT_PIN) != 0x00U)
-	{
-	    touch_proc_irq();
-	    __HAL_GPIO_EXTI_CLEAR_IT(TS_INT_PIN);
-	}
-}
-#endif
-
-#ifdef CONTEXT_KEYPAD
-//*----------------------------------------------------------------------------
-//* Function Name       : EXTI15_10_IRQHandler
-//* Object              :
-//* Notes    			: Handle keyboard events
-//* Notes   			:
-//* Notes    			:
-//* Context    			: CONTEXT_IRQ
-//*----------------------------------------------------------------------------
-void EXTI15_10_IRQHandler(void)
-{
-	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_11) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_11);
-		keypad_proc_irq(4);
-	}
-	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_12) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_12);
-		keypad_proc_irq(2);
-	}
-	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_13) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_13);
-		keypad_proc_irq(1);
-	}
-	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
-		keypad_proc_irq(3);
-	}
-}
-#endif
-
-#ifdef LL_ADC_USE_IRQ
-void ADC3_IRQHandler(void)
-{
-	if(LL_ADC_IsActiveFlag_EOC(ADC3) != 0)
-	{
-		LL_ADC_ClearFlag_EOC(ADC3);
-		adc_callback();
-	}
-
-	if(LL_ADC_IsActiveFlag_EOSMP(ADC3) != 0)
-	{
-
-		LL_ADC_ClearFlag_EOSMP(ADC3);
-		adc_callback();
-	}
-
-	if(LL_ADC_IsActiveFlag_OVR(ADC3) != 0)
-	{
-		LL_ADC_ClearFlag_OVR(ADC3);
-		adc_callback();
-	}
-}
-#endif
-
-#ifdef LL_ADC_USE_BDMA
-void BDMA_Channel0_IRQHandler(void)
-{
-	if(LL_BDMA_IsActiveFlag_TC0(BDMA) != 0)
-	{
-		adc_callback();
-		LL_BDMA_ClearFlag_TC0(BDMA);
-	}
-
-	if(LL_BDMA_IsActiveFlag_HT0(BDMA) != 0)
-	{
-		adc_callback();
-		LL_BDMA_ClearFlag_HT0(BDMA);
-	}
-
-	if(LL_BDMA_IsActiveFlag_TE0(BDMA) != 0)
-	{
-		adc_callback();
-		LL_BDMA_ClearFlag_TE0(BDMA);
-	}
-}
-#endif
-
-#ifdef CONTEXT_LORA
-//*----------------------------------------------------------------------------
-//* Function Name       : SPI1_IRQHandler
-//* Object              :
-//* Notes    			: LORA SPI irq handler
-//* Notes   			:
-//* Notes    			:
-//* Context    			: CONTEXT_IRQ
-//*----------------------------------------------------------------------------
-/*void SPI1_IRQHandler(void)
-{
-    if(LL_SPI_IsActiveFlag_OVR(SPI1) || LL_SPI_IsActiveFlag_UDR(SPI1))
-    {
-    	lora_spi_err_callback();
-    }
-
-    if(LL_SPI_IsActiveFlag_RXP(SPI1) && LL_SPI_IsEnabledIT_RXP(SPI1))
-    {
-    	lora_spi_rx_callback();
-    	return;
-    }
-
-    if((LL_SPI_IsActiveFlag_TXP(SPI1) && LL_SPI_IsEnabledIT_TXP(SPI1)))
-    {
-    	lora_spi_tx_callback();
-    	return;
-    }
-
-    if(LL_SPI_IsActiveFlag_EOT(SPI1) && LL_SPI_IsEnabledIT_EOT(SPI1))
-    {
-    	lora_spi_eot_callback();
-    	return;
-    }
-}*/
-extern SPI_HandleTypeDef SpiHandle1;
-extern DMA_HandleTypeDef hdma_tx;
-extern DMA_HandleTypeDef hdma_rx;
-void SPI1_IRQHandler(void)
-{
-  HAL_SPI_IRQHandler(&SpiHandle1);
-}
-
-void SPI1_DMA_RX_IRQHandler(void)
-{
-  HAL_DMA_IRQHandler(SpiHandle1.hdmarx);
-}
-
-void SPI1_DMA_TX_IRQHandler(void)
-{
-  HAL_DMA_IRQHandler(SpiHandle1.hdmatx);
-}
-#endif
-
 void Error_Handler(int err)
 {
 	__disable_irq();
-
-	printf( " Error Handler %d\n", err);
+	printf(" Error Handler %d\n", err);
 
 	NVIC_SystemReset();
 	while(1);
 }
 
-void BSP_ErrorHandler(void)
-{
-  //if(BSP_Initialized)
-  //{
-    //printf( "%s(): BSP Error !!!\n", __func__ );
-   // BSP_LED_On(LED_RED);
-  //}
-}
-
 #ifdef configUSE_MALLOC_FAILED_HOOK
-/**
-  * @brief  Application Malloc failure Hook
-  * @param  None
-  * @retval None
-  */
 void vApplicationMallocFailedHook(TaskHandle_t xTask, char *pcTaskName)
 {
   printf( "%s(): MALLOC FAILED !!!\n", pcTaskName );
 
   Error_Handler(18);
 }
-#endif /* configUSE_MALLOC_FAILED_HOOK */
+#endif
 
 #ifdef configCHECK_FOR_STACK_OVERFLOW
 void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
@@ -313,28 +119,58 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
 
   Error_Handler(19);
 }
-#endif /* configCHECK_FOR_STACK_OVERFLOW */
-
-#ifdef  USE_FULL_ASSERT
-
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t* file, uint32_t line)
-{
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-
-  /* Infinite loop */
-  while (1)
-  {
-  }
-}
 #endif
+
+//*----------------------------------------------------------------------------
+//* Function Name       : tasks_pre_os_init
+//* Object              :
+//* Notes    			: All hardware init that needs to be done before the
+//* Notes   			: OS start here
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
+static void tasks_pre_os_init(void)
+{
+	#ifdef CONTEXT_BMS
+	bms_proc_hw_init();
+	#endif
+
+	#ifdef CONTEXT_ROTARY
+	rotary_proc_hw_init();
+	#endif
+
+  	#ifdef CONTEXT_IPC_PROC
+	ipc_proc_init();
+  	#endif
+
+  	#ifdef CONTEXT_AUDIO
+	audio_proc_hw_init();
+  	#endif
+
+	#ifdef CONTEXT_TOUCH
+	touch_proc_hw_init();
+	#endif
+
+	#ifdef CONTEXT_VFO
+	vfo_proc_hw_init();
+	#endif
+
+	#ifdef CONTEXT_BAND
+	band_proc_hw_init();
+	#endif
+
+	#ifdef CONTEXT_TRX
+	trx_proc_hw_init();
+	#endif
+
+	#ifdef CONTEXT_KEYPAD
+	keypad_proc_init();
+	#endif
+
+	#ifdef CONTEXT_LORA
+	lora_proc_init();
+	#endif
+}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : start_proc
@@ -537,6 +373,10 @@ static int start_proc(void)
     	printf("unable to create lora process\r\n");
     	return 7;
     }
+	#endif
+
+	#ifdef CONTEXT_SD
+    Storage_Init();
 	#endif
 
     return 0;

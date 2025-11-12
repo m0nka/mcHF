@@ -122,11 +122,6 @@
 			<locationURI>copy_PARENT123456789101112131415161718/hw/rtc.c</locationURI>
 		</link>
 		<link>
-			<name>hw/sd_diskio_dma.c</name>
-			<type>1</type>
-			<locationURI>copy_PARENT12345678910111213141516171819/hw/sd_diskio_dma.c</locationURI>
-		</link>
-		<link>
 			<name>hw/shared_i2c.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT1234567891011121314151617181920/hw/shared_i2c.c</locationURI>
@@ -137,11 +132,6 @@
 			<locationURI>copy_PARENT123456789101112131415161718192021/hw/stm32h747i_discovery.c</locationURI>
 		</link>
 		<link>
-			<name>hw/stm32h747i_discovery_sd.c</name>
-			<type>1</type>
-			<locationURI>copy_PARENT12345678910111213141516171819202122/hw/stm32h747i_discovery_sd.c</locationURI>
-		</link>
-		<link>
 			<name>hw/stm32h747i_discovery_sdram.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT1234567891011121314151617181920212223/hw/stm32h747i_discovery_sdram.c</locationURI>
@@ -150,11 +140,6 @@
 			<name>hw/stm32h7xx_hal_timebase_tim.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT123456789101112131415161718192021222324/hw/stm32h7xx_hal_timebase_tim.c</locationURI>
-		</link>
-		<link>
-			<name>hw/storage.c</name>
-			<type>1</type>
-			<locationURI>copy_PARENT12345678910111213141516171819202122232425/hw/storage.c</locationURI>
 		</link>
 		<link>
 			<name>startup/startup_stm32h747xx_CM7.s</name>
@@ -607,6 +592,11 @@
 			<locationURI>copy_PARENT12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758/proc/rotary/rotary_proc.c</locationURI>
 		</link>
 		<link>
+			<name>proc/sdcard/storage_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/sdcard/storage_proc.c</locationURI>
+		</link>
+		<link>
 			<name>proc/touch/touch_proc.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566/proc/touch/touch_proc.c</locationURI>
@@ -800,6 +790,16 @@
 			<name>proc/lora/hw/lora_spi.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455/proc/lora/hw/lora_spi.c</locationURI>
+		</link>
+		<link>
+			<name>proc/sdcard/hw/sd_diskio_dma.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/sdcard/hw/sd_diskio_dma.c</locationURI>
+		</link>
+		<link>
+			<name>proc/sdcard/hw/stm32h747i_discovery_sd.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/sdcard/hw/stm32h747i_discovery_sd.c</locationURI>
 		</link>
 		<link>
 			<name>proc/touch/hw/calibration.h</name>

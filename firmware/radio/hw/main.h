@@ -1,41 +1,16 @@
-/**
-  ******************************************************************************
-  * @file    main.h
-  * @author  MCD Application Team
-  * @brief   Header for main.c file
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
-  *
-  ******************************************************************************
-  */
-
-/* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __MAIN_H
 #define __MAIN_H
-
-#ifdef __cplusplus
- extern "C" {
-#endif
 
 #include "mchf_types.h"
 
 //
 //#define GUI_TASK
 
-/* Includes ------------------------------------------------------------------*/
 #ifndef WIN32
 #include "stm32h7xx_hal.h"
 
 #include "stm32h747i_discovery.h"
-#include "stm32h747i_discovery_sd.h"
+//#include "stm32h747i_discovery_sd.h"
 #include "stm32h747i_discovery_ts.h"
 //#include "stm32h747i_discovery_qspi.h"
 //#include "stm32h747i_discovery_sdram.h"
@@ -71,7 +46,7 @@
 
 #ifndef WIN32
 /* Kernel includes components */
-#include "storage.h"
+//#include "storage.h"
 #include "calibration.h"
 //#include "gui_task.h"
 #endif /* !WIN32 */
@@ -83,6 +58,29 @@
 //#include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
+#include "version.h"
+#include "radio_init.h"
+#include "rtc.h"
+
+#include "bsp.h"
+#include "adc.h"
+#include "att.h"
+#include "WM.h"
+
+#include "ipc_proc.h"
+#include "ui_proc.h"
+#include "icc_proc.h"
+#include "audio_proc.h"
+#include "touch_proc.h"
+#include "rotary_proc.h"
+#include "bms_proc.h"
+#include "vfo_proc.h"
+#include "band_proc.h"
+#include "trx_proc.h"
+#include "keypad_proc.h"
+#include "lora_proc.h"
+#include "storage_proc.h"
 
 /* Exported types ------------------------------------------------------------*/
 typedef struct Bitmap_Res_s
@@ -144,14 +142,8 @@ struct ESPMessage {
 /* Exported macros -----------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 void Error_Handler(int err);
-void BSP_ErrorHandler(void);
+//void BSP_ErrorHandler(void);
 
 void printf_init(uchar is_shared);
 
-#ifdef __cplusplus
-}
 #endif
-
-#endif /* __MAIN_H */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

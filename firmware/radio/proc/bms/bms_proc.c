@@ -43,6 +43,53 @@ uchar bms_early_init_done = 0;
 //uchar h_prot_on  = 0;
 //uchar bal = 0;
 
+#ifdef LL_ADC_USE_IRQ
+void ADC3_IRQHandler(void)
+{
+	if(LL_ADC_IsActiveFlag_EOC(ADC3) != 0)
+	{
+		LL_ADC_ClearFlag_EOC(ADC3);
+		adc_callback();
+	}
+
+	if(LL_ADC_IsActiveFlag_EOSMP(ADC3) != 0)
+	{
+
+		LL_ADC_ClearFlag_EOSMP(ADC3);
+		adc_callback();
+	}
+
+	if(LL_ADC_IsActiveFlag_OVR(ADC3) != 0)
+	{
+		LL_ADC_ClearFlag_OVR(ADC3);
+		adc_callback();
+	}
+}
+#endif
+
+#ifdef LL_ADC_USE_BDMA
+void BDMA_Channel0_IRQHandler(void)
+{
+	if(LL_BDMA_IsActiveFlag_TC0(BDMA) != 0)
+	{
+		adc_callback();
+		LL_BDMA_ClearFlag_TC0(BDMA);
+	}
+
+	if(LL_BDMA_IsActiveFlag_HT0(BDMA) != 0)
+	{
+		adc_callback();
+		LL_BDMA_ClearFlag_HT0(BDMA);
+	}
+
+	if(LL_BDMA_IsActiveFlag_TE0(BDMA) != 0)
+	{
+		adc_callback();
+		LL_BDMA_ClearFlag_TE0(BDMA);
+	}
+}
+#endif
+
 #ifdef USE_DMA
 #define ADC_CONVERTED_DATA_BUFFER_SIZE   ((uint32_t)  32)   /* Size of array aADCxConvertedData[], Aligned on cache line size */
 

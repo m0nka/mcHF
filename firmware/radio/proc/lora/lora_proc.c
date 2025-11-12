@@ -23,6 +23,59 @@
 
 #include "lora_proc.h"
 
+#ifdef CONTEXT_LORA__
+//*----------------------------------------------------------------------------
+//* Function Name       : SPI1_IRQHandler
+//* Object              :
+//* Notes    			: LORA SPI irq handler
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+/*void SPI1_IRQHandler(void)
+{
+    if(LL_SPI_IsActiveFlag_OVR(SPI1) || LL_SPI_IsActiveFlag_UDR(SPI1))
+    {
+    	lora_spi_err_callback();
+    }
+
+    if(LL_SPI_IsActiveFlag_RXP(SPI1) && LL_SPI_IsEnabledIT_RXP(SPI1))
+    {
+    	lora_spi_rx_callback();
+    	return;
+    }
+
+    if((LL_SPI_IsActiveFlag_TXP(SPI1) && LL_SPI_IsEnabledIT_TXP(SPI1)))
+    {
+    	lora_spi_tx_callback();
+    	return;
+    }
+
+    if(LL_SPI_IsActiveFlag_EOT(SPI1) && LL_SPI_IsEnabledIT_EOT(SPI1))
+    {
+    	lora_spi_eot_callback();
+    	return;
+    }
+}*/
+extern SPI_HandleTypeDef SpiHandle1;
+extern DMA_HandleTypeDef hdma_tx;
+extern DMA_HandleTypeDef hdma_rx;
+void SPI1_IRQHandler(void)
+{
+  HAL_SPI_IRQHandler(&SpiHandle1);
+}
+
+void SPI1_DMA_RX_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(SpiHandle1.hdmarx);
+}
+
+void SPI1_DMA_TX_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(SpiHandle1.hdmatx);
+}
+#endif
+
 //*----------------------------------------------------------------------------
 //* Function Name       : lora_proc_task
 //* Object              :

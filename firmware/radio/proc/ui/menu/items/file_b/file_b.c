@@ -50,7 +50,7 @@ K_ModuleItem_Typedef  file_b =
   KillFileb
 };
 
-#ifdef CONTEXT_SD
+#ifdef CONTEXT_SD__
 
 #include "k_module.h"
 
@@ -910,7 +910,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 		}
 	}
 }
-#endif
+
 
 static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos)
 {
@@ -920,9 +920,10 @@ static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos)
 	hExplorerWin = GUI_CreateDialogBox(_aDialog, GUI_COUNTOF(_aDialog), _cbDialog, hWin, xpos, ypos);
 	#endif
 }
-
 static void KillFileb(void)
 {
 	//printf("kill logbook\r\n");
 //	GUI_EndDialog(hLogDialog, 0);
 }
+
+#endif

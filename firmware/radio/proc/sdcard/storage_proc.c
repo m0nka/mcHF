@@ -1,50 +1,31 @@
-/**
-  ******************************************************************************
-  * @file    storage.c
-  * @author  MCD Application Team
-  * @brief   This file provides the kernel storage functions
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
-  *
-  ******************************************************************************
-  */
+/************************************************************************************
+**                                                                                 **
+**                             mcHF Pro QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                                                                 **
+**---------------------------------------------------------------------------------**
+**                                                                                 **
+**  File name:                                                                     **
+**  Description:                                                                   **
+**  Last Modified:                                                                 **
+**  Licence:               GNU GPLv3                                               **
+************************************************************************************/
+#include "mchf_pro_board.h"
 
-/* Includes ------------------------------------------------------------------*/
-#include "storage.h"
+#ifdef CONTEXT_SD
 
-/** @addtogroup CORE
-  * @{
-  */
+#include "stm32h747i_discovery_sd.h"
+#include "sd_diskio.h"
 
-/** @defgroup KERNEL_STORAGE
-  * @brief Kernel storage routines
-  * @{
-  */
+#include "storage_proc.h"
 
-/* External variables --------------------------------------------------------*/
-/* Private typedef -----------------------------------------------------------*/
-/* Private defines -----------------------------------------------------------*/
 #define STORAGE_BSP_INIT
 
 #define STORAGE_THREAD_STACK_SIZE       (2 * configMINIMAL_STACK_SIZE)
 #define STORAGE_THREAD_PRIORITY         osPriorityRealtime
 
-/* Private macros ------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
-#if defined ( __ICCARM__ )
-#pragma data_alignment=32
-#pragma location="sdio_heap"
-#else
 __attribute__((section(".sdio_heap"))) __attribute__ ((aligned (32)))
-#endif
+
 static FATFS              StorageDISK_FatFs[NUM_DISK_UNITS];          /* File system object for MSD disk logical drive */
 static char               StorageDISK_Drive[NUM_DISK_UNITS][4];       /* Storage Host logical drive number */
 static osSemaphoreId      StorageSemaphore[NUM_DISK_UNITS];
@@ -60,19 +41,18 @@ osThreadId                StorageThreadId = {0};
 USBH_HandleTypeDef        hUSBHost;
 #endif /* USE_USB_FS | USE_USB_HS */
 
-/* Private function prototypes -----------------------------------------------*/
 static STORAGE_Status_t StorageTryMount( const uint8_t unit );
 static STORAGE_Status_t StorageTryUnMount( const uint8_t unit );
 static void StorageThread(void const * argument);
 #if defined(USE_SDCARD)
 static uint8_t StorageInitMSD(void);
 #endif /* USE_SDCARD */
+
 #if defined(USE_USB_FS) || defined(USE_USB_HS)
 static uint8_t StorageInitUSB(void);
 static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id);
 #endif /* USE_USB_FS | USE_USB_HS */
 
-/* Private functions ---------------------------------------------------------*/
 static STORAGE_Status_t StorageTryMount( const uint8_t unit )
 {
   osSemaphoreWait(StorageSemaphore[unit], osWaitForever);
@@ -498,12 +478,4 @@ void Storage_DetectSDCard( void )
 #endif /* USE_SDCARD */
 }
 
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif

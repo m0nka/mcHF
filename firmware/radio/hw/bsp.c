@@ -204,57 +204,6 @@ static void bsp_backlight_init(void)
 	  //HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : tasks_initial_init
-//* Object              :
-//* Notes    			: All hardware init that needs to be done before the
-//* Notes   			: OS start here
-//* Notes    			:
-//* Context    			: CONTEXT_RESET
-//*----------------------------------------------------------------------------
-void tasks_pre_os_init(void)
-{
-	#ifdef CONTEXT_BMS
-	bms_proc_hw_init();
-	#endif
-
-	#ifdef CONTEXT_ROTARY
-	rotary_proc_hw_init();
-	#endif
-
-  	#ifdef CONTEXT_IPC_PROC
-	ipc_proc_init();
-  	#endif
-
-  	#ifdef CONTEXT_AUDIO
-	audio_proc_hw_init();
-  	#endif
-
-	#ifdef CONTEXT_TOUCH
-	touch_proc_hw_init();
-	#endif
-
-	#ifdef CONTEXT_VFO
-	vfo_proc_hw_init();
-	#endif
-
-	#ifdef CONTEXT_BAND
-	band_proc_hw_init();
-	#endif
-
-	#ifdef CONTEXT_TRX
-	trx_proc_hw_init();
-	#endif
-
-	#ifdef CONTEXT_KEYPAD
-	keypad_proc_init();
-	#endif
-
-	#ifdef CONTEXT_LORA
-	lora_proc_init();
-	#endif
-}
-
 #ifdef CONTEXT_ICC
 // M4 core Keyer IRQ setup
 static void EXTI23_IRQHandler_Config(void)

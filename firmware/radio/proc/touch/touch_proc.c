@@ -32,6 +32,23 @@ uchar tp_init_done = 0;
 //typedef void (* BSP_EXTI_LineCallback) (void);
 EXTI_HandleTypeDef hts_exti_[2] = {0};
 
+//*----------------------------------------------------------------------------
+//* Function Name       : EXTI9_5_IRQHandler
+//* Object              :
+//* Notes    			: Handle touch events
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void EXTI9_5_IRQHandler(void)
+{
+	if (__HAL_GPIO_EXTI_GET_IT(TS_INT_PIN) != 0x00U)
+	{
+	    touch_proc_irq();
+	    __HAL_GPIO_EXTI_CLEAR_IT(TS_INT_PIN);
+	}
+}
+
 void touch_proc_irq(void)
 {
 	BaseType_t xHigherPriorityTaskWoken;

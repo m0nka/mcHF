@@ -12,7 +12,6 @@
 void 	LCD_LL_Reset(void);
 void 	bsp_gpio_clocks_on(void);
 
-void 	tasks_pre_os_init(void);
 uchar 	bsp_config(void);
 void 	bsp_hold_power(void);
 

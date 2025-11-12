@@ -36,9 +36,37 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 extern 			TaskHandle_t 			hKbdTask;
 extern 			TaskHandle_t 			hUiTask;
 
-// API Driver messaging
-//extern osMessageQId 					hApiMessage;
-//struct APIMessage						api_keypad;
+//*----------------------------------------------------------------------------
+//* Function Name       : EXTI15_10_IRQHandler
+//* Object              :
+//* Notes    			: Handle keyboard events
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void EXTI15_10_IRQHandler(void)
+{
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_11) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_11);
+		keypad_proc_irq(4);
+	}
+	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_12) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_12);
+		keypad_proc_irq(2);
+	}
+	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_13) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_13);
+		keypad_proc_irq(1);
+	}
+	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
+		keypad_proc_irq(3);
+	}
+}
 
 void keypad_proc_irq(uchar id)
 {

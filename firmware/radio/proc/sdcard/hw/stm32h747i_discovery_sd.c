@@ -1,88 +1,22 @@
-/**
-  ******************************************************************************
-  * @file    stm32h747i_discovery_sd.c
-  * @author  MCD Application Team
-  * @brief   This file includes the uSD card driver mounted on STM32H747I_DISCO
-  *          boards.
-  @verbatim
-  How To use this driver:
-  -----------------------
-   - This driver is used to drive the micro SD external cards mounted on STM32H747I_DISCO
-     board.
-   - This driver does not need a specific component driver for the micro SD device
-     to be included with.
+/************************************************************************************
+**                                                                                 **
+**                             mcHF Pro QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                                                                 **
+**---------------------------------------------------------------------------------**
+**                                                                                 **
+**  File name:                                                                     **
+**  Description:                                                                   **
+**  Last Modified:                                                                 **
+**  Licence:               GNU GPLv3                                               **
+************************************************************************************/
+#include "mchf_pro_board.h"
 
-  Driver description:
-  ------------------
-  + Initialization steps:
-     o Initialize the micro SD card using the BSP_SD_Init() function. This
-       function includes the MSP layer hardware resources initialization and the
-       SDIO interface configuration to interface with the external micro SD. It
-	   also includes the micro SD initialization sequence.
-
-     o To check the SD card presence you can use the function BSP_SD_IsDetected() which
-	   returns the detection status.
-
-     o If SD presence detection interrupt mode is desired, you must configure the
-       SD detection interrupt mode by calling the function BSP_SD_DetectITConfig().
-       The interrupt is generated as an external interrupt whenever the micro SD card is
-       plugged/unplugged in/from the evaluation board.
-       The SD detection is managed by MFX, so the SD detection interrupt has to be
-       treated by MFX_IRQOUT gpio pin IRQ handler. BSP_SD_DetectCallback() is called when
-       SD is detected.
-
-     o The function BSP_SD_GetCardInfo()are used to get the micro SD card information
-       which is stored in the structure "HAL_SD_CardInfoTypedef".
-
-  + Micro SD card operations
-     o The micro SD card can be accessed with read/write block(s) operations once
-       it is ready for access. The access can be performed whether
-       using the polling mode by calling the functions BSP_SD_ReadBlocks()/BSP_SD_WriteBlocks(),
-       using the interrupt mode by calling the functions BSP_SD_ReadBlocks_IT()/BSP_SD_WriteBlocks_IT(),
-       or by DMA transfer using the functions BSP_SD_ReadBlocks_DMA()/BSP_SD_WriteBlocks_DMA().
-     o The DMA transfer complete is used with interrupt mode. Once the SD transfer
-       is complete, the SD interrupt is handled using the function BSP_SDMMC1_IRQHandler()
-       The DMA Tx/Rx transfer complete are handled using the functions
-       SD_SDMMC1_DMA_Tx_IRQHandler(), SD_SDMMC1_DMA_Rx_IRQHandler().The corresponding
-       user callbacks are implemented by the user at application level.
-     o The SD erase block(s) is performed using the functions BSP_SD_Erase() with specifying
-       the number of blocks to erase.
-     o The SD runtime status is returned when calling the function BSP_SD_GetCardState().
-
-  @endverbatim
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2018 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
-
-/* Includes ------------------------------------------------------------------*/
 #include "stm32h747i_discovery_sd.h"
 #include "stm32h747i_discovery_bus.h"
 
-/** @addtogroup BSP
-  * @{
-  */
+#ifdef CONTEXT_SD
 
-/** @addtogroup STM32H747I_DISCO
-  * @{
-  */
-
-/** @defgroup STM32H747I_DISCO_SD SD
-  * @{
-  */
-
-/** @defgroup STM32H747I_DISCO_SD_Private_TypesDefinitions Private TypesDefinitions
-  * @{
-  */
 #if (USE_HAL_SD_REGISTER_CALLBACKS == 1)
 /* Is Msp Callbacks registered */
 static uint32_t   IsMspCallbacksValid[SD_INSTANCES_NBR] = {0};
@@ -935,19 +869,4 @@ static void SD_MspDeInit(SD_HandleTypeDef *hsd)
   }
 }
 
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE***  */
+#endif
