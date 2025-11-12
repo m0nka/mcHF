@@ -37,27 +37,15 @@ static STORAGE_Status_t   StorageStatus[NUM_DISK_UNITS];
 osMessageQId              StorageEvent    = {0};
 osThreadId                StorageThreadId = {0};
 
-#if defined(USE_USB_FS) || defined(USE_USB_HS)
-USBH_HandleTypeDef        hUSBHost;
-#endif /* USE_USB_FS | USE_USB_HS */
-
 static STORAGE_Status_t StorageTryMount( const uint8_t unit );
 static STORAGE_Status_t StorageTryUnMount( const uint8_t unit );
 static void StorageThread(void const * argument);
-#if defined(USE_SDCARD)
 static uint8_t StorageInitMSD(void);
-#endif /* USE_SDCARD */
-
-#if defined(USE_USB_FS) || defined(USE_USB_HS)
-static uint8_t StorageInitUSB(void);
-static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id);
-#endif /* USE_USB_FS | USE_USB_HS */
 
 static STORAGE_Status_t StorageTryMount( const uint8_t unit )
 {
   osSemaphoreWait(StorageSemaphore[unit], osWaitForever);
 
-#if defined(USE_SDCARD)
   if(unit == MSD_DISK_UNIT)
   {
     /* We need to check for SD Card before mounting the volume */
@@ -67,7 +55,6 @@ static STORAGE_Status_t StorageTryMount( const uint8_t unit )
       goto unlock_exit;
     }
   }
-#endif /* USE_SDCARD */
 
   if(StorageStatus[unit] != STORAGE_MOUNTED)
   {
@@ -153,6 +140,8 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
 static void StorageThread(void const * argument)
 {
   osEvent event;
+
+  printf("storage proc  \r\n");
 
   for( ;; )
   {
@@ -333,42 +322,35 @@ static void StorageDeInitUSB(void)
   */
 void Storage_Init(void)
 {
-  uint8_t storage_id = 0;
+	uint8_t storage_id = 0;
 
-  /* Reset All storage status */
-  for(storage_id = 0; storage_id < sizeof(StorageStatus); storage_id++)
-  {
-    StorageStatus[storage_id] = STORAGE_NOINIT;
-  }
+	/* Reset All storage status */
+	for(storage_id = 0; storage_id < sizeof(StorageStatus); storage_id++)
+	{
+		StorageStatus[storage_id] = STORAGE_NOINIT;
+	}
 
-  /* Create Storage Message Queue */
-  osMessageQDef(osqueue, 10, uint16_t);
-  StorageEvent = osMessageCreate (osMessageQ(osqueue), NULL);
+	/* Create Storage Message Queue */
+	osMessageQDef(osqueue, 10, uint16_t);
+	StorageEvent = osMessageCreate (osMessageQ(osqueue), NULL);
 
-#if defined(USE_SDCARD)
-  /* Initialize the MSD Storage */
-  StorageInitMSD();
-#endif /* USE_SDCARD */
-
-#if defined(USE_USB_FS) || defined(USE_USB_HS)
-  /* Initialize the USB Storage */
-  StorageInitUSB();
-#endif /* USE_USB_FS | USE_USB_HS */
+	/* Initialize the MSD Storage */
+	StorageInitMSD();
 
   /* Check for configured Storages then create Storage thread */
-  for(storage_id = 0; storage_id < sizeof(StorageStatus); storage_id++)
-  {
-    if( StorageID[storage_id] )
-    {
+  //for(storage_id = 0; storage_id < sizeof(StorageStatus); storage_id++)
+  //{
+    //if( StorageID[storage_id] )
+    //{
       /* It's Okay then Create Storage background task and exit from here */
       osThreadDef(STORAGE_Thread, StorageThread, STORAGE_THREAD_PRIORITY, 0, STORAGE_THREAD_STACK_SIZE);
       StorageThreadId = osThreadCreate (osThread(STORAGE_Thread), NULL);
-      return;
-    }
-  }
+      //return;
+    //}
+  //}
 
   /* Something went wrong */
-  Error_Handler(1);
+  //Error_Handler(1);
 }
 
 /**
@@ -451,7 +433,6 @@ const char *Storage_GetDrive (uint8_t unit)
   */
 void Storage_DetectSDCard( void )
 {
-#if defined(USE_SDCARD)
   if(!StorageEvent)
     return;
 
@@ -475,7 +456,6 @@ void Storage_DetectSDCard( void )
   {
     osMessagePut ( StorageEvent, MSDDISK_DISCONNECTION_EVENT, 0);
   }
-#endif /* USE_SDCARD */
 }
 
 #endif

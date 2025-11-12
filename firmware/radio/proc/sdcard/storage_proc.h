@@ -13,10 +13,6 @@
 #ifndef __STORAGE_PROC_H
 #define __STORAGE_PROC_H
 
-#if defined(USE_USB_FS) || defined(USE_USB_HS)
-#include "usbh_diskio.h"
-#endif /* USE_USB_FS | USE_USB_HS */
-
 #define FILEMGR_LIST_DEPDTH                    24
 #define FILEMGR_FILE_NAME_SIZE                256
 #define FILEMGR_MAX_LEVEL                       3
@@ -27,12 +23,7 @@
 
 typedef enum
 {
-#if defined(USE_SDCARD)
-  MSD_DISK_UNIT ,
-#endif /* USE_SDCARD */
-#if defined(USE_USB_FS) || defined(USE_USB_HS)
-  USB_DISK_UNIT ,
-#endif /* USE_USB_FS | USE_USB_HS */
+  MSD_DISK_UNIT,
   NUM_DISK_UNITS
 }
 STORAGE_IdTypeDef;
