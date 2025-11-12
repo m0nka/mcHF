@@ -49,8 +49,8 @@
 #define  ST7701_HEIGHT            			800
 //
 #define  ST7701_HSYNC			            4
-#define  ST7701_HBP               			60
-#define  ST7701_HFP               			42
+#define  ST7701_HBP               			40
+#define  ST7701_HFP               			60
 #define  ST7701_WIDTH             			480
 #endif
 
