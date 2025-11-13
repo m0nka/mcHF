@@ -21,8 +21,8 @@
 
 #define STORAGE_BSP_INIT
 
-#define STORAGE_THREAD_STACK_SIZE       (2 * configMINIMAL_STACK_SIZE)
-#define STORAGE_THREAD_PRIORITY         osPriorityRealtime
+#define STORAGE_THREAD_STACK_SIZE       (10 * configMINIMAL_STACK_SIZE)
+#define STORAGE_THREAD_PRIORITY         osPriorityNormal//osPriorityRealtime
 
 __attribute__((section(".sdio_heap"))) __attribute__ ((aligned (32)))
 
@@ -109,6 +109,11 @@ static void StorageThread(void const * argument)
 
 	printf("storage proc  \r\n");
 
+	// Initialize the MSD Storage
+	#if 0
+	StorageInitMSD();
+	#endif
+
 	for(;;)
 	{
 		event = osMessageGet(StorageEvent, osWaitForever);
@@ -160,6 +165,8 @@ static uint8_t StorageInitMSD(void)
 	sd_status = BSP_SD_Init(0);
 	if(sd_status != BSP_ERROR_NONE)
 	{
+		printf("card init failed(%d)  \r\n", sd_status);
+
 		// Undo the SD CArd init
 		BSP_SD_DeInit(0);
 	}
@@ -182,6 +189,8 @@ static uint8_t StorageInitMSD(void)
 
 		// Try mount the storage
 		StorageTryMount(MSD_DISK_UNIT);
+
+		printf("card init ok  \r\n");
 	}
 
 	return StorageID[MSD_DISK_UNIT];

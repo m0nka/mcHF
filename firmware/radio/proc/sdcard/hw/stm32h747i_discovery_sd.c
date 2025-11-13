@@ -13,7 +13,7 @@
 #include "mchf_pro_board.h"
 
 #include "stm32h747i_discovery_sd.h"
-#include "stm32h747i_discovery_bus.h"
+//#include "stm32h747i_discovery_bus.h"
 
 #ifdef CONTEXT_SD
 
@@ -601,11 +601,6 @@ static void SD_MspInit(SD_HandleTypeDef *hsd)
 		// Enable SDIO clock
 		__HAL_RCC_SDMMC1_CLK_ENABLE();
 
-		/* Enable GPIOs clock */
-		//__HAL_RCC_GPIOB_CLK_ENABLE();
-		//__HAL_RCC_GPIOC_CLK_ENABLE();
-		//__HAL_RCC_GPIOD_CLK_ENABLE();
-
 		// Common GPIO configuration
 		gpio_init_structure.Mode      = GPIO_MODE_AF_PP;
 		gpio_init_structure.Pull      = GPIO_PULLUP;
@@ -643,12 +638,25 @@ static void SD_MspInit(SD_HandleTypeDef *hsd)
 		gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_LOW;
 		HAL_GPIO_Init(SD_PWR_CNTR_PORT, &gpio_init_structure);
 
-		// Power off
-		#ifdef SD_PWR_SWAP_POLARITY
-		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
-		#else
-		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
-		#endif
+		// Card power state on reset
+		if(HAL_GPIO_ReadPin(SD_DET_PORT, SD_DET) != GPIO_PIN_RESET)
+		{
+			// Power off
+			#ifdef SD_PWR_SWAP_POLARITY
+			HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
+			#else
+			HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
+			#endif
+		}
+		else
+		{
+			// Power on
+			#ifndef SD_PWR_SWAP_POLARITY
+			HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
+			#else
+			HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
+			#endif
+		}
 
 		// NVIC configuration for SDIO interrupts
 		HAL_NVIC_SetPriority(SDMMC1_IRQn, 14, 0);

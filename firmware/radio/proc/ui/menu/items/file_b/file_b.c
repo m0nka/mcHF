@@ -29,7 +29,8 @@ extern const struct UIMenuLayout menu_layout[];
 extern struct	UI_DRIVER_STATE			ui_s;
 
 // Menu image
-extern GUI_CONST_STORAGE GUI_BITMAP bmProgramGroup;
+//extern GUI_CONST_STORAGE GUI_BITMAP bmProgramGroup;
+extern GUI_CONST_STORAGE GUI_BITMAP bmicon_compref;
 
 // TreeView images
 extern GUI_CONST_STORAGE GUI_BITMAP bmClosedFolder;
@@ -42,20 +43,20 @@ static void KillFileb(void);
 
 K_ModuleItem_Typedef  file_b =
 {
-  14,
+  10,
   "File Browser",
-  &bmProgramGroup,
+  &bmicon_compref,
   Startup,
   NULL,
   KillFileb
 };
 
-#ifdef CONTEXT_SD__
+#ifdef CONTEXT_SD
 
-#include "k_module.h"
+#include "ui_menu_module.h"
 
 #include "browser\filebrowser_app.h"
-#include "storage.h"
+#include "storage_proc.h"
 
 // ToDo: clean up this path
 #include "ff_gen_drv.h"
@@ -86,7 +87,7 @@ K_ModuleItem_Typedef  file_b =
 #define WM_FORCE_ITEM_DESELECT     	(WM_USER + 0)
 
 //extern char USBDISK_Drive[];
-extern char mSDDISK_Drive[];  
+//extern char mSDDISK_Drive[];
 
 FILELIST_FileTypeDef  *pFileList;
 
@@ -95,19 +96,19 @@ WM_HWIN hPopUp = 0;
 WM_HWIN hFileInfo = 0;
 
 uint16_t FolderLevel  = 0;
-char SelectedFileName[FILEMGR_FULL_PATH_SIZE];
+char SelectedFileName[FILEMGR_FILE_NAME_SIZE];
 char    str[FILEMGR_FILE_NAME_SIZE];
 
 static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos);
 static void _RefreshBrowser ( WM_HWIN hWin);
 
 // Menu image
-extern GUI_CONST_STORAGE GUI_BITMAP bmProgramGroup;
+//extern GUI_CONST_STORAGE GUI_BITMAP bmProgramGroup;
 // TreeView images
-extern GUI_CONST_STORAGE GUI_BITMAP bmClosedFolder;
-extern GUI_CONST_STORAGE GUI_BITMAP bmOpenFolder;
-extern GUI_CONST_STORAGE GUI_BITMAP bmTextLog;
-
+////extern GUI_CONST_STORAGE GUI_BITMAP bmClosedFolder;
+//extern GUI_CONST_STORAGE GUI_BITMAP bmOpenFolder;
+//extern GUI_CONST_STORAGE GUI_BITMAP bmTextLog;
+/*
 K_ModuleItem_Typedef  file_b =
 {
   3,
@@ -115,7 +116,7 @@ K_ModuleItem_Typedef  file_b =
   &bmProgramGroup,
   Startup,
   NULL,
-};
+};*/
 
 //WM_HWIN  hBrowser = 0;
 
@@ -437,7 +438,7 @@ static void _cbPopup(WM_MESSAGE * pMsg)
 						case ID_MENU_OPENFILE:
 						{
 							printf("popup open file\r\n");
-							k_GetExtOnly(SelectedFileName, ext);
+							//k_GetExtOnly(SelectedFileName, ext);
 							pfOpen = k_ModuleCheckLink(ext);
 
 							if(pfOpen != NULL)
@@ -526,18 +527,18 @@ static void _cbPopup(WM_MESSAGE * pMsg)
 void _FindFullPath(TREEVIEW_Handle hObj, TREEVIEW_ITEM_Handle hTVItem, char *str)
 {
   TREEVIEW_ITEM_INFO hInfo;
-  char strtmp[FILEMGR_FULL_PATH_SIZE];
+  char strtmp[FILEMGR_FILE_NAME_SIZE];
   uint8_t Level = FILEMGR_MAX_LEVEL;
   
   /* Find File name */
-  TREEVIEW_ITEM_GetText(hTVItem, (uint8_t *)str, FILEMGR_FULL_PATH_SIZE);
+  TREEVIEW_ITEM_GetText(hTVItem, (uint8_t *)str, FILEMGR_FILE_NAME_SIZE);
 
   /* Find folders */
   while( Level > 1)
   {
     TREEVIEW_ITEM_GetInfo(hTVItem, &hInfo);
     hTVItem = TREEVIEW_GetItem(hObj, hTVItem,TREEVIEW_GET_PARENT);
-    TREEVIEW_ITEM_GetText(hTVItem, (uint8_t *)strtmp, FILEMGR_FULL_PATH_SIZE);
+    TREEVIEW_ITEM_GetText(hTVItem, (uint8_t *)strtmp, FILEMGR_FILE_NAME_SIZE);
     
     if(strcmp(strtmp, "SD Card") == 0)
     {
@@ -568,11 +569,11 @@ static void ShowNodeContent(WM_HWIN hTree, TREEVIEW_ITEM_Handle hNode, char *pat
   uint32_t i = 0, Position = 0;
   TREEVIEW_ITEM_Handle hItem = 0;
   FILEMGR_ParseDisks(path, list); 
-  char fullpath[FILEMGR_FULL_PATH_SIZE];
+  char fullpath[FILEMGR_FILE_NAME_SIZE];
 
   /*Create root nodes */
   if(list->ptr > 0)
-  {
+  {/*
     for (i = 0; i < list->ptr; i++)
     {
       Position = hItem ? TREEVIEW_INSERT_BELOW : TREEVIEW_INSERT_FIRST_CHILD;
@@ -598,7 +599,7 @@ static void ShowNodeContent(WM_HWIN hTree, TREEVIEW_ITEM_Handle hNode, char *pat
       {
         hItem = TREEVIEW_InsertItem(hTree, TREEVIEW_ITEM_TYPE_LEAF, hItem, Position, (char *)list->file[i].name);
       }
-    }
+    }*/
   }
 
 }
@@ -616,11 +617,11 @@ static void ExploreDisks(WM_HWIN hTree)
 
 	Node = TREEVIEW_InsertItem(hTree, TREEVIEW_ITEM_TYPE_NODE, 0, 0, "Radio");
   
-	if(k_StorageGetStatus(MSD_DISK_UNIT) == 1)
-	{
+	//if(k_StorageGetStatus(MSD_DISK_UNIT) == 1)
+	//{
 		hItem = TREEVIEW_InsertItem(hTree, TREEVIEW_ITEM_TYPE_NODE, Node, TREEVIEW_INSERT_FIRST_CHILD, "SD Card");
-		ShowNodeContent(hTree, hItem, mSDDISK_Drive, pFileList);
-	}
+		//ShowNodeContent(hTree, hItem, mSDDISK_Drive, pFileList);
+	//}
   
 	TREEVIEW_SetAutoScrollH(hTree, 1);
 	TREEVIEW_SetAutoScrollV(hTree, 1);
@@ -653,7 +654,7 @@ static void _RefreshBrowser ( WM_HWIN hWin)
 	WM_HWIN 				hItem, Hint;
 	TREEVIEW_ITEM_Handle  	hTreeView;
 	uint32_t 				free, total,perc;
-	char 					str[FILEMGR_FULL_PATH_SIZE];
+	char 					str[FILEMGR_FILE_NAME_SIZE];
   
 	//GUI_Exec();
   
@@ -663,10 +664,10 @@ static void _RefreshBrowser ( WM_HWIN hWin)
 	//GUI_Exec();
 
   hItem = WM_GetDialogItem(hWin, ID_PROGBAR_MSD);
-  if(k_StorageGetStatus (MSD_DISK_UNIT))
+  //if(k_StorageGetStatus (MSD_DISK_UNIT))
   {
-    free =  k_StorageGetFree(MSD_DISK_UNIT);
-    total = k_StorageGetCapacity(MSD_DISK_UNIT);
+    free =  100;//k_StorageGetFree(MSD_DISK_UNIT);
+    total = 100;//k_StorageGetCapacity(MSD_DISK_UNIT);
 
     //printf("free: %d\r\n",free);
     //printf("total: %d\r\n",total);
@@ -684,12 +685,12 @@ static void _RefreshBrowser ( WM_HWIN hWin)
     sprintf(str, "%d MB", total / (2 * 1024));
     EDIT_SetText(hItem, str);
   }
-  else
-  {
-    PROGBAR_SetValue (hItem, 0); 
-    hItem = WM_GetDialogItem(hWin, ID_EDIT_MSD);
-    EDIT_SetText(hItem, "[N/A]" );
-  }
+  //else
+  ////{
+  //  PROGBAR_SetValue (hItem, 0);
+  //  hItem = WM_GetDialogItem(hWin, ID_EDIT_MSD);
+  ////  EDIT_SetText(hItem, "[N/A]" );
+  //}
   
   hTreeView = WM_GetDialogItem(hWin, ID_TREEVIEW);
   hItem = TREEVIEW_GetItem(hTreeView, 0, TREEVIEW_GET_FIRST);
@@ -718,15 +719,15 @@ static void _cbMediaConnection(WM_MESSAGE * pMsg)
   switch (pMsg->MsgId) 
   {
   case WM_CREATE:
-    prev_sd_status = k_StorageGetStatus(MSD_DISK_UNIT);
+    prev_sd_status = 1;//k_StorageGetStatus(MSD_DISK_UNIT);
     //prev_usb_status = k_StorageGetStatus(USB_DISK_UNIT);
     hStatusTimer = WM_CreateTimer(pMsg->hWin, 0, 500, 0);      
     break;
     
   case WM_TIMER:
-    if(prev_sd_status != k_StorageGetStatus(MSD_DISK_UNIT))
+    if(prev_sd_status != 1)//k_StorageGetStatus(MSD_DISK_UNIT))
     {
-      prev_sd_status = k_StorageGetStatus(MSD_DISK_UNIT);
+      prev_sd_status = 1;//k_StorageGetStatus(MSD_DISK_UNIT);
       _RefreshBrowser(hExplorerWin);
     }
     //else if(prev_usb_status != k_StorageGetStatus(USB_DISK_UNIT))
@@ -803,7 +804,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 			// MSD Size Edit
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_EDIT_MSD);
-			EDIT_SetFont(hItem,&GUI_FontAvantGarde16B);
+			//EDIT_SetFont(hItem,&GUI_FontAvantGarde16B);
 			EDIT_SetBkColor(hItem,EDIT_CI_ENABLED,GUI_STCOLOR_LIGHTBLUE);
 			EDIT_SetTextColor(hItem,EDIT_CI_ENABLED,GUI_WHITE);
 			EDIT_SetTextAlign(hItem,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
@@ -923,7 +924,7 @@ static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos)
 static void KillFileb(void)
 {
 	//printf("kill logbook\r\n");
-//	GUI_EndDialog(hLogDialog, 0);
+	GUI_EndDialog(hExplorerWin, 0);
 }
 
 #endif

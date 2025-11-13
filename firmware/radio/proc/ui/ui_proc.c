@@ -118,7 +118,7 @@ static void ui_proc_add_menu_items(void)
 	k_ModuleAdd(&clock);				// Clock Settings
 	k_ModuleAdd(&menu_batt);			// Battery
 	k_ModuleAdd(&logbook);				// Logbook
-	//k_ModuleAdd(&file_b);				// File Browser
+	k_ModuleAdd(&file_b);				// File Browser
 	k_ModuleAdd(&lora);					// Lora
 	k_ModuleAdd(&info);					// About
 }

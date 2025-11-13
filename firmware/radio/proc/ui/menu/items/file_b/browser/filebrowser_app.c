@@ -46,7 +46,7 @@
 
 #include "mchf_pro_board.h"
 
-#ifdef CONTEXT_SD__
+#ifdef CONTEXT_SD
 
 //#include "C:\Projects\mcHFx\firmware\mchf_ui\drivers\sd\hw\k_storage.h"
 
@@ -124,7 +124,7 @@ uchar  FILEMGR_ParseDisks (char *path, FILELIST_FileTypeDef *list)
 */
 void FILEMGR_GetParentDir (char *dir)
 {
-  uint16_t idx = FILEMGR_FULL_PATH_SIZE;
+  uint16_t idx = FILEMGR_FILE_NAME_SIZE;
   
   for ( ; idx > 0; idx --)
   {
