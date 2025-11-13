@@ -314,7 +314,6 @@ static int start_proc(void)
 
     // PWM...
 
-
 	#ifdef CONTEXT_BAND
     res = xTaskCreate(	(TaskFunction_t)band_proc_task,\
     					"bnd_proc",\

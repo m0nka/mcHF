@@ -1235,6 +1235,8 @@
 
 // EXTI Line usage:
 //
+// EXTI_LINE0 - sd card
+//
 // EXTI_LINE2 - paddle
 // EXTI_LINE3 - paddle
 //

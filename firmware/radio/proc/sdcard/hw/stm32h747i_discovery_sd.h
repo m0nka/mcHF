@@ -1,54 +1,9 @@
-/**
-  ******************************************************************************
-  * @file    stm32h747i_discovery_sd.h
-  * @author  MCD Application Team
-  * @brief   This file contains the common defines and functions prototypes for
-  *          the stm32h747i_discovery_sd.c driver.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2018 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
-
-/* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef STM32H747I_DISCO_SD_H
 #define STM32H747I_DISCO_SD_H
 
-#ifdef __cplusplus
- extern "C" {
-#endif
-
-/* Includes ------------------------------------------------------------------*/
 #include "stm32h747i_discovery_conf.h"
 #include "stm32h747i_discovery_errno.h"
 
-/** @addtogroup BSP
-  * @{
-  */
-
-/** @addtogroup STM32H747I_DISCO
-  * @{
-  */
-
-/** @addtogroup STM32H747I_DISCO_SD
-  * @{
-  */
-
-/** @defgroup STM32H747I_DISCO_SD_Exported_Types Exported Types
-  * @{
-  */
-
-/**
-  * @brief SD Card information structure
-  */
 #define BSP_SD_CardInfo HAL_SD_CardInfoTypeDef
 
 #if (USE_HAL_SD_REGISTER_CALLBACKS == 1)
@@ -58,13 +13,7 @@ typedef struct
   void (* pMspDeInitCb)(SD_HandleTypeDef *);
 }BSP_SD_Cb_t;
 #endif /* (USE_HAL_SD_REGISTER_CALLBACKS == 1) */
-/**
-  * @}
-  */
 
-/** @defgroup STM32H747I_DISCO_SD_Exported_Constants Exported Constants
-  * @{
-  */
 #define SD_INSTANCES_NBR         1UL
 
 #ifndef SD_WRITE_TIMEOUT
@@ -75,47 +24,20 @@ typedef struct
 #define SD_READ_TIMEOUT          100U
 #endif
 
-/**
-  * @brief  SD transfer state definition
-  */
 #define   SD_TRANSFER_OK         0U
 #define   SD_TRANSFER_BUSY       1U
 
-/**
-  * @brief SD-detect signal
-  */
 #define SD_PRESENT               1UL
 #define SD_NOT_PRESENT           0UL
 
-/**
-  * @brief SD-detect signal
-  */
-#define SD_DETECT_PIN                        GPIO_PIN_8
-#define SD_DETECT_GPIO_PORT                  GPIOI
-#define SD_DETECT_GPIO_CLK_ENABLE()          __HAL_RCC_GPIOI_CLK_ENABLE()
-#define SD_DETECT_GPIO_CLK_DISABLE()         __HAL_RCC_GPIOI_CLK_DISABLE()
-#define SD_DETECT_EXTI_IRQn                  EXTI9_5_IRQn
+#define SD_DETECT_EXTI_IRQn      EXTI0_IRQn
 
-#define SD_DETECT_EXTI_LINE              EXTI_LINE_8
-#define SD_DetectIRQHandler()            HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8)
+#define SD_DETECT_EXTI_LINE      EXTI_LINE_0
+#define SD_DetectIRQHandler()    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0)
 
-/**
-  * @}
-  */
-
-/** @addtogroup STM32H747I_DISCO_SD_Exported_Variables
-  * @{
-  */
 extern SD_HandleTypeDef    hsd_sdmmc[];
 extern EXTI_HandleTypeDef  hsd_exti[];
 
-/**
-  * @}
-  */
-
-/** @addtogroup STM32H747I_DISCO_SD_Exported_Functions
-  * @{
-  */
 int32_t BSP_SD_Init(uint32_t Instance);
 int32_t BSP_SD_DeInit(uint32_t Instance);
 #if (USE_HAL_SD_REGISTER_CALLBACKS == 1)
@@ -146,26 +68,5 @@ void BSP_SD_DetectCallback(uint32_t Instance, uint32_t Status);
 void HAL_SD_DriveTransciver_1_8V_Callback(FlagStatus status);
 HAL_StatusTypeDef MX_SDMMC1_SD_Init(SD_HandleTypeDef *hsd);
 
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-#ifdef __cplusplus
-}
 #endif
 
-#endif /* STM32H747I_DISCO_SD_H */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
