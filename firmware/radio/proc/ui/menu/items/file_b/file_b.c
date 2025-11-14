@@ -29,8 +29,8 @@ extern const struct UIMenuLayout menu_layout[];
 extern struct	UI_DRIVER_STATE			ui_s;
 
 // Menu image
-//extern GUI_CONST_STORAGE GUI_BITMAP bmProgramGroup;
-extern GUI_CONST_STORAGE GUI_BITMAP bmicon_compref;
+extern GUI_CONST_STORAGE GUI_BITMAP bmProgramGroup;
+//extern GUI_CONST_STORAGE GUI_BITMAP bmicon_compref;
 
 // TreeView images
 extern GUI_CONST_STORAGE GUI_BITMAP bmClosedFolder;
@@ -45,7 +45,7 @@ K_ModuleItem_Typedef  file_b =
 {
   10,
   "File Browser",
-  &bmicon_compref,
+  &bmProgramGroup,
   Startup,
   NULL,
   KillFileb
@@ -102,22 +102,6 @@ char    str[FILEMGR_FILE_NAME_SIZE];
 static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos);
 static void _RefreshBrowser ( WM_HWIN hWin);
 
-// Menu image
-//extern GUI_CONST_STORAGE GUI_BITMAP bmProgramGroup;
-// TreeView images
-////extern GUI_CONST_STORAGE GUI_BITMAP bmClosedFolder;
-//extern GUI_CONST_STORAGE GUI_BITMAP bmOpenFolder;
-//extern GUI_CONST_STORAGE GUI_BITMAP bmTextLog;
-/*
-K_ModuleItem_Typedef  file_b =
-{
-  3,
-  "File Browser",
-  &bmProgramGroup,
-  Startup,
-  NULL,
-};*/
-
 //WM_HWIN  hBrowser = 0;
 
 static const GUI_WIDGET_CREATE_INFO _aDialog[] = 
@@ -168,16 +152,8 @@ static MENU_ITEM _aMenuItems[] =
 
 MENU_Handle hMenu;
 
-/**
-  * @brief  Adds one menu item to the given menu
-  * @param  hMenu:    pointer to the handle of menu
-  * @param  hSubmenu: pointer to the handle of Sub menu
-  * @param  pText:    pointer to menu item description
-  * @param  Id:       ID of the menu item
-  * @param  Flags:    window creation flags
-  * @retval None
-  */
-static void _AddMenuItem(MENU_Handle hMenu, MENU_Handle hSubmenu, const char* pText, U16 Id, U16 Flags) {
+static void _AddMenuItem(MENU_Handle hMenu, MENU_Handle hSubmenu, const char* pText, U16 Id, U16 Flags)
+{
   MENU_ITEM_DATA Item;
   Item.pText    = pText;
   Item.hSubmenu = hSubmenu;
@@ -186,17 +162,6 @@ static void _AddMenuItem(MENU_Handle hMenu, MENU_Handle hSubmenu, const char* pT
   MENU_AddItem(hMenu, &Item);
 }
 
-/**
-  * @brief  Opens a popup menu at the given position.
-  * @note   It returns immediately after creation. 
-  *         On the first call it creates the menu
-  * @param  hParent:    pointer to the handle of the parent
-  * @param  pMenuItems: pointer to menu items 
-  * @param  NumItems:   number of menu items 
-  * @param  x:          x position of the popup
-  * @param  y:          y position of the popup 
-  * @retval None
-  */
 static void _OpenPopup(WM_HWIN hParent, MENU_ITEM * pMenuItems, int NumItems, int x, int y) 
 {
 #if 0
@@ -227,12 +192,8 @@ static void _OpenPopup(WM_HWIN hParent, MENU_ITEM * pMenuItems, int NumItems, in
 #endif
 }
 
-/**
-  * @brief  Callback routine of Info dialog
-  * @param  pMsg: pointer to data structure of type WM_MESSAGE 
-  * @retval None
-  */
-static void _cbFileInfoDialog(WM_MESSAGE * pMsg) {
+static void _cbFileInfoDialog(WM_MESSAGE * pMsg)
+{
   WM_HWIN hItem;
   int     NCode;
   int     Id;
@@ -311,11 +272,6 @@ static void _cbFileInfoDialog(WM_MESSAGE * pMsg) {
   }
 }
 
-/**
-  * @brief  Callback routine for informing user about exploring disk
-  * @param  pMsg: pointer to data structure of type WM_MESSAGE
-  * @retval None
-  */
 static void _cbHint(WM_MESSAGE * pMsg) 
 {
   GUI_RECT Rect;
@@ -340,12 +296,8 @@ static void _cbHint(WM_MESSAGE * pMsg)
   }
 }
 
-/**
-  * @brief  callback for Message Box 
-  * @param  pMsg : pointer to data structure
-  * @retval None
-  */
-static void _cbMessageBox(WM_MESSAGE* pMsg) {
+static void _cbMessageBox(WM_MESSAGE* pMsg)
+{
   WM_HWIN hWin;
   int Id;
 
@@ -363,13 +315,6 @@ static void _cbMessageBox(WM_MESSAGE* pMsg) {
   }
 }
 
-/**
-  * @brief  Show Message Box
-  * @param  hWin:   pointer to the parent handle
-  * @param  pTitle: pointer to the title
-  * @param  pText:  pointer to the text
-  * @retval int 
-  */ 
 static int _ShowMessageBox(WM_HWIN hWin, const char* pTitle, const char* pText, int YesNo) 
 {
   WM_HWIN hFrame, hClient, hBut;
@@ -399,11 +344,6 @@ static int _ShowMessageBox(WM_HWIN hWin, const char* pTitle, const char* pText, 
   return r;
 }
 
-/**
-  * @brief  Callback routine of popup menu.
-  * @param  pMsg: pointer to data structure of type WM_MESSAGE 
-  * @retval None
-  */
 static void _cbPopup(WM_MESSAGE * pMsg)
 {
 	K_GET_DIRECT_OPEN_FUNC 	*pfOpen;
@@ -438,7 +378,7 @@ static void _cbPopup(WM_MESSAGE * pMsg)
 						case ID_MENU_OPENFILE:
 						{
 							printf("popup open file\r\n");
-							//k_GetExtOnly(SelectedFileName, ext);
+							k_GetExtOnly(SelectedFileName, ext);
 							pfOpen = k_ModuleCheckLink(ext);
 
 							if(pfOpen != NULL)
@@ -517,13 +457,6 @@ static void _cbPopup(WM_MESSAGE * pMsg)
 	}
 }
 
-/**
-  * @brief  Finds full path of selected file.
-  * @param  hObj:    object handle
-  * @param  hTVItem: window handle
-  * @param  str: Pointer to str
-  * @retval None
-  */
 void _FindFullPath(TREEVIEW_Handle hObj, TREEVIEW_ITEM_Handle hTVItem, char *str)
 {
   TREEVIEW_ITEM_INFO hInfo;
@@ -557,13 +490,6 @@ void _FindFullPath(TREEVIEW_Handle hObj, TREEVIEW_ITEM_Handle hTVItem, char *str
   }         
 }
 
-/**
-  * @brief  Shows node content.
-  * @param  hTree: Tree view handle
-  * @param  hNode: Tree Node handle
-  * @param  list: pointer to file list structure
-  * @retval None
-  */
 static void ShowNodeContent(WM_HWIN hTree, TREEVIEW_ITEM_Handle hNode, char *path, FILELIST_FileTypeDef *list) 
 {
   uint32_t i = 0, Position = 0;
@@ -573,7 +499,7 @@ static void ShowNodeContent(WM_HWIN hTree, TREEVIEW_ITEM_Handle hNode, char *pat
 
   /*Create root nodes */
   if(list->ptr > 0)
-  {/*
+  {
     for (i = 0; i < list->ptr; i++)
     {
       Position = hItem ? TREEVIEW_INSERT_BELOW : TREEVIEW_INSERT_FIRST_CHILD;
@@ -599,7 +525,7 @@ static void ShowNodeContent(WM_HWIN hTree, TREEVIEW_ITEM_Handle hNode, char *pat
       {
         hItem = TREEVIEW_InsertItem(hTree, TREEVIEW_ITEM_TYPE_LEAF, hItem, Position, (char *)list->file[i].name);
       }
-    }*/
+    }
   }
 
 }
@@ -617,11 +543,11 @@ static void ExploreDisks(WM_HWIN hTree)
 
 	Node = TREEVIEW_InsertItem(hTree, TREEVIEW_ITEM_TYPE_NODE, 0, 0, "Radio");
   
-	//if(k_StorageGetStatus(MSD_DISK_UNIT) == 1)
-	//{
+	if(Storage_GetStatus(MSD_DISK_UNIT) == 1)
+	{
 		hItem = TREEVIEW_InsertItem(hTree, TREEVIEW_ITEM_TYPE_NODE, Node, TREEVIEW_INSERT_FIRST_CHILD, "SD Card");
 		//ShowNodeContent(hTree, hItem, mSDDISK_Drive, pFileList);
-	//}
+	}
   
 	TREEVIEW_SetAutoScrollH(hTree, 1);
 	TREEVIEW_SetAutoScrollV(hTree, 1);
@@ -664,10 +590,10 @@ static void _RefreshBrowser ( WM_HWIN hWin)
 	//GUI_Exec();
 
   hItem = WM_GetDialogItem(hWin, ID_PROGBAR_MSD);
-  //if(k_StorageGetStatus (MSD_DISK_UNIT))
+  if(Storage_GetStatus (MSD_DISK_UNIT))
   {
-    free =  100;//k_StorageGetFree(MSD_DISK_UNIT);
-    total = 100;//k_StorageGetCapacity(MSD_DISK_UNIT);
+    free =  Storage_GetFree(MSD_DISK_UNIT);
+    total = Storage_GetCapacity(MSD_DISK_UNIT);
 
     //printf("free: %d\r\n",free);
     //printf("total: %d\r\n",total);
@@ -685,12 +611,12 @@ static void _RefreshBrowser ( WM_HWIN hWin)
     sprintf(str, "%d MB", total / (2 * 1024));
     EDIT_SetText(hItem, str);
   }
-  //else
-  ////{
-  //  PROGBAR_SetValue (hItem, 0);
-  //  hItem = WM_GetDialogItem(hWin, ID_EDIT_MSD);
-  ////  EDIT_SetText(hItem, "[N/A]" );
-  //}
+  else
+  {
+    PROGBAR_SetValue (hItem, 0);
+    hItem = WM_GetDialogItem(hWin, ID_EDIT_MSD);
+    EDIT_SetText(hItem, "[N/A]" );
+  }
   
   hTreeView = WM_GetDialogItem(hWin, ID_TREEVIEW);
   hItem = TREEVIEW_GetItem(hTreeView, 0, TREEVIEW_GET_FIRST);
@@ -719,15 +645,15 @@ static void _cbMediaConnection(WM_MESSAGE * pMsg)
   switch (pMsg->MsgId) 
   {
   case WM_CREATE:
-    prev_sd_status = 1;//k_StorageGetStatus(MSD_DISK_UNIT);
-    //prev_usb_status = k_StorageGetStatus(USB_DISK_UNIT);
+    prev_sd_status = Storage_GetStatus(MSD_DISK_UNIT);
+    //prev_usb_status = Storage_GetStatus(USB_DISK_UNIT);
     hStatusTimer = WM_CreateTimer(pMsg->hWin, 0, 500, 0);      
     break;
     
   case WM_TIMER:
-    if(prev_sd_status != 1)//k_StorageGetStatus(MSD_DISK_UNIT))
+    if(prev_sd_status !=  Storage_GetStatus(MSD_DISK_UNIT))
     {
-      prev_sd_status = 1;//k_StorageGetStatus(MSD_DISK_UNIT);
+      prev_sd_status = Storage_GetStatus(MSD_DISK_UNIT);
       _RefreshBrowser(hExplorerWin);
     }
     //else if(prev_usb_status != k_StorageGetStatus(USB_DISK_UNIT))
@@ -912,14 +838,11 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 	}
 }
 
-
 static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos)
 {
 //	pFileList = NULL;
 
-	#ifdef CONTEXT_SD
 	hExplorerWin = GUI_CreateDialogBox(_aDialog, GUI_COUNTOF(_aDialog), _cbDialog, hWin, xpos, ypos);
-	#endif
 }
 static void KillFileb(void)
 {

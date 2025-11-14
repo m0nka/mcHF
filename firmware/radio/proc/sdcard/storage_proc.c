@@ -275,6 +275,46 @@ uint8_t Storage_GetStatus(uint8_t unit)
 	return status;
 }
 
+uint32_t Storage_GetCapacity (uint8_t unit)
+{
+  uint32_t   tot_sect = 0;
+  FATFS 	*fs;
+
+  if(StorageID[unit])
+  {
+	 osSemaphoreWait(StorageSemaphore[unit], osWaitForever);
+    fs = &StorageDISK_FatFs[unit];
+    tot_sect = (fs->n_fatent - 2) * fs->csize;
+    osSemaphoreRelease(StorageSemaphore[unit]);
+  }
+
+  return (tot_sect);
+}
+
+uint32_t Storage_GetFree (uint8_t unit)
+{
+  uint32_t	fre_clust = 0, ret = 0;
+  FATFS 	*fs;
+  FRESULT 	res = FR_INT_ERR;
+
+  if(StorageID[unit])
+  {
+	  osSemaphoreWait(StorageSemaphore[unit], osWaitForever);
+    fs = &StorageDISK_FatFs[unit];
+    res = f_getfree(StorageDISK_Drive[unit], (DWORD *)&fre_clust, &fs);
+
+    //printf("f_getfree res: %d\r\n",res);
+
+    if(res == FR_OK)
+      ret = (fre_clust * fs->csize);
+    else
+      ret = 0;
+    osSemaphoreRelease(StorageSemaphore[unit]);
+  }
+
+  return ret;
+}
+
 const char *Storage_GetDrive(uint8_t unit)
 {
 	if(StorageStatus[unit] == STORAGE_MOUNTED)

@@ -53,16 +53,30 @@ typedef struct _FILELIST_LineTypeDef
 }
 FILELIST_LineTypeDef;
 
+// Structure version madness!!
+#if 0
 typedef struct _FILELIST_FileTypeDef
 {
   FILELIST_LineTypeDef  file[FILEMGR_LIST_DEPDTH] ;
   uint16_t              ptr;
 }
 FILELIST_FileTypeDef;
+#else
+typedef struct _FILELIST_FileTypeDef
+{
+  FILELIST_LineTypeDef  file[FILEMGR_LIST_DEPDTH] ;
+  uint16_t              ptr;
+  struct _FILELIST_FileTypeDef *next;
+  struct _FILELIST_FileTypeDef *prev;
+}
+FILELIST_FileTypeDef;
+#endif
 
 void        Storage_Init(void);
 void        Storage_DeInit(void);
 uint8_t     Storage_GetStatus (uint8_t unit);
+uint32_t 	Storage_GetCapacity (uint8_t unit);
+uint32_t 	Storage_GetFree (uint8_t unit);
 const char *Storage_GetDrive (uint8_t unit);
 
 extern osMessageQId StorageEvent;
