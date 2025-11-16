@@ -23,6 +23,7 @@ typedef struct pwr_db
 {
   __IO uint32_t t[0x30/4];
   __IO uint32_t PDR1;
+
 }PWDDBG_TypeDef;
 
 /* Private macro -------------------------------------------------------------*/

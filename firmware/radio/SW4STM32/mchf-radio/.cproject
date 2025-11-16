@@ -376,6 +376,8 @@
 									<listOptionValue builtIn="false" value="STARTEK_35INCH__"/>
 									<listOptionValue builtIn="false" value="PCB_V9_REV_A"/>
 									<listOptionValue builtIn="false" value="MESHCORE_REPEATER"/>
+									<listOptionValue builtIn="false" value="USE_MT48LC4M32B2P___"/>
+									<listOptionValue builtIn="false" value="USE_IS42S32160F"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="true" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.otherflags.211633042" name="Other flags" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.otherflags" useByScannerDiscovery="true" valueType="stringList"/>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.languagestandard.2074062857" name="Language standard" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.languagestandard" useByScannerDiscovery="true" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.languagestandard.value.gnu11" valueType="enumerated"/>

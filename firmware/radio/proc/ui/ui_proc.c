@@ -23,7 +23,7 @@
 #include "gui.h"
 #include "dialog.h"
 
-#include "stm32h747i_discovery_sdram.h"
+#include "sdram.h"
 #include "shared_tim.h"
 
 //#define PROC_USE_WM

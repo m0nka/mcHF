@@ -32,11 +32,6 @@
 			<locationURI>copy_PARENT12345/base_hw/dsp_idle.c</locationURI>
 		</link>
 		<link>
-			<name>base_hw/mchf_pro_board.c</name>
-			<type>1</type>
-			<locationURI>copy_PARENT12345/base_hw/mchf_pro_board.c</locationURI>
-		</link>
-		<link>
 			<name>base_hw/mchf_pro_board.h</name>
 			<type>1</type>
 			<locationURI>copy_PARENT12345/base_hw/mchf_pro_board.h</locationURI>
@@ -57,6 +52,16 @@
 			<locationURI>copy_PARENT123456/config/FreeRTOSConfig.h</locationURI>
 		</link>
 		<link>
+			<name>config/IS42S32160F_conf.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/config/IS42S32160F_conf.h</locationURI>
+		</link>
+		<link>
+			<name>config/MT48LC4M32B2P_conf.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/config/MT48LC4M32B2P_conf.h</locationURI>
+		</link>
+		<link>
 			<name>config/dma_config.h</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/config/dma_config.h</locationURI>
@@ -70,11 +75,6 @@
 			<name>config/ft6x06_conf.h</name>
 			<type>1</type>
 			<locationURI>copy_PARENT12345678/config/ft6x06_conf.h</locationURI>
-		</link>
-		<link>
-			<name>config/is42s32800j_conf.h</name>
-			<type>1</type>
-			<locationURI>copy_PARENT123456789/config/is42s32800j_conf.h</locationURI>
 		</link>
 		<link>
 			<name>config/mt25tl01g_conf.h</name>
@@ -97,6 +97,16 @@
 			<locationURI>copy_PARENT12345678910111213/config/stm32h7xx_hal_conf.h</locationURI>
 		</link>
 		<link>
+			<name>hw/IS42S32160F.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/IS42S32160F.c</locationURI>
+		</link>
+		<link>
+			<name>hw/MT48LC4M32B2P.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/MT48LC4M32B2P.c</locationURI>
+		</link>
+		<link>
 			<name>hw/adc.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT1234567891011121314/hw/adc.c</locationURI>
@@ -107,19 +117,24 @@
 			<locationURI>copy_PARENT123456789101112131415/hw/att.c</locationURI>
 		</link>
 		<link>
+			<name>hw/board.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/board.c</locationURI>
+		</link>
+		<link>
 			<name>hw/bsp.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT12345678910111213141516/hw/bsp.c</locationURI>
 		</link>
 		<link>
-			<name>hw/is42s32800j.c</name>
-			<type>1</type>
-			<locationURI>copy_PARENT1234567891011121314151617/hw/is42s32800j.c</locationURI>
-		</link>
-		<link>
 			<name>hw/rtc.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT123456789101112131415161718/hw/rtc.c</locationURI>
+		</link>
+		<link>
+			<name>hw/sdram.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/sdram.c</locationURI>
 		</link>
 		<link>
 			<name>hw/shared_i2c.c</name>
@@ -130,11 +145,6 @@
 			<name>hw/stm32h747i_discovery.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT123456789101112131415161718192021/hw/stm32h747i_discovery.c</locationURI>
-		</link>
-		<link>
-			<name>hw/stm32h747i_discovery_sdram.c</name>
-			<type>1</type>
-			<locationURI>copy_PARENT1234567891011121314151617181920212223/hw/stm32h747i_discovery_sdram.c</locationURI>
 		</link>
 		<link>
 			<name>hw/stm32h7xx_hal_timebase_tim.c</name>
