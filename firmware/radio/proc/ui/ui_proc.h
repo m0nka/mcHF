@@ -17,6 +17,12 @@
 #ifndef __UI_PROC_H
 #define __UI_PROC_H
 
+// Enable individual desktop controls
+#define 	DESKTOP_SHOW_BATTERY
+#define 	DESKTOP_SHOW_SMETER
+#define 	DESKTOP_SHOW_FREQUENCY
+#define 	DESKTOP_SHOW_SDCARD
+
 // Disable individual controls
 #define 	SPECTRUM_WATERFALL
 #define 	VFO_BOTH

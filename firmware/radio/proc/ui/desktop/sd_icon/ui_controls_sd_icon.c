@@ -17,22 +17,20 @@
 
 #include "gui.h"
 #include "dialog.h"
-//#include "ST_GUI_Addons.h"
 
 #include "ui_controls_sd_icon.h"
 #include "desktop\ui_controls_layout.h"
 
 extern GUI_CONST_STORAGE GUI_BITMAP bmsd_small;
 
-// From SD driver
-//extern uchar isInitialized;
-uchar isInitialized = 1;		// test
-
-uchar loc_sd_status = 0;
-
 void ui_controls_sd_icon_update(uchar is_init)
 {
-#if 1
+	static uchar loc_sd_status = 0;
+	uchar isInitialized;
+
+	// From SD driver
+	isInitialized = Storage_GetStatus(MSD_DISK_UNIT);
+
 	// Prevent over update
 	if((loc_sd_status == isInitialized) && (!is_init))
 		return;
@@ -56,7 +54,6 @@ void ui_controls_sd_icon_update(uchar is_init)
 
 	// Save to local
 	loc_sd_status = isInitialized;
-#endif
 }
 
 //*----------------------------------------------------------------------------

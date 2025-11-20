@@ -308,8 +308,8 @@
 
 // ----------------------------------------------------------------------------
 // RX/TX indicator
-#define RXTX_X						(M_FREQ_X + FREQ_FONT_SIZE_X*1 + 12)// 80
-#define RXTX_Y						(M_FREQ_Y - 15)						// 86
+#define RXTX_X						(M_FREQ_X + FREQ_FONT_SIZE_X*2 + 18)
+#define RXTX_Y						(M_FREQ_Y - 18)
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
@@ -343,8 +343,8 @@
 //
 // ----------------------------------------------------------------------------
 // SD Card control
-#define SD_CARD_X					690
-#define SD_CARD_Y					35
+#define SD_CARD_X					356
+#define SD_CARD_Y					133
 //
 // ----------------------------------------------------------------------------
 // Holder for all progress bars
@@ -399,11 +399,11 @@
 //
 // ----------------------------------------------------------------------------
 // Battery icon
-#define BATTERY_X					365
-#define BATTERY_Y					110
+#define BATTERY_X					(365 + 35)
+#define BATTERY_Y					97
 //
-#define BATTERY_SIZE_X				55
-#define BATTERY_SIZE_Y				72
+#define BATTERY_SIZE_X				54
+#define BATTERY_SIZE_Y				28
 //
 // ----------------------------------------------------------------------------
 // Filter

@@ -34,6 +34,7 @@ extern struct BMSState	bmss;
 uchar curr_batt_value = 0;
 uchar source_suppy = 0xff;
 
+#ifdef BATT_VERTICAL
 static void ui_controls_battery_progress(uchar val)
 {
 	char buf[10];
@@ -50,7 +51,7 @@ static void ui_controls_battery_progress(uchar val)
 							2);
 
 	int y0 = BATTERY_Y + BATTERY_SIZE_Y + 5 - (val/3)*2;	// top
-	int y1 = BATTERY_Y + BATTERY_SIZE_Y - 0;			// bottom
+	int y1 = BATTERY_Y + BATTERY_SIZE_Y - 0;				// bottom
 
 	//if(bmss.run_on_dc)
 	//	GUI_SetColor(GUI_MAGENTA);
@@ -112,6 +113,85 @@ static void ui_controls_battery_progress(uchar val)
 	GUI_DispStringAt("offline", x - 16, BATTERY_Y + BATTERY_SIZE_Y - 33);
 	#endif
 }
+#else
+static void ui_controls_battery_progress(uchar val)
+{
+	char buf[10];
+
+	if(val > 100)
+		val = 100;
+
+	// Clear
+	GUI_SetColor(GUI_LIGHTGRAY);
+	GUI_FillRoundedRect(	(BATTERY_X + 3),
+							(BATTERY_Y + 3),
+							(BATTERY_X + BATTERY_SIZE_X - 2),
+							(BATTERY_Y + BATTERY_SIZE_Y - 2),
+							2);
+	int x0 = BATTERY_X + 3;
+	int x1 = BATTERY_X + 2 + val/2;
+
+	//if(bmss.run_on_dc)
+	//	GUI_SetColor(GUI_MAGENTA);
+	//else if(val < 25)
+	//	GUI_SetColor(GUI_LIGHTRED);
+	//else
+		GUI_SetColor(BATT_COLOUR);
+
+	// Update
+	GUI_FillRect(x0, (BATTERY_Y + 3), x1, (BATTERY_Y + BATTERY_SIZE_Y - 2));
+
+	sprintf(buf, "%d%%", val);
+	int x  = BATTERY_X + BATTERY_SIZE_X/2 - 10;
+
+	if(val < 10)
+		x  += 9;
+	else if(val < 100)
+		x += 5;
+
+	#ifdef CONTEXT_BMS
+	if(bmss.run_on_dc)
+		GUI_SetColor(GUI_BLACK);		// on USB suppy
+	else
+	{
+		if(val > 34)
+			GUI_SetColor(GUI_WHITE);	// on battery, good SOC, light colour
+		else
+			GUI_SetColor(GUI_RED);		// on battery, low SOC, need contrast
+	}
+	#else
+	GUI_SetColor(GUI_BLACK);		// on USB suppy
+	#endif
+
+	GUI_SetFont(&GUI_Font20B_ASCII);
+
+	#ifdef CONTEXT_BMS
+
+	// Battery percentage text
+	GUI_DispStringAt(buf, x - 12,  BATTERY_Y + BATTERY_SIZE_Y - 22);
+
+	GUI_SetColor(GUI_BLACK);
+
+	if((bmss.mins)&&(!bmss.run_on_dc))
+	{
+		if((bmss.mins/60) > 99)
+		{
+			sprintf(buf, "%2dh", bmss.mins/60);
+			GUI_DispStringAt(buf, x - 12, BATTERY_Y + BATTERY_SIZE_Y - 62);
+		}
+		else
+		{
+			sprintf(buf, "%2dh%2dm", bmss.mins/60, bmss.mins%60);
+			GUI_DispStringAt(buf, x - 26, BATTERY_Y + BATTERY_SIZE_Y - 62);
+		}
+	}
+	else
+		GUI_DispStringAt("      ", x - 6, BATTERY_Y + BATTERY_SIZE_Y - 62);
+	#else
+	GUI_DispStringAt("offline", x - 16, BATTERY_Y + BATTERY_SIZE_Y - 33);
+	#endif
+}
+#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       :
@@ -126,15 +206,24 @@ void ui_controls_battery_init(void)
 	curr_batt_value = 0;
 
 	// Two pixel frame
-	GUI_SetColor(GUI_DARKGREEN);
-	GUI_DrawRoundedRect((BATTERY_X +  0),(BATTERY_Y + 3),(BATTERY_X + BATTERY_SIZE_X),    (BATTERY_Y + BATTERY_SIZE_Y + 1),2);
-	GUI_DrawRoundedRect((BATTERY_X +  1),(BATTERY_Y + 4),(BATTERY_X + BATTERY_SIZE_X + 1),(BATTERY_Y + BATTERY_SIZE_Y + 2),2);
+	GUI_SetColor(BATT_COLOUR);
+	GUI_DrawRoundedRect((BATTERY_X +  0),(BATTERY_Y + 0),(BATTERY_X + BATTERY_SIZE_X + 0),(BATTERY_Y + BATTERY_SIZE_Y + 0), 2);
+	GUI_DrawRoundedRect((BATTERY_X +  1),(BATTERY_Y + 1),(BATTERY_X + BATTERY_SIZE_X + 1),(BATTERY_Y + BATTERY_SIZE_Y + 1), 2);
 
 	// Terminal
+	#ifdef BATT_VERTICA
+	// Vertical
 	GUI_FillRect(	(BATTERY_X + BATTERY_SIZE_X/2 - 10),
 					(BATTERY_Y - 5),
 					(BATTERY_X + BATTERY_SIZE_X/2 + 12),
 					(BATTERY_Y + 2));
+	#else
+	// Horizontal
+	GUI_FillRect(	(BATTERY_X + BATTERY_SIZE_X + 0),
+					(BATTERY_Y + BATTERY_SIZE_Y/2 - 7),
+					(BATTERY_X + BATTERY_SIZE_X + 5),
+					(BATTERY_Y + BATTERY_SIZE_Y/2 + 8));
+	#endif
 
 	ui_controls_battery_progress(100);
 }
@@ -175,9 +264,9 @@ void ui_controls_battery_touch(void)
 //*----------------------------------------------------------------------------
 void ui_controls_battery_refresh(void)
 {
-	//return;
+	return;
 
-	#if 0
+	#if 1
 	// Exercise the progress bar
 	static uchar bv = 0;
 	static uchar vskip = 0;

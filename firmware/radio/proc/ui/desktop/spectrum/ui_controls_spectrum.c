@@ -554,7 +554,7 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 
 		// Draw line between old and new point
 		// Causes draw outside of MEMDEV!!!
-		#if 0
+		#if 1
 		GUI_SetColor(GUI_WHITE);
 		if(i)
 		{

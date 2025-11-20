@@ -13,6 +13,11 @@
 #ifndef UI_CONTROLS_BATTERY_H
 #define UI_CONTROLS_BATTERY_H
 
+// Control type
+//#define BATT_VERTICAL
+
+#define BATT_COLOUR					GUI_DARKYELLOW
+
 // Exports
 void ui_controls_battery_init(void);
 void ui_controls_battery_quit(void);

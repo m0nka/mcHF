@@ -1143,6 +1143,15 @@ static void ui_controls_frequency_vfo_a_initial_paint(uchar is_init)
 						(M_FREQ_X + FREQ_FONT_SIZE_X*11 + 2),
 						(M_FREQ_Y + 55),
 						2);
+	#if 0
+	// Add frame test
+	GUI_SetColor(GUI_LIGHTBLUE);
+	GUI_DrawRoundedRect((M_FREQ_X + 0),
+						(M_FREQ_Y + 0),
+						(M_FREQ_X + FREQ_FONT_SIZE_X*11 + 2),
+						(M_FREQ_Y + 55),
+						2);
+	#endif
 
 	// Frame
 	#ifdef FRAME_MAIN_DIAL
