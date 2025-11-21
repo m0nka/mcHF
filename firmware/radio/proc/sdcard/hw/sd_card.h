@@ -1,18 +1,10 @@
-#ifndef STM32H747I_DISCO_SD_H
-#define STM32H747I_DISCO_SD_H
+#ifndef __SD_CARD_H
+#define __SD_CARD_H
 
 #include "stm32h747i_discovery_conf.h"
 #include "stm32h747i_discovery_errno.h"
 
 #define BSP_SD_CardInfo HAL_SD_CardInfoTypeDef
-
-#if (USE_HAL_SD_REGISTER_CALLBACKS == 1)
-typedef struct
-{
-  void (* pMspInitCb)(SD_HandleTypeDef *);
-  void (* pMspDeInitCb)(SD_HandleTypeDef *);
-}BSP_SD_Cb_t;
-#endif /* (USE_HAL_SD_REGISTER_CALLBACKS == 1) */
 
 #define SD_INSTANCES_NBR         1UL
 
@@ -31,19 +23,16 @@ typedef struct
 #define SD_NOT_PRESENT           0UL
 
 #define SD_DETECT_EXTI_IRQn      EXTI0_IRQn
-
 #define SD_DETECT_EXTI_LINE      EXTI_LINE_0
-#define SD_DetectIRQHandler()    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0)
+
+//#define SD_DetectIRQHandler()    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0)
 
 extern SD_HandleTypeDef    hsd_sdmmc[];
 extern EXTI_HandleTypeDef  hsd_exti[];
 
 int32_t BSP_SD_Init(uint32_t Instance);
 int32_t BSP_SD_DeInit(uint32_t Instance);
-#if (USE_HAL_SD_REGISTER_CALLBACKS == 1)
-int32_t BSP_SD_RegisterMspCallbacks(uint32_t Instance, BSP_SD_Cb_t *CallBacks);
-int32_t BSP_SD_RegisterDefaultMspCallbacks(uint32_t Instance);
-#endif /* (USE_HAL_SD_REGISTER_CALLBACKS == 1) */
+
 int32_t BSP_SD_DetectITConfig(uint32_t Instance);
 int32_t BSP_SD_ReadBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr);
 int32_t BSP_SD_WriteBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t NbrOfBlocks);

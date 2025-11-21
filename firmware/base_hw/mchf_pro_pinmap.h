@@ -716,7 +716,7 @@
 // ----------------------------------------------------
 // PortB
 
-// PB0			CODEC_RESET
+// PB0			SD_DET
 #define SD_DET                   		GPIO_PIN_0
 #define SD_DET_PORT              		GPIOB
 
@@ -857,7 +857,7 @@
 #define KEYPAD_X1_LL                   	LL_GPIO_PIN_3
 #define KEYPAD_X1_PORT              	GPIOD
 
-// PD4			SD_DET
+// PD4		CODEC_RESET
 #define CODEC_RESET						GPIO_PIN_4
 #define CODEC_RESET_PORT           		GPIOD
 
@@ -1242,8 +1242,6 @@
 //
 // EXTI_LINE_6 - touch
 //
-// EXTI_LINE_8 - SD Card detect
-
 
 #endif	//PCB_V9_REV_A
 

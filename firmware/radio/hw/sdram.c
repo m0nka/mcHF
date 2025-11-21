@@ -560,9 +560,9 @@ HAL_StatusTypeDef MX_SDRAM_Init(SDRAM_HandleTypeDef *hSdram)
 
 	// Timing configuration(ToDo: can we run at 120Mhz?)
 	sdram_timing.LoadToActiveDelay    	= 4;
-	sdram_timing.ExitSelfRefreshDelay 	= 9;
+	sdram_timing.ExitSelfRefreshDelay 	= 8;
 	sdram_timing.SelfRefreshTime      	= 5;
-	sdram_timing.RowCycleDelay        	= 9;
+	sdram_timing.RowCycleDelay        	= 8;
 	sdram_timing.WriteRecoveryTime    	= 4;
 	sdram_timing.RPDelay              	= 4;
 	sdram_timing.RCDDelay             	= 4;

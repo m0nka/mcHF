@@ -14,15 +14,10 @@
 
 #ifdef CONTEXT_SD
 
-#include "stm32h747i_discovery_sd.h"
+#include "sd_card.h"
 #include "sd_diskio.h"
 
 #include "storage_proc.h"
-
-#define STORAGE_BSP_INIT
-
-#define STORAGE_THREAD_STACK_SIZE       (10 * configMINIMAL_STACK_SIZE)
-#define STORAGE_THREAD_PRIORITY         osPriorityNormal//osPriorityRealtime
 
 __attribute__((section(".sdio_heap"))) __attribute__ ((aligned (32)))
 
@@ -37,13 +32,10 @@ static STORAGE_Status_t   StorageStatus[NUM_DISK_UNITS];
 osMessageQId              StorageEvent    = {0};
 osThreadId                StorageThreadId = {0};
 
-static STORAGE_Status_t StorageTryMount( const uint8_t unit );
-static STORAGE_Status_t StorageTryUnMount( const uint8_t unit );
-static void StorageThread(void const * argument);
-static uint8_t StorageInitMSD(void);
-
 static STORAGE_Status_t StorageTryMount( const uint8_t unit )
 {
+	printf("StorageTryMount  \r\n");
+
 	osSemaphoreWait(StorageSemaphore[unit], osWaitForever);
 
 	if(unit == MSD_DISK_UNIT)
@@ -78,6 +70,8 @@ unlock_exit:
 
 static STORAGE_Status_t StorageTryUnMount( const uint8_t unit )
 {
+	printf("StorageTryUnMount  \r\n");
+
 	if(StorageID[unit] == 0)
 		return StorageStatus[unit];
 
@@ -124,6 +118,7 @@ static void StorageThread(void const * argument)
         		case MSDDISK_CONNECTION_EVENT:
         		{
         			printf("card inserted  \r\n");
+
 					#ifdef STORAGE_BSP_INIT
         			// Enable SD Interrupt mode
         			if(BSP_SD_Init(0) == BSP_ERROR_NONE)
@@ -134,16 +129,31 @@ static void StorageThread(void const * argument)
 					#else
         			StorageTryMount(MSD_DISK_UNIT);
 					#endif // STORAGE_BSP_INIT
+
         			break;
         		}
 
         		case MSDDISK_DISCONNECTION_EVENT:
         		{
         			printf("card removed  \r\n");
+
         			StorageTryUnMount(MSD_DISK_UNIT);
+
+					#if 0
+        			printf("power off  \r\n");
+
+        			// Power off
+        			#ifdef SD_PWR_SWAP_POLARITY
+        			HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
+        			#else
+        			HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
+        			#endif
+					#endif
+
 					#ifdef STORAGE_BSP_INIT
-        			BSP_SD_DeInit(0);
+//!        			BSP_SD_DeInit(0);
 					#endif // STORAGE_BSP_INIT
+
         			break;
         		}
 

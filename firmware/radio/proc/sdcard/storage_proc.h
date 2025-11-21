@@ -13,6 +13,11 @@
 #ifndef __STORAGE_PROC_H
 #define __STORAGE_PROC_H
 
+#define STORAGE_BSP_INIT
+
+#define STORAGE_THREAD_STACK_SIZE       (10 * configMINIMAL_STACK_SIZE)
+#define STORAGE_THREAD_PRIORITY         osPriorityNormal//osPriorityRealtime
+
 #define FILEMGR_LIST_DEPDTH                    24
 #define FILEMGR_FILE_NAME_SIZE                256
 #define FILEMGR_MAX_LEVEL                       3
@@ -78,6 +83,8 @@ uint8_t     Storage_GetStatus (uint8_t unit);
 uint32_t 	Storage_GetCapacity (uint8_t unit);
 uint32_t 	Storage_GetFree (uint8_t unit);
 const char *Storage_GetDrive (uint8_t unit);
+
+void 		Storage_DetectSDCard(void);
 
 extern osMessageQId StorageEvent;
 
