@@ -33,27 +33,6 @@ void SDMMC1_IRQHandler(uint32_t Instance)
 	HAL_SD_IRQHandler(&hsd_sdmmc[Instance]);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : EXTI0_IRQHandler
-//* Object              :
-//* Notes    			: exti trap, line0
-//* Notes   			:
-//* Notes    			:
-//* Context    			: CONTEXT_IRQ
-//*----------------------------------------------------------------------------
-void EXTI0_IRQHandler(void)
-{
-	if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_0) != 0x00U)
-	{
-		ulong port_val = HAL_GPIO_ReadPin(SD_DET_PORT, SD_DET);
-
-		//--printf("sd irq(%d)\r\n", (int)port_val);
-		storage_proc_detect_sd_card(port_val);
-
-		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_0);
-	}
-}
-
 static void SD_MspInit(SD_HandleTypeDef *hsd)
 {
 	GPIO_InitTypeDef gpio_init_structure;
@@ -154,6 +133,34 @@ static void SD_MspDeInit(SD_HandleTypeDef *hsd)
 	}
 }
 
+void sd_card_low_level_init(uint32_t Instance)
+{
+	// Msp SD initialization
+	SD_MspInit(&hsd_sdmmc[Instance]);
+}
+
+void sd_card_power(uchar state)
+{
+	if(state)
+	{
+		// Power on
+		#ifndef SD_PWR_SWAP_POLARITY
+		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
+		#else
+		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
+		#endif
+	}
+	else
+	{
+		// Power off
+		#ifdef SD_PWR_SWAP_POLARITY
+		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
+		#else
+		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
+		#endif
+	}
+}
+
 int32_t sd_card_init(uint32_t Instance)
 {
 	//int32_t ret = BSP_ERROR_NONE;
@@ -162,29 +169,29 @@ int32_t sd_card_init(uint32_t Instance)
 
 	if(Instance >= SD_INSTANCES_NBR)
 	{
-		//printf("sd_card_init err1  \r\n");
+		printf("sd_card_init err1  \r\n");
 		return BSP_ERROR_WRONG_PARAM;
 	}
 
 	if(BSP_SD_IsDetected() != SD_PRESENT)
 	{
-		//printf("sd_card_init err2  \r\n");
+		printf("sd_card_init err2  \r\n");
 		return BSP_ERROR_UNKNOWN_COMPONENT;
 	}
 
 	// Msp SD initialization
-	SD_MspInit(&hsd_sdmmc[Instance]);
+	//SD_MspInit(&hsd_sdmmc[Instance]);
 
 	//  HAL SD initialization and Enable wide operation
 	if(MX_SDMMC1_SD_Init(&hsd_sdmmc[Instance]) != HAL_OK)
 	{
-		//printf("sd_card_init err3  \r\n");
+		printf("sd_card_init err3  \r\n");
 		return BSP_ERROR_PERIPH_FAILURE;
 	}
 
 	if(HAL_SD_ConfigWideBusOperation(&hsd_sdmmc[Instance], SDMMC_BUS_WIDE_4B) != HAL_OK)
 	{
-		//printf("sd_card_init err4  \r\n");
+		printf("sd_card_init err4  \r\n");
 		return BSP_ERROR_PERIPH_FAILURE;
 	}
 
@@ -192,10 +199,10 @@ int32_t sd_card_init(uint32_t Instance)
 	(void)HAL_SD_ConfigSpeedBusOperation(&hsd_sdmmc[Instance], SDMMC_SPEED_MODE_HIGH);
 
 	//printf("sd_card_init.. ok \r\n");
-
 	return BSP_ERROR_NONE;
 }
 
+#if 0
 int32_t BSP_SD_DeInit(uint32_t Instance)
 {
 	int32_t ret = BSP_ERROR_NONE;
@@ -221,6 +228,7 @@ int32_t BSP_SD_DeInit(uint32_t Instance)
 
 	return ret;
 }
+#endif
 
 HAL_StatusTypeDef MX_SDMMC1_SD_Init(SD_HandleTypeDef *hsd)
 {
