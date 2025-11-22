@@ -84,7 +84,7 @@ uint32_t 	Storage_GetCapacity (uint8_t unit);
 uint32_t 	Storage_GetFree (uint8_t unit);
 const char *Storage_GetDrive (uint8_t unit);
 
-void 		Storage_DetectSDCard(void);
+void 		storage_proc_detect_sd_card(ulong state);
 
 extern osMessageQId StorageEvent;
 

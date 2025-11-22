@@ -32,16 +32,36 @@ static STORAGE_Status_t   StorageStatus[NUM_DISK_UNITS];
 osMessageQId              StorageEvent    = {0};
 osThreadId                StorageThreadId = {0};
 
+//*----------------------------------------------------------------------------
+//* Function Name       : storage_proc_detect_sd_card
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void storage_proc_detect_sd_card(ulong state)
+{
+	if(!StorageEvent)
+		return;
+
+	// Notify storage thread
+	if(!state)
+		osMessagePut(StorageEvent, MSDDISK_CONNECTION_EVENT, 	0);
+	else
+		osMessagePut(StorageEvent, MSDDISK_DISCONNECTION_EVENT, 0);
+}
+
 static STORAGE_Status_t StorageTryMount( const uint8_t unit )
 {
-	printf("StorageTryMount  \r\n");
+	//printf("StorageTryMount  \r\n");
 
 	osSemaphoreWait(StorageSemaphore[unit], osWaitForever);
 
 	if(unit == MSD_DISK_UNIT)
 	{
 		// We need to check for SD Card before mounting the volume
-		if(!BSP_SD_IsDetected(0))
+		if(!BSP_SD_IsDetected())
 		{
 			StorageStatus[unit] = STORAGE_UNMOUNTED;
 			goto unlock_exit;
@@ -70,7 +90,7 @@ unlock_exit:
 
 static STORAGE_Status_t StorageTryUnMount( const uint8_t unit )
 {
-	printf("StorageTryUnMount  \r\n");
+	//printf("StorageTryUnMount...  \r\n");
 
 	if(StorageID[unit] == 0)
 		return StorageStatus[unit];
@@ -94,6 +114,7 @@ static STORAGE_Status_t StorageTryUnMount( const uint8_t unit )
 unlock_exit:
 	osSemaphoreRelease(StorageSemaphore[unit]);
 
+	//printf("StorageTryUnMount...ok  \r\n");
 	return StorageStatus[unit];
 }
 
@@ -102,11 +123,6 @@ static void StorageThread(void const * argument)
 	osEvent event;
 
 	printf("storage proc  \r\n");
-
-	// Initialize the MSD Storage
-	#if 0
-	StorageInitMSD();
-	#endif
 
 	for(;;)
 	{
@@ -117,42 +133,72 @@ static void StorageThread(void const * argument)
 			{
         		case MSDDISK_CONNECTION_EVENT:
         		{
-        			printf("card inserted  \r\n");
+        			// Lock IRQ
+        			HAL_NVIC_DisableIRQ  (EXTI0_IRQn);
 
-					#ifdef STORAGE_BSP_INIT
-        			// Enable SD Interrupt mode
-        			if(BSP_SD_Init(0) == BSP_ERROR_NONE)
+        			if(BSP_SD_IsDetected() == SD_PRESENT)
         			{
-        				if(BSP_SD_DetectITConfig(0) == BSP_ERROR_NONE)
-        					StorageTryMount(MSD_DISK_UNIT);
+        				printf("card inserted  \r\n");
+
+						#if 0
+        				printf("--------  \r\n");
+        				printf("power on  \r\n");
+        				printf("--------  \r\n");
+						#endif
+
+        				// Power on
+						#ifndef SD_PWR_SWAP_POLARITY
+        				HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
+						#else
+        				HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
+						#endif
+
+        				// Enable SD Interrupt mode
+        				if(sd_card_init(0) == BSP_ERROR_NONE)
+        				{
+        					if(sd_card_set_exti_irq(0) == BSP_ERROR_NONE)
+        					{
+        						StorageTryMount(MSD_DISK_UNIT);
+        					}
+        				}
         			}
-					#else
-        			StorageTryMount(MSD_DISK_UNIT);
-					#endif // STORAGE_BSP_INIT
+
+        			// Unlock IRQ
+        			HAL_NVIC_EnableIRQ  (EXTI0_IRQn);
 
         			break;
         		}
 
         		case MSDDISK_DISCONNECTION_EVENT:
         		{
-        			printf("card removed  \r\n");
+        			// Lock IRQ
+        			HAL_NVIC_DisableIRQ  (EXTI0_IRQn);
 
-        			StorageTryUnMount(MSD_DISK_UNIT);
+        			if(BSP_SD_IsDetected() == SD_NOT_PRESENT)
+        			{
+        				printf("card removed  \r\n");
 
-					#if 0
-        			printf("power off  \r\n");
+        				StorageTryUnMount(MSD_DISK_UNIT);
 
-        			// Power off
-        			#ifdef SD_PWR_SWAP_POLARITY
-        			HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
-        			#else
-        			HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
-        			#endif
-					#endif
+						#if 0
+        				printf("--------  \r\n");
+        				printf("power off  \r\n");
+        				printf("--------  \r\n");
+						#endif
 
-					#ifdef STORAGE_BSP_INIT
-//!        			BSP_SD_DeInit(0);
-					#endif // STORAGE_BSP_INIT
+        				// Power off
+						#ifdef SD_PWR_SWAP_POLARITY
+        				HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
+						#else
+        				HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
+						#endif
+
+        				// Do we need release of HW ? Maybe on task cleanup ?
+        				//BSP_SD_DeInit(0);
+        			}
+
+        			// Unlock IRQ
+        			HAL_NVIC_EnableIRQ  (EXTI0_IRQn);
 
         			break;
         		}
@@ -164,44 +210,37 @@ static void StorageThread(void const * argument)
 	}
 }
 
-static uint8_t StorageInitMSD(void)
+static uint8_t storage_proc_init_msd(void)
 {
 	uint8_t sd_status = BSP_ERROR_NONE;
 
 	if(StorageID[MSD_DISK_UNIT] != 0)
 		return StorageID[MSD_DISK_UNIT];
 
-	#ifdef STORAGE_BSP_INIT
-	sd_status = BSP_SD_Init(0);
+	//printf("storage_proc_init_msd..  \r\n");
+
+	// Configure SD Interrupt mode
+	sd_card_set_exti_irq(0);
+
+	sd_status = sd_card_init(0);
 	if(sd_status != BSP_ERROR_NONE)
 	{
 		printf("card init failed(%d)  \r\n", sd_status);
-
-		// Undo the SD CArd init
-		BSP_SD_DeInit(0);
+		return 0;
 	}
-	else
-	{
-		// Configure SD Interrupt mode
-		sd_status = BSP_SD_DetectITConfig(0);
-	}
-	#endif // STORAGE_BSP_INIT
 
-	if(sd_status == BSP_ERROR_NONE)
-	{
-		// Create Storage Semaphore
-		osSemaphoreDef(STORAGE_MSD_Semaphore);
-		StorageSemaphore[MSD_DISK_UNIT] = osSemaphoreCreate (osSemaphore(STORAGE_MSD_Semaphore), 1);
+	// Create Storage Semaphore
+	osSemaphoreDef(STORAGE_MSD_Semaphore);
+	StorageSemaphore[MSD_DISK_UNIT] = osSemaphoreCreate (osSemaphore(STORAGE_MSD_Semaphore), 1);
 
-		// Mark the storage as initialised
-		StorageID[MSD_DISK_UNIT] = 1;
-		Storage_Driver[MSD_DISK_UNIT] = &SD_Driver;
+	// Mark the storage as initialised
+	StorageID[MSD_DISK_UNIT] = 1;
+	Storage_Driver[MSD_DISK_UNIT] = &SD_Driver;
 
-		// Try mount the storage
-		StorageTryMount(MSD_DISK_UNIT);
+	// Try mount the storage
+	StorageTryMount(MSD_DISK_UNIT);
 
-		printf("card init ok  \r\n");
-	}
+	//printf("storage_proc_init_msd..ok  \r\n");
 
 	return StorageID[MSD_DISK_UNIT];
 }
@@ -234,7 +273,7 @@ void Storage_Init(void)
 	StorageEvent = osMessageCreate (osMessageQ(osqueue), NULL);
 
 	// Initialize the MSD Storage
-	StorageInitMSD();
+	storage_proc_init_msd();
 
     // It's Okay then Create Storage background task and exit from here
     osThreadDef(STORAGE_Thread, StorageThread, STORAGE_THREAD_PRIORITY, 0, STORAGE_THREAD_STACK_SIZE);
@@ -331,33 +370,6 @@ const char *Storage_GetDrive(uint8_t unit)
 		return StorageDISK_Drive[unit];
 	else
 		return '\0';
-}
-
-void Storage_DetectSDCard(void)
-{
-	if(!StorageEvent)
-		return;
-
-	if((BSP_SD_IsDetected(0)))
-	{
-		// After sd disconnection, a SD Init is required
-		if(Storage_GetStatus(MSD_DISK_UNIT) == STORAGE_NOINIT)
-		{
-			if(BSP_SD_Init(0) == BSP_ERROR_NONE)
-			{
-				if(BSP_SD_DetectITConfig(0) == BSP_ERROR_NONE)
-					osMessagePut(StorageEvent, MSDDISK_CONNECTION_EVENT, 0);
-			}
-		}
-		else if(Storage_GetStatus(MSD_DISK_UNIT) == STORAGE_UNMOUNTED)
-		{
-			osMessagePut(StorageEvent, MSDDISK_CONNECTION_EVENT, 0);
-		}
-	}
-	else
-	{
-		osMessagePut(StorageEvent, MSDDISK_DISCONNECTION_EVENT, 0);
-	}
 }
 
 #endif

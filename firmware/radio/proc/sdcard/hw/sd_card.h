@@ -30,10 +30,10 @@
 extern SD_HandleTypeDef    hsd_sdmmc[];
 extern EXTI_HandleTypeDef  hsd_exti[];
 
-int32_t BSP_SD_Init(uint32_t Instance);
+int32_t sd_card_init(uint32_t Instance);
 int32_t BSP_SD_DeInit(uint32_t Instance);
 
-int32_t BSP_SD_DetectITConfig(uint32_t Instance);
+int32_t sd_card_set_exti_irq(uint32_t Instance);
 int32_t BSP_SD_ReadBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr);
 int32_t BSP_SD_WriteBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t NbrOfBlocks);
 int32_t BSP_SD_ReadBlocks_DMA(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t NbrOfBlocks);
@@ -43,7 +43,7 @@ int32_t BSP_SD_WriteBlocks_IT(uint32_t Instance, uint32_t *pData, uint32_t Block
 int32_t BSP_SD_Erase(uint32_t Instance, uint32_t BlockIdx, uint32_t BlocksNbr);
 int32_t BSP_SD_GetCardState(uint32_t Instance);
 int32_t BSP_SD_GetCardInfo(uint32_t Instance, BSP_SD_CardInfo *CardInfo);
-int32_t BSP_SD_IsDetected(uint32_t Instance);
+int32_t BSP_SD_IsDetected(void);
 
 void    BSP_SD_DETECT_IRQHandler(uint32_t Instance);
 void    BSP_SD_IRQHandler(uint32_t Instance);
