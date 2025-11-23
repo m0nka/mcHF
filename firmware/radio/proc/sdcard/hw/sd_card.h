@@ -54,10 +54,11 @@ void sd_card_power(uchar state);
 /* These functions can be modified in case the current settings (e.g. DMA stream ot IT)
    need to be changed for specific application needs */
 void BSP_SD_AbortCallback(uint32_t Instance);
+void BSP_SD_ErrorCallback(void);
 void BSP_SD_WriteCpltCallback(uint32_t Instance);
 void BSP_SD_ReadCpltCallback(uint32_t Instance);
 void BSP_SD_DetectCallback(uint32_t Instance, uint32_t Status);
-void HAL_SD_DriveTransciver_1_8V_Callback(FlagStatus status);
+//void HAL_SD_DriveTransciver_1_8V_Callback(FlagStatus status);
 HAL_StatusTypeDef MX_SDMMC1_SD_Init(SD_HandleTypeDef *hsd);
 
 #endif

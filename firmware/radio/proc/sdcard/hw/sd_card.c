@@ -33,6 +33,26 @@ void SDMMC1_IRQHandler(uint32_t Instance)
 	HAL_SD_IRQHandler(&hsd_sdmmc[Instance]);
 }
 
+void HAL_SD_TxCpltCallback(SD_HandleTypeDef *hsd)
+{
+	BSP_SD_WriteCpltCallback(0);
+}
+
+void HAL_SD_RxCpltCallback(SD_HandleTypeDef *hsd)
+{
+	BSP_SD_ReadCpltCallback(0);
+}
+
+void HAL_SD_ErrorCallback(SD_HandleTypeDef *hsd)
+{
+	BSP_SD_ErrorCallback();
+}
+
+void HAL_SD_AbortCallback(SD_HandleTypeDef *hsd)
+{
+	BSP_SD_AbortCallback(0);
+}
+
 static void SD_MspInit(SD_HandleTypeDef *hsd)
 {
 	GPIO_InitTypeDef gpio_init_structure;
@@ -105,6 +125,7 @@ static void SD_MspInit(SD_HandleTypeDef *hsd)
 	}
 }
 
+#if 0
 static void SD_MspDeInit(SD_HandleTypeDef *hsd)
 {
 	GPIO_InitTypeDef gpio_init_structure;
@@ -132,6 +153,7 @@ static void SD_MspDeInit(SD_HandleTypeDef *hsd)
 		HAL_GPIO_DeInit(SDMMC1_SDIO_PORTD, gpio_init_structure.Pin);
 	}
 }
+#endif
 
 void sd_card_low_level_init(uint32_t Instance)
 {
@@ -292,6 +314,7 @@ int32_t BSP_SD_IsDetected(void)
 	return ret;
 }
 
+#if 0
 int32_t BSP_SD_ReadBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
 {
 	int32_t  ret = BSP_ERROR_NONE;
@@ -312,7 +335,9 @@ int32_t BSP_SD_ReadBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx,
 	// Return BSP status
 	return ret;
 }
+#endif
 
+#if 0
 int32_t BSP_SD_WriteBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
 {
 	int32_t ret = BSP_ERROR_NONE;
@@ -333,6 +358,7 @@ int32_t BSP_SD_WriteBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx
 	// Return BSP status
 	return ret;
 }
+#endif
 
 int32_t BSP_SD_ReadBlocks_DMA(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
 {
@@ -374,6 +400,7 @@ int32_t BSP_SD_WriteBlocks_DMA(uint32_t Instance, uint32_t *pData, uint32_t Bloc
 	return ret;
 }
 
+#if 0
 int32_t BSP_SD_ReadBlocks_IT(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
 {
 	int32_t ret = BSP_ERROR_NONE;
@@ -393,7 +420,9 @@ int32_t BSP_SD_ReadBlocks_IT(uint32_t Instance, uint32_t *pData, uint32_t BlockI
 	// Return BSP status
 	return ret;
 }
+#endif
 
+#if 0
 int32_t BSP_SD_WriteBlocks_IT(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
 {
 	int32_t ret = BSP_ERROR_NONE;
@@ -413,7 +442,9 @@ int32_t BSP_SD_WriteBlocks_IT(uint32_t Instance, uint32_t *pData, uint32_t Block
 	// Return BSP status
 	return ret;
 }
+#endif
 
+#if 0
 int32_t BSP_SD_Erase(uint32_t Instance, uint32_t BlockIdx, uint32_t BlocksNbr)
 {
 	int32_t ret = BSP_ERROR_NONE;
@@ -433,6 +464,7 @@ int32_t BSP_SD_Erase(uint32_t Instance, uint32_t BlockIdx, uint32_t BlocksNbr)
 	// Return BSP status
 	return ret;
 }
+#endif
 
 int32_t BSP_SD_GetCardState(uint32_t Instance)
 {

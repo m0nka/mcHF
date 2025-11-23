@@ -15,7 +15,7 @@
 
 #define STORAGE_BSP_INIT
 
-#define STORAGE_THREAD_STACK_SIZE       (10 * configMINIMAL_STACK_SIZE)
+#define STORAGE_THREAD_STACK_SIZE       (configMINIMAL_STACK_SIZE*16)
 #define STORAGE_THREAD_PRIORITY         osPriorityNormal//osPriorityRealtime
 
 #define FILEMGR_LIST_DEPDTH                    24
@@ -76,6 +76,8 @@ typedef struct _FILELIST_FileTypeDef
 }
 FILELIST_FileTypeDef;
 #endif
+
+extern char StorageDISK_Drive[];
 
 void        Storage_Init(void);
 void        Storage_DeInit(void);

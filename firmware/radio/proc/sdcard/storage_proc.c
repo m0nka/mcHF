@@ -19,18 +19,19 @@
 
 #include "storage_proc.h"
 
-__attribute__((section(".sdio_heap"))) __attribute__ ((aligned (32)))
+// File system object for MSD disk logical drive
+__attribute__((section(".dma_mem"))) __attribute__ ((aligned (32))) static FATFS StorageDISK_FatFs[NUM_DISK_UNITS];
 
-static FATFS              StorageDISK_FatFs[NUM_DISK_UNITS];	// File system object for MSD disk logical drive
-static char               StorageDISK_Drive[NUM_DISK_UNITS][4];	// Storage Host logical drive number
-static osSemaphoreId      StorageSemaphore[NUM_DISK_UNITS];
-static Diskio_drvTypeDef  const * Storage_Driver[NUM_DISK_UNITS];
+// Storage Host logical drive number
+char               			StorageDISK_Drive[4];
 
-static  uint8_t           StorageID[NUM_DISK_UNITS];
-static STORAGE_Status_t   StorageStatus[NUM_DISK_UNITS];
+static osSemaphoreId      	StorageSemaphore[NUM_DISK_UNITS];
+static Diskio_drvTypeDef  	const * Storage_Driver[NUM_DISK_UNITS];
 
-//osMessageQId              StorageEvent    = {0};
-osThreadId                StorageThreadId = {0};
+static  uint8_t           	StorageID[NUM_DISK_UNITS];
+static STORAGE_Status_t   	StorageStatus[NUM_DISK_UNITS];
+
+osThreadId                	StorageThreadId = {0};
 
 //*----------------------------------------------------------------------------
 //* Function Name       : storage_proc_detect_sd_card
@@ -112,10 +113,10 @@ static STORAGE_Status_t StorageTryMount( const uint8_t unit )
 	if(StorageStatus[unit] != STORAGE_MOUNTED)
 	{
 		// Link the disk I/O driver
-		if(FATFS_LinkDriver(Storage_Driver[unit], StorageDISK_Drive[unit]) != 0)
+		if(FATFS_LinkDriver(Storage_Driver[unit], StorageDISK_Drive) != 0)
 			goto unlock_exit;
 
-		if(f_mount(&StorageDISK_FatFs[unit], StorageDISK_Drive[unit], 0))
+		if(f_mount(&StorageDISK_FatFs[unit], StorageDISK_Drive, 0))
 			goto unlock_exit;
 
 		// Set SD storage status
@@ -141,13 +142,13 @@ static STORAGE_Status_t StorageTryUnMount( const uint8_t unit )
 	if(StorageStatus[unit] != STORAGE_MOUNTED)
 		goto unlock_exit;
 
-	if(f_mount(0, StorageDISK_Drive[unit], 0))
+	if(f_mount(0, StorageDISK_Drive, 0))
 		goto unlock_exit;
 
-	if(FATFS_UnLinkDriver(StorageDISK_Drive[unit]))
+	if(FATFS_UnLinkDriver(StorageDISK_Drive))
 		goto unlock_exit;
 
-	memset(StorageDISK_Drive[unit], 0, sizeof(StorageDISK_Drive[unit]));
+	memset(StorageDISK_Drive, 0, sizeof(StorageDISK_Drive));
 
 	// Reset storage status
 	StorageStatus[unit] = STORAGE_UNMOUNTED;
@@ -374,48 +375,54 @@ uint8_t Storage_GetStatus(uint8_t unit)
 
 uint32_t Storage_GetCapacity (uint8_t unit)
 {
-  uint32_t   tot_sect = 0;
-  FATFS 	*fs;
+	uint32_t   tot_sect = 0;
+	FATFS 	*fs;
 
-  if(StorageID[unit])
-  {
-	 osSemaphoreWait(StorageSemaphore[unit], osWaitForever);
-    fs = &StorageDISK_FatFs[unit];
-    tot_sect = (fs->n_fatent - 2) * fs->csize;
-    osSemaphoreRelease(StorageSemaphore[unit]);
-  }
+	if(StorageID[unit])
+	{
+		osSemaphoreWait(StorageSemaphore[unit], osWaitForever);
 
-  return (tot_sect);
+		fs = &StorageDISK_FatFs[unit];
+		tot_sect = (fs->n_fatent - 2) * fs->csize;
+
+		osSemaphoreRelease(StorageSemaphore[unit]);
+	}
+
+	return (tot_sect);
 }
 
 uint32_t Storage_GetFree (uint8_t unit)
 {
-  uint32_t	fre_clust = 0, ret = 0;
-  FATFS 	*fs;
-  FRESULT 	res = FR_INT_ERR;
+	uint32_t	fre_clust = 0, ret = 0;
+	FATFS 		*fs;
+	FRESULT 	res = FR_INT_ERR;
 
-  if(StorageID[unit])
-  {
-	  osSemaphoreWait(StorageSemaphore[unit], osWaitForever);
-    fs = &StorageDISK_FatFs[unit];
-    res = f_getfree(StorageDISK_Drive[unit], (DWORD *)&fre_clust, &fs);
+	if(StorageID[unit])
+	{
+		osSemaphoreWait(StorageSemaphore[unit], osWaitForever);
 
-    //printf("f_getfree res: %d\r\n",res);
+		fs = &StorageDISK_FatFs[unit];
+		//printf("path: %s \r\n", StorageDISK_Drive);
+		res = f_getfree(StorageDISK_Drive, (DWORD *)&fre_clust, &fs);
 
-    if(res == FR_OK)
-      ret = (fre_clust * fs->csize);
-    else
-      ret = 0;
-    osSemaphoreRelease(StorageSemaphore[unit]);
-  }
+		if(res == FR_OK)
+			ret = (fre_clust * fs->csize);
+		else
+		{
+			printf("f_getfree res: %d\r\n", res);
+			ret = 0;
+		}
 
-  return ret;
+		osSemaphoreRelease(StorageSemaphore[unit]);
+	}
+
+	return ret;
 }
 
 const char *Storage_GetDrive(uint8_t unit)
 {
 	if(StorageStatus[unit] == STORAGE_MOUNTED)
-		return StorageDISK_Drive[unit];
+		return StorageDISK_Drive;
 	else
 		return '\0';
 }

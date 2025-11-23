@@ -17,7 +17,7 @@
 #include "ff_gen_drv.h"
 #include "sd_diskio.h"
 
-#include "stm32h747i_discovery_sd.h"
+#include "sd_card.h"
 
 #include <cmsis_os.h>
 
@@ -45,15 +45,8 @@
 static volatile DSTATUS Stat = STA_NOINIT;
 static osMessageQId SDQueueID;
 
-#if defined ( __ICCARM__ )
-#pragma data_alignment=32
-#pragma location="sdio_heap"
-#else
-__attribute__((section(".sdio_heap"))) __attribute__ ((aligned (32)))
-#endif
-static uint8_t buffer[BLOCKSIZE];
+__attribute__((section(".dma_mem"))) __attribute__ ((aligned (32))) static uint8_t buffer[BLOCKSIZE];
 
-/* Private function prototypes -----------------------------------------------*/
 static DSTATUS SD_CheckStatus(BYTE lun);
 DSTATUS SD_initialize (BYTE);
 DSTATUS SD_status (BYTE);
@@ -95,6 +88,8 @@ DSTATUS SD_initialize(BYTE lun)
 {
 	Stat = STA_NOINIT;
 
+	printf("SD_initialize  \r\n");
+
 	/*
 	 * check that the kernel has been started before continuing
 	 * as the osMessage API will fail otherwise
@@ -126,7 +121,8 @@ DSTATUS SD_initialize(BYTE lun)
 
 DSTATUS SD_status(BYTE lun)
 {
-  return SD_CheckStatus(lun);
+	printf("SD_status  \r\n");
+	return SD_CheckStatus(lun);
 }
 
 /**
@@ -141,6 +137,8 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 {
     DRESULT res = RES_ERROR;
     osEvent event;
+
+    printf("SD_read  \r\n");
 
 	#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
     uint32_t alignedAddr;
@@ -221,6 +219,8 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 {
 	osEvent event;
 	DRESULT res = RES_ERROR;
+
+	printf("SD_write  \r\n");
 
 	uint32_t timer = osKernelSysTick() + SD_TIMEOUT;
 
@@ -309,6 +309,8 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 
 	BSP_SD_CardInfo CardInfo;
 
+	printf("SD_ioctl  \r\n");
+
 	if(Stat & STA_NOINIT) return RES_NOTRDY;
 
 	switch (cmd)
@@ -368,6 +370,7 @@ void BSP_SD_ErrorCallback(void)
 {
   /* Non Blocking Call to BSP_ErrorHandler() */
   //BSP_ErrorHandler();
+	printf("SD_err  \r\n");
 
   /*
    * No need to add an "osKernelRunning()" check here, as the SD_initialize()
@@ -380,6 +383,7 @@ void BSP_SD_AbortCallback(uint32_t Instance)
 {
   /* Non Blocking Call to BSP_ErrorHandler() */
   //BSP_ErrorHandler();
+	printf("SD_abort  \r\n");
 
   /*
    * No need to add an "osKernelRunning()" check here, as the SD_initialize()
