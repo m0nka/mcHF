@@ -264,8 +264,8 @@
 #endif
 #define M_FREQ_Y					130
 
-#define M_FREQ1_X					365
-#define M_FREQ1_Y					68
+#define M_FREQ1_X					360
+#define M_FREQ1_Y					62
 //
 #define M_FREQ1_X_SZ				188
 //#else
@@ -296,15 +296,15 @@
 //
 // ----------------------------------------------------------------------------
 // Decoder
-#define DECODER_MODE_X				481
-#define DECODER_MODE_Y				38
+#define DECODER_MODE_X				475
+#define DECODER_MODE_Y				32
 //
 #define DEC_MODE_X_SZ				72
 //
 // ----------------------------------------------------------------------------
 // AGC control
-#define AGC_X						365
-#define AGC_Y						10
+#define AGC_X						360
+#define AGC_Y						5
 
 // ----------------------------------------------------------------------------
 // RX/TX indicator
@@ -343,7 +343,7 @@
 //
 // ----------------------------------------------------------------------------
 // SD Card control
-#define SD_CARD_X					356
+#define SD_CARD_X					360
 #define SD_CARD_Y					133
 //
 // ----------------------------------------------------------------------------
@@ -391,16 +391,16 @@
 //
 // ----------------------------------------------------------------------------
 // Filter
-#define FILTER_X					366
-#define FILTER_Y					38
+#define FILTER_X					360
+#define FILTER_Y					33
 //
 #define FILTER_SIZE_X				110
 #define FILTER_SIZE_Y				22
 //
 // ----------------------------------------------------------------------------
 // Battery icon
-#define BATTERY_X					(365 + 35)
-#define BATTERY_Y					97
+#define BATTERY_X					(360 + 0)
+#define BATTERY_Y					95
 //
 #define BATTERY_SIZE_X				54
 #define BATTERY_SIZE_Y				28
