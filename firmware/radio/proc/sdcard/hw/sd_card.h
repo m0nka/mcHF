@@ -4,6 +4,9 @@
 #include "stm32h747i_discovery_conf.h"
 #include "stm32h747i_discovery_errno.h"
 
+// Use DMA version
+//#define SD_USE_DMA
+
 #define BSP_SD_CardInfo HAL_SD_CardInfoTypeDef
 
 #define SD_INSTANCES_NBR         1UL

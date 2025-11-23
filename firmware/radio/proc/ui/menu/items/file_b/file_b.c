@@ -758,7 +758,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			{
 				case WM_NOTIFICATION_CHILD_DELETED:
 				{
-					if(pFileList == NULL) 	vPortFree(pFileList);
+					if(pFileList != NULL) 	vPortFree(pFileList);
 					if(hFileInfo != 0)		hFileInfo = 0;
 					break;
 				}

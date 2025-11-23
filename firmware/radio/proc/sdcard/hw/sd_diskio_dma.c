@@ -30,7 +30,8 @@
 #define RW_ERROR_MSG       (uint32_t) 3
 #define RW_ABORT_MSG       (uint32_t) 4
 
-#define SD_TIMEOUT 30 * 1000
+//#define SD_TIMEOUT 30 * 1000
+#define SD_TIMEOUT 3 * 1000
 
 #define DISABLE_SD_INIT
 
@@ -40,7 +41,7 @@
  * read and write operation.
  * Notice: This is applicable only for cortex M7 based platform.
  */
-#define ENABLE_SD_DMA_CACHE_MAINTENANCE  1
+#define ENABLE_SD_DMA_CACHE_MAINTENANCE  0
 
 static volatile DSTATUS Stat = STA_NOINIT;
 static osMessageQId SDQueueID;
@@ -88,7 +89,7 @@ DSTATUS SD_initialize(BYTE lun)
 {
 	Stat = STA_NOINIT;
 
-	printf("SD_initialize  \r\n");
+	//printf("SD_initialize  \r\n");
 
 	/*
 	 * check that the kernel has been started before continuing
@@ -111,6 +112,7 @@ DSTATUS SD_initialize(BYTE lun)
 
 		if(Stat != STA_NOINIT)
 		{
+			//printf("queue created  \r\n");
 			osMessageQDef(SD_Queue, QUEUE_SIZE, uint16_t);
 			SDQueueID = osMessageCreate (osMessageQ(SD_Queue), NULL);
 		}
@@ -138,7 +140,7 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     DRESULT res = RES_ERROR;
     osEvent event;
 
-    printf("SD_read  \r\n");
+    printf("SD_read \r\n");
 
 	#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
     uint32_t alignedAddr;
@@ -155,15 +157,34 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 
     if (!((uint32_t)buff & 0x3))
     {
-        /* Fast path: the provided destination buffer is correctly aligned */
-        uint8_t ret = BSP_SD_ReadBlocks_DMA(0,(uint32_t*)buff, (uint32_t)(sector), count);
+    	printf("read1  \r\n");
 
-        if (ret == BSP_ERROR_NONE) {
-            /* wait for a message from the queue or a timeout */
+    	// Fast path: the provided destination buffer is correctly aligned
+		#ifndef SD_USE_DMA
+    	uint8_t ret = BSP_SD_ReadBlocks(0, (uint32_t*)buff, (uint32_t)(sector), count);
+    	if(ret != BSP_ERROR_NONE)
+        {
+        	printf("read err  \r\n");
+        	res = RES_ERROR;
+        }
+		#else
+    	uint8_t ret = BSP_SD_ReadBlocks_DMA(0, (uint32_t*)buff, (uint32_t)(sector), count);
+    	//printf("dma: %d  \r\n", ret);
+
+    	if (ret == BSP_ERROR_NONE)
+        {
+        	//printf("wait...  \r\n");
+
+        	/* wait for a message from the queue or a timeout */
             event = osMessageGet(SDQueueID, SD_TIMEOUT);
-            if (event.status == osEventMessage) {
-                if (event.value.v == READ_CPLT_MSG) {
+            if (event.status == osEventMessage)
+            {
+            	//printf("event %d \r\n", event.value.v);
+
+                if (event.value.v == READ_CPLT_MSG)
+                {
                     res = RES_OK;
+                    //printf("read complete  \r\n");
 					#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
                     /*
                     * Invalidate the chache before reading into the buffer,  to get actual data
@@ -172,19 +193,34 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
                     SCB_InvalidateDCache_by_Addr((uint32_t*)alignedAddr, count*BLOCKSIZE + ((uint32_t)buff - alignedAddr));
 					#endif
                 }
+                else if (event.value.v == RW_ERROR_MSG)
+                {
+                	printf("read dma err  \r\n");
+                	res = RES_ERROR;
+                }
+            }
+            else
+            {
+            	printf("read dma timeout  \r\n");
+            	res = RES_ERROR;
             }
         }
-    } else {
+		#endif
+    }
+    else
+    {
+    	printf("read2  \r\n");
+
         // Slow path: fetch each sector a part and memcpy to destination buffer
         uint8_t ret;
         int i;
 
         for (i = 0; i < count; i++) {
             ret = BSP_SD_ReadBlocks_DMA(0,(uint32_t*)buffer, (uint32_t)sector++, 1);
-            if (ret == BSP_ERROR_NONE) {
+            if (ret == BSP_ERROR_NONE)
+            {
                 /* wait for a message from the queue or a timeout */
                 event = osMessageGet(SDQueueID, SD_TIMEOUT);
-
                 if (event.status == osEventMessage) {
                     if (event.value.v == READ_CPLT_MSG) {
 						#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
@@ -363,6 +399,7 @@ void BSP_SD_ReadCpltCallback(uint32_t Instance)
    * No need to add an "osKernelRunning()" check here, as the SD_initialize()
    * is always called before any SD_Read()/SD_Write() call
    */
+	 //printf("read complete  \r\n");
    osMessagePut(SDQueueID, READ_CPLT_MSG, osWaitForever);
 }
 
@@ -370,7 +407,7 @@ void BSP_SD_ErrorCallback(void)
 {
   /* Non Blocking Call to BSP_ErrorHandler() */
   //BSP_ErrorHandler();
-	printf("SD_err  \r\n");
+	//printf("SD_err  \r\n");
 
   /*
    * No need to add an "osKernelRunning()" check here, as the SD_initialize()
@@ -383,7 +420,7 @@ void BSP_SD_AbortCallback(uint32_t Instance)
 {
   /* Non Blocking Call to BSP_ErrorHandler() */
   //BSP_ErrorHandler();
-	printf("SD_abort  \r\n");
+	//printf("SD_abort  \r\n");
 
   /*
    * No need to add an "osKernelRunning()" check here, as the SD_initialize()

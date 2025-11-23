@@ -33,24 +33,66 @@ void SDMMC1_IRQHandler(uint32_t Instance)
 	HAL_SD_IRQHandler(&hsd_sdmmc[Instance]);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : HAL_SD_TxCpltCallback
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
 void HAL_SD_TxCpltCallback(SD_HandleTypeDef *hsd)
 {
+	#ifdef SD_USE_DMA
 	BSP_SD_WriteCpltCallback(0);
+	#endif
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : HAL_SD_RxCpltCallback
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
 void HAL_SD_RxCpltCallback(SD_HandleTypeDef *hsd)
 {
+	#ifdef SD_USE_DMA
 	BSP_SD_ReadCpltCallback(0);
+	#endif
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : HAL_SD_ErrorCallback
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
 void HAL_SD_ErrorCallback(SD_HandleTypeDef *hsd)
 {
+	#ifdef SD_USE_DMA
 	BSP_SD_ErrorCallback();
+	#else
+	//--printf("sd error  \r\n");
+	#endif
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : HAL_SD_AbortCallback
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
 void HAL_SD_AbortCallback(SD_HandleTypeDef *hsd)
 {
+	#ifdef SD_USE_DMA
 	BSP_SD_AbortCallback(0);
+	#endif
 }
 
 static void SD_MspInit(SD_HandleTypeDef *hsd)
@@ -59,6 +101,8 @@ static void SD_MspInit(SD_HandleTypeDef *hsd)
 
 	if(hsd == &hsd_sdmmc[0])
 	{
+		//printf("SD_MspInit  \r\n");
+
 		// Enable SDIO clock
 		__HAL_RCC_SDMMC1_CLK_ENABLE();
 
@@ -119,8 +163,11 @@ static void SD_MspInit(SD_HandleTypeDef *hsd)
 			#endif
 		}
 
+		__HAL_RCC_SDMMC1_FORCE_RESET();
+		__HAL_RCC_SDMMC1_RELEASE_RESET();
+
 		// NVIC configuration for SDIO interrupts
-		HAL_NVIC_SetPriority(SDMMC1_IRQn, 14, 0);
+		HAL_NVIC_SetPriority(SDMMC1_IRQn, 5, 0);
 		HAL_NVIC_EnableIRQ	(SDMMC1_IRQn);
 	}
 }
@@ -314,7 +361,6 @@ int32_t BSP_SD_IsDetected(void)
 	return ret;
 }
 
-#if 0
 int32_t BSP_SD_ReadBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
 {
 	int32_t  ret = BSP_ERROR_NONE;
@@ -328,6 +374,7 @@ int32_t BSP_SD_ReadBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx,
 	{
 		if(HAL_SD_ReadBlocks(&hsd_sdmmc[Instance], (uint8_t *)pData, BlockIdx, BlocksNbr, timeout) != HAL_OK)
 		{
+			printf("rd err: 0x%x \r\n", hsd_sdmmc[Instance].ErrorCode);
 			ret = BSP_ERROR_PERIPH_FAILURE;
 		}
 	}
@@ -335,7 +382,6 @@ int32_t BSP_SD_ReadBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx,
 	// Return BSP status
 	return ret;
 }
-#endif
 
 #if 0
 int32_t BSP_SD_WriteBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
@@ -370,10 +416,15 @@ int32_t BSP_SD_ReadBlocks_DMA(uint32_t Instance, uint32_t *pData, uint32_t Block
 	}
 	else
 	{
+		#if 1
+		//printf("read %d %d  \r\n", BlockIdx, BlocksNbr);
 		if(HAL_SD_ReadBlocks_DMA(&hsd_sdmmc[Instance], (uint8_t *)pData, BlockIdx, BlocksNbr) != HAL_OK)
 		{
 			ret = BSP_ERROR_PERIPH_FAILURE;
 		}
+		#else
+		ret = 0;
+		#endif
 	}
 
 	// Return BSP status

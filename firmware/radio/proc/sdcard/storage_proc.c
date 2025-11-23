@@ -20,7 +20,7 @@
 #include "storage_proc.h"
 
 // File system object for MSD disk logical drive
-__attribute__((section(".dma_mem"))) __attribute__ ((aligned (32))) static FATFS StorageDISK_FatFs[NUM_DISK_UNITS];
+__attribute__((section(".dma_mem"))) __attribute__ ((aligned (32))) FATFS StorageDISK_FatFs[NUM_DISK_UNITS];
 
 // Storage Host logical drive number
 char               			StorageDISK_Drive[4];
