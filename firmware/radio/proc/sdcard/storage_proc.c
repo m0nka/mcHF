@@ -20,7 +20,7 @@
 #include "storage_proc.h"
 
 // File system object for MSD disk logical drive
-__attribute__((section(".dma_mem"))) __attribute__ ((aligned (32))) FATFS StorageDISK_FatFs[NUM_DISK_UNITS];
+__attribute__((section(".axi_ram"))) __attribute__ ((aligned (32))) FATFS StorageDISK_FatFs[NUM_DISK_UNITS];
 
 // Storage Host logical drive number
 char               			StorageDISK_Drive[4];
@@ -381,14 +381,31 @@ uint32_t Storage_GetCapacity (uint8_t unit)
 	if(StorageID[unit])
 	{
 		osSemaphoreWait(StorageSemaphore[unit], osWaitForever);
-
 		fs = &StorageDISK_FatFs[unit];
 		tot_sect = (fs->n_fatent - 2) * fs->csize;
-
 		osSemaphoreRelease(StorageSemaphore[unit]);
 	}
 
 	return (tot_sect);
+}
+
+uint32_t Storage_GetLabel(char *label)
+{
+	FRESULT res;
+	FATFS 	*fs;
+
+	if(label == NULL)
+		return FR_INT_ERR;
+
+	//if(StorageID[unit])
+	//{
+		osSemaphoreWait(StorageSemaphore[0], osWaitForever);
+		fs = &StorageDISK_FatFs[0];
+		res = f_getlabel(StorageDISK_Drive, label, NULL);
+		osSemaphoreRelease(StorageSemaphore[0]);
+	//}
+
+	return FR_OK;
 }
 
 uint32_t Storage_GetFree (uint8_t unit)
@@ -400,19 +417,12 @@ uint32_t Storage_GetFree (uint8_t unit)
 	if(StorageID[unit])
 	{
 		osSemaphoreWait(StorageSemaphore[unit], osWaitForever);
-
 		fs = &StorageDISK_FatFs[unit];
-		//printf("path: %s \r\n", StorageDISK_Drive);
 		res = f_getfree(StorageDISK_Drive, (DWORD *)&fre_clust, &fs);
-
 		if(res == FR_OK)
 			ret = (fre_clust * fs->csize);
 		else
-		{
-			printf("f_getfree res: %d\r\n", res);
 			ret = 0;
-		}
-
 		osSemaphoreRelease(StorageSemaphore[unit]);
 	}
 

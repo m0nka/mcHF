@@ -60,12 +60,16 @@ void HardFault_Handler(void)
 	printf( "=     %s     =\r\n", pcTaskGetName(NULL));
 	printf( "====================\r\n");
 
+	#if 0
 	NVIC_SystemReset();
+	#else
 	//HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+	LL_GPIO_ResetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
+	#endif
 
 	while(1)
 	{
-		//LL_GPIO_ResetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
+		__asm("nop");
 	}
 }
 

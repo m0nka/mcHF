@@ -81,10 +81,11 @@ extern char StorageDISK_Drive[];
 
 void        Storage_Init(void);
 void        Storage_DeInit(void);
-uint8_t     Storage_GetStatus (uint8_t unit);
-uint32_t 	Storage_GetCapacity (uint8_t unit);
-uint32_t 	Storage_GetFree (uint8_t unit);
-const char *Storage_GetDrive (uint8_t unit);
+uint8_t     Storage_GetStatus(uint8_t unit);
+uint32_t 	Storage_GetCapacity(uint8_t unit);
+uint32_t 	Storage_GetLabel(char *label);
+uint32_t 	Storage_GetFree(uint8_t unit);
+const char *Storage_GetDrive(uint8_t unit);
 
 void 		storage_proc_detect_sd_card(ulong state);
 

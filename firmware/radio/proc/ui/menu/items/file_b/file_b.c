@@ -20,6 +20,12 @@
 #include "ui_menu_layout.h"
 #include "ui_menu_module.h"
 
+#include "browser\filebrowser_app.h"
+#include "storage_proc.h"
+#include "ff_gen_drv.h"
+
+#include "file_b.h"
+
 extern GUI_CONST_STORAGE GUI_BITMAP bmicon_gps;
 
 // Menu layout definitions from Flash
@@ -53,42 +59,6 @@ K_ModuleItem_Typedef  file_b =
 
 #ifdef CONTEXT_SD
 
-#include "ui_menu_module.h"
-
-#include "browser\filebrowser_app.h"
-#include "storage_proc.h"
-
-// ToDo: clean up this path
-#include "ff_gen_drv.h"
-
-#define ID_WINDOW_0            		(GUI_ID_USER + 0x00)
-#define ID_BUTTON_EJECT          	(GUI_ID_USER + 0x01)
-
-#define ID_BUTTON_REFRESH    		(GUI_ID_USER + 0x02)
-#define ID_TREEVIEW          		(GUI_ID_USER + 0x03)
-#define ID_EDIT_MSD 	       		(GUI_ID_USER + 0x04)
-#define ID_PROGBAR_MSD       		(GUI_ID_USER + 0x05)
-
-#define ID_MENU_OPENFILE     		(GUI_ID_USER + 0x09)
-#define ID_MENU_DELETE       		(GUI_ID_USER + 0x0A)
-#define ID_MENU_EXIT         		(GUI_ID_USER + 0x0B)
-#define ID_MENU_PROPRIETIES  		(GUI_ID_USER + 0x0C)
-
-#define ID_FRAMEWIN_0				(GUI_ID_USER + 0x0D)
-#define ID_TEXT_SOLID_LOCATION     	(GUI_ID_USER + 0x0E)
-#define ID_TEXT_SOLID_CREATION     	(GUI_ID_USER + 0x0F)
-#define ID_TEXT_LOCATION           	(GUI_ID_USER + 0x10)
-#define ID_TEXT_CREATION           	(GUI_ID_USER + 0x11)
-#define ID_TEXT_SOLID_FILESIZE     	(GUI_ID_USER + 0x12)
-#define ID_TEXT_FILESIZE         	(GUI_ID_USER + 0x13)
-#define ID_BUTTON_OK_FILEINFO  		(GUI_ID_USER + 0x14)
-#define ID_TEXT_FILENAME           	(GUI_ID_USER + 0x15)
-
-#define WM_FORCE_ITEM_DESELECT     	(WM_USER + 0)
-
-//extern char USBDISK_Drive[];
-//extern char StorageDISK_Drive[];
-
 FILELIST_FileTypeDef  *pFileList;
 
 WM_HWIN hExplorerWin = 0;
@@ -101,8 +71,6 @@ char    str[FILEMGR_FILE_NAME_SIZE];
 
 static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos);
 static void _RefreshBrowser ( WM_HWIN hWin);
-
-//WM_HWIN  hBrowser = 0;
 
 static const GUI_WIDGET_CREATE_INFO _aDialog[] = 
 {
@@ -283,7 +251,7 @@ static void _cbHint(WM_MESSAGE * pMsg)
 			GUI_Clear();
 			GUI_SetColor(GUI_WHITE);
 			GUI_SetFont(&GUI_Font16_1HK);
-			GUI_DispStringHCenterAt("Populating Tree view...", 110 , 10);
+			GUI_DispStringHCenterAt("Loading card content...", 110 , 10);
 			GUI_SetFont(GUI_DEFAULT_FONT);
 			WM_GetClientRect(&Rect);
 			GUI_SetColor(GUI_DARKGRAY);
@@ -539,13 +507,19 @@ static void ExploreDisks(WM_HWIN hTree)
 {
 	TREEVIEW_ITEM_Handle 	hItem = 0;
 	TREEVIEW_ITEM_Handle 	Node = 0;
-	uint32_t 				Position = 0;
+	//uint32_t 				Position = 0;
+	char 					disk_label[64];
 
-	Node = TREEVIEW_InsertItem(hTree, TREEVIEW_ITEM_TYPE_NODE, 0, 0, "Radio");
+	Node = TREEVIEW_InsertItem(hTree, TREEVIEW_ITEM_TYPE_NODE, 0, 0, "SD Card Slot");
   
 	if(Storage_GetStatus(MSD_DISK_UNIT) == 1)
 	{
-		hItem = TREEVIEW_InsertItem(hTree, TREEVIEW_ITEM_TYPE_NODE, Node, TREEVIEW_INSERT_FIRST_CHILD, "SD Card");
+		if(Storage_GetLabel(disk_label) != 0)
+		{
+			strcpy(disk_label, "NONAME");
+		}
+
+		hItem = TREEVIEW_InsertItem(hTree, TREEVIEW_ITEM_TYPE_NODE, Node, TREEVIEW_INSERT_FIRST_CHILD, disk_label);
 		ShowNodeContent(hTree, hItem, StorageDISK_Drive, pFileList);
 	}
   
@@ -574,9 +548,11 @@ static void _RefreshBrowser ( WM_HWIN hWin)
 {
 	WM_HWIN 				hItem, Hint;
 	TREEVIEW_ITEM_Handle  	hTreeView;
-	uint32_t 				free_size, total_size, perc;
+	uint32_t 				free_size = 0, total_size = 0, perc = 0;
 	char 					str[FILEMGR_FILE_NAME_SIZE];
-  
+	uchar					detected = 0;
+
+	// Create progress hint
 	GUI_Exec();
 	Hint = WM_CreateWindowAsChild(80, 120, 200, 32, hWin, WM_CF_SHOW, _cbHint, 0);
 	GUI_Exec();
@@ -586,23 +562,25 @@ static void _RefreshBrowser ( WM_HWIN hWin)
 	if(Storage_GetStatus (MSD_DISK_UNIT))
 	{
 		free_size  = Storage_GetFree(MSD_DISK_UNIT);
-		total_size = Storage_GetCapacity(MSD_DISK_UNIT);
+		if(free_size != 0)
+		{
+			total_size = Storage_GetCapacity(MSD_DISK_UNIT);
+			if(total_size != 0)
+			{
+				perc = ((total_size - free_size)*100)/total_size;
 
-		//printf("free: %d\r\n",  (int)free_size);
-		//printf("total: %d\r\n", (int)total_size);
+				if(((total_size - free_size)*100)%total_size)
+					perc++;
 
-		perc = ((total_size - free_size)*100)/total_size;
+				//PROGBAR_SetMinMax(hItem, 0, 100);
+				PROGBAR_SetValue (hItem,perc);
+				hItem = WM_GetDialogItem(hWin, ID_EDIT_MSD);
+				sprintf(str, "%d MB", (int)(total_size / (2 * 1024)));
+				EDIT_SetText(hItem, str);
 
-		if(((total_size - free_size)*100)%total_size)
-			perc++;
-
-		//printf("perc: %d\r\n", (int)perc);
-
-		//PROGBAR_SetMinMax(hItem, 0, 100);
-		PROGBAR_SetValue (hItem,perc);
-		hItem = WM_GetDialogItem(hWin, ID_EDIT_MSD);
-		sprintf(str, "%d MB", (int)(total_size / (2 * 1024)));
-		EDIT_SetText(hItem, str);
+				detected = 1;
+			}
+		}
 	}
 	else
 	{
@@ -618,7 +596,10 @@ static void _RefreshBrowser ( WM_HWIN hWin)
 		TREEVIEW_ITEM_Delete (hItem);
 	}
 
-	ExploreDisks(hTreeView);
+	if(detected)
+		ExploreDisks(hTreeView);
+
+	// Remove progress hint
 	WM_DeleteWindow(Hint);
 }
 
@@ -626,37 +607,36 @@ static void _cbMediaConnection(WM_MESSAGE * pMsg)
 {
 	static WM_HTIMER      hStatusTimer;
 	static uint8_t        prev_sd_status = 0;
-	//static uint8_t        prev_usb_status = 0;
    
 	switch (pMsg->MsgId)
 	{
 		case WM_CREATE:
+		{
 			prev_sd_status = Storage_GetStatus(MSD_DISK_UNIT);
-			//prev_usb_status = Storage_GetStatus(USB_DISK_UNIT);
 			hStatusTimer = WM_CreateTimer(pMsg->hWin, 0, 500, 0);
 			break;
+		}
     
 		case WM_TIMER:
+		{
 			if(prev_sd_status !=  Storage_GetStatus(MSD_DISK_UNIT))
 			{
 				prev_sd_status = Storage_GetStatus(MSD_DISK_UNIT);
 				_RefreshBrowser(hExplorerWin);
 			}
-			//else if(prev_usb_status != k_StorageGetStatus(USB_DISK_UNIT))
-			//{
-			//prev_usb_status = k_StorageGetStatus(USB_DISK_UNIT);
-			//_RefreshBrowser(hExplorerWin);
-			//}
 			WM_RestartTimer(pMsg->Data.v, 500);
 			break;
+		}
     
 		case WM_DELETE:
+		{
 			if(hStatusTimer != 0)
 			{
 				WM_DeleteTimer(hStatusTimer);
 				hStatusTimer = 0;
 			}
 			break;
+		}
     
 		default:
 			WM_DefaultProc(pMsg);
@@ -665,8 +645,6 @@ static void _cbMediaConnection(WM_MESSAGE * pMsg)
 
 static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 {
-	//WM_HWIN hItem;
-
 	switch(Id)
 	{
 		// -------------------------------------------------------------
@@ -740,13 +718,17 @@ static void _cbDialog(WM_MESSAGE * pMsg)
     
 			WM_BringToBottom(hPopUp);
 
+			// Background refresh process
 			WM_CreateWindowAsChild(479, 250, 1, 1, pMsg->hWin, WM_CF_SHOW | WM_CF_HASTRANS, _cbMediaConnection , 0);
     
+			// Initial detect
 			_RefreshBrowser(pMsg->hWin);
 
 			break;
 		}
-#if 1
+
+		// Breaks refresh timer!!
+		#if 0
 		case WM_NOTIFY_PARENT:
 		{
 			Id    = WM_GetId(pMsg->hWinSrc);    // Id of widget
@@ -765,6 +747,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
        
 				case WM_NOTIFICATION_CLICKED:
 				{
+					#if 1
 					if(Id == ID_TREEVIEW)
 					{
 						hTreeView = TREEVIEW_GetSel(pMsg->hWinSrc);
@@ -774,7 +757,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 							//printf("treeview\r\n");
 
 							// Causes the screen to go mad!!!
-							//--GUI_TOUCH_GetState(&State);
+							//GUI_TOUCH_GetState(&State);
 
 							// Test
 							State.x = 0;
@@ -787,6 +770,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 						_FindFullPath(pMsg->hWinSrc, hTreeView, SelectedFileName);
 						_OpenPopup(hPopUp,_aMenuItems,GUI_COUNTOF(_aMenuItems),State.x,State.y);
 					}
+					#endif
 
 					break;
 				}
@@ -802,7 +786,8 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 			break;
 		}
-#endif
+		#endif
+
 		// Process key messages not supported by ICON_VIEW control
 		case WM_KEY:
 		{

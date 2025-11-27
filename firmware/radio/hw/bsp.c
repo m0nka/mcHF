@@ -520,7 +520,7 @@ uint8_t bsp_config(void)
 	//--MX_CRC_Init();
 
 	printf_init(1);
-	printf("----------------------------------------------  \r\n");
+	printf("--------------------------------  \r\n");
 	printf("-->%s v: %d.%d.%d\r\n", DEVICE_STRING, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE, MCHF_R_VER_BUILD);
 
 	// Useful during ushdr port

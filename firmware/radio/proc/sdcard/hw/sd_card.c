@@ -11,6 +11,7 @@
 **  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "mchf_pro_board.h"
+#include "main.h"
 
 #include "storage_proc.h"
 #include "sd_card.h"
@@ -97,18 +98,27 @@ void HAL_SD_AbortCallback(SD_HandleTypeDef *hsd)
 
 static void SD_MspInit(SD_HandleTypeDef *hsd)
 {
-	GPIO_InitTypeDef gpio_init_structure;
+	RCC_PeriphCLKInitTypeDef 	PeriphClkInitStruct = {0};
+	GPIO_InitTypeDef 			gpio_init_structure;
 
 	if(hsd == &hsd_sdmmc[0])
 	{
 		//printf("SD_MspInit  \r\n");
+
+		// SD Card clock - 18.75Mhz
+		#if 0
+		PeriphClkInitStruct.PeriphClockSelection	= RCC_PERIPHCLK_SDMMC;
+		PeriphClkInitStruct.SdmmcClockSelection		= RCC_SDMMCCLKSOURCE_PLL2;
+		PeriphClkInitStruct.PLL2.PLL2R           	= 8;
+		HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
+		#endif
 
 		// Enable SDIO clock
 		__HAL_RCC_SDMMC1_CLK_ENABLE();
 
 		// Common GPIO configuration
 		gpio_init_structure.Mode      = GPIO_MODE_AF_PP;
-		gpio_init_structure.Pull      = GPIO_PULLUP;
+		gpio_init_structure.Pull      = GPIO_NOPULL;
 		gpio_init_structure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
 		gpio_init_structure.Alternate = GPIO_AF12_SDIO1;
 
@@ -383,7 +393,6 @@ int32_t BSP_SD_ReadBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx,
 	return ret;
 }
 
-#if 0
 int32_t BSP_SD_WriteBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
 {
 	int32_t ret = BSP_ERROR_NONE;
@@ -404,7 +413,6 @@ int32_t BSP_SD_WriteBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx
 	// Return BSP status
 	return ret;
 }
-#endif
 
 int32_t BSP_SD_ReadBlocks_DMA(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
 {

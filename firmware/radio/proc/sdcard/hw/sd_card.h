@@ -7,7 +7,17 @@
 // Use DMA version
 //#define SD_USE_DMA
 
-#define BSP_SD_CardInfo HAL_SD_CardInfoTypeDef
+/*
+ * when using cachable memory region, it may be needed to maintain the cache
+ * validity. Enable the define below to activate a cache maintenance at each
+ * read and write operation.
+ * Notice: This is applicable only for cortex M7 based platform.
+ */
+#ifdef SD_USE_DMA
+#define ENABLE_SD_DMA_CACHE_MAINTENANCE  1
+#endif
+
+#define BSP_SD_CardInfo 		HAL_SD_CardInfoTypeDef
 
 #define SD_INSTANCES_NBR         1UL
 
