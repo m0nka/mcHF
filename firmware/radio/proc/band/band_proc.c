@@ -420,7 +420,7 @@ void band_proc_task(void const * argument)
 	ulong 	ulNotificationValue = 0, ulNotif;
 
 	vTaskDelay(BAND_PROC_START_DELAY);
-	//printf("band proc start\r\n");
+	printf("start\r\n");
 
 	//band_proc_change_filter(BAND_MODE_10, 0, 0);
 	//vTaskDelay(50);

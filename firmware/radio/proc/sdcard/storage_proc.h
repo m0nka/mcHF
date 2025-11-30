@@ -15,9 +15,6 @@
 
 #define STORAGE_BSP_INIT
 
-#define STORAGE_THREAD_STACK_SIZE       (configMINIMAL_STACK_SIZE*16)
-#define STORAGE_THREAD_PRIORITY         osPriorityNormal//osPriorityRealtime
-
 #define FILEMGR_LIST_DEPDTH                    24
 #define FILEMGR_FILE_NAME_SIZE                256
 #define FILEMGR_MAX_LEVEL                       3
@@ -78,17 +75,22 @@ FILELIST_FileTypeDef;
 #endif
 
 extern char StorageDISK_Drive[];
+extern osMessageQId StorageEvent;
 
-void        Storage_Init(void);
 void        Storage_DeInit(void);
+void 		storage_proc_detect_sd_card(ulong state);
+
+void 		StorageThread(void const * argument);
+void        Storage_Init(void);
+
+// -------------------------------------------------------------------------
+// -------------  				Access calls			--------------------
+// -------------------------------------------------------------------------
+
 uint8_t     Storage_GetStatus(uint8_t unit);
 uint32_t 	Storage_GetCapacity(uint8_t unit);
 uint32_t 	Storage_GetLabel(char *label);
 uint32_t 	Storage_GetFree(uint8_t unit);
 const char *Storage_GetDrive(uint8_t unit);
-
-void 		storage_proc_detect_sd_card(ulong state);
-
-extern osMessageQId StorageEvent;
 
 #endif

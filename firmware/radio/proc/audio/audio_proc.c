@@ -171,7 +171,8 @@ static void btm_proc_task(void *arg)
 	uchar new_bt_state;
 	uchar loc_bt_enabled = 0xFF;
 
-	//printf("bt proc start\r\n");
+	vTaskDelay(AUDIO_PROC_START_DELAY + 50);
+	printf("start  \r\n");
 
 	for(;;)
 	{
@@ -247,6 +248,9 @@ void audio_proc_task(void const * argument)
 {
 	ulong 	ulNotificationValue = 0, ulNotif;
 
+	vTaskDelay(AUDIO_PROC_START_DELAY);
+	printf("start  \r\n");
+
 	// Stall here, maybe exit with timeout ?
 	#ifdef CONTEXT_ICC
 	audio_proc_wait_dsp();
@@ -256,7 +260,7 @@ void audio_proc_task(void const * argument)
 
 	// BT Monitor task
     xTaskCreate((TaskFunction_t)btm_proc_task,\
-    					"btm_proc",\
+    					"ble",\
 						128,\
 						NULL,\
 						AUDIO_PROC_PRIORITY,\

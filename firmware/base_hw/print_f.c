@@ -89,6 +89,11 @@ const char 			cpu_id_str[] = "d:";
 SemaphoreHandle_t 	dPrintSemaphore = NULL;
 #endif
 
+#ifdef USE_TASK_SHARING
+extern ulong epoch;
+#include "task.h"
+#endif
+
 #ifdef USE_ITM_SWO
 static void swoInit (uint32_t portMask, uint32_t cpuCoreFreqHz, uint32_t baudrate)
 {
@@ -154,19 +159,19 @@ void SWD_Init(void)
 
 void print_itm_header(void)
 {
-	#ifndef USE_ITM_SWO
-	HAL_UART_Transmit(&DEBUG_UART_Handle, (uint8_t *)cpu_id_str,  sizeof(cpu_id_str) - 1, 0xFFFF);
+	#ifdef USE_TASK_SHARING
+	char header[30];
+
+	memset(header, 0, sizeof(header));
+	if(osKernelRunning())
+		sprintf(header, "%07d [%s] ", (int)epoch, pcTaskGetName(NULL));
+	else
+		sprintf(header, "%07d [%s] ", (int)epoch, "pre");
+
+	HAL_UART_Transmit(&DEBUG_UART_Handle, (uint8_t *)header,  strlen(header), 0xFFFF);
+
 	#else
-	ITM_SendChar('[');
-	ITM_SendChar(0x30 + FIRMWARE_VERSION_HIGH);
-	ITM_SendChar('.');
-	ITM_SendChar(0x30 + FIRMWARE_VERSION_MID_HIGH);
-	ITM_SendChar('.');
-	ITM_SendChar(0x30 + FIRMWARE_VERSION_MID_LOW);
-	ITM_SendChar('.');
-	ITM_SendChar(0x30 + FIRMWARE_VERSION_LOW);
-	ITM_SendChar(']');
-	ITM_SendChar(' ');
+	HAL_UART_Transmit(&DEBUG_UART_Handle, (uint8_t *)cpu_id_str,  sizeof(cpu_id_str) - 1, 0xFFFF);
 	#endif
 }
 
@@ -885,6 +890,11 @@ void printf_init(uchar is_shared)
 		// Open and keep it that way
 		#ifndef USE_ITM_SWO
 		HAL_UART_Init(&DEBUG_UART_Handle);
+		char new_line[3];
+		new_line[0] = 0x0D;
+		new_line[1] = 0x0A;
+		new_line[2] = 0x00;
+		HAL_UART_Transmit(&DEBUG_UART_Handle, (uint8_t *)new_line,  2, 0xFFFF);
 		#else
 		SWD_Init();
 		#endif

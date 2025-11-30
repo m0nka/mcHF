@@ -57,7 +57,7 @@ K_ModuleItem_Typedef  file_b =
   KillFileb
 };
 
-#ifdef CONTEXT_SD
+
 
 FILELIST_FileTypeDef  *pFileList;
 
@@ -841,4 +841,3 @@ static void KillFileb(void)
 	GUI_EndDialog(hExplorerWin, 0);
 }
 
-#endif

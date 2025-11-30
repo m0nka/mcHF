@@ -955,7 +955,7 @@ void ui_proc_task(void const *arg)
 	ulong 	ulNotificationValue = 0, ulNotif;
 
 	vTaskDelay(UI_PROC_START_DELAY);
-	//printf("ui proc start\r\n");
+	printf("start\r\n");
 
 	// Backlight PWM
 	shared_tim_init();

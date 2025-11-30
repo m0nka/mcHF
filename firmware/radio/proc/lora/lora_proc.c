@@ -90,8 +90,8 @@ void lora_proc_task(void const * argument)
 
 	// Delay start, so UI can paint properly
 	vTaskDelay(LORA_PROC_START_DELAY);
+	printf("start\r\n");
 
-	//printf("lora process start\r\n");
 	//lora_spi_init();
 
 	#ifdef MESHCORE_REPEATER

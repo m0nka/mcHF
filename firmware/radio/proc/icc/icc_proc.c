@@ -891,7 +891,7 @@ void icc_proc_task(void const *arg)
 	ulong 	ulNotificationValue = 0, ulNotif;
 
 	vTaskDelay(ICC_PROC_START_DELAY);
-	//printf("icc proc start\r\n");
+	printf("start\r\n");
 
 	// DSP on
 	if(icc_proc_dsp_on())

@@ -325,7 +325,9 @@
 									<listOptionValue builtIn="false" value="../../../proc/dsp/digi/ft8_lib/"/>
 									<listOptionValue builtIn="false" value="../../../proc/sdcard"/>
 									<listOptionValue builtIn="false" value="../../../proc/sdcard/hw"/>
+									<listOptionValue builtIn="false" value="../../../proc/sdcard/drivers"/>
 									<listOptionValue builtIn="false" value="../../../proc/app"/>
+									<listOptionValue builtIn="false" value="../../../proc/app/elf"/>
 									<listOptionValue builtIn="false" value="../../../../"/>
 									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/CMSIS/Device/ST/STM32H7xx/Include"/>
 									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/STM32H7xx_HAL_Driver/Inc"/>

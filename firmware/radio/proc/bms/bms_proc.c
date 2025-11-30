@@ -1499,7 +1499,7 @@ static void bms_proc_worker(void)
 void bms_proc_task(void const *arg)
 {
 	vTaskDelay(BMS_PROC_START_DELAY);
-	//printf("bms process start\r\n");
+	printf("start\r\n");
 
 	// Clear calibration
 	for(int i = 0; i < 10; i++)

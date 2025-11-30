@@ -389,7 +389,7 @@ void touch_proc_task(void const *argument)
 	ulong 	ulNotificationValue = 0, ulNotif;
 
 	vTaskDelay(TOUCH_PROC_START_DELAY);
-	//printf("touch proc start\r\n");
+	printf("start\r\n");
 
 	// Interface init
 	touch_proc_post_init();

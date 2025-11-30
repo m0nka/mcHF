@@ -11,6 +11,10 @@
 **  Licence:               GNU GPLv3                                               **
 ************************************************************************************/
 #include "mchf_pro_board.h"
+#include "main.h"
+
+// Storage Host logical drive number
+char StorageDISK_Drive[4];
 
 #ifdef CONTEXT_SD
 
@@ -21,9 +25,6 @@
 
 // File system object for MSD disk logical drive
 __attribute__((section(".axi_ram"))) __attribute__ ((aligned (32))) FATFS StorageDISK_FatFs[NUM_DISK_UNITS];
-
-// Storage Host logical drive number
-char               			StorageDISK_Drive[4];
 
 static osSemaphoreId      	StorageSemaphore[NUM_DISK_UNITS];
 static Diskio_drvTypeDef  	const * Storage_Driver[NUM_DISK_UNITS];
@@ -198,12 +199,27 @@ static uint8_t storage_proc_init_msd(void)
 	return StorageID[MSD_DISK_UNIT];
 }
 
-static void StorageThread(void const * argument)
+void StorageThread(void const * argument)
 {
 	//osEvent event;
 	ulong 	ulNotificationValue = 0, ulNotif;
 
-	printf("storage proc  \r\n");
+	vTaskDelay(SD_PROC_START_DELAY);
+	printf("start  \r\n");
+
+	// Initialize the MSD Storage
+	#if 1
+	storage_proc_init_msd();
+
+	// Configure SD Interrupt mode
+	sd_card_set_exti_irq(0);
+	#endif
+
+	//
+	// ToDo: Get from ini file...
+	//
+    // Set radio public values
+    radio_init_on_reset();
 
 	for(;;)
 	{
@@ -211,7 +227,7 @@ static void StorageThread(void const * argument)
 		event = osMessageGet(StorageEvent, osWaitForever);
 		if(event.status == osEventMessage)
 		#else
-		ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, TOUCH_PROC_SLEEP_TIME);
+		ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, SD_PROC_SLEEP_TIME);
 		if((ulNotif) && (ulNotificationValue))
 		#endif
 		{
@@ -311,22 +327,16 @@ void Storage_Init(void)
 		StorageStatus[storage_id] = STORAGE_NOINIT;
 	}
 
-	// Create Storage Message Queue
-	//osMessageQDef(osqueue, 10, uint16_t);
-	//StorageEvent = osMessageCreate (osMessageQ(osqueue), NULL);
-
 	// GPIO init
 	sd_card_low_level_init(0);
 
 	// Initialize the MSD Storage
+	#if 0
 	storage_proc_init_msd();
 
 	// Configure SD Interrupt mode
 	sd_card_set_exti_irq(0);
-
-    // It's Okay then Create Storage background task and exit from here
-    osThreadDef(STORAGE_Thread, StorageThread, STORAGE_THREAD_PRIORITY, 0, STORAGE_THREAD_STACK_SIZE);
-    StorageThreadId = osThreadCreate (osThread(STORAGE_Thread), NULL);
+	#endif
 }
 
 void Storage_DeInit(void)
@@ -359,8 +369,15 @@ void Storage_DeInit(void)
 	#endif
 }
 
+#endif
+
+// -------------------------------------------------------------------------
+// -------------  				Access calls			--------------------
+// -------------------------------------------------------------------------
+
 uint8_t Storage_GetStatus(uint8_t unit)
 {
+	#ifdef CONTEXT_SD
 	uint8_t status = STORAGE_NOINIT;
 
 	if(StorageID[unit])
@@ -371,10 +388,14 @@ uint8_t Storage_GetStatus(uint8_t unit)
 	}
 
 	return status;
+	#else
+	return 0;
+	#endif
 }
 
 uint32_t Storage_GetCapacity (uint8_t unit)
 {
+	#ifdef CONTEXT_SD
 	uint32_t   tot_sect = 0;
 	FATFS 	*fs;
 
@@ -387,10 +408,14 @@ uint32_t Storage_GetCapacity (uint8_t unit)
 	}
 
 	return (tot_sect);
+	#else
+	return 0;
+	#endif
 }
 
 uint32_t Storage_GetLabel(char *label)
 {
+	#ifdef CONTEXT_SD
 	FRESULT res;
 	FATFS 	*fs;
 
@@ -406,10 +431,14 @@ uint32_t Storage_GetLabel(char *label)
 	//}
 
 	return FR_OK;
+	#else
+	return 0;
+	#endif
 }
 
 uint32_t Storage_GetFree (uint8_t unit)
 {
+	#ifdef CONTEXT_SD
 	uint32_t	fre_clust = 0, ret = 0;
 	FATFS 		*fs;
 	FRESULT 	res = FR_INT_ERR;
@@ -427,14 +456,21 @@ uint32_t Storage_GetFree (uint8_t unit)
 	}
 
 	return ret;
+	#else
+	return 0;
+	#endif
 }
 
 const char *Storage_GetDrive(uint8_t unit)
 {
+	#ifdef CONTEXT_SD
 	if(StorageStatus[unit] == STORAGE_MOUNTED)
 		return StorageDISK_Drive;
 	else
 		return '\0';
+	#else
+	return 0;
+	#endif
 }
 
-#endif
+

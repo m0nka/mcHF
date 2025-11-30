@@ -36,6 +36,7 @@ TaskHandle_t 							hBandTask	= NULL;
 TaskHandle_t 							hTrxTask	= NULL;
 TaskHandle_t 							hKbdTask	= NULL;
 TaskHandle_t 							hLraTask	= NULL;
+TaskHandle_t 							hSdcTask	= NULL;
 
 QueueHandle_t 							hEspMessage;
 
@@ -174,6 +175,10 @@ static void tasks_pre_os_init(void)
 	#ifdef CONTEXT_LORA
 	lora_proc_init();
 	#endif
+
+	#ifdef CONTEXT_SD
+	Storage_Init();
+	#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -197,7 +202,7 @@ static int start_proc(void)
 
 	#ifdef CONTEXT_VIDEO
 	res = xTaskCreate(	(TaskFunction_t)ui_proc_task,\
-						"gui_proc",\
+						UI_PROC_START_NAME,\
 						UI_PROC_STACK_SIZE,\
 						NULL,\
 						UI_PROC_PRIORITY,\
@@ -213,7 +218,7 @@ static int start_proc(void)
 	// Create TS Thread
 	#ifdef CONTEXT_TOUCH
     res = xTaskCreate(	(TaskFunction_t)touch_proc_task,\
-    					"tch_proc",\
+    					TOUCH_PROC_START_NAME,\
 						TOUCH_PROC_STACK_SIZE,\
 						NULL,\
 						TOUCH_PROC_PRIORITY,\
@@ -228,10 +233,10 @@ static int start_proc(void)
 
 	#ifdef CONTEXT_ICC
     res = xTaskCreate(	(TaskFunction_t)icc_proc_task,\
-    					"icc_proc",\
-						UI_PROC_STACK_SIZE,\
+    					ICC_PROC_START_NAME,\
+						ICC_PROC_STACK_SIZE,\
 						NULL,\
-						UI_PROC_PRIORITY,\
+						ICC_PROC_PRIORITY,\
 						&hIccTask);
 
     if(res != pdPASS)
@@ -241,24 +246,9 @@ static int start_proc(void)
     }
 	#endif
 
-	#ifdef CONTEXT_IPC_PROC
-    res = xTaskCreate(	(TaskFunction_t)ipc_proc_task,\
-    					"ipc_proc",\
-						UI_PROC_STACK_SIZE,\
-						NULL,\
-						UI_PROC_PRIORITY,\
-						NULL);
-
-    if(res != pdPASS)
-    {
-    	printf("unable to create ipc process\r\n");
-    	return 4;
-    }
-	#endif
-
 	#ifdef CONTEXT_ROTARY
     res = xTaskCreate(	(TaskFunction_t)rotary_proc_task,\
-    					"rot_proc",\
+    					ROTARY_PROC_START_NAME,\
 						ROTARY_PROC_STACK_SIZE,\
 						NULL,\
 						ROTARY_PROC_PRIORITY,\
@@ -267,13 +257,13 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create rotary process\r\n");
-    	return 5;
+    	return 4;
     }
 	#endif
 
 	#ifdef CONTEXT_VFO
     res = xTaskCreate(	(TaskFunction_t)vfo_proc_task,\
-    					"vfo_proc",\
+    					VFO_PROC_START_NAME,\
 						VFO_PROC_STACK_SIZE,\
 						NULL,\
 						VFO_PROC_PRIORITY,\
@@ -282,13 +272,13 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create vfo process\r\n");
-    	return 6;
+    	return 5;
     }
 	#endif
 
 	#ifdef CONTEXT_AUDIO
     res = xTaskCreate(	(TaskFunction_t)audio_proc_task,\
-    					"aud_proc",\
+    					AUDIO_PROC_START_NAME,\
 						AUDIO_PROC_STACK_SIZE,\
 						NULL,\
 						AUDIO_PROC_PRIORITY,\
@@ -297,13 +287,13 @@ static int start_proc(void)
     if(res != pdPASS)
     {
         printf("unable to create audio process\r\n");
-        return 7;
+        return 6;
     }
     #endif
 
 	#ifdef CONTEXT_BMS
     res = xTaskCreate(	(TaskFunction_t)bms_proc_task,\
-    					"bms_proc",\
+    					BMS_PROC_START_NAME,\
 						BMS_PROC_STACK_SIZE,\
 						NULL,\
 						BMS_PROC_PRIORITY,\
@@ -312,7 +302,7 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create bms process\r\n");
-    	return 8;
+    	return 7;
     }
 	#endif
 
@@ -320,7 +310,7 @@ static int start_proc(void)
 
 	#ifdef CONTEXT_BAND
     res = xTaskCreate(	(TaskFunction_t)band_proc_task,\
-    					"bnd_proc",\
+    					BAND_PROC_START_NAME,\
 						BAND_PROC_STACK_SIZE,\
 						NULL,\
 						BAND_PROC_PRIORITY,\
@@ -329,13 +319,13 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create band control process\r\n");
-    	return 10;
+    	return 8;
     }
 	#endif
 
 	#ifdef CONTEXT_TRX
     res = xTaskCreate(	(TaskFunction_t)trx_proc_task,\
-    					"trx_proc",\
+    					TRX_PROC_START_NAME,\
 						TRX_PROC_STACK_SIZE,\
 						NULL,\
 						TRX_PROC_PRIORITY,\
@@ -344,13 +334,13 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create trx process\r\n");
-    	return 6;
+    	return 9;
     }
 	#endif
 
 	#ifdef CONTEXT_KEYPAD
     res = xTaskCreate(	(TaskFunction_t)keypad_proc_task,\
-						"kbd_proc",\
+    					KEYPAD_PROC_START_NAME,\
 						KEYPAD_PROC_STACK_SIZE,\
 						NULL,\
 						KEYPAD_PROC_PRIORITY,\
@@ -359,13 +349,13 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create kbd process\r\n");
-    	return 7;
+    	return 10;
     }
 	#endif
 
 	#ifdef CONTEXT_LORA
     res = xTaskCreate(	(TaskFunction_t)lora_proc_task,\
-						"lora_proc",\
+    					LORA_PROC_START_NAME,\
 						LORA_PROC_STACK_SIZE,\
 						NULL,\
 						LORA_PROC_PRIORITY,\
@@ -374,12 +364,23 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create lora process\r\n");
-    	return 7;
+    	return 11;
     }
 	#endif
 
 	#ifdef CONTEXT_SD
-    Storage_Init();
+    res = xTaskCreate(	(TaskFunction_t)StorageThread,\
+    					SD_PROC_START_NAME,\
+						SD_PROC_STACK_SIZE,\
+						NULL,\
+						SD_PROC_PRIORITY,\
+						&hSdcTask);
+
+    if(res != pdPASS)
+    {
+    	printf("unable to create sd card process\r\n");
+    	return 12;
+    }
 	#endif
 
     return 0;
@@ -430,7 +431,7 @@ int main(void)
     k_CalendarBkupInit();
 
     // Set radio public values
-    radio_init_on_reset();
+    //--radio_init_on_reset();
 
     // Init each task hw
     tasks_pre_os_init();

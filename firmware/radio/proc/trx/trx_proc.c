@@ -280,7 +280,7 @@ void trx_proc_task(void const *arg)
 	ulong 	ulNotificationValue = 0, ulNotif;
 
 	vTaskDelay(TRX_PROC_START_DELAY);
-	//printf("trx proc start\r\n");
+	printf("start\r\n");
 
 	// Test only, running final MOSFETS at 20V require lower bias
 	//

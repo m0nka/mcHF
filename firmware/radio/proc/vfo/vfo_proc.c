@@ -184,7 +184,7 @@ void vfo_proc_task(void const *arg)
 	ulong	vfo_task_sleep_time;
 
 	vTaskDelay(VF0_PROC_START_DELAY);
-	//printf("vfo proc start\r\n");
+	printf("start\r\n");
 
 	// Init CW gen
 	vfo_cw_gen_init();

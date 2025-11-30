@@ -1,8 +1,6 @@
 
 #include "mchf_pro_board.h"
 
-#ifdef CONTEXT_SD
-
 #include "gui.h"
 #include "dialog.h"
 
@@ -379,4 +377,3 @@ void FILEMGR_GetFileOnly (char *file, char *path)
     }
   }
 }
-#endif

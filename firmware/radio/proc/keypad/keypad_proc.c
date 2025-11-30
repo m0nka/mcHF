@@ -1641,8 +1641,7 @@ void keypad_proc_task(void const * argument)
 
 	// Delay start, so UI can paint properly
 	vTaskDelay(KEYPAD_PROC_START_DELAY);
-
-	//printf("keypad process start\r\n");
+	printf("start\r\n");
 
 	// Enable process wake-up
 	NVIC_EnableIRQ	(EXTI15_10_IRQn);
