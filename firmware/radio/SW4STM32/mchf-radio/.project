@@ -172,16 +172,6 @@
 			<locationURI>copy_PARENT123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131132133134135136137138139/util/cpu_utils.c</locationURI>
 		</link>
 		<link>
-			<name>util/radio_init.c</name>
-			<type>1</type>
-			<locationURI>copy_PARENT123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131132133134135136137138139140/util/radio_init.c</locationURI>
-		</link>
-		<link>
-			<name>util/virt_eeprom.c</name>
-			<type>1</type>
-			<locationURI>copy_PARENT123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131132133134135136137138139140141/util/virt_eeprom.c</locationURI>
-		</link>
-		<link>
 			<name>Drivers/STM32H7xx_HAL_Driver/stm32h7xx_hal.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT12345/STM32CubeH7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c</locationURI>
@@ -552,6 +542,11 @@
 			<locationURI>copy_PARENT12345/base_hw/hw/hw_uart.c</locationURI>
 		</link>
 		<link>
+			<name>proc/app/os_apploader.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/app/os_apploader.c</locationURI>
+		</link>
+		<link>
 			<name>proc/audio/audio_proc.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT1234567891011121314151617181920212223242526/proc/audio/audio_proc.c</locationURI>
@@ -747,6 +742,16 @@
 			<locationURI>copy_PARENT12345/STM32CubeH7/Middlewares/Third_Party/OpenAMP/open-amp/lib/virtio/virtqueue.c</locationURI>
 		</link>
 		<link>
+			<name>proc/app/elf/os_sedna_exports.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/app/elf/os_sedna_exports.c</locationURI>
+		</link>
+		<link>
+			<name>proc/app/elf/os_sednaelf.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/app/elf/os_sednaelf.c</locationURI>
+		</link>
+		<link>
 			<name>proc/audio/hw/codec_hw.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT123456789101112131415161718192021222324252627/proc/audio/hw/codec_hw.c</locationURI>
@@ -800,6 +805,16 @@
 			<name>proc/lora/hw/lora_spi.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455/proc/lora/hw/lora_spi.c</locationURI>
+		</link>
+		<link>
+			<name>proc/sdcard/drivers/radio_init.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/sdcard/drivers/radio_init.c</locationURI>
+		</link>
+		<link>
+			<name>proc/sdcard/drivers/virt_eeprom.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/sdcard/drivers/virt_eeprom.c</locationURI>
 		</link>
 		<link>
 			<name>proc/sdcard/hw/sd_card.c</name>
