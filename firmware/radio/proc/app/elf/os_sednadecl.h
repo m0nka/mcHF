@@ -11,8 +11,8 @@
 **                                                                                 **
 ************************************************************************************/
 
-#ifndef OS_SEDNADECL_H
-#define OS_SEDNADECL_H
+#ifndef __OS_SEDNADECL_H
+#define __OS_SEDNADECL_H
 
 /* Usb driver menues */
 #define DEVICE_MENU_INFORMATION				0xC1
@@ -68,9 +68,6 @@
 #define SEDNA_APP_ELF_DATA_SECTION_TOO_BIG	0x22
 #define SEDNA_FPGA_CONFIG_LOAD_ERROR		0x23
 #define SEDNA_FPGA_UNSUPPORTED_MODE			0x24
-
-#define SEDNA_MAXIMUM_APPLICATIONS			   2
-#define MAX_APPLICATION_THREADS				   2
 
 #define SEDNA_USB_FTDI_RET_BUFF_ALLOC_ERR	0x44
 #define SEDNA_APP_HANDLE_MISMATCH			0x45

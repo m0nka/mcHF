@@ -14,6 +14,9 @@
 #ifndef __OS_APPLOADER_H
 #define __OS_APPLOADER_H
 
+#define SEDNA_MAXIMUM_APPLICATIONS			   2
+#define MAX_APPLICATION_THREADS				   2
+
 // --------------------------------------------------------
 // This task stack size
 //

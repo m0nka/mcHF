@@ -11,15 +11,33 @@
 **                                                                                 **
 ************************************************************************************/
 
-#ifndef __OS_SEDNAELF_H
-#define __OS_SEDNAELF_H
+#ifndef __OS_SEDNA_EXPORTS_H
+#define __OS_SEDNA_EXPORTS_H
 
-#define EM_ARM		1
-#define BIG_ENDIAN  0
+/* Count of API array elements */
+#define SEDNA_EXPORTS_API_COUNT				19
 
-#define ARM_RW_VIRTUAL_PTR		0x4444
+#define SEDNA_APP_DESC_PRIORITY_SHIFT		0x04
+#define SEDNA_APP_DESC_OS_VER_SHIFT			0x08
+#define SEDNA_APP_DESC_NAME_SHIFT			0x10
 
-uchar ucSednaElfProcessElf(uchar *ucProcessImage);
+/* API calls structure decl */
+typedef struct SEDNA_API_EXPORTS 
+{   
+   void *func_address; 
+                                             
+} SEDNA_API_EXPORTS;
 
+typedef struct MENU_DEF 
+{   
+   const char 	*menu_text;     
+   const void  	*handler_ptr;            
+                                           
+} MENU_DEF, *PMENU_DEF;
+
+ulong 	ulSednaExportsBaseAddress(void);
+
+//void 	vSednaExportsDrawScriptUI(void);
+//void 	vSednaExportsPrintOnScreen(char *text,int x,int y,int foreground,int background);
 
 #endif

@@ -91,7 +91,7 @@ static uchar ucAppLoaderSendQueuedMessage(xQueueHandle pvQueueHandle, ulong *ulM
 {
 	ulong ulDummy;
 	uchar ucCount;
-	
+#if 0
 	/* Clear Rx Queue before posting */
 	while( ucQueueMessagesWaiting(pvQueueHandle))
 	{
@@ -107,7 +107,7 @@ static uchar ucAppLoaderSendQueuedMessage(xQueueHandle pvQueueHandle, ulong *ulM
 		if( cQueueSend(pvQueueHandle, (void *)&ulDummy, ( portTickType ) 0 ) != pdPASS )
 			return 1;
 	}			    
-			
+#endif
 	return 0;				    
 }
 
@@ -120,7 +120,7 @@ static uchar ucAppLoaderSendQueuedMessage(xQueueHandle pvQueueHandle, ulong *ulM
 static uchar ucAppLoaderSednaWaitMessage(xQueueHandle pRxQueue,ulong *ulQueueBuffer)
 {
 	uchar ucNext = 0;
-	
+#if 0
 	*ulQueueBuffer = 0;	
 	while( ucQueueMessagesWaiting( pRxQueue ) )
 	{			
@@ -129,7 +129,7 @@ static uchar ucAppLoaderSednaWaitMessage(xQueueHandle pRxQueue,ulong *ulQueueBuf
 			ucNext++;									
 		}
 	}
-
+#endif
 	return ucNext;
 }
 
