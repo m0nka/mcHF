@@ -120,6 +120,8 @@ static STORAGE_Status_t StorageTryMount( const uint8_t unit )
 		if(f_mount(&StorageDISK_FatFs[unit], StorageDISK_Drive, 0))
 			goto unlock_exit;
 
+		//printf("drive: %s \r\n", StorageDISK_Drive);
+
 		// Set SD storage status
 		// if(unit == MSD_DISK_UNIT)
 		StorageStatus[unit] = STORAGE_MOUNTED;
@@ -461,15 +463,18 @@ uint32_t Storage_GetFree (uint8_t unit)
 	#endif
 }
 
-const char *Storage_GetDrive(uint8_t unit)
+uchar Storage_GetDrive(uint8_t unit, char *disk)
 {
 	#ifdef CONTEXT_SD
-	if(StorageStatus[unit] == STORAGE_MOUNTED)
-		return StorageDISK_Drive;
+	if((StorageStatus[unit] == STORAGE_MOUNTED)&&(disk != NULL))
+	{
+		strcpy(disk, StorageDISK_Drive);
+		return 0;
+	}
 	else
-		return '\0';
+		return 1;
 	#else
-	return 0;
+	return 1;
 	#endif
 }
 

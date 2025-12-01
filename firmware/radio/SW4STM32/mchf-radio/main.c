@@ -37,12 +37,15 @@ TaskHandle_t 							hTrxTask	= NULL;
 TaskHandle_t 							hKbdTask	= NULL;
 TaskHandle_t 							hLraTask	= NULL;
 TaskHandle_t 							hSdcTask	= NULL;
+TaskHandle_t 							hAppTask	= NULL;
 
-QueueHandle_t 							hEspMessage;
+//QueueHandle_t 							hEspMessage;
 
-#ifdef CONTEXT_DSP
-osMessageQId 							hDspMessage;
-#endif
+//#ifdef CONTEXT_DSP
+//osMessageQId 							hDspMessage;
+//#endif
+
+APPLOADER_QUEUE_PARAMETERS 				pxAppLoaderParameters;
 
 // Combined LCD/Touch reset flag
 uchar lcd_touch_reset_done = 0;
@@ -179,6 +182,10 @@ static void tasks_pre_os_init(void)
 	#ifdef CONTEXT_SD
 	Storage_Init();
 	#endif
+
+	#ifdef CONTEXT_APP
+	os_apploader_init();
+	#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -193,12 +200,25 @@ static int start_proc(void)
 {
 	BaseType_t res;
 
-	hEspMessage = xQueueCreate(5, sizeof(struct ESPMessage *));
+	//hEspMessage = xQueueCreate(5, sizeof(struct ESPMessage *));
 
-	#ifdef CONTEXT_DSP
-	osMessageQDef(dsp_queue, 5, sizeof(struct DSPMessage *));
-	hDspMessage = osMessageCreate (osMessageQ(dsp_queue), NULL);
-	#endif
+	//#ifdef CONTEXT_DSP
+	//osMessageQDef(dsp_queue, 5, sizeof(struct DSPMessage *));
+	//hDspMessage = osMessageCreate (osMessageQ(dsp_queue), NULL);
+	//#endif
+
+	// Create the queue RX and TX queue used by the App Loader service and the USB driver
+	// Pass a pointer to the queue in the parameter structure.
+	pxAppLoaderParameters.xAppLoaderRxQueue 		= xQueueCreate(APP_LOADER_QUEUE_SIZE,(unsigned portCHAR)sizeof(ulong));
+    pxAppLoaderParameters.xAppLoaderTxQueue 		= xQueueCreate(APP_LOADER_QUEUE_SIZE,(unsigned portCHAR)sizeof(ulong));
+
+  	pxAppLoaderParameters.xI2CDriverRxQueue 		= xQueueCreate(APP_LOADER_QUEUE_SIZE,(unsigned portCHAR)sizeof(ulong));
+    pxAppLoaderParameters.xI2CDriverTxQueue 		= xQueueCreate(APP_LOADER_QUEUE_SIZE,(unsigned portCHAR)sizeof(ulong));
+
+	pxAppLoaderParameters.xCryptoServiceRxQueue 	= xQueueCreate(APP_LOADER_QUEUE_SIZE,(unsigned portCHAR)sizeof(ulong));
+    pxAppLoaderParameters.xCryptoServiceTxQueue 	= xQueueCreate(APP_LOADER_QUEUE_SIZE,(unsigned portCHAR)sizeof(ulong));
+
+    pxAppLoaderParameters.ulTasksStatus 			= 0;	// nothing running
 
 	#ifdef CONTEXT_VIDEO
 	res = xTaskCreate(	(TaskFunction_t)ui_proc_task,\
@@ -379,6 +399,21 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create sd card process\r\n");
+    	return 12;
+    }
+	#endif
+
+	#ifdef CONTEXT_APP
+    res = xTaskCreate(	(TaskFunction_t)os_apploader_task,\
+    					APP_PROC_START_NAME,\
+						APP_PROC_STACK_SIZE,\
+						(void *)&pxAppLoaderParameters,\
+						APP_PROC_PRIORITY,\
+						&hAppTask);
+
+    if(res != pdPASS)
+    {
+    	printf("unable to create app loader process\r\n");
     	return 12;
     }
 	#endif

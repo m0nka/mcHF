@@ -100,8 +100,8 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 //
 WM_HTIMER 						hTimerListFill;
 //
-extern 	osMessageQId 			hEspMessage;
-struct 	ESPMessage				esp_msg_i;
+//extern 	osMessageQId 			hEspMessage;
+//struct 	ESPMessage				esp_msg_i;
 //
 ulong 							state_id  = 0xFF;
 
@@ -269,6 +269,7 @@ static void info_state_machine(WM_MESSAGE * pMsg)
 	LISTBOX_SetSel(hList, -1);
 
 	// Caller finished ?
+#if 0
 	if(esp_msg_i.ucProcStatus == TASK_PROC_DONE)
 	{
 		state_id++;									// next state
@@ -276,6 +277,7 @@ static void info_state_machine(WM_MESSAGE * pMsg)
 	}
 	else if(esp_msg_i.ucProcStatus == TASK_PROC_WORK)
 		return;
+#endif
 
 	//--printf("state id: %d\r\n", state_id);
 
@@ -331,6 +333,7 @@ static void info_state_machine(WM_MESSAGE * pMsg)
 			state_id++;
 			break;
 
+#if 0
 		// ESP32 Firmware version request
 		case 6:
 		{
@@ -339,7 +342,9 @@ static void info_state_machine(WM_MESSAGE * pMsg)
 			osMessagePut(hEspMessage, (ulong)&esp_msg_i, osWaitForever);
 			break;
 		}
+#endif
 
+#if 0
 		// Result from previous state
 		case 7:
 		{
@@ -353,7 +358,9 @@ static void info_state_machine(WM_MESSAGE * pMsg)
 			state_id++;
 			break;
 		}
+#endif
 
+#if 0
 		// ESP32 WiFi details
 		case 8:
 		{
@@ -362,7 +369,9 @@ static void info_state_machine(WM_MESSAGE * pMsg)
 			osMessagePut(hEspMessage, (ulong)&esp_msg_i, osWaitForever);
 			break;
 		}
+#endif
 
+#if 0
 		// Result from previous state
 		case 9:
 		{
@@ -390,6 +399,7 @@ static void info_state_machine(WM_MESSAGE * pMsg)
 			state_id++;
 			break;
 		}
+#endif
 
 		default:
 			break;
@@ -421,7 +431,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 			// Start the state machine
 			hTimerListFill = WM_CreateTimer(pMsg->hWin, 0, LIST_TIMER_RESOLUTION, 0);
-			esp_msg_i.ucProcStatus = TASK_PROC_IDLE;
+//			esp_msg_i.ucProcStatus = TASK_PROC_IDLE;
 			state_id  = 0;
 
 			break;

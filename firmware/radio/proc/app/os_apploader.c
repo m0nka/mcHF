@@ -91,11 +91,14 @@ static uchar ucAppLoaderSendQueuedMessage(xQueueHandle pvQueueHandle, ulong *ulM
 {
 	ulong ulDummy;
 	uchar ucCount;
-#if 0
+
+	if(pvQueueHandle == NULL)
+		return 0;
+
 	/* Clear Rx Queue before posting */
-	while( ucQueueMessagesWaiting(pvQueueHandle))
+	while(uxQueueMessagesWaiting(pvQueueHandle))
 	{
-		cQueueReceive(pvQueueHandle,(void *)&ulDummy, ( portTickType ) 0 );																
+		xQueueReceive(pvQueueHandle,(void *)&ulDummy, (portTickType)0);
 	}
 	
 	/* Send all items */			
@@ -104,10 +107,10 @@ static uchar ucAppLoaderSendQueuedMessage(xQueueHandle pvQueueHandle, ulong *ulM
     	ulDummy = *ulMessageBuffer++;
 				    
 	    /* Insert the item */
-		if( cQueueSend(pvQueueHandle, (void *)&ulDummy, ( portTickType ) 0 ) != pdPASS )
+		if(xQueueSend(pvQueueHandle, (void *)&ulDummy, (portTickType)0) != pdPASS )
 			return 1;
 	}			    
-#endif
+
 	return 0;				    
 }
 
@@ -117,19 +120,22 @@ static uchar ucAppLoaderSendQueuedMessage(xQueueHandle pvQueueHandle, ulong *ulM
 //* Input Parameters    : Rx Queue ptr and items buffer
 //* Output Parameters   : none.
 //*--------------------------------------------------------------------------------------
-static uchar ucAppLoaderSednaWaitMessage(xQueueHandle pRxQueue,ulong *ulQueueBuffer)
+static uchar ucAppLoaderSednaWaitMessage(xQueueHandle pRxQueue, ulong *ulQueueBuffer)
 {
 	uchar ucNext = 0;
-#if 0
+
+	if(pRxQueue == NULL)
+		return 0;
+
 	*ulQueueBuffer = 0;	
-	while( ucQueueMessagesWaiting( pRxQueue ) )
+	while(uxQueueMessagesWaiting(pRxQueue))
 	{			
-		if(cQueueReceive( pRxQueue, (ulQueueBuffer + ucNext), ( portTickType ) 0 ) == pdPASS)
+		if(xQueueReceive(pRxQueue, (ulQueueBuffer + ucNext), (portTickType)0) == pdPASS)
 		{
 			ucNext++;									
 		}
 	}
-#endif
+
 	return ucNext;
 }
 
@@ -297,7 +303,7 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
  		return 11;
 
  	//vTaskSuspendAll();
- 	uiAppSize = s_strlen(chSomeAppName);
+ 	uiAppSize = strlen(chSomeAppName);
  	//cTaskResumeAll();
 
  	// Test for valid string
@@ -305,7 +311,7 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
  		return 12;
 
  	//vTaskSuspendAll();
- 	uiAppSize = s_strlen(chSomeCertPath);
+ 	uiAppSize = strlen(chSomeCertPath);
  	//cTaskResumeAll();
 
  	// Test for valid string
@@ -462,13 +468,13 @@ plain_elf:
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : vAppLoaderTask
+//* Function Name       : os_apploader_task
 //* Object              : App loader service task
-//* Input Parameters    : usb tranfer buffer ptr
-//* Output Parameters   : load result
-//* Functions called    : none
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
 //*----------------------------------------------------------------------------
-static void  vAppLoaderTask(void *pvParameters)
+void os_apploader_task(void *pvParameters)
 {
 	APPLOADER_QUEUE_PARAMETERS 	*pxAppLdrParameters;
 	ulong 						ulRxData[10],ulTxData[10],ulRxDataA[10];
@@ -489,9 +495,8 @@ static void  vAppLoaderTask(void *pvParameters)
     /* Copy to public, needed by some application API's instead of the Service Task loop */
     pxAppLdrParametersPub = pxAppLdrParameters;
 
-   	#if (SEDNA_DEBUG_BUILD == 1)
-    //DebugPrint("Aplication Loader started.\n\r");
-	#endif
+	vTaskDelay(APP_PROC_START_DELAY);
+	printf("start\r\n");
 
 	for(;;)
 	{
@@ -663,13 +668,13 @@ static void  vAppLoaderTask(void *pvParameters)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : ucAppLoaderStartTask
+//* Function Name       : os_apploader_init
 //* Object              : start loader service
 //* Input Parameters    : none
 //* Output Parameters   : none
 //* Functions called    : none
 //*----------------------------------------------------------------------------
-void ucAppLoaderStartTask(NewTaskData *ntd,void *xAppLoaderParams,uchar ucPriority,ushort usStackSize)
+void os_apploader_init(void)
 {    
 	uchar 		i;
 	
@@ -677,7 +682,7 @@ void ucAppLoaderStartTask(NewTaskData *ntd,void *xAppLoaderParams,uchar ucPriori
 	ntd->pcName 	= "UiMainTask";
 	#endif
 	
-	ntd->pvTaskCode = vAppLoaderTask;
+//!	ntd->pvTaskCode = vAppLoaderTask;
 	
 	// Clear applications struct - we clear app handle, as we use it
 	// for enumeration later 

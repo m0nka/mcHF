@@ -81,6 +81,7 @@
 #include "keypad_proc.h"
 #include "lora_proc.h"
 #include "storage_proc.h"
+#include "os_apploader.h"
 
 /* Exported types ------------------------------------------------------------*/
 typedef struct Bitmap_Res_s

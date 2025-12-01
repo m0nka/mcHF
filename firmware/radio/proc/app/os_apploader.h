@@ -37,6 +37,8 @@
 
 #define MIN_STACK_SIZE				32
 
+#define APP_LOADER_QUEUE_SIZE		10
+
 /* ----------- Struct to hold loaded applications parameters ------------ 	*/
 typedef struct APPLOADER_APP_PARAMETERS
 {
@@ -102,7 +104,10 @@ typedef struct NewTaskData
 
 } NewTaskData;
 
-void  	ucAppLoaderStartTask(NewTaskData *ntd,void *xAppLoaderParams, unsigned portCHAR ucPriority,ushort usStackSize);
+//void  	ucAppLoaderStartTask(NewTaskData *ntd,void *xAppLoaderParams, unsigned portCHAR ucPriority,ushort usStackSize);
+void os_apploader_task(void *pvParameters);
+void os_apploader_init(void);
+
 void 	*pvSednaCreateThread(pdTASK_CODE pvTaskCode, const portCHAR *pcName, void *pvParameters);
 
 #endif

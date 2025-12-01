@@ -91,6 +91,6 @@ uint8_t     Storage_GetStatus(uint8_t unit);
 uint32_t 	Storage_GetCapacity(uint8_t unit);
 uint32_t 	Storage_GetLabel(char *label);
 uint32_t 	Storage_GetFree(uint8_t unit);
-const char *Storage_GetDrive(uint8_t unit);
+uchar 		Storage_GetDrive(uint8_t unit, char *disk);
 
 #endif
