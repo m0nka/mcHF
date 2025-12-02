@@ -341,8 +341,8 @@ int32_t sd_card_set_exti_irq(uint32_t Instance)
 {
 	GPIO_InitTypeDef gpio_init_structure;
 
-	if(Instance> SD_INSTANCES_NBR)
-		return BSP_ERROR_WRONG_PARAM;
+	//if(Instance> SD_INSTANCES_NBR)
+	//	return BSP_ERROR_WRONG_PARAM;
 
 	gpio_init_structure.Pin 	= SD_DET;
 	gpio_init_structure.Pull 	= GPIO_PULLUP;

@@ -32,47 +32,7 @@ static Diskio_drvTypeDef  	const * Storage_Driver[NUM_DISK_UNITS];
 static  uint8_t           	StorageID[NUM_DISK_UNITS];
 static STORAGE_Status_t   	StorageStatus[NUM_DISK_UNITS];
 
-osThreadId                	StorageThreadId = {0};
-
-//*----------------------------------------------------------------------------
-//* Function Name       : storage_proc_detect_sd_card
-//* Object              :
-//* Notes    			:
-//* Notes   			:
-//* Notes    			:
-//* Context    			: CONTEXT_IRQ
-//*----------------------------------------------------------------------------
-void storage_proc_detect_sd_card(ulong state)
-{
-	//if(!StorageEvent)
-	//	return;
-
-	if(StorageThreadId == NULL)
-		return;
-
-	// Notify storage thread
-	#if 0
-	if(!state)
-	{
-		printf("conn  \r\n");
-		osMessagePut(StorageEvent, MSDDISK_CONNECTION_EVENT, 	0);
-	}
-	else
-		osMessagePut(StorageEvent, MSDDISK_DISCONNECTION_EVENT, 0);
-	#else
-	BaseType_t xHigherPriorityTaskWoken;
-	ulong id;
-
-	if(!state)
-		id = MSDDISK_CONNECTION_EVENT;
-	else
-		id = MSDDISK_DISCONNECTION_EVENT;
-
-	xHigherPriorityTaskWoken = pdFALSE;
-	xTaskNotifyFromISR(StorageThreadId, id, eSetBits, &xHigherPriorityTaskWoken );
-	portYIELD_FROM_ISR(xHigherPriorityTaskWoken );
-	#endif
-}
+extern TaskHandle_t 		hSdcTask;
 
 //*----------------------------------------------------------------------------
 //* Function Name       : EXTI0_IRQHandler
@@ -86,10 +46,11 @@ void EXTI0_IRQHandler(void)
 {
 	if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_0) != 0x00U)
 	{
-		ulong port_val = HAL_GPIO_ReadPin(SD_DET_PORT, SD_DET);
+		BaseType_t xHigherPriorityTaskWoken;
 
-		//printf("sd irq(%d)\r\n", (int)port_val);
-		storage_proc_detect_sd_card(port_val);
+		xHigherPriorityTaskWoken = pdFALSE;
+		xTaskNotifyFromISR(hSdcTask, 0x45, eSetBits, &xHigherPriorityTaskWoken);
+		portYIELD_FROM_ISR(xHigherPriorityTaskWoken );
 
 		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_0);
 	}
@@ -209,12 +170,14 @@ void StorageThread(void const * argument)
 	vTaskDelay(SD_PROC_START_DELAY);
 	printf("start  \r\n");
 
+	#ifndef SD_DETECT_BEFORE_OS
+	//
 	// Initialize the MSD Storage
-	#if 1
 	storage_proc_init_msd();
-
+	//
 	// Configure SD Interrupt mode
 	sd_card_set_exti_irq(0);
+	//
 	#endif
 
 	//
@@ -239,9 +202,18 @@ void StorageThread(void const * argument)
 			HAL_NVIC_DisableIRQ  (EXTI0_IRQn);
 
 			// Debounce delay
-			vTaskDelay(100);
+			vTaskDelay(80);
 
-			//switch(event.value.v)
+			ulong port_val = HAL_GPIO_ReadPin(SD_DET_PORT, SD_DET);
+
+			//--printf("after debounce(%d)\r\n", (int)port_val);
+
+			// Overwrite with debounce value
+			if(!port_val)
+				ulNotificationValue = MSDDISK_CONNECTION_EVENT;
+			else
+				ulNotificationValue = MSDDISK_DISCONNECTION_EVENT;
+
 			switch(ulNotificationValue)
 			{
         		case MSDDISK_CONNECTION_EVENT:
@@ -332,13 +304,17 @@ void Storage_Init(void)
 	// GPIO init
 	sd_card_low_level_init(0);
 
+	#ifdef SD_DETECT_BEFORE_OS
+	//
 	// Initialize the MSD Storage
-	#if 0
 	storage_proc_init_msd();
-
+	//
 	// Configure SD Interrupt mode
 	sd_card_set_exti_irq(0);
+	//
 	#endif
+
+	printf("sd low init \r\n");
 }
 
 void Storage_DeInit(void)
@@ -352,11 +328,11 @@ void Storage_DeInit(void)
 	}
 
 	// Terminate Storage background task
-	if(StorageThreadId)
-	{
-		osThreadTerminate (StorageThreadId);
-		StorageThreadId = 0;
-	}
+	//if(StorageThreadId)
+	//{
+	//	osThreadTerminate (StorageThreadId);
+	//	StorageThreadId = 0;
+	//}
 
 	// Delete Storage Message Queue
 	//if(StorageEvent)
@@ -415,7 +391,7 @@ uint32_t Storage_GetCapacity (uint8_t unit)
 	#endif
 }
 
-uint32_t Storage_GetLabel(char *label)
+uint32_t Storage_GetLabel(uint8_t unit, char *label)
 {
 	#ifdef CONTEXT_SD
 	FRESULT res;
@@ -424,13 +400,13 @@ uint32_t Storage_GetLabel(char *label)
 	if(label == NULL)
 		return FR_INT_ERR;
 
-	//if(StorageID[unit])
-	//{
+	if(StorageID[unit])
+	{
 		osSemaphoreWait(StorageSemaphore[0], osWaitForever);
 		fs = &StorageDISK_FatFs[0];
 		res = f_getlabel(StorageDISK_Drive, label, NULL);
 		osSemaphoreRelease(StorageSemaphore[0]);
-	//}
+	}
 
 	return FR_OK;
 	#else

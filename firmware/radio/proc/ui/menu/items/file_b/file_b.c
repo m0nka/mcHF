@@ -57,7 +57,7 @@ K_ModuleItem_Typedef  file_b =
 	KillFileb
 };
 
-FILELIST_FileTypeDef  *pFileList;
+FILELIST_FileTypeDef  *pFileList = NULL;
 
 WM_HWIN 	hExplorerWin = 0;
 #ifdef USE_POPUP
@@ -124,6 +124,17 @@ static MENU_ITEM _aMenuItems[] =
   {"Cancel"             , ID_MENU_EXIT, 		0},
 };
 #endif
+
+static void file_b_free_memory(void)
+{
+	// Free list memory
+	if(pFileList != NULL)
+	{
+		//--printf("List free on exit \r\n");
+		vPortFree(pFileList);
+		pFileList = NULL;
+	}
+}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : vUsbSamSendQueuedMessage
@@ -701,6 +712,62 @@ void _FindFullPath(TREEVIEW_Handle hObj, TREEVIEW_ITEM_Handle hTVItem, char *str
 	//printf("path name: %s \r\n", str);
 }
 
+static void ShowFileDetails(WM_MESSAGE * pMsg)
+{
+	FILINFO fno;
+
+	//hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_FILENAME);
+	FILEMGR_GetFileOnly(str, SelectedFileName);
+	//TEXT_SetText(hItem, str);
+
+	//hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_LOCATION);
+
+	printf("path: %s \r\n", SelectedFileName);
+	//if(SelectedFileName[0] == '0')
+	//{
+		//  TEXT_SetText(hItem, "[USB Disk]");
+		//}
+		//else if(SelectedFileName[0] == '1')
+		//{
+		//TEXT_SetText(hItem, "[SD Card Slot]");
+	//}
+
+	int res = f_stat (SelectedFileName, &fno);
+	printf("res: %d \r\n", res);
+
+	if(fno.fdate == 0)
+	{
+		fno.fdate = (1 << 5) | 1; /* Set January, 1st */
+	}
+
+	sprintf(str, "%02hu/%02hu/%hu %02hu:%02hu:%02hu", ( fno.fdate) & 0x1F,
+                                        ((fno.fdate) >> 5) & 0x0F,
+                                        (((fno.fdate) >> 9) & 0x3F) + 1980,
+                                        ((fno.ftime) >> 11) & 0x1F,
+                                        ((fno.ftime) >> 5)  & 0x3F,
+                                        (fno.ftime) & 0x1F);
+
+	//hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_CREATION);
+	//TEXT_SetText(hItem, str);
+	printf("str: %s \r\n", str);
+
+	if (fno.fsize < 1024)
+	{
+		sprintf(str, "%lu Byte(s)", fno.fsize);
+	}
+	else if (fno.fsize < (1024 * 1024))
+	{
+		sprintf(str, "%lu KByte(s)", fno.fsize/ 1024);
+	}
+	else
+	{
+		sprintf(str, "%lu MByte(s)", fno.fsize/ 1024 / 1024);
+	}
+	//hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_FILESIZE);
+	//TEXT_SetText(hItem, str);
+	printf("str1: %s \r\n", str);
+}
+
 static void ShowNodeContent(WM_HWIN hTree, TREEVIEW_ITEM_Handle hNode, char *path, FILELIST_FileTypeDef *list) 
 {
   uint32_t i = 0, Position = 0;
@@ -754,7 +821,7 @@ static void ExploreDisks(WM_HWIN hTree)
 	char 					disk_label[64];
 
 	// Get Card label
-	if(Storage_GetLabel(disk_label) != 0)
+	if(Storage_GetLabel(MSD_DISK_UNIT, disk_label) != 0)
 	{
 		strcpy(disk_label, "NONAME");
 	}
@@ -978,7 +1045,14 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			EDIT_SetTextAlign(hItem,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
 			EDIT_SetText(hItem, "12345678");
 
+			// Allocate space for file list
 			pFileList = (FILELIST_FileTypeDef *)pvPortMalloc(sizeof(FILELIST_FileTypeDef));
+			if(pFileList == NULL)
+			{
+				printf("List alloc error !!! \r\n");
+				GUI_EndDialog(pMsg->hWin, 0);
+				break;
+			}
 			//printf("ptr %08x\r\n",pFileList);
 
 			pFileList->ptr = 0;
@@ -1015,7 +1089,8 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			{
 				case WM_NOTIFICATION_CHILD_DELETED:
 				{
-					if(pFileList != NULL) 	vPortFree(pFileList);
+					// Free list memory
+					file_b_free_memory();
 
 					#ifdef USE_POPUP
 					if(hFileInfo != 0)		hFileInfo = 0;
@@ -1026,6 +1101,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
        
 				case WM_NOTIFICATION_CLICKED:
 				{
+#if 1
 					if(Id == ID_TREEVIEW)
 					{
 						char ext[10];
@@ -1050,6 +1126,8 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 						_FindFullPath(pMsg->hWinSrc, hTreeView, SelectedFileName);
 						//printf("path name: %s \r\n", SelectedFileName);
 
+						ShowFileDetails(pMsg);
+
 						k_GetExtOnly(SelectedFileName, ext);
 
 						if(strcmp(ext, "bin") == 0)
@@ -1062,7 +1140,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 						//_OpenPopup(hPopUp, _aMenuItems, GUI_COUNTOF(_aMenuItems), State.x, State.y);
 						#endif
 					}
-
+#endif
 					break;
 				}
         
@@ -1127,7 +1205,9 @@ static void KillFileb(void)
 {
 	//printf("kill browser\r\n");
 
-	vPortFree(pFileList);
+	// Free list memory
+	file_b_free_memory();
+
 	GUI_EndDialog(hExplorerWin, 0);
 }
 

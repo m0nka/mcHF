@@ -805,7 +805,7 @@ void radio_init_on_reset(void)
 	tsu.curr_band 						= BAND_MODE_40;
 	tsu.band[tsu.curr_band].volume 		= 0;
 	tsu.band[tsu.curr_band].active_vfo  = VFO_A;
-	tsu.band[tsu.curr_band].vfo_a 		= 7150*1000 + 000;
+	tsu.band[tsu.curr_band].vfo_a 		= 7076*1000 + 000;
 	tsu.band[tsu.curr_band].fixed_mode 	= 0;
 	tsu.band[tsu.curr_band].nco_freq	= 0;
 	tsu.band[tsu.curr_band].demod_mode	= DEMOD_LSB;

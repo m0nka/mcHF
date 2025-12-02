@@ -13,6 +13,7 @@
 #ifndef __STORAGE_PROC_H
 #define __STORAGE_PROC_H
 
+#define SD_DETECT_BEFORE_OS
 #define STORAGE_BSP_INIT
 
 #define FILEMGR_LIST_DEPDTH                    24
@@ -87,10 +88,10 @@ void        Storage_Init(void);
 // -------------  				Access calls			--------------------
 // -------------------------------------------------------------------------
 
-uint8_t     Storage_GetStatus(uint8_t unit);
-uint32_t 	Storage_GetCapacity(uint8_t unit);
-uint32_t 	Storage_GetLabel(char *label);
-uint32_t 	Storage_GetFree(uint8_t unit);
-uchar 		Storage_GetDrive(uint8_t unit, char *disk);
+uint8_t     Storage_GetStatus	(uint8_t unit				);
+uint32_t 	Storage_GetCapacity	(uint8_t unit				);
+uint32_t 	Storage_GetLabel	(uint8_t unit, char *label	);
+uint32_t 	Storage_GetFree		(uint8_t unit				);
+uchar 		Storage_GetDrive	(uint8_t unit, char *disk	);
 
 #endif
