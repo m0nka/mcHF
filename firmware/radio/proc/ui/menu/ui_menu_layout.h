@@ -15,6 +15,8 @@
 
 #include "GUI.h"
 
+#define LIGHT_PINK		GUI_MAKE_COLOR(0x00C1B6FF)
+
 // ------------------------------------------------------
 #define BKG_COLOR_1							GUI_WHITE
 //
@@ -25,7 +27,7 @@
 #define MENU_BAR_Y_1						3			//443
 #define MENU_BAR_X_SIZE_1					260
 #define MENU_BAR_Y_SIZE_1					30
-#define MENU_BAR_COLOR_1					GUI_ORANGE
+#define MENU_BAR_COLOR_1					LIGHT_PINK
 #define MENU_TXT_COLOR_1					GUI_WHITE
 //
 #define MENU_BAR_X_2						5

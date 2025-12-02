@@ -76,7 +76,7 @@ static void _RefreshBrowser ( WM_HWIN hWin);
 static const GUI_WIDGET_CREATE_INFO _aDialog[] = 
 {
 // -----------------------------------------------------------------------------------------------------------------------------
-//							name			id					x		y		xsize	ysize	?		?		?
+//							name			id					x		y		xsz		ysz		?		?		?
 // -----------------------------------------------------------------------------------------------------------------------------
 // Self
 { WINDOW_CreateIndirect,	"",				ID_WINDOW_0,		0,    	0,		800,	430, 	0, 		0x64,	0 },
@@ -86,8 +86,12 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 { BUTTON_CreateIndirect, 	"Details",		ID_BUTTON_OPEN, 	670, 	310, 	120, 	45, 	0, 		0x0, 	0 },
 { TREEVIEW_CreateIndirect, 	"Treeview", 	ID_TREEVIEW, 		7, 		6, 		635, 	380, 	0, 		0x0, 	0 },
 //
-{ EDIT_CreateIndirect,     	"msd.Edit",    	ID_EDIT_MSD,   		7,  	395,  	100,  	25, 	0,		0x0,	0 	},
+{ EDIT_CreateIndirect,     	"msd.Edit",    	ID_EDIT_MSD,   		7,  	395,  	100,  	25, 	0,		0x0,	0 },
 { PROGBAR_CreateIndirect, 	"Progbar", 		ID_PROGBAR_MSD, 	117,	395, 	525, 	25, 	0, 		0x0, 	0 },
+// Power out and Vcc text
+{ EDIT_CreateIndirect, 		"Edit1", 		GUI_ID_EDIT1,		670,	40,		120, 	30,  	0, 		0x0,	0 },
+{ EDIT_CreateIndirect, 		"Edit2", 		GUI_ID_EDIT2,		670,	80,		120, 	30,  	0, 		0x0,	0 },
+{ EDIT_CreateIndirect, 		"Edit3", 		GUI_ID_EDIT3,		670,	120,	120, 	30,  	0, 		0x0,	0 },
 };
 
 #ifdef USE_POPUP
@@ -134,6 +138,15 @@ static void file_b_free_memory(void)
 		vPortFree(pFileList);
 		pFileList = NULL;
 	}
+}
+
+static void file_b_set_edit_look(WM_HWIN hItem)
+{
+	EDIT_SetFont(hItem,&GUI_Font16B_1);
+	EDIT_SetBkColor(hItem,EDIT_CI_ENABLED, LIGHT_PINK);
+	EDIT_SetTextColor(hItem,EDIT_CI_ENABLED, GUI_WHITE);
+	EDIT_SetTextAlign(hItem,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
+	EDIT_SetMaxLen(hItem, 32);
 }
 
 //*----------------------------------------------------------------------------
@@ -712,60 +725,67 @@ void _FindFullPath(TREEVIEW_Handle hObj, TREEVIEW_ITEM_Handle hTVItem, char *str
 	//printf("path name: %s \r\n", str);
 }
 
-static void ShowFileDetails(WM_MESSAGE * pMsg)
+static void ShowFileDetails(WM_HWIN hWin)
 {
+	WM_HWIN hItem1, hItem2, hItem3;
 	FILINFO fno;
 
-	//hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_FILENAME);
-	FILEMGR_GetFileOnly(str, SelectedFileName);
-	//TEXT_SetText(hItem, str);
+	hItem1 = WM_GetDialogItem(hWin, GUI_ID_EDIT1);
+	hItem2 = WM_GetDialogItem(hWin, GUI_ID_EDIT2);
+	hItem3 = WM_GetDialogItem(hWin, GUI_ID_EDIT3);
 
-	//hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_LOCATION);
-
-	printf("path: %s \r\n", SelectedFileName);
-	//if(SelectedFileName[0] == '0')
-	//{
-		//  TEXT_SetText(hItem, "[USB Disk]");
-		//}
-		//else if(SelectedFileName[0] == '1')
-		//{
-		//TEXT_SetText(hItem, "[SD Card Slot]");
-	//}
+	//printf("path: %s \r\n", SelectedFileName);
 
 	int res = f_stat (SelectedFileName, &fno);
-	printf("res: %d \r\n", res);
+	if(res != FR_OK)
+	{
+		printf("res: %d \r\n", res);
+		EDIT_SetText(hItem1, "");
+		EDIT_SetText(hItem2, "");
+		EDIT_SetText(hItem3, "");
+		return;
+	}
 
+	// File name
+	FILEMGR_GetFileOnly(str, SelectedFileName);
+	//printf("file: %s \r\n", str);
+	EDIT_SetText(hItem1, str);
+
+	// File date
+	//printf("date: %d \r\n", fno.fdate);
 	if(fno.fdate == 0)
 	{
 		fno.fdate = (1 << 5) | 1; /* Set January, 1st */
 	}
 
-	sprintf(str, "%02hu/%02hu/%hu %02hu:%02hu:%02hu", ( fno.fdate) & 0x1F,
-                                        ((fno.fdate) >> 5) & 0x0F,
-                                        (((fno.fdate) >> 9) & 0x3F) + 1980,
-                                        ((fno.ftime) >> 11) & 0x1F,
-                                        ((fno.ftime) >> 5)  & 0x3F,
-                                        (fno.ftime) & 0x1F);
+	sprintf(str, "%02d/%02d/%d %02d:%02d:%02d", ( fno.fdate) & 0x1F,
+                                        		((fno.fdate) >> 5) & 0x0F,
+												(((fno.fdate) >> 9) & 0x3F) + 1980,
+												((fno.ftime) >> 11) & 0x1F,
+												((fno.ftime) >> 5)  & 0x3F,
+												(fno.ftime) & 0x1F);
 
-	//hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_CREATION);
-	//TEXT_SetText(hItem, str);
-	printf("str: %s \r\n", str);
+	//printf("str: %s \r\n", str);
 
+	EDIT_SetText(hItem2, str);
+
+	// File size
+	//printf("size: %d \r\n", fno.fsize);
 	if (fno.fsize < 1024)
 	{
-		sprintf(str, "%lu Byte(s)", fno.fsize);
+		sprintf(str, "%d Byte(s)", (int)fno.fsize);
 	}
 	else if (fno.fsize < (1024 * 1024))
 	{
-		sprintf(str, "%lu KByte(s)", fno.fsize/ 1024);
+		sprintf(str, "%d KByte(s)", (int)(fno.fsize/1024));
 	}
 	else
 	{
-		sprintf(str, "%lu MByte(s)", fno.fsize/ 1024 / 1024);
+		sprintf(str, "%d MByte(s)", (int)(fno.fsize/1024/1024));
 	}
-	//hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_FILESIZE);
-	//TEXT_SetText(hItem, str);
-	printf("str1: %s \r\n", str);
+	//printf("str1: %s \r\n", str);
+
+	EDIT_SetText(hItem3, str);
 }
 
 static void ShowNodeContent(WM_HWIN hTree, TREEVIEW_ITEM_Handle hNode, char *path, FILELIST_FileTypeDef *list) 
@@ -865,13 +885,21 @@ static void ExploreDisks(WM_HWIN hTree)
 	WM_SetFocus(hTree);
 }
 
-static void _RefreshBrowser ( WM_HWIN hWin)
+static void _RefreshBrowser(WM_HWIN hWin)
 {
 	WM_HWIN 				hItem, Hint;
 	TREEVIEW_ITEM_Handle  	hTreeView;
 	uint32_t 				free_size = 0, total_size = 0, perc = 0;
 	char 					str[FILEMGR_FILE_NAME_SIZE];
 	uchar					detected = 0;
+
+	//printf("refresh \r\n");
+
+	// Delete file selection
+	SelectedFileName[0] = 0;
+
+	// Clear details
+	ShowFileDetails(hWin);
 
 	// Create progress hint
 	GUI_Exec();
@@ -896,7 +924,7 @@ static void _RefreshBrowser ( WM_HWIN hWin)
 				//PROGBAR_SetMinMax(hItem, 0, 100);
 				PROGBAR_SetValue (hItem,perc);
 				hItem = WM_GetDialogItem(hWin, ID_EDIT_MSD);
-				sprintf(str, "%d MB", (int)(total_size / (2 * 1024)));
+				sprintf(str, "%d MB", (int)(total_size/(2*1024)));
 				EDIT_SetText(hItem, str);
 
 				detected = 1;
@@ -907,7 +935,7 @@ static void _RefreshBrowser ( WM_HWIN hWin)
 	{
 		PROGBAR_SetValue (hItem, 0);
 		hItem = WM_GetDialogItem(hWin, ID_EDIT_MSD);
-		EDIT_SetText(hItem, "[N/A]" );
+		EDIT_SetText(hItem, "" );
 	}
   
 	hTreeView = WM_GetDialogItem(hWin, ID_TREEVIEW);
@@ -1038,12 +1066,21 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			TREEVIEW_SetImage(hTreeView,TREEVIEW_BI_LEAF,	&bmTextLog);
 
 			// MSD Size Edit
+			#if 0
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_EDIT_MSD);
 			EDIT_SetFont(hItem,&GUI_Font20_1);
 			EDIT_SetBkColor(hItem,EDIT_CI_ENABLED, GUI_WHITE );
 			EDIT_SetTextColor(hItem,EDIT_CI_ENABLED, GUI_STCOLOR_LIGHTBLUE);
 			EDIT_SetTextAlign(hItem,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
 			EDIT_SetText(hItem, "12345678");
+			#else
+			file_b_set_edit_look(WM_GetDialogItem(pMsg->hWin, ID_EDIT_MSD));
+			#endif
+
+			// File details
+			file_b_set_edit_look(WM_GetDialogItem(pMsg->hWin, GUI_ID_EDIT1));
+			file_b_set_edit_look(WM_GetDialogItem(pMsg->hWin, GUI_ID_EDIT2));
+			file_b_set_edit_look(WM_GetDialogItem(pMsg->hWin, GUI_ID_EDIT3));
 
 			// Allocate space for file list
 			pFileList = (FILELIST_FileTypeDef *)pvPortMalloc(sizeof(FILELIST_FileTypeDef));
@@ -1126,10 +1163,13 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 						_FindFullPath(pMsg->hWinSrc, hTreeView, SelectedFileName);
 						//printf("path name: %s \r\n", SelectedFileName);
 
-						ShowFileDetails(pMsg);
+						// Show file details in the right panel
+						ShowFileDetails(pMsg->hWin);
 
+						// Need extension to decide button caption
 						k_GetExtOnly(SelectedFileName, ext);
 
+						// Change caption
 						if(strcmp(ext, "bin") == 0)
 							BUTTON_SetText(hItem, "Run");
 						else if(strcmp(ext, "ini") == 0)
