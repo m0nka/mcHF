@@ -119,15 +119,15 @@ uchar ucSednaElfProcessElf(uchar *ucProcessImage)
 	//DebugPrintValue("uiFuncSize1",uiFuncSize1);					
 									
 	/* Allocate temp program section buffer - ER_R0 */
-	ucProgramSectionBuffer = (uchar *) os_heap_alloc(uiFuncSize1);
+	ucProgramSectionBuffer = (uchar *) pvPortMalloc(uiFuncSize1);
 	
 	/* If the 'ER_RW' section is present allocate buffer for it */
 	if(uiFuncSize2 != NULL)
-   	  ucIDataSectionBuffer = (uchar *) os_heap_alloc(uiFuncSize2);
+   	  ucIDataSectionBuffer = (uchar *) pvPortMalloc(uiFuncSize2);
 							
     /* If the 'ER_ZI' section is present allocate buffer for it */
 	if(uiFuncSize3 != NULL)
-   	  ucUDataSectionBuffer = (uchar *) os_heap_alloc(uiFuncSize3);
+   	  ucUDataSectionBuffer = (uchar *) pvPortMalloc(uiFuncSize3);
 																	
 	/* Restart the kernel */
    	//cTaskResumeAll();		
@@ -187,15 +187,15 @@ uchar ucSednaElfProcessElf(uchar *ucProcessImage)
 	vSednaElfParceOffcets(ucProcessImageBackUp,uiFuncSize1,uiVirtualAddr1);
 					
 	/* Free program section buffer */
-   	os_heap_free( ucProgramSectionBuffer );
+	vPortFree( ucProgramSectionBuffer );
    	
    	/* Free idata section buffer */
    	if(uiFuncSize2 != NULL)
-	  os_heap_free( ucIDataSectionBuffer );
+   		vPortFree( ucIDataSectionBuffer );
 	  
 	/* Free udata section buffer */  
 	if(uiFuncSize3 != NULL)
-	  os_heap_free( ucUDataSectionBuffer );  
+		vPortFree( ucUDataSectionBuffer );
 	  	
 	return SEDNA_APP_LOAD_SUCCESS;
 }
@@ -211,14 +211,14 @@ static int iSednaElfIsValidElf(uchar *ucImagePtr)
 {   
 	int res;
 	
-	vTaskSuspendAll();
+	//vTaskSuspendAll();
 	
     if ((*ucImagePtr == 0x7F) && (strncmp((char *)(ucImagePtr + 1), "ELF", 3) == 0))
       res = 1;
     else
       res = 0;
     
-    cTaskResumeAll();
+    //cTaskResumeAll();
     
 	return res;
 }
@@ -245,7 +245,7 @@ static int iSednaElfLoadNames(Elf32_Ehdr *header, uchar *ucImagePtr)
     /* load the general string table */
     ptr = (Elf32_Shdr *)(ucImagePtr + ewSednaElfEwordSwap(header->e_shoff));
     
-    vTaskSuspendAll();
+    //vTaskSuspendAll();
     
     for (i=0; i < (int)ehSednaElfEhalfSwap(header->e_shnum); i++) 
     {        	
@@ -258,7 +258,7 @@ static int iSednaElfLoadNames(Elf32_Ehdr *header, uchar *ucImagePtr)
 	    	ptr++;			    		    	
     }
     
-    cTaskResumeAll();
+    //cTaskResumeAll();
     
     //if (sym_name_table == NULL) {
 	//	//printf("\nNo symbol table defined!\n\n");
@@ -297,9 +297,9 @@ static void vSednaElfParceSections(Elf32_Ehdr *header, uchar *image, uint *offce
     for (i=0;i<num_secs;i++) 
 	{ 		
 		/* Extract program data section params */
-		vTaskSuspendAll();
+		//vTaskSuspendAll();
 		iResult = strncmp((char *)(name_table + ewSednaElfEwordSwap(ptr->sh_name)), cSectionName, 5);
-		cTaskResumeAll();
+		//cTaskResumeAll();
 		
 		if(iResult == 0)
 		{

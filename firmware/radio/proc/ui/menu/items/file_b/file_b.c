@@ -143,7 +143,7 @@ static void file_b_free_memory(void)
 static void file_b_set_edit_look(WM_HWIN hItem)
 {
 	EDIT_SetFont(hItem,&GUI_Font16B_1);
-	EDIT_SetBkColor(hItem,EDIT_CI_ENABLED, LIGHT_PINK);
+	EDIT_SetBkColor(hItem,EDIT_CI_ENABLED, GUI_DARKMAGENTA);
 	EDIT_SetTextColor(hItem,EDIT_CI_ENABLED, GUI_WHITE);
 	EDIT_SetTextAlign(hItem,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
 	EDIT_SetMaxLen(hItem, 32);
@@ -158,14 +158,13 @@ static void file_b_set_edit_look(WM_HWIN hItem)
 //*----------------------------------------------------------------------------
 static uchar vUiSendQueuedMessage(xQueueHandle pvQueueHandle, ulong *ulMessageBuffer, uchar ucNumberOfItems)
 {
-#if 0
 	ulong ulDummy;
 	uchar ucCount;
 
 	/* Clear Rx Queue before posting */
-	while( ucQueueMessagesWaiting(pvQueueHandle))
+	while( uxQueueMessagesWaiting(pvQueueHandle))
 	{
-		cQueueReceive(pvQueueHandle,(void *)&ulDummy, ( portTickType ) 0 );
+		xQueueReceive(pvQueueHandle, (void *)&ulDummy, (portTickType)0);
 	}
 
 	/* Send all items */
@@ -174,10 +173,10 @@ static uchar vUiSendQueuedMessage(xQueueHandle pvQueueHandle, ulong *ulMessageBu
     	ulDummy = *ulMessageBuffer++;
 
 	    /* Insert the item */
-		if( cQueueSend(pvQueueHandle, (void *)&ulDummy, ( portTickType ) 0 ) != pdPASS )
+		if(xQueueSend(pvQueueHandle, (void *)&ulDummy, (portTickType)0) != pdPASS )
 			return 1;
 	}
-#endif
+
 	return 0;
 }
 
@@ -190,24 +189,22 @@ static uchar vUiSendQueuedMessage(xQueueHandle pvQueueHandle, ulong *ulMessageBu
 static uchar  vUiSednaWaitMessage(xQueueHandle pRxQueue,ulong *ulQueueBuffer)
 {
 	uchar ucNext = 0;
-#if 0
+
 	*ulQueueBuffer = 0;
-	while( ucQueueMessagesWaiting( pRxQueue ) )
+	while(uxQueueMessagesWaiting(pRxQueue))
 	{
-		if(cQueueReceive( pRxQueue, (ulQueueBuffer + ucNext), ( portTickType ) 0 ) == pdPASS)
+		if(xQueueReceive( pRxQueue, (ulQueueBuffer + ucNext), (portTickType)0) == pdPASS)
 		{
 			ucNext++;
 		}
 	}
-#endif
+
 	return ucNext;
 }
 
+extern APPLOADER_QUEUE_PARAMETERS pxAppLoaderParameters;
 static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 {
-	printf("run app: %s \r\n", chAppName);
-
-#if 0
 	ulong 			ulData[10];
 	ulong			ulTimeout = 600;
 	uchar			ucSkip = 1;
@@ -215,13 +212,15 @@ static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 	uchar 			app_det[20];
 	char			chCertPath[32]; //= "C:\\System\\30000.crt";
 
+	printf("run app: %s \r\n", chAppName);
+
 	//DebugPrint(chDeviceSN);
 	//DebugPrint("\n\r");
 
 	//vUiEpsonInfoBox("Loading...",0,0);
 
-	if(!ucIsScript)
-	{
+	//if(!ucIsScript)
+	//{
 		// Check if sec processor was detected on load up
 		//if(chDeviceSN[0] == 0)
 		//{
@@ -234,24 +233,24 @@ static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 		//}
 
 		// Create device certificate path
-		vUiMemSet((uchar *)chCertPath,0,sizeof(chCertPath));
-		vTaskSuspendAll();
-		strcpy(chCertPath,"C:\\System\\");
+		//vUiMemSet((uchar *)chCertPath,0,sizeof(chCertPath));
+		//vTaskSuspendAll();
+		//strcpy(chCertPath,"C:\\System\\");
 		//strcat(chCertPath,chDeviceSN);
-		strcat(chCertPath,"100000");
-		strcat(chCertPath,".crt");
-		cTaskResumeAll();
+		//strcat(chCertPath,"100000");
+		//strcat(chCertPath,".crt");
+		//cTaskResumeAll();
 
 		// Insert the requst as a message
 		ulData[0] = 0xC3;
 		ulData[2] = (ulong)chCertPath;
-	}
-	else
-	{
-		// Insert the requst as a message
-		ulData[0] = 0xD1;
-		ulData[2] = 0;
-	}
+	//}
+	//else
+	//{
+	//	// Insert the requst as a message
+	//	ulData[0] = 0xD1;
+	//	ulData[2] = 0;
+	//}
 
 	// Insert path
 	ulData[1] = (ulong)chAppName;
@@ -261,13 +260,13 @@ static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 	#endif
 
 	// Post load request
-	if(vUiSendQueuedMessage(pxUsbFtdiParams->xAppLoaderRxQueue,ulData,3) != 0)
+	if(vUiSendQueuedMessage(pxAppLoaderParameters.xAppLoaderRxQueue,ulData,3) != 0)
 	{
 		#if (SEDNA_DEBUG_BUILD == 1)
 		//DebugPrint("err load!\n\r");
 		#endif
 
-		vUiEpsonInfoBox("Error msg1!",0,0);
+		//vUiEpsonInfoBox("Error msg1!",0,0);
 		goto clean_up;
 	}
 
@@ -277,9 +276,9 @@ static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 	#endif
 
 	/* Wait to check loading result */
-	while((vUiSednaWaitMessage(pxUsbFtdiParams->xAppLoaderTxQueue,ulData) == 0) && ulTimeout)
+	while((vUiSednaWaitMessage(pxAppLoaderParameters.xAppLoaderTxQueue,ulData) == 0) && ulTimeout)
 	{
-		OsSleep(20);
+		vTaskDelay(20);
 
 		ulTimeout--;
 	}
@@ -291,7 +290,7 @@ static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 		//DebugPrint("err timeout!\n\r");
 		#endif
 
-		vUiEpsonInfoBox("Timeout Err!",0,0);
+		//vUiEpsonInfoBox("Timeout Err!",0,0);
 		goto clean_up;
 	}
 
@@ -302,7 +301,7 @@ static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 		//DebugPrint("err ret msg!\n\r");
 		#endif
 
-		vUiEpsonInfoBox("Err Msg2!",0,0);
+		//vUiEpsonInfoBox("Err Msg2!",0,0);
 		goto clean_up;
 	}
 
@@ -314,10 +313,10 @@ static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 		#endif
 
 		//vTaskSuspendAll();
-		s_sprintf(chCertPath,"Exec Err: %d",(uchar)(ulData[1] & 0xFF));
+		//s_sprintf(chCertPath,"Exec Err: %d",(uchar)(ulData[1] & 0xFF));
 		//cTaskResumeAll();
 
-		vUiEpsonInfoBox(chCertPath,0,0);
+		//vUiEpsonInfoBox(chCertPath,0,0);
 		goto clean_up;
 	}
 
@@ -325,7 +324,7 @@ static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 	//DebugPrint("ok.\n\r");
 	#endif
 
-	vUiExtractHandleAndName(app_det,ulData);
+//!	vUiExtractHandleAndName(app_det,ulData);
 
 	//  --- Access violation here !!! ---
 	//DebugPrint((char *)(app_det + 4));
@@ -336,20 +335,19 @@ static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 	ucSkip = 0;
 
 	// Overwrite pub var
-	isScript = ucIsScript;
+	//isScript = ucIsScript;
 
 clean_up:
 
 	if(ucSkip)
 	{
 		/* Small Delay */
-		OsSleep(100);
+		//OsSleep(100);
 
 		/* Return in the Programs Menu */
-   		vUiListPrograms();
-		ucMsCurrentID = CURR_STATE_PROGRAM;
+   		//vUiListPrograms();
+		//ucMsCurrentID = CURR_STATE_PROGRAM;
 	}
-#endif
 }
 
 #ifdef USE_POPUP
@@ -1170,7 +1168,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 						k_GetExtOnly(SelectedFileName, ext);
 
 						// Change caption
-						if(strcmp(ext, "bin") == 0)
+						if(strcmp(ext, "elf") == 0)
 							BUTTON_SetText(hItem, "Run");
 						else if(strcmp(ext, "ini") == 0)
 							BUTTON_SetText(hItem, "Open");

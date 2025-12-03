@@ -269,13 +269,15 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
 {
 	uchar 		ucFuncResult,i;
 	uchar 		*ucCurrentFunctionBuffer;
-	uchar		ucAppName[16];
-	uchar		ucAppPriority = tskIDLE_PRIORITY;
+	uchar 		ucAppName[16];
+	uchar 		ucAppPriority = tskIDLE_PRIORITY;
 
-//!	FL_FILE 	*file 		= NULL;			// file ptr
-	uint 		uiAppSize 	= 0;			// file size
-	//int			j;
+	FRESULT 	res;
+	FIL   		*file 		= NULL;			// file ptr
+	FILINFO 	fno;
 
+	uint  		uiAppSize 	= 0;			// file size
+	ulong 		read;
 	NewTaskData ntd;
 
 	// Enumerate all app struct entries and find a empty one
@@ -291,7 +293,6 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
 
 		// Next entry
 		pxAppLoaderAppParameters++;
-
 	}
 
 	// Test for valid string ptr
@@ -318,43 +319,43 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
  	if(uiAppSize == 0)
  		return 13;
 
- 	// Open application by name, the Current Dir is already selected by UI task
-//! 	file = fl_fopen(chSomeAppName,"r");
-//!	if(file == NULL)
-//!		return 14;
+ 	res = f_stat(chSomeAppName, &fno);
+ 	if(res != FR_OK)
+ 		return 14;
 
-//! 	uiAppSize = file->filelength;
- 	//DebugPrintValue("size",uiAppSize);
+ 	uiAppSize = fno.fsize;
+ 	printf("size %d bytes\r\n", uiAppSize);
 
  	// Check size
 	if((uiAppSize == 0) || (uiAppSize > 0x8000))
-	{
-		//FileLib_fclose(file);
-//!		fl_fclose(file);
 		return 15;
-	}
+
+ 	// Open application by name, the Current Dir is already selected by UI task
+ 	res = f_open(&file, chSomeAppName, FA_READ);
+	if(res != FR_OK)
+		return 16;
 
 	// Allocate function buffer, at the moment allocate ELF size,
 	// not the real process size - to be fixed eventually !
 	ucCurrentFunctionBuffer = pvPortMalloc(uiAppSize);
 	if(ucCurrentFunctionBuffer == NULL)
 	{
-//!		fl_fclose(file);
+		f_close(file);
 		return SEDNA_APP_ALLOC_ERROR;
 	}
 
 	// Read data
-//!	if(fl_fread(ucCurrentFunctionBuffer,uiAppSize,1,file) != uiAppSize)
+	if(f_read(&file, ucCurrentFunctionBuffer, uiAppSize, (void *)&read) != FR_OK)
 	{
 		// Release app memory
 		vPortFree(ucCurrentFunctionBuffer);
-//!		fl_fclose(file);
+		f_close(file);
 
-		return 16;
+		return 17;
 	}
 
 	// Close file
-//!	fl_fclose(file);
+	f_close(file);
 
 	// Temp debug possibility to run plain ELF files - REMOVE ON RELEASE BUILD !!!
 	if( (*(ucCurrentFunctionBuffer + 0) == 0x7F) &&
@@ -515,7 +516,7 @@ void os_apploader_task(void *pvParameters)
 					// Load Application
 				    ucCallResult = ucAppLoaderLoadSednaApplication((char *)ulRxData[1],(char *)ulRxData[2],&xAppHandle,cCreatedAppName,pxAppLdrParameters);
 
-					//DebugPrintValue("load app res",ucCallResult);
+					printf("load app res %d \r\n",ucCallResult);
 
 		            // Insert the request ID
 				    ulTxData[0] = SEDNA_RETURN_LOAD_STATUS;
