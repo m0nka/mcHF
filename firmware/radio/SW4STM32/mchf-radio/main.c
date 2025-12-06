@@ -61,7 +61,7 @@ void HardFault_Handler(void)
 {
 	printf( "====================\r\n");
 	printf( "=    HARD FAULT    =\r\n");
-	printf( "=     %s     =\r\n", pcTaskGetName(NULL));
+	printf( "=       [%s]      =\r\n", pcTaskGetName(NULL));
 	printf( "====================\r\n");
 
 	#if 0

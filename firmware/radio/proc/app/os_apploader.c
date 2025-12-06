@@ -18,6 +18,7 @@
 #include "os_sednadecl.h"
 #include "os_sedna_exports.h"
 #include "os_sednaelf.h"
+#include "sdram.h"
 
 #include "os_apploader.h"
 
@@ -38,6 +39,29 @@ const unsigned portCHAR 	ucQueueSize = ( unsigned portCHAR ) 10;
 
 APPLOADER_APP_PARAMETERS 	*pxAppLdrParametersPub = NULL;
 
+
+static void os_apploader_get_ext(char * pFile, char * pExt)
+{
+  int Len;
+  int i;
+  int j;
+
+  /* Search beginning of extension */
+  Len = strlen(pFile);
+  for (i = Len; i > 0; i--) {
+    if (*(pFile + i) == '.') {
+      break;
+    }
+  }
+
+  /* Copy extension */
+  j = 0;
+  while (*(pFile + ++i) != '\0') {
+    *(pExt + j) = *(pFile + i);
+    j++;
+  }
+  *(pExt + j) = '\0';          /* Set end of string */
+}
 
 static portSHORT sTaskCreate(NewTaskData *nt)
 {
@@ -269,7 +293,10 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
 {
 	uchar 		ucFuncResult,i;
 	uchar 		*ucCurrentFunctionBuffer;
+
 	uchar 		ucAppName[16];
+	char 		ext[10];
+
 	uchar 		ucAppPriority = tskIDLE_PRIORITY;
 
 	FRESULT 	res;
@@ -300,8 +327,8 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
  		return 10;
 
  	// Test for valid string ptr
- 	if(chSomeCertPath == NULL)
- 		return 11;
+ 	//if(chSomeCertPath == NULL)
+ 	//	return 11;
 
  	//vTaskSuspendAll();
  	uiAppSize = strlen(chSomeAppName);
@@ -309,31 +336,78 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
 
  	// Test for valid string
  	if(uiAppSize == 0)
- 		return 12;
+ 		return 11;
 
  	//vTaskSuspendAll();
- 	uiAppSize = strlen(chSomeCertPath);
+ 	//uiAppSize = strlen(chSomeCertPath);
  	//cTaskResumeAll();
 
  	// Test for valid string
- 	if(uiAppSize == 0)
- 		return 13;
+ 	//if(uiAppSize == 0)
+ 	//	return 13;
+
+ 	printf("file: %s \r\n", chSomeAppName);
+
+ 	// Get extension
+ 	os_apploader_get_ext(chSomeAppName, ext);
+ 	//printf("ext: %s \r\n", ext);
 
  	res = f_stat(chSomeAppName, &fno);
  	if(res != FR_OK)
- 		return 14;
+ 		return 12;
 
  	uiAppSize = fno.fsize;
  	printf("size %d bytes\r\n", uiAppSize);
 
+ 	if(strcmp(ext, "elf") == 0)
+ 	{
+ 		goto process_elf;
+ 	}
+ 	else if(strcmp(ext, "bin") == 0)
+ 	{
+ 		uchar *p_f = (uchar *)SDRAM_APP_ADDR;
+
+ 		printf("open\r\n");// crash in fopen, low level driver still sucks ;(
+
+ 	 	res = f_open(&file, chSomeAppName, FA_READ);
+ 		if(res != FR_OK)
+ 			return 13;
+
+ 		printf("read\r\n");
+
+ 		if(f_read(&file, p_f, 32 /*uiAppSize*/, (void *)&read) != FR_OK)
+ 		{
+ 			f_close(file);
+ 			return 14;
+ 		}
+
+ 		// Close file
+ 		f_close(file);
+
+ 		// Check for magic
+ 		if( (*(p_f + 0) != 0x69) ||
+ 	   		(*(p_f + 1) != 0x6D) ||
+ 	   		(*(p_f + 2) != 0x67) ||
+ 		 	(*(p_f + 3) != 0x00) )
+ 	   	{
+ 			return 15;
+ 	   	}
+
+ 		goto processed;
+ 	}
+ 	else
+ 		return 16;
+
+process_elf:
+
  	// Check size
 	if((uiAppSize == 0) || (uiAppSize > 0x8000))
-		return 15;
+		return 17;
 
  	// Open application by name, the Current Dir is already selected by UI task
  	res = f_open(&file, chSomeAppName, FA_READ);
 	if(res != FR_OK)
-		return 16;
+		return 18;
 
 	// Allocate function buffer, at the moment allocate ELF size,
 	// not the real process size - to be fixed eventually !
@@ -351,43 +425,35 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
 		vPortFree(ucCurrentFunctionBuffer);
 		f_close(file);
 
-		return 17;
+		return 19;
 	}
 
 	// Close file
 	f_close(file);
 
 	// Temp debug possibility to run plain ELF files - REMOVE ON RELEASE BUILD !!!
-	if( (*(ucCurrentFunctionBuffer + 0) == 0x7F) &&
-   		(*(ucCurrentFunctionBuffer + 1) == 0x45) &&
-   		(*(ucCurrentFunctionBuffer + 2) == 0x4C) &&
-	 	(*(ucCurrentFunctionBuffer + 3) == 0x46) )
+	if( (*(ucCurrentFunctionBuffer + 0) != 0x7F) ||
+   		(*(ucCurrentFunctionBuffer + 1) != 0x45) ||
+   		(*(ucCurrentFunctionBuffer + 2) != 0x4C) ||
+	 	(*(ucCurrentFunctionBuffer + 3) != 0x46) )
    	{
-
-		goto plain_elf;
-
-   	}
-	else
 		return 44;
-
-	// ToDo: Check ext/header for img file...
-	//
-	// img files loadat 0xC0800000 and just run
-
-plain_elf:
+   	}
 
 	// Extract the process image from the ELF file
 	ucFuncResult = ucSednaElfProcessElf(ucCurrentFunctionBuffer);
 	if(ucFuncResult != SEDNA_APP_LOAD_SUCCESS)
 	{
 	  	vPortFree(ucCurrentFunctionBuffer);
-	  	return 22;
+	  	return 20;
 	}
 
 	// Set function pointer to allocated space
 	pvAppLoaderDinamiclyLoadedFunc = (pdTASK_CODE) ucCurrentFunctionBuffer;
 
 	//DebugPrintValue("app addr",(ulong)ucCurrentFunctionBuffer);
+
+processed:
 
 	// ----------------------------------------------------------------------
 	//   Extract application descriptor block

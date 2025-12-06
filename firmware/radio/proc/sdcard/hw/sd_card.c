@@ -382,6 +382,11 @@ int32_t BSP_SD_ReadBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx,
 	}
 	else
 	{
+    	//
+    	// ToDo: Fix this!!!
+    	//
+    	vTaskDelay(20);
+
 		if(HAL_SD_ReadBlocks(&hsd_sdmmc[Instance], (uint8_t *)pData, BlockIdx, BlocksNbr, timeout) != HAL_OK)
 		{
 			printf("rd err: 0x%x \r\n", hsd_sdmmc[Instance].ErrorCode);

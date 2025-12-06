@@ -81,17 +81,17 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 // Self
 { WINDOW_CreateIndirect,	"",				ID_WINDOW_0,		0,    	0,		800,	430, 	0, 		0x64,	0 },
 // Eject Button
-{ BUTTON_CreateIndirect, 	"Eject",		ID_BUTTON_EJECT, 	670, 	375, 	120, 	45, 	0, 		0x0, 	0 },
+{ BUTTON_CreateIndirect, 	"Eject",		ID_BUTTON_EJECT, 	640, 	340, 	120, 	45, 	0, 		0x0, 	0 },
 //
-{ BUTTON_CreateIndirect, 	"Details",		ID_BUTTON_OPEN, 	670, 	310, 	120, 	45, 	0, 		0x0, 	0 },
-{ TREEVIEW_CreateIndirect, 	"Treeview", 	ID_TREEVIEW, 		7, 		6, 		635, 	380, 	0, 		0x0, 	0 },
+{ BUTTON_CreateIndirect, 	"Details",		ID_BUTTON_OPEN, 	640, 	275, 	120, 	45, 	0, 		0x0, 	0 },
+{ TREEVIEW_CreateIndirect, 	"Treeview", 	ID_TREEVIEW, 		7, 		6, 		585, 	380, 	0, 		0x0, 	0 },
 //
 { EDIT_CreateIndirect,     	"msd.Edit",    	ID_EDIT_MSD,   		7,  	395,  	100,  	25, 	0,		0x0,	0 },
-{ PROGBAR_CreateIndirect, 	"Progbar", 		ID_PROGBAR_MSD, 	117,	395, 	525, 	25, 	0, 		0x0, 	0 },
+{ PROGBAR_CreateIndirect, 	"Progbar", 		ID_PROGBAR_MSD, 	117,	395, 	475, 	25, 	0, 		0x0, 	0 },
 // Power out and Vcc text
-{ EDIT_CreateIndirect, 		"Edit1", 		GUI_ID_EDIT1,		670,	40,		120, 	30,  	0, 		0x0,	0 },
-{ EDIT_CreateIndirect, 		"Edit2", 		GUI_ID_EDIT2,		670,	80,		120, 	30,  	0, 		0x0,	0 },
-{ EDIT_CreateIndirect, 		"Edit3", 		GUI_ID_EDIT3,		670,	120,	120, 	30,  	0, 		0x0,	0 },
+{ EDIT_CreateIndirect, 		"Edit1", 		GUI_ID_EDIT1,		610,	40,		170, 	30,  	0, 		0x0,	0 },
+{ EDIT_CreateIndirect, 		"Edit2", 		GUI_ID_EDIT2,		610,	80,		170, 	30,  	0, 		0x0,	0 },
+{ EDIT_CreateIndirect, 		"Edit3", 		GUI_ID_EDIT3,		610,	120,	170, 	30,  	0, 		0x0,	0 },
 };
 
 #ifdef USE_POPUP
@@ -212,7 +212,7 @@ static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 	uchar 			app_det[20];
 	char			chCertPath[32]; //= "C:\\System\\30000.crt";
 
-	printf("run app: %s \r\n", chAppName);
+	//printf("run app: %s \r\n", chAppName);
 
 	//DebugPrint(chDeviceSN);
 	//DebugPrint("\n\r");
@@ -1169,6 +1169,8 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 						// Change caption
 						if(strcmp(ext, "elf") == 0)
+							BUTTON_SetText(hItem, "Run");
+						else if(strcmp(ext, "bin") == 0)
 							BUTTON_SetText(hItem, "Run");
 						else if(strcmp(ext, "ini") == 0)
 							BUTTON_SetText(hItem, "Open");

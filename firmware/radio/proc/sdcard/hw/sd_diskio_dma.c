@@ -112,11 +112,6 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     {
 		#ifndef SD_USE_DMA
 
-    	//
-    	// ToDo: Fix this!!!
-    	//
-    	vTaskDelay(20);
-
     	uint8_t ret = BSP_SD_ReadBlocks(0, (uint32_t*)buff, (uint32_t)(sector), count);
     	if(ret != BSP_ERROR_NONE)
         {
