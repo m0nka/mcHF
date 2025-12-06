@@ -462,9 +462,9 @@ void MPU_Config(void)
 	MPU_InitStruct.Size             = MPU_REGION_SIZE_16MB;
 	#endif
 
-	// Setup SDRAM - emWin video buffers
+	// Setup SDRAM - emWin video buffers + app region(rev 9)
 	MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
-	MPU_InitStruct.BaseAddress      = SDRAM_DEVICE_ADDR;			// 0xD0000000
+	MPU_InitStruct.BaseAddress      = SDRAM_DEVICE_ADDR;
 	MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
 	MPU_InitStruct.IsBufferable     = MPU_ACCESS_NOT_BUFFERABLE;
 	MPU_InitStruct.IsCacheable      = MPU_ACCESS_CACHEABLE;
@@ -475,6 +475,28 @@ void MPU_Config(void)
 	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
+	// Upper 8MB of ext SDRAM as app execution space
+	#ifdef PCB_V9_REV_A
+	MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
+	MPU_InitStruct.BaseAddress      = SDRAM_APP_ADDR;
+	MPU_InitStruct.Size             = MPU_REGION_SIZE_8MB;
+	MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
+	MPU_InitStruct.IsBufferable     = MPU_ACCESS_NOT_BUFFERABLE;
+	MPU_InitStruct.IsCacheable      = MPU_ACCESS_CACHEABLE;
+	MPU_InitStruct.IsShareable      = MPU_ACCESS_NOT_SHAREABLE;
+	MPU_InitStruct.Number           = MPU_REGION_NUMBER2;
+	MPU_InitStruct.TypeExtField     = MPU_TEX_LEVEL0;
+	MPU_InitStruct.SubRegionDisable = 0x00;
+	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_ENABLE;
+	HAL_MPU_ConfigRegion(&MPU_InitStruct);
+	#endif
+
+	#ifndef PCB_V9_REV_A
+	MPU_InitStruct.Number           = MPU_REGION_NUMBER2;
+	#else
+	MPU_InitStruct.Number 			= MPU_REGION_NUMBER3;
+	#endif
+
 	// Setup D3 SRAM - OpenAMP core to core comms
 	MPU_InitStruct.Enable 			= MPU_REGION_ENABLE;
 	MPU_InitStruct.BaseAddress 		= D3_SRAM_BASE;					// 0x38000000
@@ -483,11 +505,16 @@ void MPU_Config(void)
 	MPU_InitStruct.IsBufferable 	= MPU_ACCESS_NOT_BUFFERABLE;
 	MPU_InitStruct.IsCacheable 		= MPU_ACCESS_CACHEABLE;
 	MPU_InitStruct.IsShareable 		= MPU_ACCESS_SHAREABLE;
-	MPU_InitStruct.Number 			= MPU_REGION_NUMBER2;
 	MPU_InitStruct.TypeExtField 	= MPU_TEX_LEVEL0;
 	MPU_InitStruct.SubRegionDisable = 0x00;
 	MPU_InitStruct.DisableExec 		= MPU_INSTRUCTION_ACCESS_DISABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+	#ifndef PCB_V9_REV_A
+	MPU_InitStruct.Number           = MPU_REGION_NUMBER3;
+	#else
+	MPU_InitStruct.Number 			= MPU_REGION_NUMBER4;
+	#endif
 
 	// Setup AXI SRAM - OS heap
 	MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
@@ -497,11 +524,16 @@ void MPU_Config(void)
 	MPU_InitStruct.IsBufferable     = MPU_ACCESS_NOT_BUFFERABLE;
 	MPU_InitStruct.IsCacheable      = MPU_ACCESS_CACHEABLE;
 	MPU_InitStruct.IsShareable      = MPU_ACCESS_NOT_SHAREABLE;
-	MPU_InitStruct.Number           = MPU_REGION_NUMBER3;
 	MPU_InitStruct.TypeExtField     = MPU_TEX_LEVEL0;
 	MPU_InitStruct.SubRegionDisable = 0x00;
 	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+	#ifndef PCB_V9_REV_A
+	MPU_InitStruct.Number           = MPU_REGION_NUMBER4;
+	#else
+	MPU_InitStruct.Number 			= MPU_REGION_NUMBER5;
+	#endif
 
 	// Setup SRAM1 + SRAM2, DSP executable code (code + data)
 	MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
@@ -511,11 +543,16 @@ void MPU_Config(void)
 	MPU_InitStruct.IsBufferable     = MPU_ACCESS_NOT_BUFFERABLE;
 	MPU_InitStruct.IsCacheable      = MPU_ACCESS_CACHEABLE;
 	MPU_InitStruct.IsShareable      = MPU_ACCESS_NOT_SHAREABLE;
-	MPU_InitStruct.Number           = MPU_REGION_NUMBER4;
 	MPU_InitStruct.TypeExtField     = MPU_TEX_LEVEL0;
 	MPU_InitStruct.SubRegionDisable = 0x00;
 	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+	#ifndef PCB_V9_REV_A
+	MPU_InitStruct.Number           = MPU_REGION_NUMBER5;
+	#else
+	MPU_InitStruct.Number 			= MPU_REGION_NUMBER6;
+	#endif
 
 	// Setup SRAM3, D2 domain, HW peripherals DMA buffers
 	MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
@@ -525,7 +562,6 @@ void MPU_Config(void)
 	MPU_InitStruct.IsBufferable     = MPU_ACCESS_NOT_BUFFERABLE;
 	MPU_InitStruct.IsCacheable      = MPU_ACCESS_CACHEABLE;
 	MPU_InitStruct.IsShareable      = MPU_ACCESS_NOT_SHAREABLE;
-	MPU_InitStruct.Number           = MPU_REGION_NUMBER5;
 	MPU_InitStruct.TypeExtField     = MPU_TEX_LEVEL0;
 	MPU_InitStruct.SubRegionDisable = 0x00;
 	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;

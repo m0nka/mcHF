@@ -370,6 +370,10 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
 	else
 		return 44;
 
+	// ToDo: Check ext/header for img file...
+	//
+	// img files loadat 0xC0800000 and just run
+
 plain_elf:
 
 	// Extract the process image from the ELF file

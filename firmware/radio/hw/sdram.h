@@ -36,9 +36,17 @@ typedef struct
 #define SDRAM_MODEREG_WRITEBURST_MODE_PROGRAMMED ((uint16_t)0x0000)
 #define SDRAM_MODEREG_WRITEBURST_MODE_SINGLE     ((uint16_t)0x0200)
 
-#define SDRAM_INSTANCES_NBR       1U
-#define SDRAM_DEVICE_ADDR         0xC0000000			//0xD0000000U
-#define SDRAM_DEVICE_SIZE         0x00400000			//0x02000000U
+#define SDRAM_INSTANCES_NBR       				1U
+#define SDRAM_DEVICE_ADDR         				0xC0000000
+
+// Executable region
+#define SDRAM_APP_ADDR         					0xC0800000
+
+#ifndef PCB_V9_REV_A
+#define SDRAM_DEVICE_SIZE         				0x00400000
+#else
+#define SDRAM_DEVICE_SIZE         				0x01000000
+#endif
 
 /* MDMA definitions for SDRAM DMA transfer */
 #define SDRAM_MDMAx_CLK_ENABLE             __HAL_RCC_MDMA_CLK_ENABLE
