@@ -7,6 +7,9 @@
 // Use DMA version
 //#define SD_USE_DMA
 
+// Use PLL2 as clock source
+//#define SD_USE_PLL2
+
 /*
  * when using cachable memory region, it may be needed to maintain the cache
  * validity. Enable the define below to activate a cache maintenance at each

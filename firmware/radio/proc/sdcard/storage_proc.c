@@ -24,7 +24,11 @@ char StorageDISK_Drive[4];
 #include "storage_proc.h"
 
 // File system object for MSD disk logical drive
-__attribute__((section(".axi_ram"))) __attribute__ ((aligned (32))) FATFS StorageDISK_FatFs[NUM_DISK_UNITS];
+#ifdef SD_USE_DMA
+__attribute__((section(".axi_mem"))) __attribute__ ((aligned (32))) FATFS StorageDISK_FatFs[NUM_DISK_UNITS];
+#else
+FATFS StorageDISK_FatFs[NUM_DISK_UNITS];
+#endif
 
 static osSemaphoreId      	StorageSemaphore[NUM_DISK_UNITS];
 static Diskio_drvTypeDef  	const * Storage_Driver[NUM_DISK_UNITS];

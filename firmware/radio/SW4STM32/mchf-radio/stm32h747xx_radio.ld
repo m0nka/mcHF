@@ -165,10 +165,9 @@ SECTIONS
   }
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
-  heap_mem : { *(axi_ram) } >AXI_RAM
+  axi_mem : { *(axi_mem) } >AXI_RAM
   dma_mem : { *(dma_mem) } >SRAM3
   .STemWinMemPool : { *(.STemWinMemPool) } >EXT_RAM
-  .sdio_heap : { *(.sdio_heap) } >RAM
 }
 
 

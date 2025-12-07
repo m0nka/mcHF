@@ -15,7 +15,7 @@
 #include "main.h"
 
 #if configAPPLICATION_ALLOCATED_HEAP == 1
-__attribute__((section("heap_mem"))) uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
+__attribute__((section("axi_mem"))) uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
 #endif
 
 uint8_t BSP_Initialized = 0;

@@ -29,7 +29,11 @@
 static volatile DSTATUS Stat = STA_NOINIT;
 static osMessageQId SDQueueID;
 
-__attribute__((section(".axi_ram"))) __attribute__ ((aligned (32))) static uint8_t buffer[BLOCKSIZE];
+#ifdef SD_USE_DMA
+__attribute__((section(".axi_mem"))) __attribute__ ((aligned (32))) static uint8_t buffer[BLOCKSIZE];
+#else
+static uint8_t buffer[BLOCKSIZE];
+#endif
 
 static DSTATUS SD_CheckStatus(BYTE lun)
 {
@@ -91,9 +95,12 @@ DSTATUS SD_status(BYTE lun)
 DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 {
     DRESULT res = RES_ERROR;
-    //osEvent event;
 
-    //printf("SD_read \r\n");
+	#ifdef SD_USE_DMA
+    osEvent event;
+	#endif
+
+    printf("SD_read %d \r\n", count);
 
 	#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
     uint32_t alignedAddr;
@@ -123,20 +130,20 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 		#else
     	// Fast path: the provided destination buffer is correctly aligned
     	uint8_t ret = BSP_SD_ReadBlocks_DMA(0, (uint32_t*)buff, (uint32_t)(sector), count);
-    	printf("dma: %d  \r\n", ret);
-    	vTaskDelay(50);
+    	//printf("dma: %d  \r\n", ret);
+    	//vTaskDelay(50);
 
     	if (ret == BSP_ERROR_NONE)
         {
-        	printf("wait...  \r\n");
-        	vTaskDelay(50);
+        	//printf("wait...  \r\n");
+        	//vTaskDelay(50);
 
         	// wait for a message from the queue or a timeout
             event = osMessageGet(SDQueueID, SD_TIMEOUT);
             if (event.status == osEventMessage)
             {
-            	printf("event %d \r\n", event.value.v);
-            	vTaskDelay(50);
+            	//printf("event %d \r\n", event.value.v);
+            	//vTaskDelay(50);
 
                 if (event.value.v == READ_CPLT_MSG)
                 {
@@ -150,15 +157,15 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
                 }
                 else if (event.value.v == RW_ERROR_MSG)
                 {
-                	printf("read dma err  \r\n");
-                	vTaskDelay(50);
+                	//printf("read dma err  \r\n");
+                	//vTaskDelay(50);
                 	res = RES_ERROR;
                 }
             }
             else
             {
-            	printf("read dma timeout  \r\n");
-            	vTaskDelay(50);
+            	//printf("read dma timeout  \r\n");
+            	//vTaskDelay(50);
             	res = RES_ERROR;
             }
         }
@@ -354,6 +361,7 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 }
 #endif /* _USE_IOCTL == 1 */
 
+#ifdef SD_USE_DMA
 void BSP_SD_WriteCpltCallback(uint32_t Instance)
 {
   /*
@@ -398,6 +406,7 @@ void BSP_SD_AbortCallback(uint32_t Instance)
    */
    osMessagePut(SDQueueID, RW_ABORT_MSG, osWaitForever);
 }
+#endif
 
 const Diskio_drvTypeDef  SD_Driver =
 {

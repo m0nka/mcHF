@@ -77,7 +77,7 @@ void HAL_SD_ErrorCallback(SD_HandleTypeDef *hsd)
 	#ifdef SD_USE_DMA
 	BSP_SD_ErrorCallback();
 	#else
-	//--printf("sd error  \r\n");
+	printf("== sd error == \r\n");
 	#endif
 }
 
@@ -98,7 +98,9 @@ void HAL_SD_AbortCallback(SD_HandleTypeDef *hsd)
 
 static void SD_MspInit(SD_HandleTypeDef *hsd)
 {
+	#ifdef SD_USE_PLL2
 	RCC_PeriphCLKInitTypeDef 	PeriphClkInitStruct = {0};
+	#endif
 	GPIO_InitTypeDef 			gpio_init_structure;
 
 	if(hsd == &hsd_sdmmc[0])
@@ -106,7 +108,7 @@ static void SD_MspInit(SD_HandleTypeDef *hsd)
 		//printf("SD_MspInit  \r\n");
 
 		// SD Card clock - 18.75Mhz
-		#if 0
+		#ifdef SD_USE_PLL2
 		PeriphClkInitStruct.PeriphClockSelection	= RCC_PERIPHCLK_SDMMC;
 		PeriphClkInitStruct.SdmmcClockSelection		= RCC_SDMMCCLKSOURCE_PLL2;
 		PeriphClkInitStruct.PLL2.PLL2R           	= 8;
@@ -118,8 +120,8 @@ static void SD_MspInit(SD_HandleTypeDef *hsd)
 
 		// Common GPIO configuration
 		gpio_init_structure.Mode      = GPIO_MODE_AF_PP;
-		gpio_init_structure.Pull      = GPIO_NOPULL;
-		gpio_init_structure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+		gpio_init_structure.Pull      = GPIO_PULLUP;
+		gpio_init_structure.Speed     = GPIO_SPEED_FREQ_MEDIUM;
 		gpio_init_structure.Alternate = GPIO_AF12_SDIO1;
 
 		gpio_init_structure.Pin = SDMMC1_D0;
@@ -177,7 +179,7 @@ static void SD_MspInit(SD_HandleTypeDef *hsd)
 		__HAL_RCC_SDMMC1_RELEASE_RESET();
 
 		// NVIC configuration for SDIO interrupts
-		HAL_NVIC_SetPriority(SDMMC1_IRQn, 5, 0);
+		HAL_NVIC_SetPriority(SDMMC1_IRQn, 9, 0);
 		HAL_NVIC_EnableIRQ	(SDMMC1_IRQn);
 	}
 }
