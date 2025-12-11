@@ -14,7 +14,7 @@
 #include "main.h"
 
 #include "hw\openamp.h"
-#include "stm32h747i_discovery_audio.h"
+//#include "stm32h747i_discovery_audio.h"
 
 // In this file it might be little bit confusing what function in what context
 // executes, is it actually the ICC task process or HSEM IRQ call chaining into

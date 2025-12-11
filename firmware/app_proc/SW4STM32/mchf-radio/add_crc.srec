@@ -4,7 +4,7 @@
 # First create CRC checksum
 (
 mchf_app_proc.bin			               			# input file
--binary                                  				# input format
+-binary                                  			# input format
 -STM32 -maximum-address mchf_app_proc.bin -binary
 )
 

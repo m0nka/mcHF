@@ -10,11 +10,6 @@
 #include "stm32h7xx_hal.h"
 
 #include "stm32h747i_discovery.h"
-//#include "stm32h747i_discovery_sd.h"
-#include "stm32h747i_discovery_ts.h"
-//#include "stm32h747i_discovery_qspi.h"
-//#include "stm32h747i_discovery_sdram.h"
-//#include "stm32h747i_discovery_bus.h"
 #include "otm8009a.h"
 #include "cmsis_os.h"
 
@@ -47,7 +42,7 @@
 #ifndef WIN32
 /* Kernel includes components */
 //#include "storage.h"
-#include "calibration.h"
+//#include "calibration.h"
 //#include "gui_task.h"
 #endif /* !WIN32 */
 
@@ -68,7 +63,7 @@
 #include "att.h"
 #include "WM.h"
 
-#include "ipc_proc.h"
+//#include "ipc_proc.h"
 #include "ui_proc.h"
 #include "icc_proc.h"
 #include "audio_proc.h"

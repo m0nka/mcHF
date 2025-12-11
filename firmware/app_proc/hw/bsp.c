@@ -23,7 +23,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "bsp.h"
 
-#include "ipc_proc.h"
+//#include "ipc_proc.h"
 #include "audio_proc.h"
 #include "touch_proc.h"
 #include "rotary_proc.h"
