@@ -12,7 +12,7 @@
 :: Main Board
 @SET MAIN_BOARD=-DISCO
 :: Hex filename
-@SET HEX_FILE="Release/mchf_application.bin"
+@SET HEX_FILE="Release/mchf_app_proc.bin"
 @IF NOT EXIST "%HEX_FILE%" @ECHO %HEX_FILE% Does not exist !! && GOTO goError
 
 :: Board ID

@@ -3,9 +3,9 @@
 
 # First create CRC checksum
 (
-mchf_application.bin			               			# input file
+mchf_app_proc.bin			               			# input file
 -binary                                  				# input format
--STM32 -maximum-address mchf_application.bin -binary
+-STM32 -maximum-address mchf_app_proc.bin -binary
 )
 
 # produce the output file
