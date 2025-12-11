@@ -1,0 +1,13 @@
+# srec_cat command file to add the CRC32 
+# use srec_cat @add_crc.srec
+
+# First create CRC checksum
+(
+mchf_app_proc.bin			               			# input file
+-binary                                  			# input format
+-STM32 -maximum-address mchf_app_proc.bin -binary
+)
+
+# produce the output file
+-o radio.bin
+-binary

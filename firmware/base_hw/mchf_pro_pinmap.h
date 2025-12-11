@@ -661,6 +661,7 @@
 // PA2			LORA_POWER, Lora driver
 #define LORA_POWER						LL_GPIO_PIN_2
 #define LORA_POWER_PORT					GPIOA
+//#define LORA_POWER_INV
 
 // PA3			RFM_DIO2, was Lora driver, now BT module power control
 #define RFM_DIO2						GPIO_PIN_3
@@ -715,7 +716,7 @@
 // ----------------------------------------------------
 // PortB
 
-// PB0			CODEC_RESET
+// PB0			SD_DET
 #define SD_DET                   		GPIO_PIN_0
 #define SD_DET_PORT              		GPIOB
 
@@ -856,7 +857,7 @@
 #define KEYPAD_X1_LL                   	LL_GPIO_PIN_3
 #define KEYPAD_X1_PORT              	GPIOD
 
-// PD4			SD_DET
+// PD4		CODEC_RESET
 #define CODEC_RESET						GPIO_PIN_4
 #define CODEC_RESET_PORT           		GPIOD
 
@@ -1234,13 +1235,13 @@
 
 // EXTI Line usage:
 //
+// EXTI_LINE0 - sd card
+//
 // EXTI_LINE2 - paddle
 // EXTI_LINE3 - paddle
 //
 // EXTI_LINE_6 - touch
 //
-// EXTI_LINE_8 - SD Card detect
-
 
 #endif	//PCB_V9_REV_A
 

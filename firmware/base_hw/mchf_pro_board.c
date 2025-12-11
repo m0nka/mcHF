@@ -14,7 +14,7 @@
 #include "mchf_pro_board.h"
 #include "main.h"
 
-#include "stm32h747i_discovery_sdram.h"
+#include "sdram.h"
 
 #define PWR_CFG_SMPS    0xCAFECAFE
 #define PWR_CFG_LDO     0x5ACAFE5A
@@ -455,10 +455,15 @@ void MPU_Config(void)
 	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_ENABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
+	#ifndef PCB_V9_REV_A
+	MPU_InitStruct.Size             = MPU_REGION_SIZE_4MB;
+	#else
+	MPU_InitStruct.Size             = MPU_REGION_SIZE_16MB;
+	#endif
+
 	// Setup SDRAM - emWin video buffers
 	MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
 	MPU_InitStruct.BaseAddress      = SDRAM_DEVICE_ADDR;			// 0xD0000000
-	MPU_InitStruct.Size             = MPU_REGION_SIZE_4MB;			// 32MB
 	MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
 	MPU_InitStruct.IsBufferable     = MPU_ACCESS_NOT_BUFFERABLE;
 	MPU_InitStruct.IsCacheable      = MPU_ACCESS_CACHEABLE;

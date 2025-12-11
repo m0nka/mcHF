@@ -44,6 +44,7 @@ extern uchar stay_in_boot;
 int test_sd_card(void)
 {
 	GPIO_InitTypeDef  GPIO_InitStruct;
+	int i;
 
 	// SD_DET - PC2 after 0.8.3 mod
 	GPIO_InitStruct.Pin   = SD_DET;
@@ -100,44 +101,68 @@ int test_sd_card(void)
 	// Check signature
 	if((boot[510] != 0x55) || (boot[511] != 0xAA))
 	{
-		//printf("sd bad boot sector signature!\r\n");
+		printf("sd bad boot sector signature!\r\n");
 		return 4;
 	}
 
+	// Manual blocks read
+	for(i = 0; i < 10000; i++)
+	{
+		if(BSP_SD_ReadBlocks(0, (ulong *)boot, 1, 1) != 0)
+			break;
+	}
+
+	//printf("read blocks: %d\r\n", i);
+
+	if(i < 10000)
+		return 5;
+
+	#if 0
 	// Init FatFS
 	if(FATFS_LinkDriver(&SD_Driver, SDPath) != 0)
 	{
-		//printf("sd unable to init FS!\r\n");
+		printf("sd unable to init FS!\r\n");
 		return 5;
 	}
 
+	printf("path: %s \r\n", SDPath);
+
 	if(f_mount(&SDFatFs, (TCHAR const*)SDPath, 0) != FR_OK)
 	{
-		//printf("sd unable to mount FS!\r\n");
+		printf("sd unable to mount FS!\r\n");
 		return 6;
 	}
 
-	#if 0
+	FILINFO fno;
 	FRESULT res;
 	uint32_t bytesread;
 	uint8_t rtext[100];
 
+	res = f_stat("0:/system/app_proc.ini", &fno);
+	if(res != FR_OK)
+	{
+		printf("error file stat!\r\n");
+		return 7;
+	}
+	printf("size: %d \r\n", fno.fsize);
+
 	/* Open the text file object with read access */
-	if(f_open(&MyFile, "STM32.TXT", FA_READ) == FR_OK)
+	if(f_open(&MyFile, "0:/system/app_proc.ini", FA_READ) == FR_OK)
 	{
 		memset(rtext, 0, sizeof(rtext));
 		res = f_read(&MyFile, rtext, sizeof(rtext), (void *)&bytesread);
 
 		if((bytesread > 0) && (res == FR_OK))
 		{
-			//printf((char *)rtext);
-			f_close(&MyFile);
+			printf((char *)rtext);
 		}
-		//else
-		//	printf("error read file!\r\n");
+		else
+			printf("error read file!\r\n");
+
+		f_close(&MyFile);
 	}
-	//else
-	//	printf("error open file!\r\n");
+	else
+		printf("error open file!\r\n");
 	#endif
 
 	return 0;

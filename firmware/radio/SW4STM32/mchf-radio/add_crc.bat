@@ -1,1 +1,0 @@
-C:\Projects\wip\mcHF\firmware\radio\SW4STM32\mchf-radio\srec_cat.exe @C:\Projects\wip\mcHF\firmware\radio\SW4STM32\mchf-radio\add_crc.srec

@@ -28,6 +28,7 @@
 
 #include "mchf_pro_pinmap.h"
 #include "proc_conf.h"
+//#include "dma_conf.h"
 #include "mchf_icc_def.h"
 //
 #include <stdio.h>
