@@ -42,9 +42,9 @@
 			<locationURI>PARENT-3-PROJECT_LOC/base_hw/mchf_pro_pinmap.h</locationURI>
 		</link>
 		<link>
-			<name>base_hw/print_f.c</name>
+			<name>common/print_f.c</name>
 			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/base_hw/print_f.c</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/common/print_f.c</locationURI>
 		</link>
 		<link>
 			<name>config/ffconf.h</name>

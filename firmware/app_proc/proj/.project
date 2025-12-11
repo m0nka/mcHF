@@ -42,9 +42,9 @@
 			<locationURI>copy_PARENT12345/base_hw/mchf_pro_pinmap.h</locationURI>
 		</link>
 		<link>
-			<name>base_hw/print_f.c</name>
+			<name>common/print_f.c</name>
 			<type>1</type>
-			<locationURI>copy_PARENT12345/base_hw/print_f.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/common/print_f.c</locationURI>
 		</link>
 		<link>
 			<name>config/FreeRTOSConfig.h</name>

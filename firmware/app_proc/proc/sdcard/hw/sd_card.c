@@ -175,11 +175,11 @@ static void SD_MspInit(SD_HandleTypeDef *hsd)
 			#endif
 		}
 
-		//__HAL_RCC_SDMMC1_FORCE_RESET();
-		//__HAL_RCC_SDMMC1_RELEASE_RESET();
+		__HAL_RCC_SDMMC1_FORCE_RESET();
+		__HAL_RCC_SDMMC1_RELEASE_RESET();
 
 		// NVIC configuration for SDIO interrupts
-		HAL_NVIC_SetPriority(SDMMC1_IRQn, 9, 0);
+		HAL_NVIC_SetPriority(SDMMC1_IRQn, 14, 0);
 		HAL_NVIC_EnableIRQ	(SDMMC1_IRQn);
 	}
 }
