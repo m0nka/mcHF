@@ -273,79 +273,78 @@
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.fdata.975221279" name="Place data in their own sections (-fdata-sections)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.fdata" useByScannerDiscovery="false" value="false" valueType="boolean"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths.1757108378" name="Include paths (-I)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../"/>
-									<listOptionValue builtIn="false" value="../../../../base_hw/common"/>
-									<listOptionValue builtIn="false" value="../../../../base_hw"/>
-									<listOptionValue builtIn="false" value="../../../startup"/>
-									<listOptionValue builtIn="false" value="../../../config"/>
-									<listOptionValue builtIn="false" value="../../../hw"/>
-									<listOptionValue builtIn="false" value="../../../util"/>
-									<listOptionValue builtIn="false" value="../../../proc"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/menu"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/dsp_s"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/pa"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/pa/res"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/batt"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/batt/res"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/user_i"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/file_b"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/info"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/clock"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/logbook"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/desktop"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/desktop_ft8"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/driver/backlight"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/driver"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/driver/mipi"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/ui_lib/STemWin/inc"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/ui_lib/keypad"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/ui_lib"/>
-									<listOptionValue builtIn="false" value="../../../proc/ui/ui_state"/>
-									<listOptionValue builtIn="false" value="../../../proc/ipc"/>
-									<listOptionValue builtIn="false" value="../../../proc/ipc/hw"/>
-									<listOptionValue builtIn="false" value="../../../proc/rotary"/>
-									<listOptionValue builtIn="false" value="../../../proc/bms"/>
-									<listOptionValue builtIn="false" value="../../../proc/bms/hw"/>
-									<listOptionValue builtIn="false" value="../../../proc/icc"/>
-									<listOptionValue builtIn="false" value="../../../proc/audio"/>
-									<listOptionValue builtIn="false" value="../../../proc/audio/hw"/>
-									<listOptionValue builtIn="false" value="../../../proc/touch"/>
-									<listOptionValue builtIn="false" value="../../../proc/touch/hw"/>
-									<listOptionValue builtIn="false" value="../../../proc/vfo"/>
-									<listOptionValue builtIn="false" value="../../../proc/vfo/hw"/>
-									<listOptionValue builtIn="false" value="../../../proc/band"/>
-									<listOptionValue builtIn="false" value="../../../proc/pwm"/>
-									<listOptionValue builtIn="false" value="../../../proc/trx"/>
-									<listOptionValue builtIn="false" value="../../../proc/keypad"/>
-									<listOptionValue builtIn="false" value="../../../proc/lora"/>
-									<listOptionValue builtIn="false" value="../../../proc/lora/hw"/>
-									<listOptionValue builtIn="false" value="../../../proc/lora/drivers/meshcore/repeater"/>
-									<listOptionValue builtIn="false" value="../../../proc/lora/drivers/meshcore/core"/>
-									<listOptionValue builtIn="false" value="../../../proc/dsp"/>
-									<listOptionValue builtIn="false" value="../../../proc/dsp/digi/ft8_lib/"/>
-									<listOptionValue builtIn="false" value="../../../proc/sdcard"/>
-									<listOptionValue builtIn="false" value="../../../proc/sdcard/hw"/>
-									<listOptionValue builtIn="false" value="../../../proc/sdcard/drivers"/>
-									<listOptionValue builtIn="false" value="../../../proc/app"/>
-									<listOptionValue builtIn="false" value="../../../proc/app/elf"/>
-									<listOptionValue builtIn="false" value="../../../../"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/CMSIS/Device/ST/STM32H7xx/Include"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/STM32H7xx_HAL_Driver/Inc"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/BSP/STM32H747I-DISCO"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/BSP/Components/Common"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/BSP/Components/ft6x06"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/BSP/Components/otm8009a"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/BSP/Components/wm8994"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/CMSIS/Include"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Middlewares/Third_Party/FatFs/src"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Middlewares/Third_Party/FatFs/src/drivers"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Middlewares/Third_Party/FreeRTOS/Source/include"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Middlewares/ST/STM32_USB_Host_Library/Core/Inc"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Inc"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Middlewares/Third_Party/OpenAMP/open-amp/lib/include"/>
-									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/include"/>
+									<listOptionValue builtIn="false" value="../../../base_hw/common"/>
+									<listOptionValue builtIn="false" value="../../../base_hw"/>
+									<listOptionValue builtIn="false" value="../../config"/>
+									<listOptionValue builtIn="false" value="../../hw"/>
+									<listOptionValue builtIn="false" value="../../util"/>
+									<listOptionValue builtIn="false" value="../../proc"/>
+									<listOptionValue builtIn="false" value="../../proc/ui"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/menu"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/menu/items/dsp_s"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/menu/items/pa"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/menu/items/pa/res"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/menu/items/batt"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/menu/items/batt/res"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/menu/items/user_i"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/menu/items/file_b"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/menu/items/info"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/menu/items/clock"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/menu/items/logbook"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/desktop"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/desktop_ft8"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/driver/backlight"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/driver"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/driver/mipi"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/ui_lib/STemWin/inc"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/ui_lib/keypad"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/ui_lib"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/ui_state"/>
+									<listOptionValue builtIn="false" value="../../proc/ipc"/>
+									<listOptionValue builtIn="false" value="../../proc/ipc/hw"/>
+									<listOptionValue builtIn="false" value="../../proc/rotary"/>
+									<listOptionValue builtIn="false" value="../../proc/bms"/>
+									<listOptionValue builtIn="false" value="../../proc/bms/hw"/>
+									<listOptionValue builtIn="false" value="../../proc/icc"/>
+									<listOptionValue builtIn="false" value="../../proc/audio"/>
+									<listOptionValue builtIn="false" value="../../proc/audio/hw"/>
+									<listOptionValue builtIn="false" value="../../proc/touch"/>
+									<listOptionValue builtIn="false" value="../../proc/touch/hw"/>
+									<listOptionValue builtIn="false" value="../../proc/vfo"/>
+									<listOptionValue builtIn="false" value="../../proc/vfo/hw"/>
+									<listOptionValue builtIn="false" value="../../proc/band"/>
+									<listOptionValue builtIn="false" value="../../proc/pwm"/>
+									<listOptionValue builtIn="false" value="../../proc/trx"/>
+									<listOptionValue builtIn="false" value="../../proc/keypad"/>
+									<listOptionValue builtIn="false" value="../../proc/lora"/>
+									<listOptionValue builtIn="false" value="../../proc/lora/hw"/>
+									<listOptionValue builtIn="false" value="../../proc/lora/drivers/meshcore/repeater"/>
+									<listOptionValue builtIn="false" value="../../proc/lora/drivers/meshcore/core"/>
+									<listOptionValue builtIn="false" value="../../proc/dsp"/>
+									<listOptionValue builtIn="false" value="../../proc/dsp/digi/ft8_lib/"/>
+									<listOptionValue builtIn="false" value="../../proc/sdcard"/>
+									<listOptionValue builtIn="false" value="../../proc/sdcard/hw"/>
+									<listOptionValue builtIn="false" value="../../proc/sdcard/drivers"/>
+									<listOptionValue builtIn="false" value="../../proc/app"/>
+									<listOptionValue builtIn="false" value="../../proc/app/elf"/>
+									<listOptionValue builtIn="false" value="../../../"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/CMSIS/Device/ST/STM32H7xx/Include"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/STM32H7xx_HAL_Driver/Inc"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/BSP/STM32H747I-DISCO"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/BSP/Components/Common"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/BSP/Components/ft6x06"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/BSP/Components/otm8009a"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/BSP/Components/wm8994"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/CMSIS/Include"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/Third_Party/FatFs/src"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/Third_Party/FatFs/src/drivers"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/Third_Party/FreeRTOS/Source/include"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/ST/STM32_USB_Host_Library/Core/Inc"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Inc"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/Third_Party/OpenAMP/open-amp/lib/include"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/include"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.definedsymbols.909203959" name="Define symbols (-D)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.definedsymbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
@@ -437,7 +436,7 @@
 									<listOptionValue builtIn="false" value=":stemwin.a"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.directories.562424423" name="Library search path (-L)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.directories" useByScannerDiscovery="false" valueType="libPaths">
-									<listOptionValue builtIn="false" value="../../../proc/ui/ui_lib/STemWin/lib"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/ui_lib/STemWin/lib"/>
 								</option>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.systemcalls.1391670493" name="System calls" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.systemcalls" useByScannerDiscovery="false" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.systemcalls.value.minimalimplementation" valueType="enumerated"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.otherflags.182890494" name="Other flags" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.otherflags" useByScannerDiscovery="false" valueType="stringList">
@@ -491,6 +490,7 @@
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Debug_CM7"/>
+		<configuration configurationName="Release"/>
 		<configuration configurationName="Debug">
 			<resource resourceType="PROJECT" workspacePath="/mchf-radio"/>
 		</configuration>

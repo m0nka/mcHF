@@ -49,127 +49,127 @@
 		<link>
 			<name>config/FreeRTOSConfig.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/config/FreeRTOSConfig.h</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/config/FreeRTOSConfig.h</locationURI>
 		</link>
 		<link>
 			<name>config/IS42S32160F_conf.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/config/IS42S32160F_conf.h</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/config/IS42S32160F_conf.h</locationURI>
 		</link>
 		<link>
 			<name>config/MT48LC4M32B2P_conf.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/config/MT48LC4M32B2P_conf.h</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/config/MT48LC4M32B2P_conf.h</locationURI>
 		</link>
 		<link>
 			<name>config/dma_config.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/config/dma_config.h</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/config/dma_config.h</locationURI>
 		</link>
 		<link>
 			<name>config/ffconf.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/config/ffconf.h</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/config/ffconf.h</locationURI>
 		</link>
 		<link>
 			<name>config/ft6x06_conf.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/config/ft6x06_conf.h</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/config/ft6x06_conf.h</locationURI>
 		</link>
 		<link>
 			<name>config/mt25tl01g_conf.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/config/mt25tl01g_conf.h</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/config/mt25tl01g_conf.h</locationURI>
 		</link>
 		<link>
 			<name>config/proc_conf.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/config/proc_conf.h</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/config/proc_conf.h</locationURI>
 		</link>
 		<link>
 			<name>config/stm32h747i_discovery_conf.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/config/stm32h747i_discovery_conf.h</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/config/stm32h747i_discovery_conf.h</locationURI>
 		</link>
 		<link>
 			<name>config/stm32h7xx_hal_conf.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/config/stm32h7xx_hal_conf.h</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/config/stm32h7xx_hal_conf.h</locationURI>
 		</link>
 		<link>
 			<name>hw/IS42S32160F.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/IS42S32160F.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/hw/IS42S32160F.c</locationURI>
 		</link>
 		<link>
 			<name>hw/MT48LC4M32B2P.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/MT48LC4M32B2P.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/hw/MT48LC4M32B2P.c</locationURI>
 		</link>
 		<link>
 			<name>hw/adc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/adc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/hw/adc.c</locationURI>
 		</link>
 		<link>
 			<name>hw/att.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/att.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/hw/att.c</locationURI>
 		</link>
 		<link>
 			<name>hw/board.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/board.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/hw/board.c</locationURI>
 		</link>
 		<link>
 			<name>hw/bsp.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/bsp.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/hw/bsp.c</locationURI>
 		</link>
 		<link>
 			<name>hw/rtc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/rtc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/hw/rtc.c</locationURI>
 		</link>
 		<link>
 			<name>hw/sdram.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/sdram.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/hw/sdram.c</locationURI>
 		</link>
 		<link>
 			<name>hw/shared_i2c.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/shared_i2c.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/hw/shared_i2c.c</locationURI>
 		</link>
 		<link>
 			<name>hw/stm32h747i_discovery.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/stm32h747i_discovery.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/hw/stm32h747i_discovery.c</locationURI>
 		</link>
 		<link>
 			<name>hw/stm32h7xx_hal_timebase_tim.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hw/stm32h7xx_hal_timebase_tim.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/hw/stm32h7xx_hal_timebase_tim.c</locationURI>
 		</link>
 		<link>
 			<name>startup/startup_stm32h747xx_CM7.s</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/startup/startup_stm32h747xx_CM7.s</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/startup/startup_stm32h747xx_CM7.s</locationURI>
 		</link>
 		<link>
 			<name>startup/syscalls.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/startup/syscalls.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/startup/syscalls.c</locationURI>
 		</link>
 		<link>
 			<name>startup/system_stm32h7xx_dualcore_bootcm7_cm4gated.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/startup/system_stm32h7xx_dualcore_bootcm7_cm4gated.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/startup/system_stm32h7xx_dualcore_bootcm7_cm4gated.c</locationURI>
 		</link>
 		<link>
 			<name>util/cpu_utils.c</name>
 			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Utilities/CPU/cpu_utils.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/util/cpu_utils.c</locationURI>
 		</link>
 		<link>
 			<name>Drivers/STM32H7xx_HAL_Driver/stm32h7xx_hal.c</name>
@@ -544,87 +544,87 @@
 		<link>
 			<name>proc/app/os_apploader.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/app/os_apploader.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/app/os_apploader.c</locationURI>
 		</link>
 		<link>
 			<name>proc/audio/audio_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/audio/audio_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/audio/audio_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/band/band_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/band/band_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/band/band_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/bms/bms_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/bms/bms_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/bms/bms_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/dsp/dsp_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/dsp_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/dsp_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/icc/icc_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/icc/icc_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/icc/icc_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/keypad/keypad_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/keypad/keypad_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/keypad/keypad_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/lora/lora_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/lora/lora_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/lora_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/pwm/pwm_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/pwm/pwm_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/pwm/pwm_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/rotary/rotary_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/rotary/rotary_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/rotary/rotary_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/sdcard/storage_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/sdcard/storage_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/storage_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/touch/touch_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/touch/touch_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/touch/touch_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/trx/trx_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/trx/trx_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/trx/trx_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/ui_actions.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/ui_actions.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/ui_actions.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/ui_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/ui_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/ui_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/vfo/vfo_cw_gen.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/vfo/vfo_cw_gen.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/vfo/vfo_cw_gen.c</locationURI>
 		</link>
 		<link>
 			<name>proc/vfo/vfo_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/vfo/vfo_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/vfo/vfo_proc.c</locationURI>
 		</link>
 		<link>
 			<name>Middlewares/FatFs/Core/diskio.c</name>
@@ -739,132 +739,132 @@
 		<link>
 			<name>proc/app/elf/os_sedna_exports.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/app/elf/os_sedna_exports.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/app/elf/os_sedna_exports.c</locationURI>
 		</link>
 		<link>
 			<name>proc/app/elf/os_sednaelf.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/app/elf/os_sednaelf.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/app/elf/os_sednaelf.c</locationURI>
 		</link>
 		<link>
 			<name>proc/audio/hw/codec_hw.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/audio/hw/codec_hw.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/audio/hw/codec_hw.c</locationURI>
 		</link>
 		<link>
 			<name>proc/bms/hw/bq40z80.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/bms/hw/bq40z80.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/bms/hw/bq40z80.c</locationURI>
 		</link>
 		<link>
 			<name>proc/icc/hw/mbox_hsem.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/icc/hw/mbox_hsem.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/icc/hw/mbox_hsem.c</locationURI>
 		</link>
 		<link>
 			<name>proc/icc/hw/openamp.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/icc/hw/openamp.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/icc/hw/openamp.c</locationURI>
 		</link>
 		<link>
 			<name>proc/icc/hw/openamp_conf.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/icc/hw/openamp_conf.h</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/icc/hw/openamp_conf.h</locationURI>
 		</link>
 		<link>
 			<name>proc/icc/hw/rsc_table.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/icc/hw/rsc_table.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/icc/hw/rsc_table.c</locationURI>
 		</link>
 		<link>
 			<name>proc/lora/hw/lora_spi.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/lora/hw/lora_spi.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/hw/lora_spi.c</locationURI>
 		</link>
 		<link>
 			<name>proc/sdcard/drivers/radio_init.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/sdcard/drivers/radio_init.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/drivers/radio_init.c</locationURI>
 		</link>
 		<link>
 			<name>proc/sdcard/drivers/virt_eeprom.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/sdcard/drivers/virt_eeprom.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/drivers/virt_eeprom.c</locationURI>
 		</link>
 		<link>
 			<name>proc/sdcard/hw/sd_card.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/sdcard/hw/sd_card.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/hw/sd_card.c</locationURI>
 		</link>
 		<link>
 			<name>proc/sdcard/hw/sd_diskio_dma.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/sdcard/hw/sd_diskio_dma.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/hw/sd_diskio_dma.c</locationURI>
 		</link>
 		<link>
 			<name>proc/touch/hw/ft6x06.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/touch/hw/ft6x06.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/touch/hw/ft6x06.c</locationURI>
 		</link>
 		<link>
 			<name>proc/touch/hw/ft6x06_reg.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/touch/hw/ft6x06_reg.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/touch/hw/ft6x06_reg.c</locationURI>
 		</link>
 		<link>
 			<name>proc/touch/hw/touch_i2c.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/touch/hw/touch_i2c.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/touch/hw/touch_i2c.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop_ft8/ui_desktop_ft8.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop_ft8/ui_desktop_ft8.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop_ft8/ui_desktop_ft8.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/driver/GUIConf.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/driver/GUIConf.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/driver/GUIConf.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/driver/LCDConf.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/driver/LCDConf.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/driver/LCDConf.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/ui_menu.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/ui_menu.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/ui_menu.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/ui_menu_layout.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/ui_menu_layout.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/ui_menu_layout.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/ui_menu_module.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/ui_menu_module.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/ui_menu_module.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/ui_lib/ui_cool_progress.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/ui_lib/ui_cool_progress.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/ui_lib/ui_cool_progress.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/ui_state/ui_lora_state.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/ui_state/ui_lora_state.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/ui_state/ui_lora_state.c</locationURI>
 		</link>
 		<link>
 			<name>proc/vfo/hw/si5351.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/vfo/hw/si5351.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/vfo/hw/si5351.c</locationURI>
 		</link>
 		<link>
 			<name>proc/vfo/hw/vfo_i2c.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/vfo/hw/vfo_i2c.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/vfo/hw/vfo_i2c.c</locationURI>
 		</link>
 		<link>
 			<name>Middlewares/OpenAMP/libmetal/generic/generic_device.c</name>
@@ -884,313 +884,313 @@
 		<link>
 			<name>proc/ui/desktop/battery/ui_controls_battery.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/battery/ui_controls_battery.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/battery/ui_controls_battery.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/clock_panel/ui_controls_clock_panel.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/clock_panel/ui_controls_clock_panel.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/clock_panel/ui_controls_clock_panel.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/cpu_stat/ui_controls_cpu_stat.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/cpu_stat/ui_controls_cpu_stat.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/cpu_stat/ui_controls_cpu_stat.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/dsp_stat/ui_controls_dsp_stat.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/dsp_stat/ui_controls_dsp_stat.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/dsp_stat/ui_controls_dsp_stat.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/filter/ui_controls_filter.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/filter/ui_controls_filter.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/filter/ui_controls_filter.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/freq/ui_controls_frequency.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/freq/ui_controls_frequency.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/freq/ui_controls_frequency.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/keyer/keyer_image.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/keyer/keyer_image.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/keyer/keyer_image.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/keyer/ui_controls_keyer.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/keyer/ui_controls_keyer.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/keyer/ui_controls_keyer.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/on_screen/on_screen_agc_att.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_agc_att.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_agc_att.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/on_screen/on_screen_audio.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_audio.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_audio.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/on_screen/on_screen_keyboard.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_keyboard.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_keyboard.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/on_screen/on_screen_power.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_power.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_power.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/on_screen/on_screen_quick_log.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_quick_log.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/on_screen/on_screen_quick_log.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/sd_icon/sd_small.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/sd_icon/sd_small.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/sd_icon/sd_small.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/sd_icon/ui_controls_sd_icon.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/sd_icon/ui_controls_sd_icon.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/sd_icon/ui_controls_sd_icon.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/smeter/needle.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/smeter/needle.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/smeter/needle.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/smeter/needle1.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/smeter/needle1.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/smeter/needle1.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/smeter/scale.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/smeter/scale.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/smeter/scale.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/smeter/scale1.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/smeter/scale1.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/smeter/scale1.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/smeter/ui_controls_smeter.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/smeter/ui_controls_smeter.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/smeter/ui_controls_smeter.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/spectrum/ui_controls_spectrum.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/spectrum/ui_controls_spectrum.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/spectrum/ui_controls_spectrum.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/tx_status/ui_controls_tx_stat.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/tx_status/ui_controls_tx_stat.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/tx_status/ui_controls_tx_stat.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/volume/ui_controls_volume.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/desktop/volume/ui_controls_volume.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop/volume/ui_controls_volume.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/driver/backlight/shared_tim.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/driver/backlight/shared_tim.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/driver/backlight/shared_tim.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/driver/mipi/otm8009a.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/driver/mipi/otm8009a.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/driver/mipi/otm8009a.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/driver/mipi/st7701.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/driver/mipi/st7701.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/driver/mipi/st7701.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/ui_lib/keypad/c_keypad.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/ui_lib/keypad/c_keypad.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/ui_lib/keypad/c_keypad.c</locationURI>
 		</link>
 		<link>
 			<name>proc/dsp/digi/ft8_lib/common/audio.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/common/audio.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/common/audio.c</locationURI>
 		</link>
 		<link>
 			<name>proc/dsp/digi/ft8_lib/common/monitor.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/common/monitor.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/common/monitor.c</locationURI>
 		</link>
 		<link>
 			<name>proc/dsp/digi/ft8_lib/common/wave.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/common/wave.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/common/wave.c</locationURI>
 		</link>
 		<link>
 			<name>proc/dsp/digi/ft8_lib/fft/kiss_fft.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/fft/kiss_fft.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/fft/kiss_fft.c</locationURI>
 		</link>
 		<link>
 			<name>proc/dsp/digi/ft8_lib/fft/kiss_fftr.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/fft/kiss_fftr.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/fft/kiss_fftr.c</locationURI>
 		</link>
 		<link>
 			<name>proc/dsp/digi/ft8_lib/ft8/constants.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/constants.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/constants.c</locationURI>
 		</link>
 		<link>
 			<name>proc/dsp/digi/ft8_lib/ft8/crc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/crc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/crc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/dsp/digi/ft8_lib/ft8/decode.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/decode.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/decode.c</locationURI>
 		</link>
 		<link>
 			<name>proc/dsp/digi/ft8_lib/ft8/encode.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/encode.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/encode.c</locationURI>
 		</link>
 		<link>
 			<name>proc/dsp/digi/ft8_lib/ft8/ldpc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/ldpc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/ldpc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/dsp/digi/ft8_lib/ft8/message.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/message.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/message.c</locationURI>
 		</link>
 		<link>
 			<name>proc/dsp/digi/ft8_lib/ft8/text.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/text.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/text.c</locationURI>
 		</link>
 		<link>
 			<name>proc/lora/drivers/meshcore/repeater/repeater_main.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/lora/drivers/meshcore/repeater/repeater_main.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/drivers/meshcore/repeater/repeater_main.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/batt/menu_batt.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/batt/menu_batt.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/batt/menu_batt.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/clock/clock.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/clock/clock.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/clock/clock.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/clock/clock_res.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/clock/clock_res.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/clock/clock_res.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/dsp_s/dsp_s.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/dsp_s/dsp_s.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/dsp_s/dsp_s.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/dsp_s/dsp_s_res.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/dsp_s/dsp_s_res.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/dsp_s/dsp_s_res.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/file_b/file_b.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/file_b/file_b.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/file_b/file_b.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/file_b/file_b_res.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/file_b/file_b_res.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/file_b/file_b_res.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/info/info.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/info/info.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/info/info.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/info/info_res.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/info/info_res.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/info/info_res.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/logbook/logbook.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/logbook/logbook.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/logbook/logbook.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/logbook/logbook_res.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/logbook/logbook_res.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/logbook/logbook_res.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/lora/lora.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/lora/lora.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/lora/lora.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/lora/lora_res.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/lora/lora_res.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/lora/lora_res.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/pa/menu_pa.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/pa/menu_pa.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/pa/menu_pa.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/user_i/user_i.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/user_i/user_i.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/user_i/user_i.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/user_i/user_i_icons.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/user_i/user_i_icons.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/user_i/user_i_icons.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/user_i/user_i_res.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/user_i/user_i_res.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/user_i/user_i_res.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/ui_lib/STemWin/OS/GUI_X_OS.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/ui_lib/STemWin/OS/GUI_X_OS.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/ui_lib/STemWin/OS/GUI_X_OS.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/batt/res/icon_power.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/batt/res/icon_power.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/batt/res/icon_power.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/file_b/browser/filebrowser_app.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/file_b/browser/filebrowser_app.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/file_b/browser/filebrowser_app.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/pa/res/menu_pa_res.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu/items/pa/res/menu_pa_res.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/pa/res/menu_pa_res.c</locationURI>
 		</link>
 	</linkedResources>
 	<variableList>
 		<variable>
 			<name>copy_PARENT</name>
-			<value>$%7BPARENT-2-ECLIPSE_HOME%7D/Projects/mcHFpro/firmware/mchf-radio/SW4STM32</value>
+			<value>$%7BPARENT-2-ECLIPSE_HOME%7D/Projects/mcHFpro/firmware/app_proc/proj</value>
 		</variable>
 		<variable>
 			<name>copy_PARENT1</name>
@@ -1198,11 +1198,11 @@
 		</variable>
 		<variable>
 			<name>copy_PARENT12</name>
-			<value>$%7Bcopy_PARENT1%7D/mchf-radio</value>
+			<value>$%7Bcopy_PARENT1%7D/app_proc</value>
 		</variable>
 		<variable>
 			<name>copy_PARENT123</name>
-			<value>$%7Bcopy_PARENT1%7D/mchf-radio</value>
+			<value>$%7Bcopy_PARENT1%7D/app_proc</value>
 		</variable>
 		<variable>
 			<name>copy_PARENT1231</name>

@@ -1,0 +1,1 @@
+C:\Projects\wip\mcHF\firmware\app_proc\proj\srec_cat.exe @C:\Projects\wip\mcHF\firmware\app_proc\proj\add_crc.srec
