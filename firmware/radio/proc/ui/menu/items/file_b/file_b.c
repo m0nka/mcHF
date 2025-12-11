@@ -255,9 +255,9 @@ static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 	// Insert path
 	ulData[1] = (ulong)chAppName;
 
-	#if (SEDNA_DEBUG_BUILD == 1)
-	//DebugPrint("Load app...");
-	#endif
+	//#if (SEDNA_DEBUG_BUILD == 1)
+	printf("Load app...\r\n");
+	//#endif
 
 	// Post load request
 	if(vUiSendQueuedMessage(pxAppLoaderParameters.xAppLoaderRxQueue,ulData,3) != 0)
@@ -269,6 +269,9 @@ static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 		//vUiEpsonInfoBox("Error msg1!",0,0);
 		goto clean_up;
 	}
+
+	printf("done\r\n");
+	return;
 
 	#if (SEDNA_DEBUG_BUILD == 1)
 	//DebugPrint("ok.\n\r");

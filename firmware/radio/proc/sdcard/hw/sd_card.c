@@ -121,7 +121,7 @@ static void SD_MspInit(SD_HandleTypeDef *hsd)
 		// Common GPIO configuration
 		gpio_init_structure.Mode      = GPIO_MODE_AF_PP;
 		gpio_init_structure.Pull      = GPIO_PULLUP;
-		gpio_init_structure.Speed     = GPIO_SPEED_FREQ_MEDIUM;
+		gpio_init_structure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
 		gpio_init_structure.Alternate = GPIO_AF12_SDIO1;
 
 		gpio_init_structure.Pin = SDMMC1_D0;
@@ -175,8 +175,8 @@ static void SD_MspInit(SD_HandleTypeDef *hsd)
 			#endif
 		}
 
-		__HAL_RCC_SDMMC1_FORCE_RESET();
-		__HAL_RCC_SDMMC1_RELEASE_RESET();
+		//__HAL_RCC_SDMMC1_FORCE_RESET();
+		//__HAL_RCC_SDMMC1_RELEASE_RESET();
 
 		// NVIC configuration for SDIO interrupts
 		HAL_NVIC_SetPriority(SDMMC1_IRQn, 9, 0);

@@ -100,7 +100,7 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     osEvent event;
 	#endif
 
-    printf("SD_read %d \r\n", count);
+    printf("SD_read %d \r\n", sector);
 
 	#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
     uint32_t alignedAddr;
@@ -118,7 +118,7 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     if (!((uint32_t)buff & 0x3))
     {
 		#ifndef SD_USE_DMA
-
+    	printf("read ...  \r\n");
     	uint8_t ret = BSP_SD_ReadBlocks(0, (uint32_t*)buff, (uint32_t)(sector), count);
     	if(ret != BSP_ERROR_NONE)
         {

@@ -44,6 +44,7 @@ extern uchar stay_in_boot;
 int test_sd_card(void)
 {
 	GPIO_InitTypeDef  GPIO_InitStruct;
+	int i;
 
 	// SD_DET - PC2 after 0.8.3 mod
 	GPIO_InitStruct.Pin   = SD_DET;
@@ -103,6 +104,18 @@ int test_sd_card(void)
 		printf("sd bad boot sector signature!\r\n");
 		return 4;
 	}
+
+	// Manual blocks read
+	for(i = 0; i < 10000; i++)
+	{
+		if(BSP_SD_ReadBlocks(0, (ulong *)boot, 1, 1) != 0)
+			break;
+	}
+
+	//printf("read blocks: %d\r\n", i);
+
+	if(i < 10000)
+		return 5;
 
 	#if 0
 	// Init FatFS
