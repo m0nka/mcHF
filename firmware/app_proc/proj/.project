@@ -737,6 +737,66 @@
 			<locationURI>copy_PARENT12345/STM32CubeH7/Middlewares/Third_Party/OpenAMP/open-amp/lib/virtio/virtqueue.c</locationURI>
 		</link>
 		<link>
+			<name>middleware/ft8_lib/common/audio.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/common/audio.c</locationURI>
+		</link>
+		<link>
+			<name>middleware/ft8_lib/common/monitor.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/common/monitor.c</locationURI>
+		</link>
+		<link>
+			<name>middleware/ft8_lib/common/wave.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/common/wave.c</locationURI>
+		</link>
+		<link>
+			<name>middleware/ft8_lib/fft/kiss_fft.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/fft/kiss_fft.c</locationURI>
+		</link>
+		<link>
+			<name>middleware/ft8_lib/fft/kiss_fftr.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/fft/kiss_fftr.c</locationURI>
+		</link>
+		<link>
+			<name>middleware/ft8_lib/ft8/constants.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/ft8/constants.c</locationURI>
+		</link>
+		<link>
+			<name>middleware/ft8_lib/ft8/crc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/ft8/crc.c</locationURI>
+		</link>
+		<link>
+			<name>middleware/ft8_lib/ft8/decode.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/ft8/decode.c</locationURI>
+		</link>
+		<link>
+			<name>middleware/ft8_lib/ft8/encode.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/ft8/encode.c</locationURI>
+		</link>
+		<link>
+			<name>middleware/ft8_lib/ft8/ldpc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/ft8/ldpc.c</locationURI>
+		</link>
+		<link>
+			<name>middleware/ft8_lib/ft8/message.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/ft8/message.c</locationURI>
+		</link>
+		<link>
+			<name>middleware/ft8_lib/ft8/text.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/ft8/text.c</locationURI>
+		</link>
+		<link>
 			<name>proc/app/elf/os_sedna_exports.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/app/elf/os_sedna_exports.c</locationURI>
@@ -1015,66 +1075,6 @@
 			<name>proc/ui/ui_lib/keypad/c_keypad.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/ui_lib/keypad/c_keypad.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib/common/audio.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/common/audio.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib/common/monitor.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/common/monitor.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib/common/wave.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/common/wave.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib/fft/kiss_fft.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/fft/kiss_fft.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib/fft/kiss_fftr.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/fft/kiss_fftr.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib/ft8/constants.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/constants.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib/ft8/crc.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/crc.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib/ft8/decode.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/decode.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib/ft8/encode.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/encode.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib/ft8/ldpc.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/ldpc.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib/ft8/message.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/message.c</locationURI>
-		</link>
-		<link>
-			<name>proc/dsp/digi/ft8_lib/ft8/text.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/digi/ft8_lib/ft8/text.c</locationURI>
 		</link>
 		<link>
 			<name>proc/lora/drivers/meshcore/repeater/repeater_main.c</name>
