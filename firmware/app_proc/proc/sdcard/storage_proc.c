@@ -30,13 +30,13 @@ __attribute__((section(".axi_mem"))) __attribute__ ((aligned (32))) FATFS Storag
 FATFS StorageDISK_FatFs[NUM_DISK_UNITS];
 #endif
 
-static osSemaphoreId      	StorageSemaphore[NUM_DISK_UNITS];
-static Diskio_drvTypeDef  	const * Storage_Driver[NUM_DISK_UNITS];
+osSemaphoreId      					StorageSemaphore[NUM_DISK_UNITS];
+static Diskio_drvTypeDef  	const 	*Storage_Driver[NUM_DISK_UNITS];
 
-static  uint8_t           	StorageID[NUM_DISK_UNITS];
-static STORAGE_Status_t   	StorageStatus[NUM_DISK_UNITS];
+uint8_t           					StorageID[NUM_DISK_UNITS];
+STORAGE_Status_t   					StorageStatus[NUM_DISK_UNITS];
 
-extern TaskHandle_t 		hSdcTask;
+extern TaskHandle_t 				hSdcTask;
 
 //*----------------------------------------------------------------------------
 //* Function Name       : EXTI0_IRQHandler
@@ -60,7 +60,15 @@ void EXTI0_IRQHandler(void)
 	}
 }
 
-static STORAGE_Status_t StorageTryMount( const uint8_t unit )
+//*----------------------------------------------------------------------------
+//* Function Name       : storage_proc_try_mount
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_SD
+//*----------------------------------------------------------------------------
+static STORAGE_Status_t storage_proc_try_mount( const uint8_t unit )
 {
 	//printf("StorageTryMount  \r\n");
 
@@ -94,13 +102,20 @@ static STORAGE_Status_t StorageTryMount( const uint8_t unit )
 
 unlock_exit:
   	  osSemaphoreRelease(StorageSemaphore[unit]);
-
   	  return StorageStatus[unit];
 }
 
-static STORAGE_Status_t StorageTryUnMount( const uint8_t unit )
+//*----------------------------------------------------------------------------
+//* Function Name       : storage_proc_try_unmount
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_SD
+//*----------------------------------------------------------------------------
+static STORAGE_Status_t storage_proc_try_unmount( const uint8_t unit )
 {
-	//printf("StorageTryUnMount...  \r\n");
+	//printf("storage_proc_try_unmount...  \r\n");
 
 	if(StorageID[unit] == 0)
 		return StorageStatus[unit];
@@ -124,10 +139,18 @@ static STORAGE_Status_t StorageTryUnMount( const uint8_t unit )
 unlock_exit:
 	osSemaphoreRelease(StorageSemaphore[unit]);
 
-	//printf("StorageTryUnMount...ok  \r\n");
+	//printf("storage_proc_try_unmount...ok  \r\n");
 	return StorageStatus[unit];
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : storage_proc_init_msd
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_SD
+//*----------------------------------------------------------------------------
 static uint8_t storage_proc_init_msd(void)
 {
 	uint8_t sd_status = BSP_ERROR_NONE;
@@ -141,7 +164,10 @@ static uint8_t storage_proc_init_msd(void)
 
 	// Exit on no card
 	if(BSP_SD_IsDetected() == SD_NOT_PRESENT)
+	{
+		printf("card not avail  \r\n");
 		return BSP_ERROR_NONE;
+	}
 
 	// Card init
 	sd_status = sd_card_init(0);
@@ -152,21 +178,53 @@ static uint8_t storage_proc_init_msd(void)
 	}
 
 	// Create Storage Semaphore
-	osSemaphoreDef(STORAGE_MSD_Semaphore);
-	StorageSemaphore[MSD_DISK_UNIT] = osSemaphoreCreate (osSemaphore(STORAGE_MSD_Semaphore), 1);
+	//osSemaphoreDef(STORAGE_MSD_Semaphore);
+	//StorageSemaphore[MSD_DISK_UNIT] = osSemaphoreCreate (osSemaphore(STORAGE_MSD_Semaphore), 1);
 
 	// Mark the storage as initialised
 	StorageID[MSD_DISK_UNIT] = 1;
 	Storage_Driver[MSD_DISK_UNIT] = &SD_Driver;
 
 	// Try mount the storage
-	StorageTryMount(MSD_DISK_UNIT);
+	storage_proc_try_mount(MSD_DISK_UNIT);
 
-	printf("card ok  \r\n");
+	#if 1
+	if(StorageStatus[MSD_DISK_UNIT] != STORAGE_MOUNTED)
+		printf("card not ready!  \r\n");
+	else
+		printf("card ready  \r\n");
+	#endif
+
 	return StorageID[MSD_DISK_UNIT];
 }
 
-void StorageThread(void const * argument)
+void storage_proc_connection_evt(void)
+{
+	// Debounce
+	if(BSP_SD_IsDetected() != SD_PRESENT)
+		return;
+
+	printf("card inserted  \r\n");
+
+	// Power on
+	sd_card_power(1);
+
+	// Power on delay
+	vTaskDelay(100);
+
+	// In case the card was not inserted on reset
+	storage_proc_init_msd();
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : storage_proc_task
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_SD
+//*----------------------------------------------------------------------------
+void storage_proc_task(void const * argument)
 {
 	//osEvent event;
 	ulong 	ulNotificationValue = 0, ulNotif;
@@ -221,37 +279,8 @@ void StorageThread(void const * argument)
 			switch(ulNotificationValue)
 			{
         		case MSDDISK_CONNECTION_EVENT:
-        		{
-        			// Debounce
-        			if(BSP_SD_IsDetected() != SD_PRESENT)
-        				break;
-
-        			printf("card inserted  \r\n");
-
-        			// Power on
-        			sd_card_power(1);
-
-        			// Power on delay
-        			vTaskDelay(100);
-
-        			// In case the card was not inserted on reset
-        			storage_proc_init_msd();
-
-        			// Card init
-					#if 0
-        			if(sd_card_init(0) != BSP_ERROR_NONE)
-        				break;
-					#endif
-
-        			// Mount FS
-        			StorageTryMount(MSD_DISK_UNIT);
-
-        			// Test only
-        			//if(StorageStatus[0] == STORAGE_MOUNTED)
-        			//	printf("card size: 0x%x  \r\n", (int)Storage_GetCapacity(0));
-
+        			storage_proc_connection_evt();
         			break;
-        		}
 
         		case MSDDISK_DISCONNECTION_EVENT:
         		{
@@ -262,7 +291,7 @@ void StorageThread(void const * argument)
         			printf("card surprise removal  \r\n");
 
         			// FS Clean-up
-        			StorageTryUnMount(MSD_DISK_UNIT);
+        			storage_proc_try_unmount(MSD_DISK_UNIT);
 
         			// Power off
         			sd_card_power(0);
@@ -282,32 +311,35 @@ void StorageThread(void const * argument)
 	}
 }
 
-static void StorageDeInitMSD(void)
-{
-	#ifdef STORAGE_BSP_INIT
-	BSP_SD_DeInit(0);
-	#endif // STORAGE_BSP_INIT
-  
-	if(StorageSemaphore[MSD_DISK_UNIT])
-	{
-		osSemaphoreDelete(StorageSemaphore[MSD_DISK_UNIT]);
-		StorageSemaphore[MSD_DISK_UNIT] = 0;
-	}
-}
-
-void Storage_Init(void)
+//*----------------------------------------------------------------------------
+//* Function Name       : storage_proc_init
+//* Object              :
+//* Notes    			: pre-os init
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
+void storage_proc_init(void)
 {
 	uint8_t storage_id = 0;
 
 	// Reset All storage status
-	for(storage_id = 0; storage_id < sizeof(StorageStatus); storage_id++)
-	{
-		StorageStatus[storage_id] = STORAGE_NOINIT;
-	}
+	//for(storage_id = 0; storage_id < sizeof(StorageStatus); storage_id++)
+	//{
+	//	StorageStatus[storage_id] = STORAGE_NOINIT;
+	//}
+	StorageStatus[storage_id] = STORAGE_NOINIT;
+
+	// Create Storage Semaphore
+	osSemaphoreDef(STORAGE_MSD_Semaphore);
+	StorageSemaphore[MSD_DISK_UNIT] = osSemaphoreCreate (osSemaphore(STORAGE_MSD_Semaphore), 1);
 
 	// GPIO init
 	sd_card_low_level_init(0);
 
+	//
+	// Are we detecting before the OS is running ?
+	//
 	#ifdef SD_DETECT_BEFORE_OS
 	//
 	// Initialize the MSD Storage
@@ -321,141 +353,4 @@ void Storage_Init(void)
 	printf("sd low init \r\n");
 }
 
-void Storage_DeInit(void)
-{
-	uint8_t storage_id = 0;
-
-	// Try Unmount All storage
-	for(storage_id = 0; storage_id < sizeof(StorageStatus); storage_id++)
-	{
-		StorageTryUnMount(storage_id);
-	}
-
-	// Terminate Storage background task
-	//if(StorageThreadId)
-	//{
-	//	osThreadTerminate (StorageThreadId);
-	//	StorageThreadId = 0;
-	//}
-
-	// Delete Storage Message Queue
-	//if(StorageEvent)
-	//{
-	//	osMessageDelete (StorageEvent);
-	//	StorageEvent = 0;
-	//}
-
-	#if defined(USE_SDCARD)
-	// DeInit MSD Storage
-	StorageDeInitMSD();
-	#endif
-}
-
 #endif
-
-// -------------------------------------------------------------------------
-// -------------  				Access calls			--------------------
-// -------------------------------------------------------------------------
-
-uint8_t Storage_GetStatus(uint8_t unit)
-{
-	#ifdef CONTEXT_SD
-	uint8_t status = STORAGE_NOINIT;
-
-	if(StorageID[unit])
-	{
-		osSemaphoreWait(StorageSemaphore[unit], osWaitForever);
-		status = (StorageStatus[unit] == STORAGE_MOUNTED);
-		osSemaphoreRelease(StorageSemaphore[unit]);
-	}
-
-	return status;
-	#else
-	return 0;
-	#endif
-}
-
-uint32_t Storage_GetCapacity (uint8_t unit)
-{
-	#ifdef CONTEXT_SD
-	uint32_t   tot_sect = 0;
-	FATFS 	*fs;
-
-	if(StorageID[unit])
-	{
-		osSemaphoreWait(StorageSemaphore[unit], osWaitForever);
-		fs = &StorageDISK_FatFs[unit];
-		tot_sect = (fs->n_fatent - 2) * fs->csize;
-		osSemaphoreRelease(StorageSemaphore[unit]);
-	}
-
-	return (tot_sect);
-	#else
-	return 0;
-	#endif
-}
-
-uint32_t Storage_GetLabel(uint8_t unit, char *label)
-{
-	#ifdef CONTEXT_SD
-	FRESULT res;
-	FATFS 	*fs;
-
-	if(label == NULL)
-		return FR_INT_ERR;
-
-	if(StorageID[unit])
-	{
-		osSemaphoreWait(StorageSemaphore[0], osWaitForever);
-		fs = &StorageDISK_FatFs[0];
-		res = f_getlabel(StorageDISK_Drive, label, NULL);
-		osSemaphoreRelease(StorageSemaphore[0]);
-	}
-
-	return FR_OK;
-	#else
-	return 0;
-	#endif
-}
-
-uint32_t Storage_GetFree (uint8_t unit)
-{
-	#ifdef CONTEXT_SD
-	uint32_t	fre_clust = 0, ret = 0;
-	FATFS 		*fs;
-	FRESULT 	res = FR_INT_ERR;
-
-	if(StorageID[unit])
-	{
-		osSemaphoreWait(StorageSemaphore[unit], osWaitForever);
-		fs = &StorageDISK_FatFs[unit];
-		res = f_getfree(StorageDISK_Drive, (DWORD *)&fre_clust, &fs);
-		if(res == FR_OK)
-			ret = (fre_clust * fs->csize);
-		else
-			ret = 0;
-		osSemaphoreRelease(StorageSemaphore[unit]);
-	}
-
-	return ret;
-	#else
-	return 0;
-	#endif
-}
-
-uchar Storage_GetDrive(uint8_t unit, char *disk)
-{
-	#ifdef CONTEXT_SD
-	if((StorageStatus[unit] == STORAGE_MOUNTED)&&(disk != NULL))
-	{
-		strcpy(disk, StorageDISK_Drive);
-		return 0;
-	}
-	else
-		return 1;
-	#else
-	return 1;
-	#endif
-}
-
-

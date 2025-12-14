@@ -21,7 +21,7 @@
 #include "ui_menu_module.h"
 
 #include "browser\filebrowser_app.h"
-#include "storage_proc.h"
+#include "storage_api.h"
 #include "ff_gen_drv.h"
 
 #include "file_b.h"
@@ -740,7 +740,7 @@ static void ShowFileDetails(WM_HWIN hWin)
 	int res = f_stat (SelectedFileName, &fno);
 	if(res != FR_OK)
 	{
-		printf("res: %d \r\n", res);
+		//printf("res: %d \r\n", res);
 		EDIT_SetText(hItem1, "");
 		EDIT_SetText(hItem2, "");
 		EDIT_SetText(hItem3, "");

@@ -29,7 +29,7 @@
 #endif
 
 #ifndef SD_READ_TIMEOUT
-#define SD_READ_TIMEOUT          100U
+#define SD_READ_TIMEOUT          3000U
 #endif
 
 #define   SD_TRANSFER_OK         0U
@@ -47,7 +47,6 @@ extern SD_HandleTypeDef    hsd_sdmmc[];
 extern EXTI_HandleTypeDef  hsd_exti[];
 
 int32_t sd_card_init(uint32_t Instance);
-int32_t BSP_SD_DeInit(uint32_t Instance);
 
 int32_t sd_card_set_exti_irq(uint32_t Instance);
 int32_t BSP_SD_ReadBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr);
@@ -75,7 +74,7 @@ void BSP_SD_WriteCpltCallback(uint32_t Instance);
 void BSP_SD_ReadCpltCallback(uint32_t Instance);
 void BSP_SD_DetectCallback(uint32_t Instance, uint32_t Status);
 //void HAL_SD_DriveTransciver_1_8V_Callback(FlagStatus status);
-HAL_StatusTypeDef MX_SDMMC1_SD_Init(SD_HandleTypeDef *hsd);
+//HAL_StatusTypeDef MX_SDMMC1_SD_Init(SD_HandleTypeDef *hsd);
 
 #endif
 

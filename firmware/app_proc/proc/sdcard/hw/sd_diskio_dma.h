@@ -7,8 +7,8 @@
 #define RW_ERROR_MSG       (uint32_t) 3
 #define RW_ABORT_MSG       (uint32_t) 4
 
-//#define SD_TIMEOUT 30 * 1000
-#define SD_TIMEOUT 3 * 1000
+#define SD_TIMEOUT 30 * 1000
+//#define SD_TIMEOUT 3 * 1000
 
 #define DISABLE_SD_INIT
 

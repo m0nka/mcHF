@@ -592,6 +592,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/rotary/rotary_proc.c</locationURI>
 		</link>
 		<link>
+			<name>proc/sdcard/storage_api.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/storage_api.c</locationURI>
+		</link>
+		<link>
 			<name>proc/sdcard/storage_proc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/storage_proc.c</locationURI>

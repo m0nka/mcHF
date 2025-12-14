@@ -369,6 +369,7 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
 
  		printf("open\r\n");// crash in fopen, low level driver still sucks ;(
 
+		#if 0
  	 	res = f_open(&file, chSomeAppName, FA_READ);
  		if(res != FR_OK)
  			return 13;
@@ -383,6 +384,9 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
 
  		// Close file
  		f_close(file);
+		#else
+ 		vTaskDelay(100);
+ 		#endif
 
  		// Check for magic
  		if( (*(p_f + 0) != 0x69) ||

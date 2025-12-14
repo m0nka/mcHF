@@ -180,7 +180,7 @@ static void tasks_pre_os_init(void)
 	#endif
 
 	#ifdef CONTEXT_SD
-	Storage_Init();
+	storage_proc_init();
 	#endif
 
 	#ifdef CONTEXT_APP
@@ -389,7 +389,7 @@ static int start_proc(void)
 	#endif
 
 	#ifdef CONTEXT_SD
-    res = xTaskCreate(	(TaskFunction_t)StorageThread,\
+    res = xTaskCreate(	(TaskFunction_t)storage_proc_task,\
     					SD_PROC_START_NAME,\
 						SD_PROC_STACK_SIZE,\
 						NULL,\

@@ -115,10 +115,11 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     		return RES_NOTRDY;
     }
 
+    // Is address aligned(even if yes, is it in correct RAM ??)
     if (!((uint32_t)buff & 0x3))
     {
 		#ifndef SD_USE_DMA
-    	printf("read ...  \r\n");
+    	//printf("read ...  \r\n");
     	uint8_t ret = BSP_SD_ReadBlocks(0, (uint32_t*)buff, (uint32_t)(sector), count);
     	if(ret != BSP_ERROR_NONE)
         {

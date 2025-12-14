@@ -78,20 +78,7 @@ FILELIST_FileTypeDef;
 extern char StorageDISK_Drive[];
 extern osMessageQId StorageEvent;
 
-void        Storage_DeInit(void);
-void 		storage_proc_detect_sd_card(ulong state);
-
-void 		StorageThread(void const * argument);
-void        Storage_Init(void);
-
-// -------------------------------------------------------------------------
-// -------------  				Access calls			--------------------
-// -------------------------------------------------------------------------
-
-uint8_t     Storage_GetStatus	(uint8_t unit				);
-uint32_t 	Storage_GetCapacity	(uint8_t unit				);
-uint32_t 	Storage_GetLabel	(uint8_t unit, char *label	);
-uint32_t 	Storage_GetFree		(uint8_t unit				);
-uchar 		Storage_GetDrive	(uint8_t unit, char *disk	);
+void 		storage_proc_task(void const * argument);
+void        storage_proc_init(void);
 
 #endif

@@ -214,6 +214,39 @@ static void SD_MspDeInit(SD_HandleTypeDef *hsd)
 }
 #endif
 
+static HAL_StatusTypeDef sdmmc1_init(SD_HandleTypeDef *hsd)
+{
+	HAL_StatusTypeDef ret = HAL_OK;
+
+	// uSD device interface configuration
+	hsd->Instance                 = SDMMC1;
+	hsd->Init.ClockEdge           = SDMMC_CLOCK_EDGE_RISING;
+	hsd->Init.ClockPowerSave      = SDMMC_CLOCK_POWER_SAVE_DISABLE;
+	hsd->Init.BusWide             = SDMMC_BUS_WIDE_4B;
+	hsd->Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
+	#if (USE_SD_TRANSCEIVER >0)
+	hsd->Init.TranceiverPresent   = SDMMC_TRANSCEIVER_PRESENT;
+	#endif //USE_SD_TRANSCEIVER
+	#if ( USE_SD_HIGH_PERFORMANCE > 0 )
+	hsd->Init.ClockDiv            = SDMMC_HSpeed_CLK_DIV;
+	#else
+	hsd->Init.ClockDiv            = SDMMC_NSpeed_CLK_DIV;
+	#endif // USE_SD_HIGH_PERFORMANCE
+
+	printf("try HAL_SD_Init..  \r\n");
+
+	// HAL SD initialization
+	if(HAL_SD_Init(hsd) != HAL_OK)
+	{
+		ret = HAL_ERROR;
+	}
+	//printf("card speed: %d \r\n", (int)hsd->SdCard.CardSpeed);
+
+	printf("HAL_SD_Init..ok  \r\n");
+
+	return ret;
+}
+
 void sd_card_low_level_init(uint32_t Instance)
 {
 	// Msp SD initialization
@@ -244,32 +277,20 @@ void sd_card_power(uchar state)
 
 int32_t sd_card_init(uint32_t Instance)
 {
-	//int32_t ret = BSP_ERROR_NONE;
-
-	//printf("sd_card_init..  \r\n");
-
-	if(Instance >= SD_INSTANCES_NBR)
-	{
-		printf("sd_card_init err1  \r\n");
-		return BSP_ERROR_WRONG_PARAM;
-	}
-
 	if(BSP_SD_IsDetected() != SD_PRESENT)
 	{
-		printf("sd_card_init err2  \r\n");
+		printf("no card  \r\n");
 		return BSP_ERROR_UNKNOWN_COMPONENT;
 	}
 
-	// Msp SD initialization
-	//SD_MspInit(&hsd_sdmmc[Instance]);
-
 	//  HAL SD initialization and Enable wide operation
-	if(MX_SDMMC1_SD_Init(&hsd_sdmmc[Instance]) != HAL_OK)
+	if(sdmmc1_init(&hsd_sdmmc[Instance]) != HAL_OK)
 	{
 		printf("sd_card_init err3  \r\n");
 		return BSP_ERROR_PERIPH_FAILURE;
 	}
 
+	#if 0
 	if(HAL_SD_ConfigWideBusOperation(&hsd_sdmmc[Instance], SDMMC_BUS_WIDE_4B) != HAL_OK)
 	{
 		printf("sd_card_init err4  \r\n");
@@ -278,73 +299,15 @@ int32_t sd_card_init(uint32_t Instance)
 
 	// Switch to High Speed mode if the card support this mode
 	(void)HAL_SD_ConfigSpeedBusOperation(&hsd_sdmmc[Instance], SDMMC_SPEED_MODE_HIGH);
+	#endif
 
 	//printf("sd_card_init.. ok \r\n");
 	return BSP_ERROR_NONE;
 }
 
-#if 0
-int32_t BSP_SD_DeInit(uint32_t Instance)
-{
-	int32_t ret = BSP_ERROR_NONE;
-
-	if(Instance >= SD_INSTANCES_NBR)
-	{
-		ret = BSP_ERROR_WRONG_PARAM;
-	}
-	else
-	{
-		if(HAL_SD_DeInit(&hsd_sdmmc[Instance]) != HAL_OK)// HAL SD de-initialization
-		{
-			ret = BSP_ERROR_PERIPH_FAILURE;
-		}
-		else
-		{
-			// Msp SD de-initialization
-			#if (USE_HAL_SD_REGISTER_CALLBACKS == 0)
-			SD_MspDeInit(&hsd_sdmmc[Instance]);
-			#endif // (USE_HAL_SD_REGISTER_CALLBACKS == 0)
-		}
-	}
-
-	return ret;
-}
-#endif
-
-HAL_StatusTypeDef MX_SDMMC1_SD_Init(SD_HandleTypeDef *hsd)
-{
-	HAL_StatusTypeDef ret = HAL_OK;
-
-	// uSD device interface configuration
-	hsd->Instance                 = SDMMC1;
-	hsd->Init.ClockEdge           = SDMMC_CLOCK_EDGE_RISING;
-	hsd->Init.ClockPowerSave      = SDMMC_CLOCK_POWER_SAVE_DISABLE;
-	hsd->Init.BusWide             = SDMMC_BUS_WIDE_4B;
-	hsd->Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
-	#if (USE_SD_TRANSCEIVER >0)
-	hsd->Init.TranceiverPresent   = SDMMC_TRANSCEIVER_PRESENT;
-	#endif //USE_SD_TRANSCEIVER
-	#if ( USE_SD_HIGH_PERFORMANCE > 0 )
-	hsd->Init.ClockDiv            = SDMMC_HSpeed_CLK_DIV;
-	#else
-	hsd->Init.ClockDiv            = SDMMC_NSpeed_CLK_DIV;
-	#endif // USE_SD_HIGH_PERFORMANCE
-
-	// HAL SD initialization
-	if(HAL_SD_Init(hsd) != HAL_OK)
-	{
-		ret = HAL_ERROR;
-	}
-
-	return ret;
-}
-
 int32_t sd_card_set_exti_irq(uint32_t Instance)
 {
 	GPIO_InitTypeDef gpio_init_structure;
-
-	//if(Instance> SD_INSTANCES_NBR)
-	//	return BSP_ERROR_WRONG_PARAM;
 
 	gpio_init_structure.Pin 	= SD_DET;
 	gpio_init_structure.Pull 	= GPIO_PULLUP;
@@ -391,7 +354,7 @@ int32_t BSP_SD_ReadBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx,
 
 		if(HAL_SD_ReadBlocks(&hsd_sdmmc[Instance], (uint8_t *)pData, BlockIdx, BlocksNbr, timeout) != HAL_OK)
 		{
-			printf("rd err: 0x%x \r\n", hsd_sdmmc[Instance].ErrorCode);
+			//printf("rd err: 0x%x \r\n", hsd_sdmmc[Instance].ErrorCode);
 			ret = BSP_ERROR_PERIPH_FAILURE;
 		}
 	}
