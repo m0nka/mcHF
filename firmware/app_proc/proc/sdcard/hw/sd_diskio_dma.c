@@ -100,7 +100,7 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     osEvent event;
 	#endif
 
-    printf("SD_read %d \r\n", sector);
+    printf("SD_read %d,%d(%8x) \r\n", sector, count, (ulong)buff);
 
 	#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
     uint32_t alignedAddr;
@@ -115,20 +115,22 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     		return RES_NOTRDY;
     }
 
-    // Is address aligned(even if yes, is it in correct RAM ??)
-    if (!((uint32_t)buff & 0x3))
+    // Is address aligned/correct RAM
+    if((!((uint32_t)buff & 0x3))&&(((ulong)buff >> 24) == 0x24))
     {
 		#ifndef SD_USE_DMA
     	//printf("read ...  \r\n");
     	uint8_t ret = BSP_SD_ReadBlocks(0, (uint32_t*)buff, (uint32_t)(sector), count);
     	if(ret != BSP_ERROR_NONE)
         {
-        	printf("read err  \r\n");
+        	printf("read errA  \r\n");
         	res = RES_ERROR;
         }
     	else
     		res = RES_OK;
 		#else
+    	//printf("read A  \r\n");
+
     	// Fast path: the provided destination buffer is correctly aligned
     	uint8_t ret = BSP_SD_ReadBlocks_DMA(0, (uint32_t*)buff, (uint32_t)(sector), count);
     	//printf("dma: %d  \r\n", ret);
@@ -178,13 +180,15 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
         uint8_t ret = BSP_ERROR_NONE;
         int i;
 
+        //printf("read B  \r\n");
+
         for (i = 0; i < count; i++)
         {
 			#ifndef SD_USE_DMA
         	uint8_t ret = BSP_SD_ReadBlocks(0, (uint32_t*)buffer, (uint32_t)(sector++), 1);
         	if(ret != BSP_ERROR_NONE)
         	{
-        		//printf("read err  \r\n");
+        		printf("read errB  \r\n");
         		break;
         	}
         	else

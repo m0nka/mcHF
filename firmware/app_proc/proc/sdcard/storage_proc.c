@@ -159,14 +159,14 @@ static uint8_t storage_proc_init_msd(void)
 	if(StorageID[MSD_DISK_UNIT] != 0)
 	{
 		printf("skip card init  \r\n");
-		return StorageID[MSD_DISK_UNIT];
+		return 1;
 	}
 
 	// Exit on no card
 	if(BSP_SD_IsDetected() == SD_NOT_PRESENT)
 	{
 		printf("card not avail  \r\n");
-		return BSP_ERROR_NONE;
+		return 2;
 	}
 
 	// Card init
@@ -174,12 +174,8 @@ static uint8_t storage_proc_init_msd(void)
 	if(sd_status != BSP_ERROR_NONE)
 	{
 		printf("card init failed(%d)  \r\n", sd_status);
-		return BSP_ERROR_NONE;
+		return 3;
 	}
-
-	// Create Storage Semaphore
-	//osSemaphoreDef(STORAGE_MSD_Semaphore);
-	//StorageSemaphore[MSD_DISK_UNIT] = osSemaphoreCreate (osSemaphore(STORAGE_MSD_Semaphore), 1);
 
 	// Mark the storage as initialised
 	StorageID[MSD_DISK_UNIT] = 1;
@@ -195,12 +191,11 @@ static uint8_t storage_proc_init_msd(void)
 		printf("card ready  \r\n");
 	#endif
 
-	return StorageID[MSD_DISK_UNIT];
+	return 0;
 }
 
-void storage_proc_connection_evt(void)
+static void storage_proc_connection_evt(void)
 {
-	// Debounce
 	if(BSP_SD_IsDetected() != SD_PRESENT)
 		return;
 
@@ -213,7 +208,37 @@ void storage_proc_connection_evt(void)
 	vTaskDelay(100);
 
 	// In case the card was not inserted on reset
-	storage_proc_init_msd();
+	if(storage_proc_init_msd() != 0)
+	{
+		// FS Clean-up
+		//--storage_proc_try_unmount(MSD_DISK_UNIT);
+
+		//
+		// ToDo: How do we properly reset drivers(bad init result, read errors, etc)
+		//
+		sd_card_reset_driver();
+
+		// Power off
+		sd_card_power(0);
+
+		//--StorageID[MSD_DISK_UNIT] = STORAGE_NOINIT;
+	}
+}
+
+static void storage_proc_disconnect_evt(void)
+{
+	if(BSP_SD_IsDetected() != SD_NOT_PRESENT)
+		return;
+
+	printf("card surprise removal  \r\n");
+
+	// FS Clean-up
+	storage_proc_try_unmount(MSD_DISK_UNIT);
+
+	// Power off
+	sd_card_power(0);
+
+	StorageID[MSD_DISK_UNIT] = STORAGE_NOINIT;
 }
 
 //*----------------------------------------------------------------------------
@@ -283,23 +308,11 @@ void storage_proc_task(void const * argument)
         			break;
 
         		case MSDDISK_DISCONNECTION_EVENT:
-        		{
-        			// Debounce
-        			if(BSP_SD_IsDetected() != SD_NOT_PRESENT)
-        				break;
-
-        			printf("card surprise removal  \r\n");
-
-        			// FS Clean-up
-        			storage_proc_try_unmount(MSD_DISK_UNIT);
-
-        			// Power off
-        			sd_card_power(0);
-
-        			StorageID[MSD_DISK_UNIT] = STORAGE_NOINIT;
-
+        			storage_proc_disconnect_evt();
         			break;
-        		}
+
+        		// Add Eject button from UI
+        		// ...
 
         		default:
         			break;
@@ -350,7 +363,7 @@ void storage_proc_init(void)
 	//
 	#endif
 
-	printf("sd low init \r\n");
+	//--printf("sd low init \r\n");
 }
 
 #endif

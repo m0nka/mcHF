@@ -300,7 +300,7 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
 	uchar 		ucAppPriority = tskIDLE_PRIORITY;
 
 	FRESULT 	res;
-	FIL   		*file 		= NULL;			// file ptr
+	FIL   		file;
 	FILINFO 	fno;
 
 	uint  		uiAppSize 	= 0;			// file size
@@ -346,7 +346,7 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
  	//if(uiAppSize == 0)
  	//	return 13;
 
- 	printf("file: %s \r\n", chSomeAppName);
+ 	//printf("file: %s \r\n", chSomeAppName);
 
  	// Get extension
  	os_apploader_get_ext(chSomeAppName, ext);
@@ -357,7 +357,7 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
  		return 12;
 
  	uiAppSize = fno.fsize;
- 	printf("size %d bytes\r\n", uiAppSize);
+ 	//printf("size %d bytes\r\n", uiAppSize);
 
  	if(strcmp(ext, "elf") == 0)
  	{
@@ -365,29 +365,36 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
  	}
  	else if(strcmp(ext, "bin") == 0)
  	{
+		#if 1
  		uchar *p_f = (uchar *)SDRAM_APP_ADDR;
+ 		//uchar temp_buff[40];
 
- 		printf("open\r\n");// crash in fopen, low level driver still sucks ;(
+ 		printf("open: %s \r\n", chSomeAppName);
 
-		#if 0
  	 	res = f_open(&file, chSomeAppName, FA_READ);
  		if(res != FR_OK)
  			return 13;
 
- 		printf("read\r\n");
-
- 		if(f_read(&file, p_f, 32 /*uiAppSize*/, (void *)&read) != FR_OK)
+ 		if(f_read(&file, p_f, uiAppSize, (void *)&read) != FR_OK)
+ 		//if(f_read(&file, temp_buff, 32, (void *)&read) != FR_OK)
  		{
- 			f_close(file);
+ 			f_close(&file);
  			return 14;
  		}
+ 		//print_hex_array(temp_buff, 8);
 
  		// Close file
- 		f_close(file);
+ 		f_close(&file);
+ 		printf("read ok \r\n");
+
+ 		// Test ext memory write/read
+ 		//memcpy(p_f, temp_buff, 32);
+ 		//print_hex_array(p_f, 8);
+
 		#else
  		vTaskDelay(100);
  		#endif
-
+#if 0
  		// Check for magic
  		if( (*(p_f + 0) != 0x69) ||
  	   		(*(p_f + 1) != 0x6D) ||
@@ -396,7 +403,7 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
  	   	{
  			return 15;
  	   	}
-
+#endif
  		goto processed;
  	}
  	else
@@ -418,7 +425,7 @@ process_elf:
 	ucCurrentFunctionBuffer = pvPortMalloc(uiAppSize);
 	if(ucCurrentFunctionBuffer == NULL)
 	{
-		f_close(file);
+		f_close(&file);
 		return SEDNA_APP_ALLOC_ERROR;
 	}
 
@@ -427,13 +434,13 @@ process_elf:
 	{
 		// Release app memory
 		vPortFree(ucCurrentFunctionBuffer);
-		f_close(file);
+		f_close(&file);
 
 		return 19;
 	}
 
 	// Close file
-	f_close(file);
+	f_close(&file);
 
 	// Temp debug possibility to run plain ELF files - REMOVE ON RELEASE BUILD !!!
 	if( (*(ucCurrentFunctionBuffer + 0) != 0x7F) ||

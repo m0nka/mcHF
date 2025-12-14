@@ -29,7 +29,7 @@
 #endif
 
 #ifndef SD_READ_TIMEOUT
-#define SD_READ_TIMEOUT          3000U
+#define SD_READ_TIMEOUT          5000U
 #endif
 
 #define   SD_TRANSFER_OK         0U
@@ -63,8 +63,9 @@ int32_t BSP_SD_IsDetected(void);
 void    BSP_SD_DETECT_IRQHandler(uint32_t Instance);
 void    BSP_SD_IRQHandler(uint32_t Instance);
 
-void sd_card_low_level_init(uint32_t Instance);
-void sd_card_power(uchar state);
+void 	sd_card_reset_driver(void);
+void 	sd_card_low_level_init(uint32_t Instance);
+void 	sd_card_power(uchar state);
 
 /* These functions can be modified in case the current settings (e.g. DMA stream ot IT)
    need to be changed for specific application needs */
