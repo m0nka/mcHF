@@ -365,36 +365,26 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
  	}
  	else if(strcmp(ext, "bin") == 0)
  	{
-		#if 1
  		uchar *p_f = (uchar *)SDRAM_APP_ADDR;
- 		//uchar temp_buff[40];
 
- 		printf("open: %s \r\n", chSomeAppName);
+ 		//printf("open: %s \r\n", chSomeAppName);
 
  	 	res = f_open(&file, chSomeAppName, FA_READ);
  		if(res != FR_OK)
  			return 13;
 
  		if(f_read(&file, p_f, uiAppSize, (void *)&read) != FR_OK)
- 		//if(f_read(&file, temp_buff, 32, (void *)&read) != FR_OK)
  		{
  			f_close(&file);
  			return 14;
  		}
- 		//print_hex_array(temp_buff, 8);
 
  		// Close file
  		f_close(&file);
- 		printf("read ok \r\n");
+ 		//printf("read ok \r\n");
 
- 		// Test ext memory write/read
- 		//memcpy(p_f, temp_buff, 32);
- 		//print_hex_array(p_f, 8);
+ 		print_hex_array(p_f, 8);
 
-		#else
- 		vTaskDelay(100);
- 		#endif
-#if 0
  		// Check for magic
  		if( (*(p_f + 0) != 0x69) ||
  	   		(*(p_f + 1) != 0x6D) ||
@@ -403,8 +393,15 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
  	   	{
  			return 15;
  	   	}
-#endif
- 		goto processed;
+
+ 		ulong chk = 0;
+ 		for(int i = 0; i < uiAppSize; i++)
+ 			chk += *p_f++;
+
+ 		printf("file checksum: 0x%x \r\n", chk);
+
+ 		return 0;		// temp, ToDo: fix loading
+ 		//goto processed;
  	}
  	else
  		return 16;

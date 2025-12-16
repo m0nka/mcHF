@@ -29,9 +29,9 @@ SD_HandleTypeDef hsd_sdmmc[SD_INSTANCES_NBR];
 //* Notes    			:
 //* Context    			: CONTEXT_IRQ
 //*----------------------------------------------------------------------------
-void SDMMC1_IRQHandler(uint32_t Instance)
+void SDMMC1_IRQHandler(void)
 {
-	HAL_SD_IRQHandler(&hsd_sdmmc[Instance]);
+	HAL_SD_IRQHandler(&hsd_sdmmc[0]);
 }
 
 //*----------------------------------------------------------------------------
@@ -629,7 +629,7 @@ int32_t BSP_SD_WriteBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx
 	return ret;
 }
 
-int32_t BSP_SD_ReadBlocks_DMA(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
+int32_t sd_card_read_blocks_dma(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
 {
 	int32_t ret = BSP_ERROR_NONE;
 
@@ -639,15 +639,11 @@ int32_t BSP_SD_ReadBlocks_DMA(uint32_t Instance, uint32_t *pData, uint32_t Block
 	}
 	else
 	{
-		#if 1
 		//printf("read %d %d  \r\n", BlockIdx, BlocksNbr);
 		if(HAL_SD_ReadBlocks_DMA(&hsd_sdmmc[Instance], (uint8_t *)pData, BlockIdx, BlocksNbr) != HAL_OK)
 		{
 			ret = BSP_ERROR_PERIPH_FAILURE;
 		}
-		#else
-		ret = 0;
-		#endif
 	}
 
 	// Return BSP status

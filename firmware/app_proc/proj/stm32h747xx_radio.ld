@@ -165,8 +165,8 @@ SECTIONS
   }
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
-  axi_mem : { *(axi_mem) } >AXI_RAM
-  dma_mem : { *(dma_mem) } >SRAM3
+  axi_mem : { *(.axi_mem) } >AXI_RAM
+  dma_mem : { *(.dma_mem) } >SRAM3
   .STemWinMemPool : { *(.STemWinMemPool) } >EXT_RAM
 }
 
