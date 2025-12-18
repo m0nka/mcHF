@@ -13,13 +13,13 @@
 #include "mchf_pro_board.h"
 #include "main.h"
 
+#ifdef CONTEXT_SD
+
+#include "sd_diskio_dma.h"
 #include "storage_proc.h"
 #include "sd_card.h"
 
-#ifdef CONTEXT_SD
-
-SD_HandleTypeDef hsd_sdmmc[SD_INSTANCES_NBR];
-//EXTI_HandleTypeDef hsd_exti[SD_INSTANCES_NBR];
+SD_HandleTypeDef hsd_sdmmc;
 
 //*----------------------------------------------------------------------------
 //* Function Name       : SDMMC1_IRQHandler
@@ -31,7 +31,7 @@ SD_HandleTypeDef hsd_sdmmc[SD_INSTANCES_NBR];
 //*----------------------------------------------------------------------------
 void SDMMC1_IRQHandler(void)
 {
-	HAL_SD_IRQHandler(&hsd_sdmmc[0]);
+	HAL_SD_IRQHandler(&hsd_sdmmc);
 }
 
 //*----------------------------------------------------------------------------
@@ -45,7 +45,7 @@ void SDMMC1_IRQHandler(void)
 void HAL_SD_TxCpltCallback(SD_HandleTypeDef *hsd)
 {
 	#ifdef SD_USE_DMA
-	BSP_SD_WriteCpltCallback(0);
+	BSP_SD_WriteCpltCallback();
 	#endif
 }
 
@@ -60,7 +60,7 @@ void HAL_SD_TxCpltCallback(SD_HandleTypeDef *hsd)
 void HAL_SD_RxCpltCallback(SD_HandleTypeDef *hsd)
 {
 	#ifdef SD_USE_DMA
-	BSP_SD_ReadCpltCallback(0);
+	BSP_SD_ReadCpltCallback();
 	#endif
 }
 
@@ -92,7 +92,7 @@ void HAL_SD_ErrorCallback(SD_HandleTypeDef *hsd)
 void HAL_SD_AbortCallback(SD_HandleTypeDef *hsd)
 {
 	#ifdef SD_USE_DMA
-	BSP_SD_AbortCallback(0);
+	BSP_SD_AbortCallback();
 	#endif
 }
 
@@ -103,85 +103,82 @@ static void SD_MspInit(SD_HandleTypeDef *hsd)
 	#endif
 	GPIO_InitTypeDef 			gpio_init_structure;
 
-	if(hsd == &hsd_sdmmc[0])
+	//printf("SD_MspInit  \r\n");
+
+	// SD Card clock - 18.75Mhz
+	#ifdef SD_USE_PLL2
+	PeriphClkInitStruct.PeriphClockSelection	= RCC_PERIPHCLK_SDMMC;
+	PeriphClkInitStruct.SdmmcClockSelection		= RCC_SDMMCCLKSOURCE_PLL2;
+	PeriphClkInitStruct.PLL2.PLL2R           	= 8;
+	HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
+	#endif
+
+	// Enable SDIO clock
+	__HAL_RCC_SDMMC1_CLK_ENABLE();
+
+	// Common GPIO configuration
+	gpio_init_structure.Mode      = GPIO_MODE_AF_PP;
+	gpio_init_structure.Pull      = GPIO_PULLUP;
+	gpio_init_structure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+	gpio_init_structure.Alternate = GPIO_AF12_SDIO1;
+
+	gpio_init_structure.Pin = SDMMC1_D0;
+	HAL_GPIO_Init(SDMMC1_SDIO_PORTC, &gpio_init_structure);
+
+	gpio_init_structure.Pin = SDMMC1_D1;
+	HAL_GPIO_Init(SDMMC1_SDIO_PORTC, &gpio_init_structure);
+
+	gpio_init_structure.Pin = SDMMC1_D2;
+	HAL_GPIO_Init(SDMMC1_SDIO_PORTC, &gpio_init_structure);
+
+	gpio_init_structure.Pin = SDMMC1_D3;
+	HAL_GPIO_Init(SDMMC1_SDIO_PORTC, &gpio_init_structure);
+
+	gpio_init_structure.Pin = SDMMC1_CLK;
+	HAL_GPIO_Init(SDMMC1_SDIO_PORTC, &gpio_init_structure);
+
+	gpio_init_structure.Pin = SDMMC1_CMD;
+	HAL_GPIO_Init(SDMMC1_SDIO_PORTD, &gpio_init_structure);
+
+	// Configure Input mode for SD detection pin
+	gpio_init_structure.Pin 	= SD_DET;
+	gpio_init_structure.Pull 	= GPIO_PULLUP;
+	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_HIGH;
+	gpio_init_structure.Mode 	= GPIO_MODE_INPUT;
+	HAL_GPIO_Init(SD_DET_PORT, &gpio_init_structure);
+
+	gpio_init_structure.Pin   	= SD_PWR_CNTR;
+	gpio_init_structure.Mode  	= GPIO_MODE_OUTPUT_PP;
+	gpio_init_structure.Pull  	= GPIO_PULLUP;
+	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(SD_PWR_CNTR_PORT, &gpio_init_structure);
+
+	// Card power state on reset
+	if(HAL_GPIO_ReadPin(SD_DET_PORT, SD_DET) != GPIO_PIN_RESET)
 	{
-		//printf("SD_MspInit  \r\n");
-
-		// SD Card clock - 18.75Mhz
-		#ifdef SD_USE_PLL2
-		PeriphClkInitStruct.PeriphClockSelection	= RCC_PERIPHCLK_SDMMC;
-		PeriphClkInitStruct.SdmmcClockSelection		= RCC_SDMMCCLKSOURCE_PLL2;
-		PeriphClkInitStruct.PLL2.PLL2R           	= 8;
-		HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
+		// Power off
+		#ifdef SD_PWR_SWAP_POLARITY
+		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
+		#else
+		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
 		#endif
-
-		// Enable SDIO clock
-		__HAL_RCC_SDMMC1_CLK_ENABLE();
-
-		// Common GPIO configuration
-		gpio_init_structure.Mode      = GPIO_MODE_AF_PP;
-		gpio_init_structure.Pull      = GPIO_PULLUP;
-		gpio_init_structure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
-		gpio_init_structure.Alternate = GPIO_AF12_SDIO1;
-
-		gpio_init_structure.Pin = SDMMC1_D0;
-		HAL_GPIO_Init(SDMMC1_SDIO_PORTC, &gpio_init_structure);
-
-		gpio_init_structure.Pin = SDMMC1_D1;
-		HAL_GPIO_Init(SDMMC1_SDIO_PORTC, &gpio_init_structure);
-
-		gpio_init_structure.Pin = SDMMC1_D2;
-		HAL_GPIO_Init(SDMMC1_SDIO_PORTC, &gpio_init_structure);
-
-		gpio_init_structure.Pin = SDMMC1_D3;
-		HAL_GPIO_Init(SDMMC1_SDIO_PORTC, &gpio_init_structure);
-
-		gpio_init_structure.Pin = SDMMC1_CLK;
-		HAL_GPIO_Init(SDMMC1_SDIO_PORTC, &gpio_init_structure);
-
-		gpio_init_structure.Pin = SDMMC1_CMD;
-		HAL_GPIO_Init(SDMMC1_SDIO_PORTD, &gpio_init_structure);
-
-		// Configure Input mode for SD detection pin
-		gpio_init_structure.Pin 	= SD_DET;
-		gpio_init_structure.Pull 	= GPIO_PULLUP;
-		gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_HIGH;
-		gpio_init_structure.Mode 	= GPIO_MODE_INPUT;
-		HAL_GPIO_Init(SD_DET_PORT, &gpio_init_structure);
-
-		gpio_init_structure.Pin   	= SD_PWR_CNTR;
-		gpio_init_structure.Mode  	= GPIO_MODE_OUTPUT_PP;
-		gpio_init_structure.Pull  	= GPIO_PULLUP;
-		gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_LOW;
-		HAL_GPIO_Init(SD_PWR_CNTR_PORT, &gpio_init_structure);
-
-		// Card power state on reset
-		if(HAL_GPIO_ReadPin(SD_DET_PORT, SD_DET) != GPIO_PIN_RESET)
-		{
-			// Power off
-			#ifdef SD_PWR_SWAP_POLARITY
-			HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
-			#else
-			HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
-			#endif
-		}
-		else
-		{
-			// Power on
-			#ifndef SD_PWR_SWAP_POLARITY
-			HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
-			#else
-			HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
-			#endif
-		}
-
-		__HAL_RCC_SDMMC1_FORCE_RESET();
-		__HAL_RCC_SDMMC1_RELEASE_RESET();
-
-		// NVIC configuration for SDIO interrupts
-		HAL_NVIC_SetPriority(SDMMC1_IRQn, 14, 0);
-		HAL_NVIC_EnableIRQ	(SDMMC1_IRQn);
 	}
+	else
+	{
+		// Power on
+		#ifndef SD_PWR_SWAP_POLARITY
+		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
+		#else
+		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
+		#endif
+	}
+
+	__HAL_RCC_SDMMC1_FORCE_RESET();
+	__HAL_RCC_SDMMC1_RELEASE_RESET();
+
+	// NVIC configuration for SDIO interrupts
+	HAL_NVIC_SetPriority(SDMMC1_IRQn, 14, 0);
+	HAL_NVIC_EnableIRQ	(SDMMC1_IRQn);
 }
 
 #if 0
@@ -189,7 +186,7 @@ static void SD_MspDeInit(SD_HandleTypeDef *hsd)
 {
 	GPIO_InitTypeDef gpio_init_structure;
 
-	if(hsd == &hsd_sdmmc[0])
+	if(hsd == &hsd_sdmmc)
 	{
 		// Power off
 		#ifdef SD_PWR_SWAP_POLARITY
@@ -495,16 +492,16 @@ static HAL_StatusTypeDef sdmmc1_init(SD_HandleTypeDef *hsd)
 //
 void sd_card_reset_driver(void)
 {
-	SDMMC_PowerState_OFF(hsd_sdmmc[0].Instance);
+	SDMMC_PowerState_OFF(hsd_sdmmc.Instance);
 
-	hsd_sdmmc[0].ErrorCode = HAL_SD_ERROR_NONE;
-	hsd_sdmmc[0].State = HAL_SD_STATE_RESET;
+	hsd_sdmmc.ErrorCode = HAL_SD_ERROR_NONE;
+	hsd_sdmmc.State = HAL_SD_STATE_RESET;
 }
 
-void sd_card_low_level_init(uint32_t Instance)
+void sd_card_low_level_init(void)
 {
 	// Msp SD initialization
-	SD_MspInit(&hsd_sdmmc[Instance]);
+	SD_MspInit(&hsd_sdmmc);
 }
 
 void sd_card_power(uchar state)
@@ -529,16 +526,16 @@ void sd_card_power(uchar state)
 	}
 }
 
-int32_t sd_card_init(uint32_t Instance)
+int32_t sd_card_init(void)
 {
-	if(BSP_SD_IsDetected() != SD_PRESENT)
+	if(sd_card_is_detected() != SD_PRESENT)
 	{
 		//printf("no card  \r\n");
 		return BSP_ERROR_UNKNOWN_COMPONENT;
 	}
 
 	//  HAL SD initialization and Enable wide operation
-	if(sdmmc1_init(&hsd_sdmmc[Instance]) != HAL_OK)
+	if(sdmmc1_init(&hsd_sdmmc) != HAL_OK)
 	{
 		//printf("sd_card_init err3  \r\n");
 		return BSP_ERROR_PERIPH_FAILURE;
@@ -548,7 +545,7 @@ int32_t sd_card_init(uint32_t Instance)
 	return BSP_ERROR_NONE;
 }
 
-int32_t sd_card_set_exti_irq(uint32_t Instance)
+int32_t sd_card_set_exti_irq(void)
 {
 	GPIO_InitTypeDef gpio_init_structure;
 
@@ -564,197 +561,106 @@ int32_t sd_card_set_exti_irq(uint32_t Instance)
 	return BSP_ERROR_NONE;
 }
 
-int32_t BSP_SD_IsDetected(void)
+uchar sd_card_is_detected(void)
 {
-	int32_t ret = BSP_ERROR_UNKNOWN_FAILURE;
+	ulong ret;
 
 	ret = (uint32_t)HAL_GPIO_ReadPin(SD_DET_PORT, SD_DET);
 
 	// Check SD card detect pin
 	if(ret != GPIO_PIN_RESET)
-		ret = (int32_t)SD_NOT_PRESENT;
+		return SD_NOT_PRESENT;
 	else
-		ret = (int32_t)SD_PRESENT;
-
-	return ret;
+		return SD_PRESENT;
 }
 
-int32_t BSP_SD_ReadBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
+int32_t sd_card_read_blocks(uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
 {
 	int32_t  ret = BSP_ERROR_NONE;
 	uint32_t timeout = SD_READ_TIMEOUT*BlocksNbr;
 
-	if(Instance >= SD_INSTANCES_NBR)
-	{
-		ret = BSP_ERROR_WRONG_PARAM;
-	}
-	else
-	{
-    	//
-    	// ToDo: Fix this!!!
-    	//
-    	vTaskDelay(15);
+	//
+	// ToDo: Fix this!!!
+	//
+	vTaskDelay(15);
 
-		if(HAL_SD_ReadBlocks(&hsd_sdmmc[Instance], (uint8_t *)pData, BlockIdx, BlocksNbr, timeout) != HAL_OK)
-		{
-			//sd_card_reset_driver();
-
-			//printf("rd err: 0x%x \r\n", hsd_sdmmc[Instance].ErrorCode);
-			ret = BSP_ERROR_PERIPH_FAILURE;
-		}
+	if(HAL_SD_ReadBlocks(&hsd_sdmmc, (uint8_t *)pData, BlockIdx, BlocksNbr, timeout) != HAL_OK)
+	{
+		//sd_card_reset_driver();
+		//printf("rd err: 0x%x \r\n", hsd_sdmmc.ErrorCode);
+		ret = BSP_ERROR_PERIPH_FAILURE;
 	}
 
 	// Return BSP status
 	return ret;
 }
 
-int32_t BSP_SD_WriteBlocks(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
+int32_t sd_card_write_blocks(uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
 {
 	int32_t ret = BSP_ERROR_NONE;
 	uint32_t timeout = SD_READ_TIMEOUT*BlocksNbr;
 
-	if(Instance >= SD_INSTANCES_NBR)
+	if(HAL_SD_WriteBlocks(&hsd_sdmmc, (uint8_t *)pData, BlockIdx, BlocksNbr, timeout) != HAL_OK)
 	{
-		ret = BSP_ERROR_WRONG_PARAM;
-	}
-	else
-	{
-		if(HAL_SD_WriteBlocks(&hsd_sdmmc[Instance], (uint8_t *)pData, BlockIdx, BlocksNbr, timeout) != HAL_OK)
-		{
-			ret = BSP_ERROR_PERIPH_FAILURE;
-		}
+		ret = BSP_ERROR_PERIPH_FAILURE;
 	}
 
 	// Return BSP status
 	return ret;
 }
 
-int32_t sd_card_read_blocks_dma(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
+int32_t sd_card_read_blocks_dma(uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
 {
 	int32_t ret = BSP_ERROR_NONE;
 
-	if(Instance >= SD_INSTANCES_NBR)
+	//printf("read %d %d  \r\n", BlockIdx, BlocksNbr);
+	if(HAL_SD_ReadBlocks_DMA(&hsd_sdmmc,(uint8_t *)pData, BlockIdx, BlocksNbr) != HAL_OK)
 	{
-		ret = BSP_ERROR_WRONG_PARAM;
-	}
-	else
-	{
-		//printf("read %d %d  \r\n", BlockIdx, BlocksNbr);
-		if(HAL_SD_ReadBlocks_DMA(&hsd_sdmmc[Instance], (uint8_t *)pData, BlockIdx, BlocksNbr) != HAL_OK)
-		{
-			ret = BSP_ERROR_PERIPH_FAILURE;
-		}
+		ret = BSP_ERROR_PERIPH_FAILURE;
 	}
 
 	// Return BSP status
 	return ret;
 }
 
-int32_t BSP_SD_WriteBlocks_DMA(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
+int32_t sd_card_write_blocks_dma(uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
 {
 	int32_t ret = BSP_ERROR_NONE;
 
-	if(Instance >= SD_INSTANCES_NBR)
+	if(HAL_SD_WriteBlocks_DMA(&hsd_sdmmc, (uint8_t *)pData, BlockIdx, BlocksNbr) != HAL_OK)
 	{
-		ret = BSP_ERROR_WRONG_PARAM;
-	}
-	else
-	{
-		if(HAL_SD_WriteBlocks_DMA(&hsd_sdmmc[Instance], (uint8_t *)pData, BlockIdx, BlocksNbr) != HAL_OK)
-		{
-			ret = BSP_ERROR_PERIPH_FAILURE;
-		}
+		ret = BSP_ERROR_PERIPH_FAILURE;
 	}
 
 	// Return BSP status
 	return ret;
 }
 
-#if 0
-int32_t BSP_SD_ReadBlocks_IT(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
+int32_t sd_card_erase(uint32_t BlockIdx, uint32_t BlocksNbr)
 {
 	int32_t ret = BSP_ERROR_NONE;
 
-	if(Instance >= SD_INSTANCES_NBR)
+	if(HAL_SD_Erase(&hsd_sdmmc, BlockIdx, BlockIdx + BlocksNbr) != HAL_OK)
 	{
-		ret = BSP_ERROR_WRONG_PARAM;
-	}
-	else
-	{
-		if(HAL_SD_ReadBlocks_IT(&hsd_sdmmc[Instance], (uint8_t *)pData, BlockIdx, BlocksNbr) != HAL_OK)
-		{
-			ret = BSP_ERROR_PERIPH_FAILURE;
-		}
+		ret = BSP_ERROR_PERIPH_FAILURE;
 	}
 
 	// Return BSP status
 	return ret;
 }
-#endif
 
-#if 0
-int32_t BSP_SD_WriteBlocks_IT(uint32_t Instance, uint32_t *pData, uint32_t BlockIdx, uint32_t BlocksNbr)
+int32_t sd_card_get_card_state(void)
+{
+	return (int32_t)((HAL_SD_GetCardState(&hsd_sdmmc) == HAL_SD_CARD_TRANSFER ) ? SD_TRANSFER_OK : SD_TRANSFER_BUSY);
+}
+
+int32_t ad_card_get_card_info(BSP_SD_CardInfo *CardInfo)
 {
 	int32_t ret = BSP_ERROR_NONE;
 
-	if(Instance >= SD_INSTANCES_NBR)
+	if(HAL_SD_GetCardInfo(&hsd_sdmmc, CardInfo) != HAL_OK)
 	{
-		ret = BSP_ERROR_WRONG_PARAM;
-	}
-	else
-	{
-		if(HAL_SD_WriteBlocks_IT(&hsd_sdmmc[Instance], (uint8_t *)pData, BlockIdx, BlocksNbr) != HAL_OK)
-		{
-			ret = BSP_ERROR_PERIPH_FAILURE;
-		}
-	}
-
-	// Return BSP status
-	return ret;
-}
-#endif
-
-#if 0
-int32_t BSP_SD_Erase(uint32_t Instance, uint32_t BlockIdx, uint32_t BlocksNbr)
-{
-	int32_t ret = BSP_ERROR_NONE;
-
-	if(Instance >= SD_INSTANCES_NBR)
-	{
-		ret = BSP_ERROR_WRONG_PARAM;
-	}
-	else
-	{
-		if(HAL_SD_Erase(&hsd_sdmmc[Instance], BlockIdx, BlockIdx + BlocksNbr) != HAL_OK)
-		{
-			ret = BSP_ERROR_PERIPH_FAILURE;
-		}
-	}
-
-	// Return BSP status
-	return ret;
-}
-#endif
-
-int32_t BSP_SD_GetCardState(uint32_t Instance)
-{
-	return (int32_t)((HAL_SD_GetCardState(&hsd_sdmmc[Instance]) == HAL_SD_CARD_TRANSFER ) ? SD_TRANSFER_OK : SD_TRANSFER_BUSY);
-}
-
-int32_t BSP_SD_GetCardInfo(uint32_t Instance, BSP_SD_CardInfo *CardInfo)
-{
-	int32_t ret = BSP_ERROR_NONE;
-
-	if(Instance >= SD_INSTANCES_NBR)
-	{
-		ret = BSP_ERROR_WRONG_PARAM;
-	}
-	else
-	{
-		if(HAL_SD_GetCardInfo(&hsd_sdmmc[Instance], CardInfo) != HAL_OK)
-		{
-			ret = BSP_ERROR_PERIPH_FAILURE;
-		}
+		ret = BSP_ERROR_PERIPH_FAILURE;
 	}
 
 	// Return BSP status

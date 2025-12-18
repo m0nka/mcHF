@@ -322,6 +322,7 @@
 									<listOptionValue builtIn="false" value="../../proc/lora/drivers/meshcore/core"/>
 									<listOptionValue builtIn="false" value="../../proc/dsp"/>
 									<listOptionValue builtIn="false" value="../../proc/sdcard"/>
+									<listOptionValue builtIn="false" value="../../proc/sdcard/fs"/>
 									<listOptionValue builtIn="false" value="../../proc/sdcard/hw"/>
 									<listOptionValue builtIn="false" value="../../proc/sdcard/drivers"/>
 									<listOptionValue builtIn="false" value="../../proc/app"/>

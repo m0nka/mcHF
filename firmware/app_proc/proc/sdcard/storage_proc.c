@@ -79,7 +79,7 @@ static STORAGE_Status_t storage_proc_try_mount( const uint8_t unit )
 	if(unit == MSD_DISK_UNIT)
 	{
 		// We need to check for SD Card before mounting the volume
-		if(!BSP_SD_IsDetected())
+		if(!sd_card_is_detected())
 		{
 			StorageStatus[unit] = STORAGE_UNMOUNTED;
 			goto unlock_exit;
@@ -165,14 +165,14 @@ static uint8_t storage_proc_init_msd(void)
 	}
 
 	// Exit on no card
-	if(BSP_SD_IsDetected() == SD_NOT_PRESENT)
+	if(sd_card_is_detected() == SD_NOT_PRESENT)
 	{
 		printf("card not avail  \r\n");
 		return 2;
 	}
 
 	// Card init
-	sd_status = sd_card_init(0);
+	sd_status = sd_card_init();
 	if(sd_status != BSP_ERROR_NONE)
 	{
 		printf("card init failed(%d)  \r\n", sd_status);
@@ -198,7 +198,7 @@ static uint8_t storage_proc_init_msd(void)
 
 static void storage_proc_connection_evt(void)
 {
-	if(BSP_SD_IsDetected() != SD_PRESENT)
+	if(sd_card_is_detected() != SD_PRESENT)
 		return;
 
 	printf("card inserted  \r\n");
@@ -229,7 +229,7 @@ static void storage_proc_connection_evt(void)
 
 static void storage_proc_disconnect_evt(void)
 {
-	if(BSP_SD_IsDetected() != SD_NOT_PRESENT)
+	if(sd_card_is_detected() != SD_NOT_PRESENT)
 		return;
 
 	printf("card surprise removal  \r\n");
@@ -350,7 +350,7 @@ void storage_proc_init(void)
 	StorageSemaphore[MSD_DISK_UNIT] = osSemaphoreCreate (osSemaphore(STORAGE_MSD_Semaphore), 1);
 
 	// GPIO init
-	sd_card_low_level_init(0);
+	sd_card_low_level_init();
 
 	//
 	// Are we detecting before the OS is running ?
@@ -361,7 +361,7 @@ void storage_proc_init(void)
 	storage_proc_init_msd();
 	//
 	// Configure SD Interrupt mode
-	sd_card_set_exti_irq(0);
+	sd_card_set_exti_irq();
 	//
 	#endif
 

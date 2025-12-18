@@ -20,21 +20,6 @@
 // clocks and start the OS (IRQ stack usage as well)
 #define CONTEXT_RESET_VECTOR
 
-// DISCO BOARD
-#ifdef BOARD_EVAL_747
-#define CONTEXT_VIDEO					// Video driver
-//#define CONTEXT_DRIVER_KEYPAD			// ??
-//#define CONTEXT_ROTARY				// Encoders input processing
-//#define CONTEXT_IPC_PROC				// Processor communication: 	STM32 <-> ESP32
-#define CONTEXT_ICC						// Core to core communication: 	M7 <-> M4
-//#define CONTEXT_TOUCH					// Touch screen
-#endif
-
-// BMS TEST BOARD
-#ifdef BOARD_TEST_BMS
-#define CONTEXT_BMS						// Battery Management System
-#endif
-
 //
 // -----------------------------------------------------------------------------------------------
 // High level video driver
@@ -50,14 +35,6 @@
 // Core to core communication: 	M7 <-> M4
 //
 #define CONTEXT_ICC
-//
-// -----------------------------------------------------------------------------------------------
-// Processor communication: 	STM32 <-> ESP32
-//
-// == Keeping this off, with rev 0.8.1 HW causes the ESP32 to reset ==
-// == constantly and generate huge QRM !!!                          ==
-//
-//#define CONTEXT_IPC_PROC
 //
 // -----------------------------------------------------------------------------------------------
 // Encoders input processing

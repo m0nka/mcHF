@@ -632,29 +632,9 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/vfo/vfo_proc.c</locationURI>
 		</link>
 		<link>
-			<name>Middlewares/FatFs/Core/diskio.c</name>
-			<type>1</type>
-			<locationURI>copy_PARENT12345/STM32CubeH7/Middlewares/Third_Party/FatFs/src/diskio.c</locationURI>
-		</link>
-		<link>
 			<name>Middlewares/FatFs/Core/ff.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT12345/STM32CubeH7/Middlewares/Third_Party/FatFs/src/ff.c</locationURI>
-		</link>
-		<link>
-			<name>Middlewares/FatFs/Core/ff_gen_drv.c</name>
-			<type>1</type>
-			<locationURI>copy_PARENT12345/STM32CubeH7/Middlewares/Third_Party/FatFs/src/ff_gen_drv.c</locationURI>
-		</link>
-		<link>
-			<name>Middlewares/FatFs/Options/syscall.c</name>
-			<type>1</type>
-			<locationURI>copy_PARENT12345/STM32CubeH7/Middlewares/Third_Party/FatFs/src/option/syscall.c</locationURI>
-		</link>
-		<link>
-			<name>Middlewares/FatFs/Options/unicode.c</name>
-			<type>1</type>
-			<locationURI>copy_PARENT12345/STM32CubeH7/Middlewares/Third_Party/FatFs/src/option/unicode.c</locationURI>
 		</link>
 		<link>
 			<name>Middlewares/FreeRTOS/CMSIS-RTOS/cmsis_os.c</name>
@@ -855,6 +835,26 @@
 			<name>proc/sdcard/drivers/virt_eeprom.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/drivers/virt_eeprom.c</locationURI>
+		</link>
+		<link>
+			<name>proc/sdcard/fs/diskio.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/fs/diskio.c</locationURI>
+		</link>
+		<link>
+			<name>proc/sdcard/fs/ff_gen_drv.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/fs/ff_gen_drv.c</locationURI>
+		</link>
+		<link>
+			<name>proc/sdcard/fs/syscall.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/fs/syscall.c</locationURI>
+		</link>
+		<link>
+			<name>proc/sdcard/fs/unicode.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/fs/unicode.c</locationURI>
 		</link>
 		<link>
 			<name>proc/sdcard/hw/sd_card.c</name>
