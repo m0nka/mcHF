@@ -632,11 +632,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/vfo/vfo_proc.c</locationURI>
 		</link>
 		<link>
-			<name>Middlewares/FatFs/Core/ff.c</name>
-			<type>1</type>
-			<locationURI>copy_PARENT12345/STM32CubeH7/Middlewares/Third_Party/FatFs/src/ff.c</locationURI>
-		</link>
-		<link>
 			<name>Middlewares/FreeRTOS/CMSIS-RTOS/cmsis_os.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT12345/STM32CubeH7/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c</locationURI>
@@ -720,6 +715,21 @@
 			<name>Middlewares/OpenAMP/open-amp/virtqueue.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT12345/STM32CubeH7/Middlewares/Third_Party/OpenAMP/open-amp/lib/virtio/virtqueue.c</locationURI>
+		</link>
+		<link>
+			<name>middleware/ff16/source/ff.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/middleware/ff16/source/ff.c</locationURI>
+		</link>
+		<link>
+			<name>middleware/ff16/source/ffsystem.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/middleware/ff16/source/ffsystem.c</locationURI>
+		</link>
+		<link>
+			<name>middleware/ff16/source/ffunicode.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/middleware/ff16/source/ffunicode.c</locationURI>
 		</link>
 		<link>
 			<name>middleware/ft8_lib/common/audio.c</name>
@@ -827,16 +837,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/hw/lora_spi.c</locationURI>
 		</link>
 		<link>
-			<name>proc/sdcard/drivers/radio_init.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/drivers/radio_init.c</locationURI>
-		</link>
-		<link>
-			<name>proc/sdcard/drivers/virt_eeprom.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/drivers/virt_eeprom.c</locationURI>
-		</link>
-		<link>
 			<name>proc/sdcard/fs/diskio.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/fs/diskio.c</locationURI>
@@ -847,16 +847,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/fs/ff_gen_drv.c</locationURI>
 		</link>
 		<link>
-			<name>proc/sdcard/fs/syscall.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/fs/syscall.c</locationURI>
-		</link>
-		<link>
-			<name>proc/sdcard/fs/unicode.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/fs/unicode.c</locationURI>
-		</link>
-		<link>
 			<name>proc/sdcard/hw/sd_card.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/hw/sd_card.c</locationURI>
@@ -865,6 +855,16 @@
 			<name>proc/sdcard/hw/sd_diskio_dma.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/hw/sd_diskio_dma.c</locationURI>
+		</link>
+		<link>
+			<name>proc/sdcard/misc/radio_init.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/misc/radio_init.c</locationURI>
+		</link>
+		<link>
+			<name>proc/sdcard/misc/virt_eeprom.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/misc/virt_eeprom.c</locationURI>
 		</link>
 		<link>
 			<name>proc/touch/hw/ft6x06.c</name>
