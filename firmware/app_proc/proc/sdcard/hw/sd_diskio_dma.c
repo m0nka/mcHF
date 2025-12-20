@@ -205,7 +205,7 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
                     }
                     else if (event.value.v == RW_ERROR_MSG)
                     {
-                    	printf("readB dma err  \r\n");
+                    	printf("readB dma err(%d)  \r\n", i);
                     	res = RES_ERROR;
                     }
                 }

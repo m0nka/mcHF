@@ -65,7 +65,14 @@ static void os_apploader_get_ext(char * pFile, char * pExt)
 
 static portSHORT sTaskCreate(NewTaskData *nt)
 {
+	// ToDo: check args
 
+	return xTaskCreate(	(TaskFunction_t)nt->pvTaskCode,\
+						nt->pcName,\
+						nt->usStackDepth,\
+						nt->pvParameters,\
+						nt->ucPriority,\
+						nt->pxCreatedTask);
 }
 
 //*----------------------------------------------------------------------------
@@ -283,13 +290,13 @@ static uchar ucAppLoaderUnloadSednaApplication(xTaskHandle xRunningTask,char *cA
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : ucAppLoaderLoadSednaApplication
+//* Function Name       : os_apploader_load
 //* Object              : Loads and starts Sedna Application
 //* Input Parameters    : usb tranfer buffer ptr
 //* Output Parameters   : load result
 //* Functions called    : none
 //*----------------------------------------------------------------------------
-static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCertPath, xTaskHandle *xCreatedTask,char *cAppName,APPLOADER_QUEUE_PARAMETERS *pxAppLdrParam)
+static uchar os_apploader_load(char *chSomeAppName,char *chSomeCertPath, xTaskHandle *xCreatedTask,char *cAppName,APPLOADER_QUEUE_PARAMETERS *pxAppLdrParam)
 {
 	uchar 		ucFuncResult,i;
 	uchar 		*ucCurrentFunctionBuffer;
@@ -402,8 +409,28 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
 
  		printf("file checksum in RAM: 0x%x \r\n", (int)chk);
 
- 		return 0;		// temp, ToDo: fix loading
- 		//goto processed;
+ 		// Reload ptr
+ 		p_f = (uchar *)SDRAM_APP_ADDR;
+
+ 		// Get ptr from descriptor
+ 		ulong app_addr = *(ulong *)(p_f + 4);
+
+ 		//app_addr -= 1;
+
+ 		printf("entry addr in RAM: 0x%x \r\n", (int)app_addr);
+
+ 		// Set function pointer to allocated space
+ 		pvAppLoaderDinamiclyLoadedFunc = (pdTASK_CODE)app_addr;
+
+ 		// Copy string descriptor, maybe test for valid name ???
+ 		vAppLoaderMemCopy(ucAppName, (p_f + SEDNA_APP_DESC_NAME_SHIFT), configMAX_TASK_NAME_LEN);
+
+ 		// Load priority from descriptor and test if not too high
+ 		//ucAppPriority = *(p_f + SEDNA_APP_DESC_PRIORITY_SHIFT);
+ 		//if(ucAppPriority > (tskIDLE_PRIORITY + 3) )
+ 		  ucAppPriority = osPriorityLow;//tskIDLE_PRIORITY + 3;
+
+ 		goto processed;
  	}
  	else
  		return 16;
@@ -463,8 +490,6 @@ process_elf:
 
 	//DebugPrintValue("app addr",(ulong)ucCurrentFunctionBuffer);
 
-processed:
-
 	// ----------------------------------------------------------------------
 	//   Extract application descriptor block
 	// ----------------------------------------------------------------------
@@ -477,21 +502,23 @@ processed:
 	if( ucAppPriority > (tskIDLE_PRIORITY + 3) )
 	  ucAppPriority = tskIDLE_PRIORITY + 3;
 
+processed:
+
 	// ----------------------------------------------------------------------
 
 	// Create the structure used to pass
 	// parameters to the running application
-	pxAppParameters = ( APP_PARAMETERS * ) pvPortMalloc( sizeof( APP_PARAMETERS ) );
+	pxAppParameters = (APP_PARAMETERS *)pvPortMalloc(sizeof(APP_PARAMETERS));
 
 	// Create the RX and TX queue
-	pxAppParameters->xAppMsgRxQueue = xQueueCreate( ucQueueSize, ( unsigned portCHAR ) sizeof( ulong ) );
-	pxAppParameters->xAppMsgTxQueue = xQueueCreate( ucQueueSize, ( unsigned portCHAR ) sizeof( ulong ) );
+	pxAppParameters->xAppMsgRxQueue = xQueueCreate( ucQueueSize, (unsigned portCHAR) sizeof(ulong));
+	pxAppParameters->xAppMsgTxQueue = xQueueCreate( ucQueueSize, (unsigned portCHAR) sizeof(ulong));
 	pxAppParameters->ulApiCallBase  = ulSednaExportsBaseAddress();
 
 	ntd.pvTaskCode 		= pvAppLoaderDinamiclyLoadedFunc;
 	ntd.pcName			= (char *)ucAppName;
-	ntd.usStackDepth	= C_APPL_STACK_SIZE;
-	ntd.pvParameters	= (void *)pxAppParameters;
+	ntd.usStackDepth	= (configMINIMAL_STACK_SIZE);	//C_APPL_STACK_SIZE;
+	ntd.pvParameters	= (void *)vTaskDelay;	//pxAppParameters;
 	ntd.ucPriority		= ucAppPriority;
 	ntd.pxCreatedTask	= xCreatedTask;
 //!	ntd.ucType			= TASK_IS_APPLICATION;
@@ -510,8 +537,7 @@ processed:
 					TASK_ENTRY_ARM
 					) != pdPASS )*/
 
-//!	if(sTaskCreate(&ntd) != pdPASS)
-	if(1)
+	if(sTaskCreate(&ntd) != pdPASS)
 	{
 		// Could not create the task
 		ucFuncResult = SEDNA_APP_EXECUTE_ERROR;
@@ -594,9 +620,9 @@ void os_apploader_task(void *pvParameters)
 				case SEDNA_LOAD_APPLICATION:
 				{
 					// Load Application
-				    ucCallResult = ucAppLoaderLoadSednaApplication((char *)ulRxData[1],(char *)ulRxData[2],&xAppHandle,cCreatedAppName,pxAppLdrParameters);
+				    ucCallResult = os_apploader_load((char *)ulRxData[1],(char *)ulRxData[2],&xAppHandle,cCreatedAppName,pxAppLdrParameters);
 
-					printf("load app res %d \r\n",ucCallResult);
+					//printf("load app res %d \r\n",ucCallResult);
 
 		            // Insert the request ID
 				    ulTxData[0] = SEDNA_RETURN_LOAD_STATUS;

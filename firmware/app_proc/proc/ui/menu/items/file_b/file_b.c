@@ -150,13 +150,13 @@ static void file_b_set_edit_look(WM_HWIN hItem)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : vUsbSamSendQueuedMessage
+//* Function Name       : file_b_send_msg
 //* Object              : Send message to queue
 //* Input Parameters    : none
 //* Output Parameters   : none
 //* Functions called    : none
 //*----------------------------------------------------------------------------
-static uchar vUiSendQueuedMessage(xQueueHandle pvQueueHandle, ulong *ulMessageBuffer, uchar ucNumberOfItems)
+static uchar file_b_send_msg(xQueueHandle pvQueueHandle, ulong *ulMessageBuffer, uchar ucNumberOfItems)
 {
 	ulong ulDummy;
 	uchar ucCount;
@@ -181,12 +181,12 @@ static uchar vUiSendQueuedMessage(xQueueHandle pvQueueHandle, ulong *ulMessageBu
 }
 
 //*--------------------------------------------------------------------------------------
-//* Function Name       : vUsbSamSednaWaitMessage
+//* Function Name       : file_b_wait_msg
 //* Object              : Read pending messages
 //* Input Parameters    : Rx Queue ptr and items buffer
 //* Output Parameters   : none.
 //*--------------------------------------------------------------------------------------
-static uchar  vUiSednaWaitMessage(xQueueHandle pRxQueue,ulong *ulQueueBuffer)
+static uchar file_b_wait_msg(xQueueHandle pRxQueue,ulong *ulQueueBuffer)
 {
 	uchar ucNext = 0;
 
@@ -209,7 +209,7 @@ static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 	ulong			ulTimeout = 600;
 	uchar			ucSkip = 1;
 
-	uchar 			app_det[20];
+	//uchar 			app_det[20];
 	char			chCertPath[32]; //= "C:\\System\\30000.crt";
 
 	//printf("run app: %s \r\n", chAppName);
@@ -255,77 +255,50 @@ static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 	// Insert path
 	ulData[1] = (ulong)chAppName;
 
-	//#if (SEDNA_DEBUG_BUILD == 1)
 	printf("Load app...\r\n");
-	//#endif
 
 	// Post load request
-	if(vUiSendQueuedMessage(pxAppLoaderParameters.xAppLoaderRxQueue,ulData,3) != 0)
+	if(file_b_send_msg(pxAppLoaderParameters.xAppLoaderRxQueue,ulData,3) != 0)
 	{
-		#if (SEDNA_DEBUG_BUILD == 1)
-		//DebugPrint("err load!\n\r");
-		#endif
-
-		//vUiEpsonInfoBox("Error msg1!",0,0);
+		printf("err load!\n\r");
 		goto clean_up;
 	}
-
-	printf("done\r\n");
-	return;
-
-	#if (SEDNA_DEBUG_BUILD == 1)
-	//DebugPrint("ok.\n\r");
-	//DebugPrint("Check status...");
-	#endif
+	printf("done, wait res...\r\n");
 
 	/* Wait to check loading result */
-	while((vUiSednaWaitMessage(pxAppLoaderParameters.xAppLoaderTxQueue,ulData) == 0) && ulTimeout)
+	while((file_b_wait_msg(pxAppLoaderParameters.xAppLoaderTxQueue,ulData) == 0) && ulTimeout)
 	{
 		vTaskDelay(20);
-
 		ulTimeout--;
 	}
 
 	// Check if msg received
 	if(ulTimeout == 0)
 	{
-		#if (SEDNA_DEBUG_BUILD == 1)
-		//DebugPrint("err timeout!\n\r");
-		#endif
-
-		//vUiEpsonInfoBox("Timeout Err!",0,0);
+		printf("err timeout!\n\r");
 		goto clean_up;
 	}
 
 	// Check return msg
 	if(ulData[0] != 0xD6)
 	{
-		#if (SEDNA_DEBUG_BUILD == 1)
-		//DebugPrint("err ret msg!\n\r");
-		#endif
-
-		//vUiEpsonInfoBox("Err Msg2!",0,0);
+		printf("err ret msg!\n\r");
 		goto clean_up;
 	}
 
 	// Check func result
 	if((ulData[1] & 0xFF) != 0x00)
 	{
-		#if (SEDNA_DEBUG_BUILD == 1)
-		//DebugPrintInt("err exec: ",ulData[1] & 0xFF);
-		#endif
+		printf("err exec: %d \r\n",ulData[1] & 0xFF);
 
 		//vTaskSuspendAll();
 		//s_sprintf(chCertPath,"Exec Err: %d",(uchar)(ulData[1] & 0xFF));
 		//cTaskResumeAll();
 
-		//vUiEpsonInfoBox(chCertPath,0,0);
 		goto clean_up;
 	}
 
-	#if (SEDNA_DEBUG_BUILD == 1)
-	//DebugPrint("ok.\n\r");
-	#endif
+	printf("ok.\n\r");
 
 //!	vUiExtractHandleAndName(app_det,ulData);
 
