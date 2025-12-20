@@ -354,7 +354,10 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
 
  	res = f_stat(chSomeAppName, &fno);
  	if(res != FR_OK)
+ 	{
+ 		printf("fs err: %d \r\n", res);
  		return 12;
+ 	}
 
  	uiAppSize = fno.fsize;
  	//printf("size %d bytes\r\n", uiAppSize);
@@ -367,23 +370,22 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
  	{
  		uchar *p_f = (uchar *)SDRAM_APP_ADDR;
 
- 		//printf("open: %s \r\n", chSomeAppName);
-
  	 	res = f_open(&file, chSomeAppName, FA_READ);
  		if(res != FR_OK)
  			return 13;
 
- 		if(f_read(&file, p_f, uiAppSize, (void *)&read) != FR_OK)
+ 		res = f_read(&file, p_f, uiAppSize, (void *)&read);
+ 		if(res != FR_OK)
  		{
+ 			printf("fs err: %d \r\n", res);
  			f_close(&file);
  			return 14;
  		}
 
  		// Close file
  		f_close(&file);
- 		//printf("read ok \r\n");
 
- 		print_hex_array(p_f, 8);
+ 		//--print_hex_array(p_f, 8);
 
  		// Check for magic
  		if( (*(p_f + 0) != 0x69) ||
@@ -398,7 +400,7 @@ static uchar ucAppLoaderLoadSednaApplication(char *chSomeAppName,char *chSomeCer
  		for(int i = 0; i < uiAppSize; i++)
  			chk += *p_f++;
 
- 		printf("file checksum: 0x%x \r\n", chk);
+ 		printf("file checksum in RAM: 0x%x \r\n", (int)chk);
 
  		return 0;		// temp, ToDo: fix loading
  		//goto processed;

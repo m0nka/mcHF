@@ -100,8 +100,6 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     osEvent event;
 	#endif
 
-    //printf("SD_read %d,%d(%8x) \r\n", sector, count, (ulong)buff);
-
 	#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
     uint32_t alignedAddr;
 	#endif
@@ -112,16 +110,18 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     while((sd_card_get_card_state() == SD_TRANSFER_BUSY))
     {
     	if(timer < osKernelSysTick())
+    	{
+    		printf("read busy err  \r\n");
     		return RES_NOTRDY;
+    	}
     }
 
     // Is address aligned/correct RAM
-    if((!((uint32_t)buff & 0x3))&&(((ulong)buff >> 24) == 0x24))
+    if((!((uint32_t)buff & 0x3))&&(((ulong)buff >> 24) == (D1_AXISRAM_BASE >> 24)))
     {
-    	//printf("SD_readA %d,%d(%8x) \r\n", sector, count, (ulong)buff);
+    	//printf("SD_readA %d,%d(%08x) \r\n", (int)sector, (int)count, (int)buff);
 
 		#ifndef SD_USE_DMA
-    	//printf("read ...  \r\n");
     	uint8_t ret = sd_card_read_blocks((uint32_t*)buff, (uint32_t)(sector), count);
     	if(ret != BSP_ERROR_NONE)
         {
@@ -131,26 +131,15 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     	else
     		res = RES_OK;
 		#else
-    	//printf("read A  \r\n");
-    	//vTaskDelay(50);
-
     	// Fast path: the provided destination buffer is correctly aligned
     	uint8_t ret = sd_card_read_blocks_dma((uint32_t*)buff, (uint32_t)(sector), count);
-    	//printf("dma: %d  \r\n", ret);
-    	//vTaskDelay(50);
-
     	if (ret == BSP_ERROR_NONE)
         {
-        	//printf("wait...  \r\n");
-        	//vTaskDelay(50);
-
         	// wait for a message from the queue or a timeout
             event = osMessageGet(SDQueueID, SD_TIMEOUT);
             if (event.status == osEventMessage)
             {
             	//printf("event %d \r\n", event.value.v);
-            	//vTaskDelay(50);
-
                 if (event.value.v == READ_CPLT_MSG)
                 {
                     res = RES_OK;
@@ -163,15 +152,13 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
                 }
                 else if (event.value.v == RW_ERROR_MSG)
                 {
-                	//printf("read dma err  \r\n");
-                	//vTaskDelay(50);
+                	printf("readA dma err  \r\n");
                 	res = RES_ERROR;
                 }
             }
             else
             {
-            	//printf("read dma timeout  \r\n");
-            	//vTaskDelay(50);
+            	printf("readA dma timeout  \r\n");
             	res = RES_ERROR;
             }
         }
@@ -183,7 +170,7 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
         uint8_t ret = BSP_ERROR_NONE;
         int i;
 
-        //printf("SD_readB %d,%d(%8x) \r\n", sector, count, (ulong)buff);
+        //printf("SD_readB %d,%d(%08x) \r\n", (int)sector, (int)count, (int)buff);
 
         for (i = 0; i < count; i++)
         {
@@ -205,17 +192,30 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
             {
                 /* wait for a message from the queue or a timeout */
                 event = osMessageGet(SDQueueID, SD_TIMEOUT);
-                if (event.status == osEventMessage) {
-                    if (event.value.v == READ_CPLT_MSG) {
+                if (event.status == osEventMessage)
+                {
+                    if (event.value.v == READ_CPLT_MSG)
+                    {
 						#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
-                        // invalidate the scratch buffer before the next read to get the actual data instead of the cached one
                         SCB_InvalidateDCache_by_Addr((uint32_t*)buffer, BLOCKSIZE);
 						#endif
+
                         memcpy(buff, buffer, BLOCKSIZE);
                         buff += BLOCKSIZE;
                     }
+                    else if (event.value.v == RW_ERROR_MSG)
+                    {
+                    	printf("readB dma err  \r\n");
+                    	res = RES_ERROR;
+                    }
                 }
-            } else
+                else
+                {
+                	printf("readB dma timeout  \r\n");
+                	res = RES_ERROR;
+                }
+            }
+            else
                 break;
 			#endif
         }

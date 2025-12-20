@@ -148,6 +148,7 @@ typedef struct {
 /* Filesystem object structure (FATFS) */
 
 typedef struct {
+	BYTE	win[FF_MAX_SS];
 	BYTE	fs_type;	/* Filesystem type (0:not mounted) */
 	BYTE	pdrv;		/* Physical drive that holds this volume */
 	BYTE	ldrv;		/* Logical drive number (used only when FF_FS_REENTRANT) */
@@ -185,7 +186,7 @@ typedef struct {
 	FFXCWDS	xcwds2;		/* Working buffer to follow the path */
 #endif
 #endif
-	BYTE	win[FF_MAX_SS];	/* Disk access window for directory, FAT (and file data in tiny cfg) */
+	//BYTE	win[FF_MAX_SS];	/* Disk access window for directory, FAT (and file data in tiny cfg) */
 } FATFS;
 
 
