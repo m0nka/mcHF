@@ -405,14 +405,14 @@ static HAL_StatusTypeDef HAL_SD_InitA(SD_HandleTypeDef *hsd)
 		return HAL_ERROR;
 	}
 
-	printf("stall in..  \r\n");
+	//printf("stall in..  \r\n");
 
 	if(HAL_SD_GetCardStatusA(hsd, &CardStatus) != HAL_OK)
 	{
 		return HAL_ERROR;
 	}
 
-	printf("stall out  \r\n");
+	//printf("stall out  \r\n");
 
 	/* Get Initial Card Speed from Card Status*/
 	speedgrade = CardStatus.UhsSpeedGrade;

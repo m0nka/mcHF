@@ -97,6 +97,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/config/stm32h7xx_hal_conf.h</locationURI>
 		</link>
 		<link>
+			<name>config/version.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/config/version.h</locationURI>
+		</link>
+		<link>
 			<name>hw/IS42S32160F.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/hw/IS42S32160F.c</locationURI>
@@ -855,6 +860,11 @@
 			<name>proc/sdcard/hw/sd_diskio_dma.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/hw/sd_diskio_dma.c</locationURI>
+		</link>
+		<link>
+			<name>proc/sdcard/misc/auto_run.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/misc/auto_run.c</locationURI>
 		</link>
 		<link>
 			<name>proc/sdcard/misc/radio_init.c</name>

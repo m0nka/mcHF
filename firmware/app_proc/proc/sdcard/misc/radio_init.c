@@ -471,7 +471,7 @@ void radio_init_eep_defaults(void)
 {
 	ulong i;
 
-	printf("load eep defaults \r\n");
+	//printf("load eep defaults \r\n");
 
 	// Generate band info values
 	for(i = 0; i < MAX_BANDS; i++)

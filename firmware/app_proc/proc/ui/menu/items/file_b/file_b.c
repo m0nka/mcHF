@@ -43,6 +43,8 @@ extern GUI_CONST_STORAGE GUI_BITMAP bmClosedFolder;
 extern GUI_CONST_STORAGE GUI_BITMAP bmOpenFolder;
 extern GUI_CONST_STORAGE GUI_BITMAP bmTextLog;
 
+extern APPLOADER_QUEUE_PARAMETERS pxAppLoaderParameters;
+
 static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos);
 static void KillFileb(void);
 //static void _RefreshBrowser ( WM_HWIN hWin);
@@ -202,8 +204,7 @@ static uchar file_b_wait_msg(xQueueHandle pRxQueue,ulong *ulQueueBuffer)
 	return ucNext;
 }
 
-extern APPLOADER_QUEUE_PARAMETERS pxAppLoaderParameters;
-static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
+static void file_b_load_app(char *chAppName,uchar ucIsScript)
 {
 	ulong 			ulData[10];
 	ulong			ulTimeout = 600;
@@ -992,7 +993,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 				BUTTON_GetText(hItem, capt, sizeof(capt));
 
 				if(strcmp(capt, "Run") == 0)
-					vUiLoadApplication(SelectedFileName, 0);
+					file_b_load_app(SelectedFileName, 0);
 				else if(strcmp(capt, "Open") == 0)
 				{
 					// ToDo: Open in text window

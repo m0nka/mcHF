@@ -18,6 +18,7 @@ char StorageDISK_Drive[4];
 
 #ifdef CONTEXT_SD
 
+#include "auto_run.h"
 #include "sd_card.h"
 #include "sd_diskio.h"
 
@@ -196,6 +197,14 @@ static uint8_t storage_proc_init_msd(void)
 	return 0;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : storage_proc_connection_evt
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_SD
+//*----------------------------------------------------------------------------
 static void storage_proc_connection_evt(void)
 {
 	if(sd_card_is_detected() != SD_PRESENT)
@@ -227,6 +236,14 @@ static void storage_proc_connection_evt(void)
 	}
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : storage_proc_disconnect_evt
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_SD
+//*----------------------------------------------------------------------------
 static void storage_proc_disconnect_evt(void)
 {
 	if(sd_card_is_detected() != SD_NOT_PRESENT)
@@ -275,17 +292,15 @@ void storage_proc_task(void const * argument)
     // Set radio public values
     radio_init_on_reset();
 
+    // Apps auto run
+    auto_run_handle_all();
+
 	for(;;)
 	{
-		#if 0
-		event = osMessageGet(StorageEvent, osWaitForever);
-		if(event.status == osEventMessage)
-		#else
 		ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, SD_PROC_SLEEP_TIME);
 		if((ulNotif) && (ulNotificationValue))
-		#endif
 		{
-			//--printf("notif: %d  \r\n", ulNotificationValue);
+			//--printf("notif: %d  \r\n", (int)ulNotificationValue);
 
 			// Lock IRQ
 			HAL_NVIC_DisableIRQ  (EXTI0_IRQn);

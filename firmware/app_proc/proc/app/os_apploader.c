@@ -337,23 +337,13 @@ static uchar os_apploader_load(char *chSomeAppName,char *chSomeCertPath, xTaskHa
  	//if(chSomeCertPath == NULL)
  	//	return 11;
 
- 	//vTaskSuspendAll();
  	uiAppSize = strlen(chSomeAppName);
- 	//cTaskResumeAll();
 
  	// Test for valid string
  	if(uiAppSize == 0)
  		return 11;
 
- 	//vTaskSuspendAll();
- 	//uiAppSize = strlen(chSomeCertPath);
- 	//cTaskResumeAll();
-
- 	// Test for valid string
- 	//if(uiAppSize == 0)
- 	//	return 13;
-
- 	//printf("file: %s \r\n", chSomeAppName);
+ 	printf("file: %s \r\n", chSomeAppName);
 
  	// Get extension
  	os_apploader_get_ext(chSomeAppName, ext);
@@ -407,7 +397,7 @@ static uchar os_apploader_load(char *chSomeAppName,char *chSomeCertPath, xTaskHa
  		for(int i = 0; i < uiAppSize; i++)
  			chk += *p_f++;
 
- 		printf("file checksum in RAM: 0x%x \r\n", (int)chk);
+ 		printf("checksum: 0x%08x \r\n", (int)chk);
 
  		// Reload ptr
  		p_f = (uchar *)SDRAM_APP_ADDR;
@@ -417,7 +407,7 @@ static uchar os_apploader_load(char *chSomeAppName,char *chSomeCertPath, xTaskHa
 
  		//app_addr -= 1;
 
- 		printf("entry addr in RAM: 0x%x \r\n", (int)app_addr);
+ 		printf("address:  0x%08x \r\n", (int)app_addr);
 
  		// Set function pointer to allocated space
  		pvAppLoaderDinamiclyLoadedFunc = (pdTASK_CODE)app_addr;
