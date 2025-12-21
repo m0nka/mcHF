@@ -403,10 +403,7 @@ static uchar os_apploader_load(char *chSomeAppName,char *chSomeCertPath, xTaskHa
  		p_f = (uchar *)SDRAM_APP_ADDR;
 
  		// Get ptr from descriptor
- 		ulong app_addr = *(ulong *)(p_f + 4);
-
- 		//app_addr -= 1;
-
+ 		ulong app_addr = *(ulong *)(p_f + SEDNA_APP_ENTRY_FUNC_SHIFT);
  		printf("address:  0x%08x \r\n", (int)app_addr);
 
  		// Set function pointer to allocated space
@@ -507,8 +504,8 @@ processed:
 
 	ntd.pvTaskCode 		= pvAppLoaderDinamiclyLoadedFunc;
 	ntd.pcName			= (char *)ucAppName;
-	ntd.usStackDepth	= (configMINIMAL_STACK_SIZE);	//C_APPL_STACK_SIZE;
-	ntd.pvParameters	= (void *)vTaskDelay;	//pxAppParameters;
+	ntd.usStackDepth	= (configMINIMAL_STACK_SIZE*64);	//C_APPL_STACK_SIZE;
+	ntd.pvParameters	= (void *)pxAppParameters;
 	ntd.ucPriority		= ucAppPriority;
 	ntd.pxCreatedTask	= xCreatedTask;
 //!	ntd.ucType			= TASK_IS_APPLICATION;
