@@ -8,26 +8,19 @@
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:                                                                       **
 ************************************************************************************/
-#ifndef __SD_DISKIO_DMA_H
-#define __SD_DISKIO_DMA_H
+#ifndef __STORAGE_API_H
+#define __STORAGE_API_H
 
-#define QUEUE_SIZE         	(uint32_t) 10
-#define READ_CPLT_MSG      	(uint32_t) 1
-#define WRITE_CPLT_MSG     	(uint32_t) 2
-#define RW_ERROR_MSG       	(uint32_t) 3
-#define RW_ABORT_MSG       	(uint32_t) 4
+// -------------------------------------------------------------------------
+// -------------  				Access calls			--------------------
+// -------------------------------------------------------------------------
 
-//#define SD_TIMEOUT 		30 * 1000
-#define SD_TIMEOUT 			5000
-
-#define DISABLE_SD_INIT
-
-void BSP_SD_AbortCallback(void);
-void BSP_SD_ErrorCallback(void);
-void BSP_SD_WriteCpltCallback(void);
-void BSP_SD_ReadCpltCallback(void);
-void BSP_SD_DetectCallback(uint32_t Status);
+uint8_t     Storage_GetStatus	(uint8_t unit				);
+uint32_t 	Storage_GetCapacity	(uint8_t unit				);
+uint32_t 	Storage_GetLabel	(uint8_t unit, char *label	);
+uint32_t 	Storage_GetFree		(uint8_t unit				);
+uint32_t 	Storage_GetDrive	(uint8_t unit, char *disk	);
 
 #endif

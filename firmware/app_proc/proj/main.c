@@ -15,11 +15,8 @@
 #include "main.h"
 
 #if configAPPLICATION_ALLOCATED_HEAP == 1
-__attribute__((section("axi_mem"))) uint8_t ucHeap[configTOTAL_HEAP_SIZE];
+__attribute__((section(".axi_mem"))) uint8_t ucHeap[configTOTAL_HEAP_SIZE];
 #endif
-
-uint8_t BSP_Initialized = 0;
-uint32_t wakeup_pressed = 0;
 
 // UI process
 extern struct	UI_DRIVER_STATE			ui_s;
@@ -180,7 +177,7 @@ static void tasks_pre_os_init(void)
 	#endif
 
 	#ifdef CONTEXT_SD
-	Storage_Init();
+	storage_proc_init();
 	#endif
 
 	#ifdef CONTEXT_APP
@@ -389,7 +386,7 @@ static int start_proc(void)
 	#endif
 
 	#ifdef CONTEXT_SD
-    res = xTaskCreate(	(TaskFunction_t)StorageThread,\
+    res = xTaskCreate(	(TaskFunction_t)storage_proc_task,\
     					SD_PROC_START_NAME,\
 						SD_PROC_STACK_SIZE,\
 						NULL,\
@@ -455,7 +452,7 @@ int main(void)
     // Configure the system clock to 480 MHz
     SystemClock_Config();
 
-	// ADC3 clock from PLL2
+	// ADC/SD card clock from PLL2
 	PeriphCommonClock_Config();
 
     // HW init
@@ -464,9 +461,6 @@ int main(void)
 
     // RTC init
     k_CalendarBkupInit();
-
-    // Set radio public values
-    //--radio_init_on_reset();
 
     // Init each task hw
     tasks_pre_os_init();
@@ -482,15 +476,10 @@ int main(void)
     if(start_proc())
     	goto stall_radio;
 
-    // Do we need this at all ?
-    BSP_Initialized = 1;
-    //printf("run os...\r\n");
-
     // Start scheduler
     osKernelStart();
 
 stall_radio:
-// ToDo: Handle critical errors
-//
+	// ToDo: Handle critical errors
     while(1);
 }

@@ -17,9 +17,10 @@
 /* Count of API array elements */
 #define SEDNA_EXPORTS_API_COUNT				19
 
-#define SEDNA_APP_DESC_PRIORITY_SHIFT		0x04
-#define SEDNA_APP_DESC_OS_VER_SHIFT			0x08
-#define SEDNA_APP_DESC_NAME_SHIFT			0x10
+#define SEDNA_APP_ENTRY_FUNC_SHIFT			0x08
+#define SEDNA_APP_DESC_PRIORITY_SHIFT		0x0C
+#define SEDNA_APP_DESC_OS_VER_SHIFT			0x10
+#define SEDNA_APP_DESC_NAME_SHIFT			0x18
 
 /* API calls structure decl */
 typedef struct SEDNA_API_EXPORTS 

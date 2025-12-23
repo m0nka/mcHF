@@ -39,7 +39,7 @@ static DSTATUS SD_CheckStatus(BYTE lun)
 {
 	Stat = STA_NOINIT;
 
-	if(BSP_SD_GetCardState(0) == SD_TRANSFER_OK)
+	if(sd_card_get_card_state() == SD_TRANSFER_OK)
 	{
 		Stat &= ~STA_NOINIT;
 	}
@@ -100,8 +100,6 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     osEvent event;
 	#endif
 
-    printf("SD_read %d \r\n", sector);
-
 	#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
     uint32_t alignedAddr;
 	#endif
@@ -109,42 +107,39 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     uint32_t timer = osKernelSysTick() + SD_TIMEOUT;
 
     // first ensure the SDCard is ready for a new operation
-    while((BSP_SD_GetCardState(0) == SD_TRANSFER_BUSY))
+    while((sd_card_get_card_state() == SD_TRANSFER_BUSY))
     {
     	if(timer < osKernelSysTick())
+    	{
+    		printf("read busy err  \r\n");
     		return RES_NOTRDY;
+    	}
     }
 
-    if (!((uint32_t)buff & 0x3))
+    // Is address aligned/correct RAM
+    if((!((uint32_t)buff & 0x3))&&(((ulong)buff >> 24) == (D1_AXISRAM_BASE >> 24)))
     {
+    	//printf("SD_readA %d,%d(%08x) \r\n", (int)sector, (int)count, (int)buff);
+
 		#ifndef SD_USE_DMA
-    	printf("read ...  \r\n");
-    	uint8_t ret = BSP_SD_ReadBlocks(0, (uint32_t*)buff, (uint32_t)(sector), count);
+    	uint8_t ret = sd_card_read_blocks((uint32_t*)buff, (uint32_t)(sector), count);
     	if(ret != BSP_ERROR_NONE)
         {
-        	printf("read err  \r\n");
+        	printf("read errA  \r\n");
         	res = RES_ERROR;
         }
     	else
     		res = RES_OK;
 		#else
     	// Fast path: the provided destination buffer is correctly aligned
-    	uint8_t ret = BSP_SD_ReadBlocks_DMA(0, (uint32_t*)buff, (uint32_t)(sector), count);
-    	//printf("dma: %d  \r\n", ret);
-    	//vTaskDelay(50);
-
+    	uint8_t ret = sd_card_read_blocks_dma((uint32_t*)buff, (uint32_t)(sector), count);
     	if (ret == BSP_ERROR_NONE)
         {
-        	//printf("wait...  \r\n");
-        	//vTaskDelay(50);
-
         	// wait for a message from the queue or a timeout
             event = osMessageGet(SDQueueID, SD_TIMEOUT);
             if (event.status == osEventMessage)
             {
             	//printf("event %d \r\n", event.value.v);
-            	//vTaskDelay(50);
-
                 if (event.value.v == READ_CPLT_MSG)
                 {
                     res = RES_OK;
@@ -157,15 +152,13 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
                 }
                 else if (event.value.v == RW_ERROR_MSG)
                 {
-                	//printf("read dma err  \r\n");
-                	//vTaskDelay(50);
+                	printf("readA dma err  \r\n");
                 	res = RES_ERROR;
                 }
             }
             else
             {
-            	//printf("read dma timeout  \r\n");
-            	//vTaskDelay(50);
+            	printf("readA dma timeout  \r\n");
             	res = RES_ERROR;
             }
         }
@@ -177,13 +170,15 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
         uint8_t ret = BSP_ERROR_NONE;
         int i;
 
+        //printf("SD_readB %d,%d(%08x) \r\n", (int)sector, (int)count, (int)buff);
+
         for (i = 0; i < count; i++)
         {
 			#ifndef SD_USE_DMA
-        	uint8_t ret = BSP_SD_ReadBlocks(0, (uint32_t*)buffer, (uint32_t)(sector++), 1);
+        	uint8_t ret = sd_card_read_blocks((uint32_t*)buffer, (uint32_t)(sector++), 1);
         	if(ret != BSP_ERROR_NONE)
         	{
-        		//printf("read err  \r\n");
+        		printf("read errB  \r\n");
         		break;
         	}
         	else
@@ -192,22 +187,35 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
                 buff += BLOCKSIZE;
         	}
 			#else
-            ret = BSP_SD_ReadBlocks_DMA(0, (uint32_t*)buffer, (uint32_t)sector++, 1);
+            ret = sd_card_read_blocks_dma((uint32_t*)buffer, (uint32_t)sector++, 1);
             if (ret == BSP_ERROR_NONE)
             {
                 /* wait for a message from the queue or a timeout */
                 event = osMessageGet(SDQueueID, SD_TIMEOUT);
-                if (event.status == osEventMessage) {
-                    if (event.value.v == READ_CPLT_MSG) {
+                if (event.status == osEventMessage)
+                {
+                    if (event.value.v == READ_CPLT_MSG)
+                    {
 						#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
-                        // invalidate the scratch buffer before the next read to get the actual data instead of the cached one
                         SCB_InvalidateDCache_by_Addr((uint32_t*)buffer, BLOCKSIZE);
 						#endif
+
                         memcpy(buff, buffer, BLOCKSIZE);
                         buff += BLOCKSIZE;
                     }
+                    else if (event.value.v == RW_ERROR_MSG)
+                    {
+                    	printf("readB dma err(%d)  \r\n", i);
+                    	res = RES_ERROR;
+                    }
                 }
-            } else
+                else
+                {
+                	printf("readB dma timeout  \r\n");
+                	res = RES_ERROR;
+                }
+            }
+            else
                 break;
 			#endif
         }
@@ -238,7 +246,7 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 	uint32_t timer = osKernelSysTick() + SD_TIMEOUT;
 
 	// first ensure the SDCard is ready for a new operation
-	while((BSP_SD_GetCardState(0) == SD_TRANSFER_BUSY))
+	while((sd_card_get_card_state() == SD_TRANSFER_BUSY))
 	{
 		if(timer < osKernelSysTick())
 			return RES_NOTRDY;
@@ -259,9 +267,9 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 		SCB_InvalidateDCache_by_Addr((uint32_t*)alignedAddr, count*BLOCKSIZE + ((uint32_t)buff - alignedAddr));
 		#endif
 
-		if(BSP_SD_WriteBlocks_DMA(0,(uint32_t*)buff,
-                              (uint32_t) (sector),
-                              count) == BSP_ERROR_NONE)
+		if(sd_card_write_blocks_dma	((uint32_t*)buff,
+									(uint32_t) (sector),
+									count) == BSP_ERROR_NONE)
 		{
 			// Get the message from the queue
 			event = osMessageGet(SDQueueID, SD_TIMEOUT);
@@ -287,7 +295,7 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 
 		for (i = 0; i < count; i++)
 		{
-			uint8_t ret = BSP_SD_WriteBlocks_DMA(0,(uint32_t*)buffer, (uint32_t)sector++, 1);
+			uint8_t ret = sd_card_write_blocks_dma((uint32_t*)buffer, (uint32_t)sector++, 1);
 			if (ret == BSP_ERROR_NONE) {
 				// wait for a message from the queue or a timeout
 				event = osMessageGet(SDQueueID, SD_TIMEOUT);
@@ -335,21 +343,21 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 
 		// Get number of sectors on the disk (DWORD)
 		case GET_SECTOR_COUNT :
-			BSP_SD_GetCardInfo(0,&CardInfo);
+			ad_card_get_card_info(&CardInfo);
 			*(DWORD*)buff = CardInfo.LogBlockNbr;
 			res = RES_OK;
 			break;
 
 		// Get R/W sector size (WORD)
 		case GET_SECTOR_SIZE :
-			BSP_SD_GetCardInfo(0,&CardInfo);
+			ad_card_get_card_info(&CardInfo);
 			*(WORD*)buff = CardInfo.LogBlockSize;
 			res = RES_OK;
 			break;
 
 		// Get erase block size in unit of sector (DWORD)
 		case GET_BLOCK_SIZE :
-			BSP_SD_GetCardInfo(0,&CardInfo);
+			ad_card_get_card_info(&CardInfo);
 			*(DWORD*)buff = CardInfo.LogBlockSize / BLOCKSIZE;
 			res = RES_OK;
 			break;
@@ -362,7 +370,7 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 #endif /* _USE_IOCTL == 1 */
 
 #ifdef SD_USE_DMA
-void BSP_SD_WriteCpltCallback(uint32_t Instance)
+void BSP_SD_WriteCpltCallback(void)
 {
   /*
    * No need to add an "osKernelRunning()" check here, as the SD_initialize()
@@ -371,7 +379,7 @@ void BSP_SD_WriteCpltCallback(uint32_t Instance)
    osMessagePut(SDQueueID, WRITE_CPLT_MSG, osWaitForever);
 }
 
-void BSP_SD_ReadCpltCallback(uint32_t Instance)
+void BSP_SD_ReadCpltCallback(void)
 {
   /*
    * No need to add an "osKernelRunning()" check here, as the SD_initialize()
@@ -394,7 +402,7 @@ void BSP_SD_ErrorCallback(void)
    osMessagePut(SDQueueID, RW_ERROR_MSG, osWaitForever);
 }
 
-void BSP_SD_AbortCallback(uint32_t Instance)
+void BSP_SD_AbortCallback(void)
 {
   /* Non Blocking Call to BSP_ErrorHandler() */
   //BSP_ErrorHandler();

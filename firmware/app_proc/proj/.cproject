@@ -321,13 +321,15 @@
 									<listOptionValue builtIn="false" value="../../proc/lora/drivers/meshcore/repeater"/>
 									<listOptionValue builtIn="false" value="../../proc/lora/drivers/meshcore/core"/>
 									<listOptionValue builtIn="false" value="../../proc/dsp"/>
-									<listOptionValue builtIn="false" value="../../proc/dsp/digi/ft8_lib/"/>
 									<listOptionValue builtIn="false" value="../../proc/sdcard"/>
+									<listOptionValue builtIn="false" value="../../proc/sdcard/fs"/>
 									<listOptionValue builtIn="false" value="../../proc/sdcard/hw"/>
-									<listOptionValue builtIn="false" value="../../proc/sdcard/drivers"/>
+									<listOptionValue builtIn="false" value="../../proc/sdcard/misc"/>
 									<listOptionValue builtIn="false" value="../../proc/app"/>
 									<listOptionValue builtIn="false" value="../../proc/app/elf"/>
 									<listOptionValue builtIn="false" value="../../../"/>
+									<listOptionValue builtIn="false" value="../../middleware/ft8_lib/"/>
+									<listOptionValue builtIn="false" value="../../middleware/ff16/source"/>
 									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/CMSIS/Device/ST/STM32H7xx/Include"/>
 									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/STM32H7xx_HAL_Driver/Inc"/>
 									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/BSP/STM32H747I-DISCO"/>
@@ -336,8 +338,6 @@
 									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/BSP/Components/otm8009a"/>
 									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/BSP/Components/wm8994"/>
 									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/CMSIS/Include"/>
-									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/Third_Party/FatFs/src"/>
-									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/Third_Party/FatFs/src/drivers"/>
 									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1"/>
 									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/Third_Party/FreeRTOS/Source/include"/>
 									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS"/>

@@ -1,3 +1,6 @@
 [submodule "firmware/STM32CubeH7"]
 	path = firmware/STM32CubeH7
 	url = https://github.com/STMicroelectronics/STM32CubeH7
+[submodule "firmware/app_proc/middleware/ft8_lib"]
+	path = firmware/app_proc/middleware/ft8_lib
+	url = https://github.com/kgoba/ft8_lib

@@ -853,26 +853,31 @@ const struct SEDNA_API_EXPORTS saeBlock[SEDNA_EXPORTS_API_COUNT + 1] =
 {      
     /* Device HW and version API's */
  	{(void *)ucVersion},
- 	//{(void *)vParPortSetLedB},
+	{(void *)ucSednaExportsNullSub},
  	
  	/* Task control */
- 	//{(void *)yeild},
- 	//{(void *)OsSleep},
+ 	{(void *)vTaskDelay},
+ 	{(void *)vTaskDelay},
  	
- 	/* Memory managment */
+ 	/* Memory management */
  	//{(void *)os_heap_alloc},
  	//{(void *)os_heap_free},
+	{(void *)ucSednaExportsNullSub},
+	{(void *)ucSednaExportsNullSub},
  	
  	/* Application messaging */
  	//{(void *)ucQueueMessagesWaiting},
  	//{(void *)cQueueReceive},
  	//{(void *)cQueueSend},
+	{(void *)ucSednaExportsNullSub},
+	{(void *)ucSednaExportsNullSub},
+	{(void *)ucSednaExportsNullSub},
  	
- 	#if (SEDNA_DEBUG_BUILD == 1)	
+ 	#if 1
    	/* Debug print */
- 	{(void *)DebugPrint},	
- 	{(void *)DebugPrintValue},
- 	{(void *)DebugPrintBlock},	
+ 	{(void *)printf},
+ 	{(void *)printf},
+ 	{(void *)printf},
  	#else
  	{(void *)ucSednaExportsNullSub},
  	{(void *)ucSednaExportsNullSub},

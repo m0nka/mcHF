@@ -4,7 +4,9 @@
 #include "mchf_types.h"
 
 //
-//#define GUI_TASK
+// Define timeout to prevent HAL driver task stall
+//
+#define SDMMC_SWDATATIMEOUT		5000
 
 #ifndef WIN32
 #include "stm32h7xx_hal.h"
@@ -25,6 +27,7 @@
 #include "stm32h7xx_ll_dma.h"
 #include "stm32h7xx_ll_bdma.h"
 #include "stm32h7xx_ll_spi.h"
+#include "stm32h7xx_ll_sdmmc.h"
 
 /* FatFs includes component */
 #include "ff_gen_drv.h"

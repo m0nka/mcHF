@@ -14,8 +14,10 @@
 #ifndef __OS_APPLOADER_H
 #define __OS_APPLOADER_H
 
-#define SEDNA_MAXIMUM_APPLICATIONS			   2
-#define MAX_APPLICATION_THREADS				   2
+#define SEDNA_MAXIMUM_APPLICATIONS			   	8
+#define MAX_APPLICATION_THREADS				   	2
+
+#define MAX_CHUNK_IN_RAM						0x100000
 
 // --------------------------------------------------------
 // This task stack size
@@ -45,6 +47,11 @@ typedef struct APPLOADER_APP_PARAMETERS
 	/* Allocated app ptr. We keep the ptr to Application allocated space here.
 	   We can free the space on unload using this entry from the struct 	*/
 	uchar 		*ucFunctionBuffer;
+
+	ushort		dummy1;
+	uchar		dummy2;
+
+	ulong		ext_ram_addr;
 
 	/* Allocated size. We need this to map the Application Task space when
 	   processing StartThread requests.										*/
@@ -108,6 +115,6 @@ typedef struct NewTaskData
 void os_apploader_task(void *pvParameters);
 void os_apploader_init(void);
 
-void 	*pvSednaCreateThread(pdTASK_CODE pvTaskCode, const portCHAR *pcName, void *pvParameters);
+//void 	*pvSednaCreateThread(pdTASK_CODE pvTaskCode, const portCHAR *pcName, void *pvParameters);
 
 #endif

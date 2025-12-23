@@ -21,7 +21,7 @@
 #include "ui_menu_module.h"
 
 #include "browser\filebrowser_app.h"
-#include "storage_proc.h"
+#include "storage_api.h"
 #include "ff_gen_drv.h"
 
 #include "file_b.h"
@@ -42,6 +42,8 @@ extern GUI_CONST_STORAGE GUI_BITMAP bmProgramGroup;
 extern GUI_CONST_STORAGE GUI_BITMAP bmClosedFolder;
 extern GUI_CONST_STORAGE GUI_BITMAP bmOpenFolder;
 extern GUI_CONST_STORAGE GUI_BITMAP bmTextLog;
+
+extern APPLOADER_QUEUE_PARAMETERS pxAppLoaderParameters;
 
 static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos);
 static void KillFileb(void);
@@ -150,13 +152,13 @@ static void file_b_set_edit_look(WM_HWIN hItem)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : vUsbSamSendQueuedMessage
+//* Function Name       : file_b_send_msg
 //* Object              : Send message to queue
 //* Input Parameters    : none
 //* Output Parameters   : none
 //* Functions called    : none
 //*----------------------------------------------------------------------------
-static uchar vUiSendQueuedMessage(xQueueHandle pvQueueHandle, ulong *ulMessageBuffer, uchar ucNumberOfItems)
+static uchar file_b_send_msg(xQueueHandle pvQueueHandle, ulong *ulMessageBuffer, uchar ucNumberOfItems)
 {
 	ulong ulDummy;
 	uchar ucCount;
@@ -181,12 +183,12 @@ static uchar vUiSendQueuedMessage(xQueueHandle pvQueueHandle, ulong *ulMessageBu
 }
 
 //*--------------------------------------------------------------------------------------
-//* Function Name       : vUsbSamSednaWaitMessage
+//* Function Name       : file_b_wait_msg
 //* Object              : Read pending messages
 //* Input Parameters    : Rx Queue ptr and items buffer
 //* Output Parameters   : none.
 //*--------------------------------------------------------------------------------------
-static uchar  vUiSednaWaitMessage(xQueueHandle pRxQueue,ulong *ulQueueBuffer)
+static uchar file_b_wait_msg(xQueueHandle pRxQueue,ulong *ulQueueBuffer)
 {
 	uchar ucNext = 0;
 
@@ -202,14 +204,13 @@ static uchar  vUiSednaWaitMessage(xQueueHandle pRxQueue,ulong *ulQueueBuffer)
 	return ucNext;
 }
 
-extern APPLOADER_QUEUE_PARAMETERS pxAppLoaderParameters;
-static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
+static void file_b_load_app(char *chAppName,uchar ucIsScript)
 {
 	ulong 			ulData[10];
 	ulong			ulTimeout = 600;
 	uchar			ucSkip = 1;
 
-	uchar 			app_det[20];
+	//uchar 			app_det[20];
 	char			chCertPath[32]; //= "C:\\System\\30000.crt";
 
 	//printf("run app: %s \r\n", chAppName);
@@ -255,77 +256,50 @@ static void vUiLoadApplication(char *chAppName,uchar ucIsScript)
 	// Insert path
 	ulData[1] = (ulong)chAppName;
 
-	//#if (SEDNA_DEBUG_BUILD == 1)
 	printf("Load app...\r\n");
-	//#endif
 
 	// Post load request
-	if(vUiSendQueuedMessage(pxAppLoaderParameters.xAppLoaderRxQueue,ulData,3) != 0)
+	if(file_b_send_msg(pxAppLoaderParameters.xAppLoaderRxQueue,ulData,3) != 0)
 	{
-		#if (SEDNA_DEBUG_BUILD == 1)
-		//DebugPrint("err load!\n\r");
-		#endif
-
-		//vUiEpsonInfoBox("Error msg1!",0,0);
+		printf("err load!\n\r");
 		goto clean_up;
 	}
-
-	printf("done\r\n");
-	return;
-
-	#if (SEDNA_DEBUG_BUILD == 1)
-	//DebugPrint("ok.\n\r");
-	//DebugPrint("Check status...");
-	#endif
+	printf("done, wait res...\r\n");
 
 	/* Wait to check loading result */
-	while((vUiSednaWaitMessage(pxAppLoaderParameters.xAppLoaderTxQueue,ulData) == 0) && ulTimeout)
+	while((file_b_wait_msg(pxAppLoaderParameters.xAppLoaderTxQueue,ulData) == 0) && ulTimeout)
 	{
 		vTaskDelay(20);
-
 		ulTimeout--;
 	}
 
 	// Check if msg received
 	if(ulTimeout == 0)
 	{
-		#if (SEDNA_DEBUG_BUILD == 1)
-		//DebugPrint("err timeout!\n\r");
-		#endif
-
-		//vUiEpsonInfoBox("Timeout Err!",0,0);
+		printf("err timeout!\n\r");
 		goto clean_up;
 	}
 
 	// Check return msg
 	if(ulData[0] != 0xD6)
 	{
-		#if (SEDNA_DEBUG_BUILD == 1)
-		//DebugPrint("err ret msg!\n\r");
-		#endif
-
-		//vUiEpsonInfoBox("Err Msg2!",0,0);
+		printf("err ret msg!\n\r");
 		goto clean_up;
 	}
 
 	// Check func result
 	if((ulData[1] & 0xFF) != 0x00)
 	{
-		#if (SEDNA_DEBUG_BUILD == 1)
-		//DebugPrintInt("err exec: ",ulData[1] & 0xFF);
-		#endif
+		printf("err exec: %d \r\n",ulData[1] & 0xFF);
 
 		//vTaskSuspendAll();
 		//s_sprintf(chCertPath,"Exec Err: %d",(uchar)(ulData[1] & 0xFF));
 		//cTaskResumeAll();
 
-		//vUiEpsonInfoBox(chCertPath,0,0);
 		goto clean_up;
 	}
 
-	#if (SEDNA_DEBUG_BUILD == 1)
-	//DebugPrint("ok.\n\r");
-	#endif
+	printf("ok.\n\r");
 
 //!	vUiExtractHandleAndName(app_det,ulData);
 
@@ -740,7 +714,7 @@ static void ShowFileDetails(WM_HWIN hWin)
 	int res = f_stat (SelectedFileName, &fno);
 	if(res != FR_OK)
 	{
-		printf("res: %d \r\n", res);
+		//printf("res: %d \r\n", res);
 		EDIT_SetText(hItem1, "");
 		EDIT_SetText(hItem2, "");
 		EDIT_SetText(hItem3, "");
@@ -1019,7 +993,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 				BUTTON_GetText(hItem, capt, sizeof(capt));
 
 				if(strcmp(capt, "Run") == 0)
-					vUiLoadApplication(SelectedFileName, 0);
+					file_b_load_app(SelectedFileName, 0);
 				else if(strcmp(capt, "Open") == 0)
 				{
 					// ToDo: Open in text window

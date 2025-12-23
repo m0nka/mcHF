@@ -60,6 +60,11 @@
 #include "stm32h7xx_hal.h"
 #endif
 
+//
+// Temp def here, to prevent error comp
+//
+#define MSC_MEDIA_PACKET 512
+
 /** @addtogroup USBD_OTG_DRIVER
   * @{
   */
