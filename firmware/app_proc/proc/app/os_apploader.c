@@ -63,7 +63,7 @@ static void os_apploader_get_ext(char * pFile, char * pExt)
   *(pExt + j) = '\0';          /* Set end of string */
 }
 
-static portSHORT sTaskCreate(NewTaskData *nt)
+static portSHORT os_apploader_create_proc(NewTaskData *nt)
 {
 	// ToDo: check args
 
@@ -76,13 +76,13 @@ static portSHORT sTaskCreate(NewTaskData *nt)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : vAppLoaderMemCopy
+//* Function Name       : os_apploader_memcpy
 //* Object              : Copy buffers
 //* Input Parameters    : 
 //* Output Parameters   : none
 //* Functions called    : none
 //*----------------------------------------------------------------------------
-static void vAppLoaderMemCopy(uchar *pDestBuffer, uchar *pSourceBuffer,uint nCpySize)
+static void os_apploader_memcpy(uchar *pDestBuffer, uchar *pSourceBuffer,uint nCpySize)
 {
 ulong    i;
 
@@ -94,13 +94,13 @@ ulong    i;
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : vAppLoaderMemSet
+//* Function Name       : os_apploader_memset
 //* Object              : Set buffer
 //* Input Parameters    : 
 //* Output Parameters   : none
 //* Functions called    : none
 //*----------------------------------------------------------------------------
-static void vAppLoaderMemSet(uchar *pDestBuffer, uchar ucValue,uint nCpySize)
+static void os_apploader_memset(uchar *pDestBuffer, uchar ucValue,uint nCpySize)
 {
 ulong    i;
 
@@ -112,13 +112,13 @@ ulong    i;
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : ucAppLoaderSendQueuedMessage
+//* Function Name       : os_apploader_send_msg
 //* Object              : Send message to queue
 //* Input Parameters    : none
 //* Output Parameters   : none
 //* Functions called    : none
 //*----------------------------------------------------------------------------
-static uchar ucAppLoaderSendQueuedMessage(xQueueHandle pvQueueHandle, ulong *ulMessageBuffer, uchar ucNumberOfItems)
+static uchar os_apploader_send_msg(xQueueHandle pvQueueHandle, ulong *ulMessageBuffer, uchar ucNumberOfItems)
 {
 	ulong ulDummy;
 	uchar ucCount;
@@ -146,12 +146,12 @@ static uchar ucAppLoaderSendQueuedMessage(xQueueHandle pvQueueHandle, ulong *ulM
 }
 
 //*--------------------------------------------------------------------------------------
-//* Function Name       : ucAppLoaderSednaWaitMessage
+//* Function Name       : os_apploader_wait_msg
 //* Object              : Read pending messages
 //* Input Parameters    : Rx Queue ptr and items buffer
 //* Output Parameters   : none.
 //*--------------------------------------------------------------------------------------
-static uchar ucAppLoaderSednaWaitMessage(xQueueHandle pRxQueue, ulong *ulQueueBuffer)
+static uchar os_apploader_wait_msg(xQueueHandle pRxQueue, ulong *ulQueueBuffer)
 {
 	uchar ucNext = 0;
 
@@ -171,13 +171,13 @@ static uchar ucAppLoaderSednaWaitMessage(xQueueHandle pRxQueue, ulong *ulQueueBu
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : pvAppLoaderSendCleanUpMsg
+//* Function Name       : os_apploader_cleanup_msg
 //* Object              : Send clean up message to application
 //* Input Parameters    : none
 //* Output Parameters   : none
 //* Functions called    : none
 //*----------------------------------------------------------------------------
-static void pvAppLoaderSendCleanUpMsg(xTaskHandle xCAppHandle)
+static void os_apploader_cleanup_msg(xTaskHandle xCAppHandle)
 {
 	ulong 						ulRxData[5],ulTxData[5],i;
 
@@ -201,7 +201,7 @@ static void pvAppLoaderSendCleanUpMsg(xTaskHandle xCAppHandle)
 		if((ulong)(pxAppLoaderAppParameters->xAppHandle) == (ulong)xCAppHandle)
 		{
 			/* This message is sent to the application */
-			ucAppLoaderSendQueuedMessage(pxAppParameters->xAppMsgRxQueue,ulTxData,2);
+			os_apploader_send_msg(pxAppParameters->xAppMsgRxQueue,ulTxData,2);
 
 			break;
 		}
@@ -211,23 +211,23 @@ static void pvAppLoaderSendCleanUpMsg(xTaskHandle xCAppHandle)
 	}
 
 	/* Wait finish status of the Clean Up routine, if not, simpy terminate */
-	while(ucAppLoaderSednaWaitMessage(pxAppParameters->xAppMsgTxQueue,ulRxData) != 3)
+	while(os_apploader_wait_msg(pxAppParameters->xAppMsgTxQueue,ulRxData) != 3)
 	{
 		/* App loader will stall here, if the application fail to send ask msg !!! */
 		vTaskDelay(100);
 	}
 
-	//DebugPrint("pvAppLoaderSendCleanUpMsg->success\n\r");
+	//DebugPrint("os_apploader_cleanup_msg->success\n\r");
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : ucAppLoaderUnloadSednaApplication
+//* Function Name       : os_apploader_unload
 //* Object              : Unload App - Delete from task lists and free memory
 //* Input Parameters    : app handle and name
 //* Output Parameters   : load result
 //* Functions called    : none
 //*----------------------------------------------------------------------------
-static uchar ucAppLoaderUnloadSednaApplication(xTaskHandle xRunningTask,char *cAppName)
+static uchar os_apploader_unload(xTaskHandle xRunningTask,char *cAppName)
 {
 	ulong ulTask;
 	uchar i;
@@ -261,7 +261,7 @@ static uchar ucAppLoaderUnloadSednaApplication(xTaskHandle xRunningTask,char *cA
 	}
 
 	/* Call the cleanup routine before deleting task */
-	pvAppLoaderSendCleanUpMsg(xRunningTask);
+	os_apploader_cleanup_msg(xRunningTask);
 
 	/* Delete any running app threads */
 	for(i = 0;i < MAX_APPLICATION_THREADS; i++)
@@ -343,7 +343,7 @@ static uchar os_apploader_load(char *chSomeAppName,char *chSomeCertPath, xTaskHa
  	if(uiAppSize == 0)
  		return 11;
 
- 	printf("file: %s \r\n", chSomeAppName);
+ 	//printf("file: %s \r\n", chSomeAppName);
 
  	// Get extension
  	os_apploader_get_ext(chSomeAppName, ext);
@@ -366,72 +366,108 @@ static uchar os_apploader_load(char *chSomeAppName,char *chSomeCertPath, xTaskHa
  	else if(strcmp(ext, "bin") == 0)
  	{
  		uchar *p_f = (uchar *)SDRAM_APP_ADDR;
+ 		uchar app_header[32];
+ 		ulong alloc_addr = 0;
 
+ 		// Open for read
  	 	res = f_open(&file, chSomeAppName, FA_READ);
  		if(res != FR_OK)
  			return 13;
 
- 		res = f_read(&file, p_f, uiAppSize, (void *)&read);
+ 		// Read header
+ 		res = f_read(&file, app_header, 32, (void *)&read);
+ 		if(res != FR_OK)
+		{
+ 			printf("fs header err: %d \r\n", res);
+ 			f_close(&file);
+ 			return 14;
+ 		}
+ 		//--print_hex_array(app_header, 8);
+
+ 		// Check for magic
+ 		if( (app_header[0] != 0x69) ||
+ 	   		(app_header[1] != 0x6D) ||
+ 	   		(app_header[2] != 0x67) ||
+ 		 	(app_header[3] != 0x00) )
+ 	   	{
+ 			f_close(&file);
+ 			return 15;
+ 	   	}
+
+ 		// Extract allocation address(stack_ptr - app_area size)
+ 		alloc_addr  = app_header[4];
+ 		alloc_addr |= app_header[5] <<  8;
+ 		alloc_addr |= app_header[6] << 16;
+ 		alloc_addr |= app_header[7] << 24;
+ 		alloc_addr -= MAX_CHUNK_IN_RAM;
+
+ 		//printf("alloc: %08x, file: %08x \r\n", pxAppLoaderAppParameters->ext_ram_addr, alloc_addr);
+
+ 		// Is linker allocation matching section we have selected ?
+ 		if(pxAppLoaderAppParameters->ext_ram_addr != alloc_addr)
+ 		{
+ 			f_close(&file);
+ 			return 16;
+ 		}
+
+ 		// Header into area
+ 		memcpy(p_f, app_header, 32);
+
+ 		// Read whole app
+ 		res = f_read(&file,(p_f + 32), (uiAppSize - 32), (void *)&read);
  		if(res != FR_OK)
  		{
  			printf("fs err: %d \r\n", res);
  			f_close(&file);
- 			return 14;
+ 			return 17;
  		}
 
  		// Close file
  		f_close(&file);
 
- 		//--print_hex_array(p_f, 8);
-
- 		// Check for magic
- 		if( (*(p_f + 0) != 0x69) ||
- 	   		(*(p_f + 1) != 0x6D) ||
- 	   		(*(p_f + 2) != 0x67) ||
- 		 	(*(p_f + 3) != 0x00) )
- 	   	{
- 			return 15;
- 	   	}
-
  		ulong chk = 0;
  		for(int i = 0; i < uiAppSize; i++)
  			chk += *p_f++;
 
- 		printf("checksum: 0x%08x \r\n", (int)chk);
+ 		//printf("checksum: 0x%08x \r\n", (int)chk);
+
+ 		// ToDo: do something with the checksum...
+ 		//
 
  		// Reload ptr
- 		p_f = (uchar *)SDRAM_APP_ADDR;
+ 		p_f = (uchar *)(pxAppLoaderAppParameters->ext_ram_addr);
 
  		// Get ptr from descriptor
  		ulong app_addr = *(ulong *)(p_f + SEDNA_APP_ENTRY_FUNC_SHIFT);
- 		printf("address:  0x%08x \r\n", (int)app_addr);
+ 		//printf("address:  0x%08x \r\n", (int)app_addr);
 
  		// Set function pointer to allocated space
  		pvAppLoaderDinamiclyLoadedFunc = (pdTASK_CODE)app_addr;
 
  		// Copy string descriptor, maybe test for valid name ???
- 		vAppLoaderMemCopy(ucAppName, (p_f + SEDNA_APP_DESC_NAME_SHIFT), configMAX_TASK_NAME_LEN);
+ 		os_apploader_memcpy(ucAppName, (p_f + SEDNA_APP_DESC_NAME_SHIFT), configMAX_TASK_NAME_LEN);
 
  		// Load priority from descriptor and test if not too high
  		//ucAppPriority = *(p_f + SEDNA_APP_DESC_PRIORITY_SHIFT);
  		//if(ucAppPriority > (tskIDLE_PRIORITY + 3) )
  		  ucAppPriority = osPriorityLow;//tskIDLE_PRIORITY + 3;
 
+ 		printf("app load ok \r\n");
  		goto processed;
  	}
  	else
- 		return 16;
+ 		return 18;
 
 process_elf:
 
  	// Check size
 	if((uiAppSize == 0) || (uiAppSize > 0x8000))
-		return 17;
+		return 19;
 
  	// Open application by name, the Current Dir is already selected by UI task
  	res = f_open(&file, chSomeAppName, FA_READ);
 	if(res != FR_OK)
-		return 18;
+		return 20;
 
 	// Allocate function buffer, at the moment allocate ELF size,
 	// not the real process size - to be fixed eventually !
@@ -449,7 +485,7 @@ process_elf:
 		vPortFree(ucCurrentFunctionBuffer);
 		f_close(&file);
 
-		return 19;
+		return 21;
 	}
 
 	// Close file
@@ -469,7 +505,7 @@ process_elf:
 	if(ucFuncResult != SEDNA_APP_LOAD_SUCCESS)
 	{
 	  	vPortFree(ucCurrentFunctionBuffer);
-	  	return 20;
+	  	return 22;
 	}
 
 	// Set function pointer to allocated space
@@ -482,7 +518,7 @@ process_elf:
 	// ----------------------------------------------------------------------
 
 	// Copy string descriptor, maybe test for valid name ???
-	vAppLoaderMemCopy(ucAppName,(ucCurrentFunctionBuffer + SEDNA_APP_DESC_NAME_SHIFT),configMAX_TASK_NAME_LEN);
+	os_apploader_memcpy(ucAppName,(ucCurrentFunctionBuffer + SEDNA_APP_DESC_NAME_SHIFT),configMAX_TASK_NAME_LEN);
 
 	// Load priority from descriptor and test if not too high
 	ucAppPriority = *(ucCurrentFunctionBuffer + SEDNA_APP_DESC_PRIORITY_SHIFT);
@@ -508,23 +544,8 @@ processed:
 	ntd.pvParameters	= (void *)pxAppParameters;
 	ntd.ucPriority		= ucAppPriority;
 	ntd.pxCreatedTask	= xCreatedTask;
-//!	ntd.ucType			= TASK_IS_APPLICATION;
-//!	ntd.ulOwnerId		= TASK_OWNER_KERNEL;
-//!	ntd.ucThumbFlag		= TASK_ENTRY_ARM;
 
-	// Dynamically create a task
-	/*if( sTaskCreate(pvAppLoaderDinamiclyLoadedFunc,
-					(char *)ucAppName,
-					C_APPL_STACK_SIZE,
-					(void *)pxAppParameters,
-					ucAppPriority,
-					xCreatedTask,
-					TASK_IS_APPLICATION,
-					TASK_OWNER_KERNEL,
-					TASK_ENTRY_ARM
-					) != pdPASS )*/
-
-	if(sTaskCreate(&ntd) != pdPASS)
+	if(os_apploader_create_proc(&ntd) != pdPASS)
 	{
 		// Could not create the task
 		ucFuncResult = SEDNA_APP_EXECUTE_ERROR;
@@ -538,7 +559,7 @@ processed:
 		ucFuncResult = SEDNA_APP_LOAD_SUCCESS;
 
 		// Save application name and handle
-		vAppLoaderMemCopy((uchar *)pxAppLoaderAppParameters->pcAppName,ucAppName,configMAX_TASK_NAME_LEN);
+		os_apploader_memcpy((uchar *)pxAppLoaderAppParameters->pcAppName,ucAppName,configMAX_TASK_NAME_LEN);
 	    pxAppLoaderAppParameters->xAppHandle = *xCreatedTask;
 
 	    // Save allocated application ptr
@@ -556,7 +577,7 @@ processed:
 	}
 
 	// Copy application name, so we can return it to creator
-	vAppLoaderMemCopy((uchar *)cAppName,ucAppName,configMAX_TASK_NAME_LEN);
+	os_apploader_memcpy((uchar *)cAppName,ucAppName,configMAX_TASK_NAME_LEN);
 
 	return ucFuncResult;
 }
@@ -598,7 +619,7 @@ void os_apploader_task(void *pvParameters)
 		pxAppLdrParameters->ulTasksStatus |= APP_LOADER_TASK;
 
 		// Wait messages
-		if(ucAppLoaderSednaWaitMessage(pxAppLdrParameters->xAppLoaderRxQueue,ulRxData) > 0)
+		if(os_apploader_wait_msg(pxAppLdrParameters->xAppLoaderRxQueue,ulRxData) > 0)
 		{
 			// Process message request
 			switch(ulRxData[0])
@@ -626,9 +647,9 @@ void os_apploader_task(void *pvParameters)
 
 					// Post the result, if success include handle and name
 		            if(ucCallResult == SEDNA_APP_LOAD_SUCCESS)
-  		              ucAppLoaderSendQueuedMessage(pxAppLdrParameters->xAppLoaderTxQueue,ulTxData,7);
+  		              os_apploader_send_msg(pxAppLdrParameters->xAppLoaderTxQueue,ulTxData,7);
 		            else
-		              ucAppLoaderSendQueuedMessage(pxAppLdrParameters->xAppLoaderTxQueue,ulTxData,2);
+		              os_apploader_send_msg(pxAppLdrParameters->xAppLoaderTxQueue,ulTxData,2);
 
 					break;
 				}
@@ -658,14 +679,14 @@ void os_apploader_task(void *pvParameters)
 					cCreatedAppName[15] = (char)(ulRxData[5] & 0xFF);
 
 					// Unload Application
-					ucCallResult = ucAppLoaderUnloadSednaApplication(xAppHandle,cCreatedAppName);
+					ucCallResult = os_apploader_unload(xAppHandle,cCreatedAppName);
 
 		            // Insert the request ID
 				    ulTxData[0] = SEDNA_RETURN_UNLOAD_STATUS;
 				    ulTxData[1] = ucCallResult;
 
 		            // Post result
-		            ucAppLoaderSendQueuedMessage(pxAppLdrParameters->xAppLoaderTxQueue,ulTxData,2);
+		            os_apploader_send_msg(pxAppLdrParameters->xAppLoaderTxQueue,ulTxData,2);
 
 					break;
 				}
@@ -700,7 +721,7 @@ void os_apploader_task(void *pvParameters)
 						if((ulong)(pxAppLoaderAppParameters->xAppHandle) == (ulong)xAppHandle)
 						{
 							// This message is sent to the application, not USB driver (!)
-				            ucAppLoaderSendQueuedMessage(pxAppParameters->xAppMsgRxQueue,ulTxData,2);
+				            os_apploader_send_msg(pxAppParameters->xAppMsgRxQueue,ulTxData,2);
 
 							// Allow dumping of application messages
 							ucApplicationMessagesExpected = 1;
@@ -724,7 +745,7 @@ void os_apploader_task(void *pvParameters)
 		if(ucApplicationMessagesExpected == 1)
 		{
 			// Wait any message from Application Queue and pass it to the USBFTDI driver queue
-			if(ucAppLoaderSednaWaitMessage(pxAppParameters->xAppMsgTxQueue,ulRxDataA) == 3)
+			if(os_apploader_wait_msg(pxAppParameters->xAppMsgTxQueue,ulRxDataA) == 3)
 			{
 				//DebugPrint("vAppLoaderTask->SEDNA_RETURN_APP_MSG_STATUS\n\r");
 
@@ -742,7 +763,7 @@ void os_apploader_task(void *pvParameters)
 		    	ulTxData[3] = ulRxDataA[2];
 
 		    	// Post to the return queue - 4 bytes
-		        ucAppLoaderSendQueuedMessage(pxAppLdrParameters->xAppLoaderTxQueue,ulTxData,4);
+		        os_apploader_send_msg(pxAppLdrParameters->xAppLoaderTxQueue,ulTxData,4);
 
 				// We don't expect any messages any more, set to false
 				ucApplicationMessagesExpected = 0;
@@ -771,34 +792,16 @@ void os_apploader_task(void *pvParameters)
 void os_apploader_init(void)
 {    
 	uchar 		i;
-	
-	#if (SEDNA_DEBUG_BUILD == 1)
-	ntd->pcName 	= "UiMainTask";
-	#endif
-	
-//!	ntd->pvTaskCode = vAppLoaderTask;
-	
+
 	// Clear applications struct - we clear app handle, as we use it
 	// for enumeration later 
   	for(i = 0,pxAppLoaderAppParameters = pxAppLoaderAppParametersArr;i < SEDNA_MAXIMUM_APPLICATIONS; i++)  	
 	{
+		// Add free ext ram locations
+		pxAppLoaderAppParameters->ext_ram_addr = SDRAM_APP_ADDR + (MAX_CHUNK_IN_RAM*i);
+
 		pxAppLoaderAppParameters->xAppHandle = NULL;
 		pxAppLoaderAppParameters++;
 	}
-						
-	/*#if (SEDNA_DEBUG_BUILD == 1)
-	sTaskCreate(vAppLoaderTask, 
-				"AppLoader", 
-				usStackSize, 
-				xAppLoaderParams, 
-				ucPriority, 
-				NULL,
-				TASK_IS_SERVICE,
-				TASK_OWNER_KERNEL,
-				TASK_ENTRY_THUMB);	
-	#endif*/
-	
-	// Start app loader task, app loader queue is passed as param	
-//!	sTaskCreate(ntd);
 }
 #endif

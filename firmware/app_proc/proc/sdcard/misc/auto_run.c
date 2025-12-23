@@ -81,11 +81,14 @@ static uchar auto_run_wait_msg(xQueueHandle pRxQueue,ulong *ulQueueBuffer)
 //* Notes    			:
 //* Context    			: CONTEXT_SD
 //*----------------------------------------------------------------------------
-static uchar auto_run_load_app(char *chAppName,uchar ucIsScript)
+static uchar auto_run_load_app(char *chAppName, uchar ucIsScript)
 {
 	ulong 			ulData[10];
 	ulong			ulTimeout = 600;
 	char			chCertPath[32];
+
+	if(chAppName == NULL)
+		return 100;
 
 	//printf("file: %s \r\n", chAppName);
 
@@ -112,14 +115,14 @@ static uchar auto_run_load_app(char *chAppName,uchar ucIsScript)
 	// Check if msg received
 	if(ulTimeout == 0)
 	{
-		printf("err timeout!\n\r");
+		//printf("err timeout!\n\r");
 		return 2;
 	}
 
 	// Check return msg
 	if(ulData[0] != 0xD6)
 	{
-		printf("err ret msg!\n\r");
+		//printf("err ret msg!\n\r");
 		return 3;
 	}
 
@@ -130,8 +133,54 @@ static uchar auto_run_load_app(char *chAppName,uchar ucIsScript)
 		return 4;
 	}
 
-	printf("ok.\n\r");
+	//printf("ok.\n\r");
 	return 0;
+}
+
+static uchar auto_run_check(char *auto_path, ulong size)
+{
+	FIL   		file;
+	FILINFO 	fno;
+	ulong 		read;
+	int			res;
+	char		a_f[] = "0://system/autorun.txt";
+
+	if((auto_path == NULL)||(size == 0))
+		return 100;
+
+	memset(auto_path, 0, size);
+
+	// Get size first
+ 	res = f_stat(a_f, &fno);
+ 	if(res != FR_OK)
+ 	{
+ 		return 1;
+ 	}
+
+ 	// Check size
+ 	if(fno.fsize > size)
+ 		return 2;
+
+ 	// Open for read
+	res = f_open(&file, a_f, FA_READ);
+	if(res != FR_OK)
+		return 3;
+
+	// Read file
+	res = f_read(&file, auto_path, fno.fsize, (void *)&read);
+	if(res != FR_OK)
+	{
+		f_close(&file);
+		return 4;
+	}
+
+	f_close(&file);
+
+	// Commented out ?
+	if((*(auto_path + 0) != '0')||(*(auto_path + 1) != ':'))
+		return 5;
+
+ 	return 0;
 }
 
 //*----------------------------------------------------------------------------
@@ -144,20 +193,27 @@ static uchar auto_run_load_app(char *chAppName,uchar ucIsScript)
 //*----------------------------------------------------------------------------
 void auto_run_handle_all(void)
 {
+	char file_path[64];
+
 	vTaskDelay(3000);
 
 	if(!Storage_GetStatus(MSD_DISK_UNIT))
 	{
-		printf("auto run abort, no disk \r\n");
+		//printf("auto run abort, no disk \r\n");
 		return;
 	}
 
-	//ToDo: 1. open ini file
-	//      2. check for entries, get paths
-	//		3. run all
+	// Get auto run file
+	if(auto_run_check(file_path, sizeof(file_path)) != 0)
+		return;
+
+	printf("autorun: %s \r\n", file_path);
 
 	// Load
-	auto_run_load_app("0://apps/meshcore/firmware.bin", 0);
+	//
+	// "0://apps/meshcore/firmware.bin"
+	//
+	auto_run_load_app(file_path, 0);
 }
 
 #endif
