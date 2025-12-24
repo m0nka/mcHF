@@ -264,9 +264,9 @@ void ui_controls_battery_touch(void)
 //*----------------------------------------------------------------------------
 void ui_controls_battery_refresh(void)
 {
-	return;
+	//return;
 
-	#if 1
+	#if 0
 	// Exercise the progress bar
 	static uchar bv = 0;
 	static uchar vskip = 0;

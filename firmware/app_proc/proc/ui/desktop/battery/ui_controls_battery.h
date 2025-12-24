@@ -16,7 +16,7 @@
 // Control type
 //#define BATT_VERTICAL
 
-#define BATT_COLOUR					GUI_DARKYELLOW
+#define BATT_COLOUR					GUI_ORANGE
 
 // Exports
 void ui_controls_battery_init(void);
