@@ -404,6 +404,10 @@
 //
 #define BATTERY_SIZE_X				54
 #define BATTERY_SIZE_Y				28
+
+#define BATT_MINU_X					(BATTERY_X + BATTERY_SIZE_X + 10)
+#define BATT_MINU_Y					(BATTERY_Y + BATTERY_SIZE_Y)
+#define BATT_MINU_TXT_Y				21
 //
 // ----------------------------------------------------------------------------
 // Filter

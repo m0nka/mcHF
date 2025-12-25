@@ -170,25 +170,35 @@ static void ui_controls_battery_progress(uchar val)
 	// Battery percentage text
 	GUI_DispStringAt(buf, x - 12,  BATTERY_Y + BATTERY_SIZE_Y - 22);
 
+	// Clear
+	//GUI_SetColor(GUI_LIGHTGRAY);
 	GUI_SetColor(GUI_BLACK);
+	GUI_FillRoundedRect(	(BATT_MINU_X + 0),
+							(BATTERY_Y + 3),
+							(BATT_MINU_X + 58),
+							(BATT_MINU_Y - 2),
+							2);
+
+	GUI_SetFont(&GUI_Font16B_ASCII);
+	GUI_SetColor(GUI_WHITE);
 
 	if((bmss.mins)&&(!bmss.run_on_dc))
 	{
 		if((bmss.mins/60) > 99)
 		{
 			sprintf(buf, "%2dh", bmss.mins/60);
-			GUI_DispStringAt(buf, x - 12, BATTERY_Y + BATTERY_SIZE_Y - 62);
+			GUI_DispStringAt(buf, BATT_MINU_X + 2, BATT_MINU_Y - BATT_MINU_TXT_Y);
 		}
 		else
 		{
 			sprintf(buf, "%2dh%2dm", bmss.mins/60, bmss.mins%60);
-			GUI_DispStringAt(buf, x - 26, BATTERY_Y + BATTERY_SIZE_Y - 62);
+			GUI_DispStringAt(buf, BATT_MINU_X  + 6, BATT_MINU_Y - BATT_MINU_TXT_Y);
 		}
 	}
 	else
-		GUI_DispStringAt("      ", x - 6, BATTERY_Y + BATTERY_SIZE_Y - 62);
+		GUI_DispStringAt("      ", BATT_MINU_X  + 6, BATT_MINU_Y - BATT_MINU_TXT_Y);
 	#else
-	GUI_DispStringAt("offline", x - 16, BATTERY_Y + BATTERY_SIZE_Y - 33);
+	GUI_DispStringAt("offline", x - 16, BATTERY_Y + BATTERY_SIZE_Y - BATT_MINU_TXT_Y);
 	#endif
 }
 #endif
