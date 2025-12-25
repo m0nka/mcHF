@@ -781,8 +781,8 @@ void radio_init_on_reset(void)
 	// ToDo: Are we going to send those to the DSP core at all ?
 	radio_init_load_dsp_values();
 
-	//if(res == 0)
-	//	return;
+	if(res == 0)
+		return;
 
 	// Restore eeprom
 	radio_init_eep_defaults();

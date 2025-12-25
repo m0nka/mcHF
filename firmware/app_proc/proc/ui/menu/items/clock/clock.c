@@ -77,7 +77,6 @@ WM_HTIMER 		hTimerTime;
 uint8_t 		DisableAutoRefresh = 0;
 CALENDAR_DATE  	hDate;
 
-#ifndef PCB_V9_REV_A
 static const GUI_POINT aPoints[3][4] = {
 
   // Hour Needle
@@ -168,7 +167,6 @@ static void GUI_UpdateClock(uint16_t x0, uint16_t y0, uint8_t hour, uint8_t min,
 
   GUI_AA_DisableHiRes();
 }
-#endif
 
 static void _cbDialog(WM_MESSAGE * pMsg)
 {
