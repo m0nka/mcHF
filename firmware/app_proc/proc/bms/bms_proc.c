@@ -1368,9 +1368,6 @@ static void bms_proc_power_off(void)
    			// Need more cleanup ??
    			// ...
 
-   			// Reset(0x41, 0x12)
-   			//bq40z80_write_16bit_reg(0x41, 0x0000);
-
    			// Power off process
    			bsp_power_off();
    		}
@@ -1391,6 +1388,22 @@ static void bms_proc_worker(void)
 	ushort status = 0;
 
 	bms_proc_power_off();
+
+	// We need to power off the BMS before cell removal
+	if(bmss.shutdown_req)
+	{
+		#if 1
+		//
+		// Will nuke all permanent data in backup RAM/GPS as
+		// this will disconnect discharge MOSFET !!!
+		//
+		bq40z80_unseal();		// unlock MAC access
+		bq40z80_shutdown();		// shutdown safely
+		//
+		#endif
+
+		bmss.shutdown_req = 0;
+	}
 
 	status = bq40z80_read_status();
 
@@ -1522,9 +1535,10 @@ void bms_proc_task(void const *arg)
 	bmss.ulCH10 = 0;
 	bmss.ulCH11 = 0;
 
-	bmss.charger_on = 0;
-	bmss.h_prot_on  = 0;
-	bmss.run_on_dc  = 0;
+	bmss.charger_on 	= 0;
+	bmss.h_prot_on  	= 0;
+	bmss.run_on_dc		= 0;
+	bmss.shutdown_req 	= 0;
 
 	// Manual calibration, compensate for divider resistors tolerance
 	//

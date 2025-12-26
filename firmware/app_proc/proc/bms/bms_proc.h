@@ -169,6 +169,8 @@ __attribute__((__common__)) struct BMSState {
 	uchar h_prot_on;
 	uchar run_on_dc;
 
+	uchar shutdown_req;
+
 } BMSState;
 
 void bms_proc_hw_init(void);

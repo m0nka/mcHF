@@ -77,7 +77,9 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate1[] =
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT0,		10,		110,	125, 			30,  				0, 		0x0,	0 },
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT1,		155,	110,	125, 			30,  				0, 		0x0,	0 },
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT2,		305,	110,	125, 			30,  				0, 		0x0,	0 },
-	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT3,		450,	110,	125, 			30,  				0, 		0x0,	0 }
+	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT3,		450,	110,	125, 			30,  				0, 		0x0,	0 },
+
+	{ BUTTON_CreateIndirect, 	"Shutdown",	ID_BUTTON_SHUTDOWN,	20, 	350, 	120, 			45, 				0, 		0x0, 	0 },
 };
 
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate2[] =
@@ -131,6 +133,62 @@ WM_HWIN   			hBdialog;
 LISTWHEEL_Handle 	hMulti;
 WM_HTIMER 			hTimerBatt;
 WM_HTIMER 			hTimerBattA;
+
+static void menu_batt_cbMessageBox(WM_MESSAGE* pMsg)
+{
+  WM_HWIN hWin;
+  int Id;
+
+  hWin = pMsg->hWin;
+  switch (pMsg->MsgId) {
+  case WM_NOTIFY_PARENT:
+    if (pMsg->Data.v == WM_NOTIFICATION_RELEASED) {
+      Id = WM_GetId(pMsg->hWinSrc);
+       GUI_EndDialog(hWin, (Id == GUI_ID_OK) ? 1 : 0);
+    }
+
+    break;
+  default:
+    WM_DefaultProc(pMsg);
+  }
+}
+
+static int menu_batt_ShowMessageBox(WM_HWIN hWin, const char* pTitle, const char* pText, int YesNo)
+{
+	WM_HWIN hFrame, hClient, hBut;
+	int r = 0;
+
+	// Create frame win
+	hFrame = FRAMEWIN_CreateEx(200, 100, 400, 200, hWin, WM_CF_SHOW, FRAMEWIN_CF_MOVEABLE, 0, pTitle, &menu_batt_cbMessageBox);
+
+	FRAMEWIN_SetClientColor   (hFrame, GUI_WHITE);
+	FRAMEWIN_SetFont          (hFrame, &GUI_Font16B_ASCII);
+	FRAMEWIN_SetTextAlign     (hFrame, GUI_TA_HCENTER);
+
+	// Create dialog items
+	hClient = WM_GetClientWindow(hFrame);
+	TEXT_CreateEx(10, 40, 370, 230, hClient, WM_CF_SHOW, GUI_TA_HCENTER, 0, pText);
+
+	if(YesNo)
+	{
+		hBut = BUTTON_CreateEx(220, 100, 110, 40, hClient, WM_CF_SHOW, 0, GUI_ID_CANCEL);
+		BUTTON_SetText        (hBut, "No");
+		hBut = BUTTON_CreateEx(60, 100, 110, 40, hClient, WM_CF_SHOW, 0, GUI_ID_OK);
+		BUTTON_SetText        (hBut, "Yes");
+	}
+	else
+	{
+		hBut = BUTTON_CreateEx(64, 45, 55, 18, hClient, WM_CF_SHOW, 0, GUI_ID_OK);
+		BUTTON_SetText        (hBut, "Ok");
+	}
+
+	WM_SetFocus(hFrame);
+	WM_MakeModal(hFrame);
+
+	r = GUI_ExecCreatedDialog(hFrame);
+
+	return r;
+}
 
 static void UpdateMonitorFrame(WM_HWIN hDlg)
 {
@@ -426,6 +484,29 @@ static void _cbMonitorControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			break;
 		}
 		#endif
+
+		// -------------------------------------------------------------
+		// Button - shutdown BMS
+		case ID_BUTTON_SHUTDOWN:
+		{
+			switch(NCode)
+			{
+				case WM_NOTIFICATION_RELEASED:
+				{
+					if(menu_batt_ShowMessageBox(pMsg->hWin,
+												"Battery Manager",
+												"Are you sure you want to shutdown the BMS?",
+												1))
+					{
+						printf("...bms shutdown \r\n");
+						//bmss.shutdown_req = 1;
+					}
+					break;
+				}
+			}
+			break;
+		}
+
 		// -------------------------------------------------------------
 		default:
 			break;
@@ -523,7 +604,7 @@ static void _cbSettingsControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			{
 				case WM_NOTIFICATION_RELEASED:
 				{
-					HAL_PWREx_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFI, PWR_D3_DOMAIN);
+					//HAL_PWREx_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFI, PWR_D3_DOMAIN);
 					break;
 				}
 			}

@@ -20,7 +20,16 @@
 #include "bq40z80.h"
 
 ushort bq40z80_regs[0x1C];
+uchar  bms_loc_init = 0;
 
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_mac_read_block
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
 uchar bq40z80_mac_read_block(ushort cmd, uchar *buf, uchar len)
 {
 	ulong err;
@@ -63,13 +72,21 @@ uchar bq40z80_mac_read_block(ushort cmd, uchar *buf, uchar len)
 	return 0;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_write_16bit_reg
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
 uchar bq40z80_write_16bit_reg(uchar reg, ushort val)
 {
 	ulong err;
 	uchar data[2];
 
-	data[0] = (uchar)(val >> 8);
-	data[1] = (uchar)(val);
+	data[1] = (uchar)(val >> 8);
+	data[0] = (uchar)(val);
 
 	err = shared_i2c_write_reg(0x16, reg, data, 2);
 	if(err != 0)
@@ -81,6 +98,14 @@ uchar bq40z80_write_16bit_reg(uchar reg, ushort val)
 	return 0;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_read_16bit_reg
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
 uchar bq40z80_read_16bit_reg(uchar reg, ushort *val)
 {
 	ulong err;
@@ -101,11 +126,63 @@ uchar bq40z80_read_16bit_reg(uchar reg, ushort *val)
 	return 0;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_shutdown
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_shutdown(void)
+{
+	if(bq40z80_write_16bit_reg(0x00, 0x0010) != 0)
+		return 1;
+
+	osDelay(20);
+
+	if(bq40z80_write_16bit_reg(0x00, 0x0010) != 0)
+		return 2;
+
+	printf("== shutdown cmd ok == \r\n");
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_unseal
+//* Object              :
+//* Notes    			: unlock MAC access
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_unseal(void)
+{
+	if(bq40z80_write_16bit_reg(0x00, 0x0414) != 0)
+		return 1;
+
+	osDelay(20);
+
+	if(bq40z80_write_16bit_reg(0x00, 0x3672) != 0)
+		return 2;
+
+	printf("== unseal cmd ok == \r\n");
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_read_fw_ver
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
 uchar bq40z80_read_fw_ver(void)
 {
 	uchar buf[100];
 
-	if(bq40z80_write_16bit_reg(0x44, 0x0006) != 0)
+	if(bq40z80_write_16bit_reg(0x44, 0x0002) != 0)
 		return 1;
 
 	osDelay(2);
@@ -113,9 +190,19 @@ uchar bq40z80_read_fw_ver(void)
 	if(bq40z80_mac_read_block(0x0044, buf, 11) != 0)
 		return 2;
 
+	//print_hex_array(buf, 11);
+
 	return 0;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_read_all_regs
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
 void bq40z80_read_all_regs(void)
 {
 	ushort val = 0;
@@ -138,8 +225,14 @@ void bq40z80_read_all_regs(void)
 	printf("dump bms registers done\r\n");
 }
 
-uchar bms_loc_init = 0;
-
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_read_soc
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
 uchar bq40z80_read_soc(void)
 {
 	ushort val = 0;
@@ -157,6 +250,14 @@ uchar bq40z80_read_soc(void)
 	return 0xFF;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_read_runtime
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
 ushort bq40z80_read_runtime(void)
 {
 	ushort val = 0;
@@ -174,6 +275,14 @@ ushort bq40z80_read_runtime(void)
 	return 0xFFFF;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_read_status
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
 ushort bq40z80_read_status(void)
 {
 	ushort val = 0;
@@ -187,6 +296,14 @@ ushort bq40z80_read_status(void)
 	return 0xFFFF;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_read_current
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
 short bq40z80_read_current(void)
 {
 	ushort curr;
@@ -203,6 +320,14 @@ short bq40z80_read_current(void)
 	return 0;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_init
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
 void bq40z80_init(void)
 {
 	//ulong err;

@@ -31,6 +31,8 @@
 #define ID_BUTTON_DSP_RESET		  	(GUI_ID_USER + 0x60)
 #define ID_BUTTON_EEP_RESET		  	(GUI_ID_USER + 0x61)
 
+#define ID_BUTTON_SHUTDOWN		  	(GUI_ID_USER + 0x62)
+
 #define SOPTS						SLIDER_CF_HORIZONTAL
 
 #define BATT_MAX_COLUMN				8

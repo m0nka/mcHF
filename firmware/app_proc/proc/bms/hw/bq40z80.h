@@ -19,6 +19,8 @@ uchar bq40z80_mac_read_block(ushort cmd, uchar *buf, uchar len);
 uchar bq40z80_write_16bit_reg(uchar reg, ushort val);
 uchar bq40z80_read_16bit_reg(uchar reg, ushort *val);
 
+uchar bq40z80_shutdown(void);
+uchar bq40z80_unseal(void);
 uchar bq40z80_read_fw_ver(void);
 
 uchar bq40z80_read_soc(void);
