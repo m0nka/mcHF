@@ -22,6 +22,7 @@
 #endif
 
 #ifdef DSP_CORE
+#include <string.h>
 #include "mchf_board.h"
 #endif
 
@@ -159,7 +160,7 @@ void SWD_Init(void)
 
 void print_itm_header(void)
 {
-	#ifdef USE_TASK_SHARING
+	#if defined (USE_TASK_SHARING)
 	char header[30];
 
 	memset(header, 0, sizeof(header));
@@ -170,6 +171,13 @@ void print_itm_header(void)
 
 	HAL_UART_Transmit(&DEBUG_UART_Handle, (uint8_t *)header,  strlen(header), 0xFFFF);
 
+	#elif defined (DSP_CORE)
+	char header[30];
+
+	memset(header, 0, sizeof(header));
+	sprintf(header, "%07d [%s] ", (int)HAL_GetTick(), "bb_");
+
+	HAL_UART_Transmit(&DEBUG_UART_Handle, (uint8_t *)header,  strlen(header), 0xFFFF);
 	#else
 	HAL_UART_Transmit(&DEBUG_UART_Handle, (uint8_t *)cpu_id_str,  sizeof(cpu_id_str) - 1, 0xFFFF);
 	#endif

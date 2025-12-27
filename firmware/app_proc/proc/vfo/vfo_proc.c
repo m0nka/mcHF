@@ -114,6 +114,8 @@ static void vfo_proc_worker(ulong notif_val)
 	{
 		case UI_NEW_FREQ_EVENT:
 		{
+			//printf("vfo: %d\r\n",notif_val);
+
 			// Set VFO
 			if(vfo_proc_set_freq() == 0)
 			{
@@ -188,6 +190,9 @@ void vfo_proc_task(void const *arg)
 
 	// Init CW gen
 	vfo_cw_gen_init();
+
+	// Delayed init
+	vfo_proc_set_freq();
 
 vfo_proc_loop:
 

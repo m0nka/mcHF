@@ -136,6 +136,10 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
 //*----------------------------------------------------------------------------
 static void tasks_pre_os_init(void)
 {
+	#ifdef CONTEXT_SD
+	storage_proc_init();
+	#endif
+
 	#ifdef CONTEXT_BMS
 	bms_proc_hw_init();
 	#endif
@@ -143,10 +147,6 @@ static void tasks_pre_os_init(void)
 	#ifdef CONTEXT_ROTARY
 	rotary_proc_hw_init();
 	#endif
-
-  	#ifdef CONTEXT_IPC_PROC
-	ipc_proc_init();
-  	#endif
 
   	#ifdef CONTEXT_AUDIO
 	audio_proc_hw_init();
@@ -174,10 +174,6 @@ static void tasks_pre_os_init(void)
 
 	#ifdef CONTEXT_LORA
 	lora_proc_init();
-	#endif
-
-	#ifdef CONTEXT_SD
-	storage_proc_init();
 	#endif
 
 	#ifdef CONTEXT_APP

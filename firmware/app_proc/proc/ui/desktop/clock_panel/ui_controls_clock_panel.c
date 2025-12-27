@@ -155,6 +155,10 @@ static void ui_controls_clock_panel_dsp_details(void)
 {
 	static uchar dsp_control_init_done = 0;
 	static uchar dsp_version_done = 0;
+	static uchar loc_fix_mode = 0xFF;
+	static short loc_nco_freq = 0xFFFF;
+
+	char   	buff[20];
 
 	if(dsp_control_init_done == 0)
 	{
@@ -184,8 +188,6 @@ static void ui_controls_clock_panel_dsp_details(void)
 	// DSP firmware version
 	if((dsp_version_done == 0) && (tsu.dsp_alive) && ((tsu.dsp_rev3 != 0) || (tsu.dsp_rev4 != 0)))
 	{
-		char   	buff[20];
-
 		GUI_SetColor(HOT_PINK);
 		GUI_SetFont(&GUI_Font8x8_1);
 		sprintf(buff,"%d.%d",tsu.dsp_rev3,tsu.dsp_rev4);
@@ -194,6 +196,40 @@ static void ui_controls_clock_panel_dsp_details(void)
 		dsp_version_done = 1;
 	}
 
+	// Show VFO mode changes on panel
+	if(loc_fix_mode != tsu.band[tsu.curr_band].fixed_mode)
+	{
+		GUI_SetColor(CLOCK_PANEL_COL);
+		//GUI_SetColor(GUI_WHITE);
+		GUI_FillRect(498, 192, 550, 198);
+
+		GUI_SetColor(GUI_BLUE);
+		GUI_SetFont(&GUI_Font8x8_1);
+
+		printf("fix mode change \r\n");
+		if(tsu.band[tsu.curr_band].fixed_mode == 1)
+			GUI_DispStringAt("Fixed  ", 500, 192);
+		else
+			GUI_DispStringAt("Centre ", 500, 192);
+
+		loc_fix_mode = tsu.band[tsu.curr_band].fixed_mode;
+	}
+
+	// Show NCO frequency changes on panel
+	if(loc_nco_freq != tsu.band[tsu.curr_band].nco_freq)
+	{
+		GUI_SetColor(CLOCK_PANEL_COL);
+		//GUI_SetColor(GUI_WHITE);
+		GUI_FillRect(558, 192, 630, 198);
+
+		GUI_SetColor(GUI_DARKRED);
+		GUI_SetFont(&GUI_Font8x8_1);
+
+		sprintf(buff,"%dHz", tsu.band[tsu.curr_band].nco_freq);
+		GUI_DispStringAt(buff, 560, 192);
+
+		loc_nco_freq = tsu.band[tsu.curr_band].nco_freq;
+	}
 }
 
 static void ui_controls_clock_panel_btm_part(void)

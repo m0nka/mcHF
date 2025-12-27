@@ -390,7 +390,7 @@ int main(void)
     // Init debug print in shared mode
     printf_init(1);
 
-	printf("-->%s v: %d.%d\r\n", DEVICE_STRING, MCHF_D_VER_RELEASE, MCHF_D_VER_BUILD);
+	printf("%s v: %d.%d\r\n", DEVICE_STRING, MCHF_D_VER_RELEASE, MCHF_D_VER_BUILD);
 	//printf("exec at 0x%08x\r\n", (int)&Reset_Handler);
 
 	set_cw_irq();
