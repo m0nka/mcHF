@@ -119,13 +119,13 @@
 
 __attribute__((__common__)) struct BMSState {
 
-	ulong a[10];		// adc channel voltage
-	ulong s[4];		// branch voltage
-	ulong c[4];		// calculated cell voltage
-	ulong e[4];		// channel errors, accumulated
-	ulong t[4];		// cell temperature
+	ulong a[10];	// adc channel voltage
+	ulong s[5];		// branch voltage
+	ulong c[5];		// calculated cell voltage
+	ulong e[5];		// channel errors, accumulated
+	ulong t[5];		// cell temperature
 
-	ulong ba[4];	// balancer accumulator
+	ulong ba[5];	// balancer accumulator
 
 	//ulong k[4];
 	//ulong f[4];	// filtered values (long averaging)

@@ -22,10 +22,58 @@
 ushort bq40z80_regs[0x1C];
 uchar  bms_loc_init = 0;
 
+extern struct BMSState	bmss;
+
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_sbs_read_block
+//* Object              :
+//* Notes    			: read block in normal mode
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_sbs_read_block(ushort cmd, uchar *buf, uchar len)
+{
+	ulong err;
+	uchar t_buf[40];
+
+	if(buf ==  NULL)
+		return 1;
+
+	if(len > (sizeof(t_buf) - 1))
+		return 2;
+
+	t_buf[0] = 0x00;
+	t_buf[1] = cmd;
+
+	err = shared_i2c_write_reg(0x16, 0x00, t_buf, 1);
+	if(err != 0)
+	{
+		printf("write block %d\r\n", (int)err);
+		return 2;
+	}
+
+	osDelay(100);
+
+	err = shared_i2c_read_reg(0x16, cmd, t_buf, (len + 1));
+	if(err != 0)
+	{
+		printf("read block %d\r\n", (int)err);
+		return 3;
+	}
+
+	//printf("read block size 0x%02x\r\n", (int)t_buf[0]);
+	//print_hex_array(t_buf + 1, 32);
+
+	memcpy(buf, t_buf + 1, len);
+
+	return 0;
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : bq40z80_mac_read_block
 //* Object              :
-//* Notes    			:
+//* Notes    			: read block in MAC mode
 //* Notes   			:
 //* Notes    			:
 //* Context    			: CONTEXT_BMS
@@ -321,6 +369,75 @@ short bq40z80_read_current(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_read_da_status
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+short bq40z80_read_da_status(void)
+{
+	uchar da_stat[50];
+	//ushort intt, ts4t;
+
+	// Read DA status1
+	if(bq40z80_sbs_read_block(0x71, da_stat, 32))
+		return 1;
+
+	//print_hex_array(da_stat, 32);
+
+	bmss.c[0] = (da_stat[1] << 8)|da_stat[0];
+	bmss.c[1] = (da_stat[3] << 8)|da_stat[2];
+	bmss.c[2] = (da_stat[5] << 8)|da_stat[4];
+	bmss.c[3] = (da_stat[7] << 8)|da_stat[6];
+
+	// Read DA status2
+	if(bq40z80_sbs_read_block(0x72, da_stat, 16))
+		return 2;
+
+	//print_hex_array(da_stat, 16);
+
+	// Internal temp
+	//intt = (da_stat[1] << 8)|da_stat[0];
+
+	// TS1 - next to cell1
+	bmss.t[0] = (da_stat[3] << 8)|da_stat[2];
+	bmss.t[0] = (bmss.t[0]*10 - 27315);
+
+	// TS2 - next to cell 3
+	bmss.t[2] = (da_stat[5] << 8)|da_stat[4];
+	bmss.t[2] = (bmss.t[2]*10 - 27315);
+
+	// TS3 - next to cell 5
+	bmss.t[4] = (da_stat[7] << 8)|da_stat[6];
+	bmss.t[4] = (bmss.t[4]*10 - 27315);
+
+	// Other two cells as average of neighbour cells
+	bmss.t[1] = (bmss.t[0] + bmss.t[2])/2;
+	bmss.t[3] = (bmss.t[2] + bmss.t[4])/2;
+
+	// TS4
+	//ts4t = (da_stat[9] << 8)|da_stat[8];
+
+	//printf("int t %dC \r\n", (int)((intt*10 - 27315)/100));
+	//printf("fet t %dC \r\n", (int)((ts4t*10 - 27315)/100));
+
+	// Read DA status3
+	if(bq40z80_sbs_read_block(0x7B, da_stat, 18))
+		return 3;
+
+	//print_hex_array(da_stat, 18);
+
+	bmss.c[4] = (da_stat[1] << 8)|da_stat[0];
+
+	// Notify UI
+	bmss.rr = 1;
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : bq40z80_init
 //* Object              :
 //* Notes    			:
@@ -331,7 +448,7 @@ short bq40z80_read_current(void)
 void bq40z80_init(void)
 {
 	//ulong err;
-	ushort val = 0;
+	//ushort val = 0;
 
 	// Do we need init ?
 	#ifndef CONTEXT_AUDIO
@@ -383,6 +500,8 @@ void bq40z80_init(void)
 	}*/
 
 	//printf("batt status:%04x \r\n", bq40z80_regs[0x15]);
+
+	//bq40z80_read_da_status();
 }
 
 

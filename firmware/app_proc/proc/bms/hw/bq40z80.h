@@ -29,6 +29,7 @@ ushort bq40z80_read_runtime(void);
 ushort bq40z80_read_status(void);
 short bq40z80_read_current(void);
 
+short bq40z80_read_da_status(void);
 void  bq40z80_init(void);
 
 #endif

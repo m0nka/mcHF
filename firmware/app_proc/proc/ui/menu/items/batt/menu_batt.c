@@ -65,19 +65,20 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate1[] =
  	{ WINDOW_CreateIndirect,   	"", 		0,              	0,   	0, 		TBL1X, 	400, 		FRAMEWIN_CF_MOVEABLE 		  },
 	//
 	// Balancer state header
-	{ HEADER_CreateIndirect, 	"", 		ID_HEADER_0, 		10, 	10, 	565, 			25, 				0, 		0x0, 	0 },
+	{ HEADER_CreateIndirect, 	"", 		ID_HEADER_0, 		10, 	10, 	710, 			25, 				0, 		0x0, 	0 },
 
 	// Battery cells as progress bars
 	{ PROGBAR_CreateIndirect, 	"", 		ID_PROGBAR_0, 		10, 	45, 	125, 			65, 				0, 		0x0, 	0 },
 	{ PROGBAR_CreateIndirect, 	"", 		ID_PROGBAR_0 + 1, 	155, 	45, 	125, 			65, 				0, 		0x0, 	0 },
 	{ PROGBAR_CreateIndirect, 	"", 		ID_PROGBAR_0 + 2, 	305, 	45, 	125, 			65, 				0, 		0x0, 	0 },
 	{ PROGBAR_CreateIndirect, 	"", 		ID_PROGBAR_0 + 3, 	450, 	45, 	125, 			65, 				0, 		0x0, 	0 },
-
+	{ PROGBAR_CreateIndirect, 	"", 		ID_PROGBAR_0 + 4, 	595, 	45, 	125, 			65, 				0, 		0x0, 	0 },
 	// Cell descriptions
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT0,		10,		110,	125, 			30,  				0, 		0x0,	0 },
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT1,		155,	110,	125, 			30,  				0, 		0x0,	0 },
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT2,		305,	110,	125, 			30,  				0, 		0x0,	0 },
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT3,		450,	110,	125, 			30,  				0, 		0x0,	0 },
+	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT4,		595,	110,	125, 			30,  				0, 		0x0,	0 },
 
 	{ BUTTON_CreateIndirect, 	"Shutdown",	ID_BUTTON_SHUTDOWN,	20, 	350, 	120, 			45, 				0, 		0x0, 	0 },
 };
@@ -263,13 +264,14 @@ static void UpdateMonitorFrame(WM_HWIN hDlg)
 	HEADER_SetItemText(hHeader, 2, "CELL2");
 	HEADER_SetItemText(hHeader, 4, "CELL3");
 	HEADER_SetItemText(hHeader, 6, "CELL4");
+	HEADER_SetItemText(hHeader, 8, "CELL5");
 
 	if(bmss.run_on_dc == 0)
 		HEADER_SetTextColor(hHeader, GUI_BLUE);
 	else
 		HEADER_SetTextColor(hHeader, GUI_MAGENTA);
 
-	for(i = 0; i < 4; i++)
+	for(i = 0; i < 5; i++)
 	{
 		hItem = WM_GetDialogItem(hDlg, ID_PROGBAR_0 + i);
 
@@ -689,6 +691,8 @@ static void _cbDialog1(WM_MESSAGE * pMsg)
 			HEADER_AddItem(hItem, 125, "CELL3", 	14);
 			HEADER_AddItem(hItem,  20, "", 			14);
 			HEADER_AddItem(hItem, 125, "CELL4", 	14);
+			HEADER_AddItem(hItem,  20, "", 			14);
+			HEADER_AddItem(hItem, 125, "CELL5", 	14);
 
 			#if 0
 			for (int i = 0; i < 24; i++)
@@ -714,7 +718,7 @@ static void _cbDialog1(WM_MESSAGE * pMsg)
 				}
 			}
 			#else
-			for (int i = 0; i < 4; i++)
+			for (int i = 0; i < 5; i++)
 			{
 				hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_TEXT0 + i);
 

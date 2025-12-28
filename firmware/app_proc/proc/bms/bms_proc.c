@@ -1427,6 +1427,8 @@ static void bms_proc_worker(void)
 			bmss.run_on_dc = 1;
 		else
 			bmss.run_on_dc = 0;
+
+		bq40z80_read_da_status();
 	}
 
 	bms_read_skip++;
