@@ -14,6 +14,16 @@
 #ifndef __CODEC_HW_H
 #define __CODEC_HW_H
 
+// Use CPU Mute line as audio final amp shutown
+//
+#define USE_HARD_MUTE
+//
+// Swap polarity
+//
+//#define HARD_MUTE_REV_POL
+
+// ------------------------------------------------------------------
+
 #define CS4245_CHIP_ID						0x01
 #define CS4245_POWER_CTRL					0x02
 #define CS4245_DAC_CTRL_1					0x03

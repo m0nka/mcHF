@@ -521,7 +521,7 @@ void codec_hw_init(void)
 	#if 1
 	gpio_init_structure.Pin   = CODEC_MUTE;
 	HAL_GPIO_Init(CODEC_MUTE_PORT, &gpio_init_structure);
-	#ifndef PCB_V9_REV_A
+	#ifdef HARD_MUTE_REV_POL
 	HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);	// unmute
 	#else
 	HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);	// unmute
@@ -550,7 +550,7 @@ void codec_hw_power_cleanup(void)
 	#if 1
 	gpio_init_structure.Pin   = CODEC_MUTE;
 	HAL_GPIO_Init(CODEC_MUTE_PORT, &gpio_init_structure);
-	#ifndef PCB_V9_REV_A
+	#ifdef HARD_MUTE_REV_POL
 	HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);	// mute
 	#else
 	HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);	// mute
@@ -623,6 +623,49 @@ void codec_hw_volume(void)
 
 		//printf("-----------------\r\n");
 		//printf("vol = %d, bal = %d\r\n", vol, bal);
+
+		// Creates a large pop on unmute!
+		#if 0
+		if(vol == 0)
+		{
+			// Mute audio path
+			#ifdef USE_HARD_MUTE
+			#ifdef HARD_MUTE_REV_POL
+			HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);
+			#else
+			HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);
+			#endif
+			#endif
+
+			return;
+		}
+		else
+		{
+			// Unmute audio path
+			#ifdef USE_HARD_MUTE
+			#ifndef HARD_MUTE_REV_POL
+			HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);
+			#else
+			HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);
+			#endif
+			#endif
+		}
+		#endif
+
+		// ToDo: test control of the DAC mute bit towards the MOSFETs
+		#if 0
+		if(vol == 0)
+		{
+			codec_hw_update_register(CS4245_DAC_A_CTRL, false, 0);
+			codec_hw_update_register(CS4245_DAC_B_CTRL, false, 0);
+			return;
+		}
+		else
+		{
+			codec_hw_update_register(CS4245_DAC_A_CTRL, false, ~CS4245_MUTE_DAC);
+			codec_hw_update_register(CS4245_DAC_B_CTRL, false, ~CS4245_MUTE_DAC);
+		}
+		#endif
 
 		int range = (vol * 2);
 		//printf("ran = %d\r\n", range);

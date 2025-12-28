@@ -499,7 +499,7 @@ static void _cbMonitorControl(WM_MESSAGE * pMsg, int Id, int NCode)
 												1))
 					{
 						printf("...bms shutdown \r\n");
-						//bmss.shutdown_req = 1;
+						bmss.shutdown_req = 1;
 					}
 					break;
 				}
