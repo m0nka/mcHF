@@ -293,7 +293,7 @@ static void UpdateMonitorFrame(WM_HWIN hDlg)
 		TEXT_SetTextColor(hItem, GUI_DARKBLUE);
 
 		// Show balancer state
-		if((bmss.run_on_dc == 0)&&(bmss.usBalID[i] == 1))
+		if((bmss.run_on_dc == 0))//&&(bmss.usBalID[i] == 1))
 		{
 			TEXT_SetTextColor(hItem, GUI_LIGHTRED);
 			HEADER_SetItemText(hHeader, (i*2), "LOADED");
@@ -309,6 +309,7 @@ static void UpdateMonitorFrame(WM_HWIN hDlg)
 
 static void UpdateCalibrationFrame(WM_HWIN hDlg)
 {
+#if 0
 	#ifdef CONTEXT_BMS
 	WM_HWIN hItem;
 	char buf[30];
@@ -464,6 +465,7 @@ static void UpdateCalibrationFrame(WM_HWIN hDlg)
 	bmss.rr = 0;
 
 	#endif
+#endif
 }
 
 static void _cbMonitorControl(WM_MESSAGE * pMsg, int Id, int NCode)

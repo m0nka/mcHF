@@ -435,7 +435,7 @@ static void UpdateExitBox(WM_HWIN hDlg)
 		TEXT_SetTextColor(hItem, GUI_DARKBLUE);
 
 		// Show balancer state
-		if((bmss.run_on_dc == 0)&&(bmss.usBalID[i] == 1))
+		if((bmss.run_on_dc == 0))//&&(bmss.usBalID[i] == 1))
 		{
 			TEXT_SetTextColor(hItem, GUI_LIGHTRED);
 			HEADER_SetItemText(hHeader, (i*2), "LOADED");

@@ -35,6 +35,11 @@ extern struct 	TransceiverState 		ts;
 
 extern ulong 	epoch;
 
+uchar ui_dsp_control_init_done 	= 0;
+uchar ui_dsp_version_done 		= 0;
+uchar loc_fix_mode 				= 0xFF;
+short loc_nco_freq 				= 0xFFFF;
+
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_clock_init
 //* Object              :
@@ -153,14 +158,14 @@ static void ui_controls_clock_panel_show_alive(void)
 
 static void ui_controls_clock_panel_dsp_details(void)
 {
-	static uchar dsp_control_init_done = 0;
-	static uchar dsp_version_done = 0;
-	static uchar loc_fix_mode = 0xFF;
-	static short loc_nco_freq = 0xFFFF;
+	//static uchar ui_dsp_control_init_done = 0;
+	//static uchar ui_dsp_version_done = 0;
+	//static uchar loc_fix_mode = 0xFF;
+	//static short loc_nco_freq = 0xFFFF;
 
 	char   	buff[20];
 
-	if(dsp_control_init_done == 0)
+	if(ui_dsp_control_init_done == 0)
 	{
 		// Sampling rate(bottom text)
 		// ToDo: get from DSP and dynamically refresh on change
@@ -182,18 +187,18 @@ static void ui_controls_clock_panel_dsp_details(void)
 				GUI_DispStringAt("NA", 410, 192);
 				break;
 		}
-		dsp_control_init_done = 1;
+		ui_dsp_control_init_done = 1;
 	}
 
 	// DSP firmware version
-	if((dsp_version_done == 0) && (tsu.dsp_alive) && ((tsu.dsp_rev3 != 0) || (tsu.dsp_rev4 != 0)))
+	if((ui_dsp_version_done == 0) && (tsu.dsp_alive) && ((tsu.dsp_rev3 != 0) || (tsu.dsp_rev4 != 0)))
 	{
 		GUI_SetColor(HOT_PINK);
 		GUI_SetFont(&GUI_Font8x8_1);
 		sprintf(buff,"%d.%d",tsu.dsp_rev3,tsu.dsp_rev4);
 		GUI_DispStringAt(buff,448, 192);
 
-		dsp_version_done = 1;
+		ui_dsp_version_done = 1;
 	}
 
 	// Show VFO mode changes on panel
@@ -206,7 +211,7 @@ static void ui_controls_clock_panel_dsp_details(void)
 		GUI_SetColor(GUI_BLUE);
 		GUI_SetFont(&GUI_Font8x8_1);
 
-		printf("fix mode change \r\n");
+		//printf("fix mode change \r\n");
 		if(tsu.band[tsu.curr_band].fixed_mode == 1)
 			GUI_DispStringAt("Fixed  ", 500, 192);
 		else
@@ -319,6 +324,12 @@ void ui_controls_clock_panel_refresh(void)
 //*----------------------------------------------------------------------------
 void ui_controls_clock_panel_init(void)
 {
+	// Init publics for this module
+	ui_dsp_control_init_done	= 0;
+	ui_dsp_version_done 		= 0;
+	loc_fix_mode 				= 0xFF;
+	loc_nco_freq 				= 0xFFFF;
+
 	// Bottom part of panel
 	ui_controls_clock_panel_btm_part();
 
