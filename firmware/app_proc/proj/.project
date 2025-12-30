@@ -1092,11 +1092,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/ui_lib/keypad/c_keypad.c</locationURI>
 		</link>
 		<link>
-			<name>proc/lora/drivers/meshcore/repeater/repeater_main.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/drivers/meshcore/repeater/repeater_main.c</locationURI>
-		</link>
-		<link>
 			<name>proc/ui/menu/items/batt/menu_batt.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/batt/menu_batt.c</locationURI>
