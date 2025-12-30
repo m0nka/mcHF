@@ -133,7 +133,7 @@ static void ui_controls_clock_panel_show_alive(void)
 		else
 			GUI_SetColor(CLOCK_PANEL_COL);
 
-		GUI_FillRect(385, 192, 395, 198);
+		GUI_FillRect(380, 192, 390, 198);
 
 		old_blinker = tsu.dsp_blinker;
 	}
@@ -150,7 +150,7 @@ static void ui_controls_clock_panel_show_alive(void)
 	else
 		GUI_SetColor(CLOCK_PANEL_COL);
 
-	GUI_FillRect(370, 192, 380, 198);
+	GUI_FillRect(365, 192, 375, 198);
 
 	uc_keep_flag = !uc_keep_flag;
 }

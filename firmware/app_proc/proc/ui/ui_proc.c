@@ -931,7 +931,7 @@ static void ui_proc_periodic(void)
 extern TaskHandle_t hUiTask;
 void ui_proc_power_cleanup(void)
 {
-	// Cleare screen
+	// Clear screen
 	GUI_SetBkColor(GUI_BLACK);
 	GUI_Clear();
 	GUI_Exec();
@@ -939,7 +939,11 @@ void ui_proc_power_cleanup(void)
 	// Show text
 	GUI_SetColor(GUI_WHITE);
 	GUI_SetFont(&GUI_Font32B_1);
+	#ifndef PCB_V9_REV_A
 	GUI_DispStringAt("Good bye!", 350, 200);
+	#else
+	GUI_DispStringAt("Good bye!", 325, 215);
+	#endif
 	GUI_Exec();
 }
 

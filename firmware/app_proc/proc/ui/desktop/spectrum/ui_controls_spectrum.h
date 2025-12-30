@@ -29,7 +29,11 @@
 //
 #define BAND_GUIDE_LEFT_LABLE_X		((SW_FRAME_X +                  0) +  20)
 #define BAND_GUIDE_MIDP_LABLE_X		((SW_FRAME_X + SPECTRUM_MID_POINT) - 250)
+#ifndef PCB_V9_REV_A
 #define BAND_GUIDE_RIGH_LABLE_X		((SW_FRAME_X +                854) - 150)
+#else
+#define BAND_GUIDE_RIGH_LABLE_X		((SW_FRAME_X +                800) - 150)
+#endif
 //
 #define BAND_GUIDE_LEFT_LABLE_Y		(SCOPE_Y + 70)
 #define BAND_GUIDE_MIDP_LABLE_Y		(SCOPE_Y + 20)

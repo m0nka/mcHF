@@ -79,6 +79,9 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate1[] =
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT2,		305,	110,	125, 			30,  				0, 		0x0,	0 },
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT3,		450,	110,	125, 			30,  				0, 		0x0,	0 },
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT4,		595,	110,	125, 			30,  				0, 		0x0,	0 },
+	// Misc values
+	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT5,		10,		170,	125, 			30,  				0, 		0x0,	0 },
+	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT6,		155,	170,	125, 			30,  				0, 		0x0,	0 },
 
 	{ BUTTON_CreateIndirect, 	"Shutdown",	ID_BUTTON_SHUTDOWN,	20, 	350, 	120, 			45, 				0, 		0x0, 	0 },
 };
@@ -189,6 +192,15 @@ static int menu_batt_ShowMessageBox(WM_HWIN hWin, const char* pTitle, const char
 	r = GUI_ExecCreatedDialog(hFrame);
 
 	return r;
+}
+
+static void menu_bms_edit_look(WM_HWIN hEdit)
+{
+	TEXT_SetFont(hEdit,&GUI_Font16B_1);
+	//TEXT_SetBkColor(hEdit, GUI_WHITE);
+	TEXT_SetTextColor(hEdit, GUI_DARKBLUE);
+	TEXT_SetTextAlign(hEdit, TEXT_CF_HCENTER|TEXT_CF_VCENTER);
+	//TEXT_SetText(hEdit, "== test ==");
 }
 
 static void UpdateMonitorFrame(WM_HWIN hDlg)
@@ -627,42 +639,11 @@ static void _cbSettingsControl(WM_MESSAGE * pMsg, int Id, int NCode)
 //
 static void _cbDialog1(WM_MESSAGE * pMsg)
 {
-#if 0
-  char       acBuffer[32];
-  int        NCode;
-  int        Id;
-  static int Time;
-
-  switch (pMsg->MsgId) {
-  case WM_PAINT:
-    GUI_SetTextMode(GUI_TM_TRANS);
-    GUI_SetColor(GUI_BLACK);
-    GUI_SetFont(&GUI_Font13B_1);
-    if (Time) {
-      sprintf(acBuffer, "System time: %d", Time);
-      GUI_DispStringAt(acBuffer, 5, 60);
-    }
-    break;
-  case WM_NOTIFY_PARENT:
-    NCode = pMsg->Data.v;
-    Id = WM_GetId(pMsg->hWinSrc);
-    if (NCode == WM_NOTIFICATION_RELEASED) {
-      switch (Id) {
-      case GUI_ID_BUTTON0:
-        Time = GUI_GetTime();
-        break;
-      }
-    }
-    WM_InvalidateWindow(pMsg->hWin);
-    break;
-  default:
-    WM_DefaultProc(pMsg);
-  }
-#else
 	WM_HWIN 	hItem, hEdit;
 	int 		Id, NCode;
 	//GUI_RECT	Rect;
 	WM_HWIN hDlg;
+	int i;
 
 	hDlg = pMsg->hWin;
 
@@ -696,42 +677,22 @@ static void _cbDialog1(WM_MESSAGE * pMsg)
 			HEADER_AddItem(hItem,  20, "", 			14);
 			HEADER_AddItem(hItem, 125, "CELL5", 	14);
 
-			#if 0
-			for (int i = 0; i < 24; i++)
+			// Cell params
+			for(i = 0; i < 5; i++)
 			{
 				hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_TEXT0 + i);
-
-				if(i < 20)
-					TEXT_SetFont(hItem,&GUI_Font13B_1);
-				else
-					TEXT_SetFont(hItem,&GUI_Font20B_1);
-
-				TEXT_SetBkColor(hItem,GUI_LIGHTBLUE);
-				TEXT_SetTextColor(hItem,GUI_WHITE);
-				TEXT_SetTextAlign(hItem,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
-
-				if(i < 20)
-				{
-					hEdit = WM_GetDialogItem(hDlg, GUI_ID_EDIT0 + i);
-					EDIT_SetFont(hEdit,&GUI_Font20B_1);
-					EDIT_SetBkColor(hEdit,EDIT_CI_ENABLED,GUI_LIGHTBLUE);
-					EDIT_SetTextColor(hEdit,EDIT_CI_ENABLED,GUI_WHITE);
-					EDIT_SetTextAlign(hEdit,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
-				}
+				menu_bms_edit_look(hItem);
 			}
-			#else
-			for (int i = 0; i < 5; i++)
-			{
-				hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_TEXT0 + i);
 
-				TEXT_SetFont(hItem,&GUI_Font16B_1);
-				//TEXT_SetBkColor(hItem, GUI_WHITE);
-				TEXT_SetTextColor(hItem, GUI_DARKBLUE);
-				TEXT_SetTextAlign(hItem, TEXT_CF_HCENTER|TEXT_CF_VCENTER);
-				//TEXT_SetText(hItem, "== test ==");
-			}
-			#endif
 			UpdateMonitorFrame(hDlg);
+
+			hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_TEXT5);
+			menu_bms_edit_look(hItem);
+			TEXT_SetText(hItem, "Pack: 20.02V");
+			//
+			hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_TEXT6);
+			menu_bms_edit_look(hItem);
+			TEXT_SetText(hItem, "Current: 200mA");
 
 			#if 0
 			hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_SLIDER0);
@@ -807,7 +768,6 @@ static void _cbDialog1(WM_MESSAGE * pMsg)
 			WM_DefaultProc(pMsg);
 			break;
 	}
-#endif
 }
 
 //
@@ -996,8 +956,8 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 		    hDialog = GUI_CreateDialogBox(_aDialogCreate1, GUI_COUNTOF(_aDialogCreate1), _cbDialog1, WM_UNATTACHED, 0, 0);
 		    MULTIPAGE_AddPage(hMulti, hDialog, "Monitor");
 
-		    hDialog = GUI_CreateDialogBox(_aDialogCreate2, GUI_COUNTOF(_aDialogCreate2), _cbDialog2, WM_UNATTACHED, 0, 0);
-		    MULTIPAGE_AddPage(hMulti, hDialog, "Calibration");
+		    //hDialog = GUI_CreateDialogBox(_aDialogCreate2, GUI_COUNTOF(_aDialogCreate2), _cbDialog2, WM_UNATTACHED, 0, 0);
+		    //MULTIPAGE_AddPage(hMulti, hDialog, "Calibration");
 
 		    hDialog = GUI_CreateDialogBox(_aDialogCreate3, GUI_COUNTOF(_aDialogCreate3), _cbDialog3, WM_UNATTACHED, 0, 0);
 		    MULTIPAGE_AddPage(hMulti, hDialog, "Charger");
