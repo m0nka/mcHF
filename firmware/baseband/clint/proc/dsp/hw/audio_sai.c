@@ -1,14 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #include "mchf_board.h"
 

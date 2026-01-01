@@ -1,14 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:                                                                       **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #ifndef __STORAGE_PROC_H
 #define __STORAGE_PROC_H
