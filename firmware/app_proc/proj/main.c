@@ -42,6 +42,7 @@ TaskHandle_t 							hAppTask	= NULL;
 //osMessageQId 							hDspMessage;
 //#endif
 
+xQueueHandle 							xBmsRxQueue;
 APPLOADER_QUEUE_PARAMETERS 				pxAppLoaderParameters;
 
 // Combined LCD/Touch reset flag
@@ -213,6 +214,9 @@ static int start_proc(void)
 
     pxAppLoaderParameters.ulTasksStatus 			= 0;	// nothing running
 
+    // BMS messaging
+    xBmsRxQueue = xQueueCreate(APP_LOADER_QUEUE_SIZE,(unsigned portCHAR)sizeof(ulong));
+
 	#ifdef CONTEXT_VIDEO
 	res = xTaskCreate(	(TaskFunction_t)ui_proc_task,\
 						UI_PROC_START_NAME,\
@@ -308,7 +312,7 @@ static int start_proc(void)
     res = xTaskCreate(	(TaskFunction_t)bms_proc_task,\
     					BMS_PROC_START_NAME,\
 						BMS_PROC_STACK_SIZE,\
-						NULL,\
+						(void *)&xBmsRxQueue,\
 						BMS_PROC_PRIORITY,\
 						NULL);
 

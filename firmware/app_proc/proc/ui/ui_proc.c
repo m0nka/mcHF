@@ -670,15 +670,15 @@ static void ui_proc_change_mode(void)
 		// Switch to menu mode
 		case MODE_MENU:
 		{
-			printf("Entering Menu mode...\r\n");
+			//printf("Entering Menu mode...\r\n");
 
 			// Destroy desktop controls
 			ui_controls_volume_quit();
 			ui_controls_clock_panel_quit();
 			ui_controls_spectrum_quit();
-#ifdef DESKTOP_SHOW_FREQUENCY
+			#ifdef DESKTOP_SHOW_FREQUENCY
 			ui_controls_frequency_quit();
-#endif
+			#endif
 
 			#ifdef DESKTOP_SHOW_SMETER
 			ui_controls_smeter_quit();
@@ -787,7 +787,7 @@ static void ui_proc_change_mode(void)
 		// Switch to desktop mode
 		case MODE_DESKTOP:
 		{
-			printf("Entering Desktop mode...\r\n");
+			//printf("Entering Desktop mode...\r\n");
 
 			// Destroy any Window Manager items
 			ui_menu_destroy();

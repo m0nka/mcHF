@@ -34,6 +34,8 @@ extern struct 	BMSState				bmss;
 // Menu layout definitions from Flash
 extern const struct UIMenuLayout menu_layout[];
 
+extern xQueueHandle xBmsRxQueue;
+
 static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos);
 static void KillBatt(void);
 
@@ -80,8 +82,10 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate1[] =
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT3,		450,	110,	125, 			30,  				0, 		0x0,	0 },
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT4,		595,	110,	125, 			30,  				0, 		0x0,	0 },
 	// Misc values
-	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT5,		10,		170,	125, 			30,  				0, 		0x0,	0 },
-	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT6,		155,	170,	125, 			30,  				0, 		0x0,	0 },
+	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT5,		10,		160,	170, 			30,  				0, 		0x0,	0 },
+	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT6,		190,	160,	170, 			30,  				0, 		0x0,	0 },
+	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT7,		370,	160,	170, 			30,  				0, 		0x0,	0 },
+	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT8,		550,	160,	170, 			30,  				0, 		0x0,	0 },
 
 	{ BUTTON_CreateIndirect, 	"Shutdown",	ID_BUTTON_SHUTDOWN,	20, 	350, 	120, 			45, 				0, 		0x0, 	0 },
 };
@@ -196,11 +200,49 @@ static int menu_batt_ShowMessageBox(WM_HWIN hWin, const char* pTitle, const char
 
 static void menu_bms_edit_look(WM_HWIN hEdit)
 {
-	TEXT_SetFont(hEdit,&GUI_Font16B_1);
-	//TEXT_SetBkColor(hEdit, GUI_WHITE);
-	TEXT_SetTextColor(hEdit, GUI_DARKBLUE);
+	TEXT_SetFont(hEdit,&GUI_Font20_1);
+	TEXT_SetTextColor(hEdit, GUI_BLACK);
+	TEXT_SetTextAlign(hEdit, TEXT_CF_HCENTER|TEXT_CF_VCENTER);
+}
+
+static void menu_bms_edit_look_a(WM_HWIN hEdit)
+{
+	TEXT_SetFont(hEdit,&GUI_Font24B_ASCII);
+	TEXT_SetBkColor(hEdit, GUI_DARKCYAN);
+	TEXT_SetTextColor(hEdit, GUI_WHITE);
 	TEXT_SetTextAlign(hEdit, TEXT_CF_HCENTER|TEXT_CF_VCENTER);
 	//TEXT_SetText(hEdit, "== test ==");
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : file_b_send_msg
+//* Object              : Send message to queue
+//* Input Parameters    : none
+//* Output Parameters   : none
+//* Functions called    : none
+//*----------------------------------------------------------------------------
+static uchar menu_batt_send_msg(xQueueHandle pvQueueHandle, ulong *ulMessageBuffer, uchar ucNumberOfItems)
+{
+	ulong ulDummy;
+	uchar ucCount;
+
+	/* Clear Rx Queue before posting */
+	while( uxQueueMessagesWaiting(pvQueueHandle))
+	{
+		xQueueReceive(pvQueueHandle, (void *)&ulDummy, (portTickType)0);
+	}
+
+	/* Send all items */
+	for(ucCount = 0;ucCount < ucNumberOfItems;ucCount++)
+	{
+    	ulDummy = *ulMessageBuffer++;
+
+	    /* Insert the item */
+		if(xQueueSend(pvQueueHandle, (void *)&ulDummy, (portTickType)0) != pdPASS )
+			return 1;
+	}
+
+	return 0;
 }
 
 static void UpdateMonitorFrame(WM_HWIN hDlg)
@@ -208,68 +250,13 @@ static void UpdateMonitorFrame(WM_HWIN hDlg)
 	#ifdef CONTEXT_BMS
 	int i;
 	char buf[40];
+	WM_HWIN hItem, hHeader;
+	ulong perc_val;
 
 	if(!bmss.rr)
 		return;
 
 	//printf("ui update\r\n");
-
-	#if 0
-	WM_HWIN hEdit;
-	for(i = 0; i < 16; i++)
-	{
-		hEdit = WM_GetDialogItem(hDlg, GUI_ID_EDIT0 + i);
-
-		//sprintf(buf, "%d.%dV", bmss.a[i]/1000, (bmss.a[i]%1000)/10);
-		if(i < 4)
-			sprintf(buf, "%d", bmss.a[i]);
-		else if(i < 8)
-			sprintf(buf, "%d", bmss.s[i - 4]);
-		else if(i < 12)
-			sprintf(buf, "%d", bmss.c[i - 8]);
-		else
-			sprintf(buf, "%d.%02dV", bmss.c[i - 12]/1000, (bmss.c[i - 12]%1000)/10);
-
-		EDIT_SetText(hEdit, buf);
-	}
-
-	// Charger voltage
-	hEdit = WM_GetDialogItem(hDlg, GUI_ID_EDIT0 + i);
-	sprintf(buf, "%d", bmss.chgr);
-	EDIT_SetText(hEdit, buf);
-	i++;
-
-	// Load voltage
-	hEdit = WM_GetDialogItem(hDlg, GUI_ID_EDIT0 + i);
-	sprintf(buf, "%d", bmss.load);
-	EDIT_SetText(hEdit, buf);
-	i++;
-
-	// Current draw
-	hEdit = WM_GetDialogItem(hDlg, GUI_ID_EDIT0 + i);
-	sprintf(buf, "%d", bmss.curr);
-	EDIT_SetText(hEdit, buf);
-	i++;
-
-	total_error += bmss.t_err;
-
-	// Accum measurement error
-	hEdit = WM_GetDialogItem(hDlg, GUI_ID_EDIT0 + i);
-	sprintf(buf, "%d", total_error);
-	EDIT_SetText(hEdit, buf);
-	i++;
-
-	// Temperature
-	for(i = 0; i < 4; i++)
-	{
-		hEdit = WM_GetDialogItem(hDlg, GUI_ID_TEXT0 + i + 20);
-
-		sprintf(buf, "%2d.%02dC", bmss.t[i]/100, bmss.t[i]%100);
-		TEXT_SetText(hEdit, buf);
-	}
-	#else
-	WM_HWIN hItem, hHeader;
-	ulong perc_val;
 
 	hHeader = WM_GetDialogItem(hDlg, ID_HEADER_0);
 	HEADER_SetItemText(hHeader, 0, "CELL1");
@@ -279,7 +266,7 @@ static void UpdateMonitorFrame(WM_HWIN hDlg)
 	HEADER_SetItemText(hHeader, 8, "CELL5");
 
 	if(bmss.run_on_dc == 0)
-		HEADER_SetTextColor(hHeader, GUI_BLUE);
+		HEADER_SetTextColor(hHeader, GUI_ORANGE);
 	else
 		HEADER_SetTextColor(hHeader, GUI_MAGENTA);
 
@@ -302,16 +289,38 @@ static void UpdateMonitorFrame(WM_HWIN hDlg)
 		hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT0 + i);
 		sprintf(buf, "%d.%02dV - %2d.%02dC", (int)(bmss.c[i]/1000), (int)((bmss.c[i]%1000)/10), (int)(bmss.t[i]/100), (int)(bmss.t[i]%100));
 		TEXT_SetText(hItem, buf);
-		TEXT_SetTextColor(hItem, GUI_DARKBLUE);
+		//TEXT_SetTextColor(hItem, GUI_DARKBLUE);
 
 		// Show balancer state
-		if((bmss.run_on_dc == 0))//&&(bmss.usBalID[i] == 1))
-		{
-			TEXT_SetTextColor(hItem, GUI_LIGHTRED);
-			HEADER_SetItemText(hHeader, (i*2), "LOADED");
-		}
+		//if(bmss.run_on_dc == 0)
+		//{
+			//TEXT_SetTextColor(hItem, GUI_LIGHTRED);
+			//HEADER_SetItemText(hHeader, (i*2), "LOADED");
+		//}
 	}
-	#endif
+
+	// Show pack voltage
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT0 + 5);
+	sprintf(buf, "Pack: %dmV", (int)bmss.pack_v);
+	TEXT_SetText(hItem, buf);
+
+	// Show current
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT0 + 6);
+	sprintf(buf, "Curr: %dmA", bmss.curr);
+	TEXT_SetText(hItem, buf);
+
+	// Show SOC
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT0 + 7);
+	sprintf(buf, "SOC:  %d%%", bmss.perc);
+	TEXT_SetText(hItem, buf);
+
+	// Show Minutes
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT0 + 8);
+	if((bmss.mins/60) > 99)
+		sprintf(buf, "Time: %2dh", bmss.mins/60);
+	else
+		sprintf(buf, "Time: %2dh%2dm", bmss.mins/60, bmss.mins%60);
+	TEXT_SetText(hItem, buf);
 
 	// Clear update flag
 	bmss.rr = 0;
@@ -644,6 +653,7 @@ static void _cbDialog1(WM_MESSAGE * pMsg)
 	//GUI_RECT	Rect;
 	WM_HWIN hDlg;
 	int i;
+	ulong 			ulData[10];
 
 	hDlg = pMsg->hWin;
 
@@ -678,21 +688,27 @@ static void _cbDialog1(WM_MESSAGE * pMsg)
 			HEADER_AddItem(hItem, 125, "CELL5", 	14);
 
 			// Cell params
-			for(i = 0; i < 5; i++)
+			for(i = 0; i < 9; i++)
 			{
 				hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_TEXT0 + i);
-				menu_bms_edit_look(hItem);
+
+				if(i < 5)
+					menu_bms_edit_look(hItem);
+				else
+					menu_bms_edit_look_a(hItem);
 			}
 
 			UpdateMonitorFrame(hDlg);
 
+			/*
 			hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_TEXT5);
 			menu_bms_edit_look(hItem);
-			TEXT_SetText(hItem, "Pack: 20.02V");
+			//TEXT_SetText(hItem, "Pack: 20.02V");
 			//
 			hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_TEXT6);
 			menu_bms_edit_look(hItem);
-			TEXT_SetText(hItem, "Current: 200mA");
+			//TEXT_SetText(hItem, "Current: 200mA");
+			*/
 
 			#if 0
 			hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_SLIDER0);
@@ -710,6 +726,10 @@ static void _cbDialog1(WM_MESSAGE * pMsg)
 			//PROGBAR_SetValue(hItem, 80);
 			//hItem = WM_GetDialogItem(pMsg->hWin, ID_PROGBAR_0 + 3);
 			//PROGBAR_SetValue(hItem, 100);
+
+			// Unlock BMS
+			ulData[0] = 0x27;
+			menu_batt_send_msg(xBmsRxQueue, ulData, 1);
 
 			//hTimerWiFi = WM_CreateTimer(pMsg->hWin, 0, WIFI_TIMER_RESOLUTION, 0);
 			break;
@@ -1026,6 +1046,12 @@ use_const_decl:
 
 static void KillBatt(void)
 {
+	ulong ulData[10];
+
+	// Lock BMS
+	ulData[0] = 0x2A;
+	menu_batt_send_msg(xBmsRxQueue, ulData, 1);
+
 	//printf("kill menu\r\n");
 	GUI_EndDialog(hMulti,   0);
 	GUI_EndDialog(hBdialog, 0);

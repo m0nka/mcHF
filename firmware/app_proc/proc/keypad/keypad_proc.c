@@ -692,7 +692,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		if(!hold)
 		{
 			printf("F5->QuickLog\r\n");
-			GUI_StoreKeyMsg('L', 1);
+			//GUI_StoreKeyMsg('L', 1);
 		}
 		else
 			printf("F5 hold\r\n");

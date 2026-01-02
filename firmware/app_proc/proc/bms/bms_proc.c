@@ -21,7 +21,9 @@
 #include "bms_proc.h"
 
 struct BMSState	bmss;
-//uchar bms_early_init_done = 0;
+
+// System timer
+extern ulong epoch;
 
 // ToDo: reuse for PA temperature protection
 #if 0
@@ -88,6 +90,26 @@ static void bms_proc_power_off(void)
    	}
 }
 
+static void bms_proc_shutdown(void)
+{
+	if(!bmss.shutdown_req)
+		return;
+
+	#if 1
+	//
+	// Will nuke all permanent data in backup RAM/GPS as
+	// this will disconnect discharge MOSFET !!!
+	//
+	if(!(bmss.bms_unlock_state))
+		bq40z80_unseal();		// unlock MAC access
+
+	bq40z80_shutdown();			// shutdown safely
+	//
+	#endif
+
+	bmss.shutdown_req = 0;
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : bms_proc_pins_init
 //* Object              :
@@ -138,7 +160,8 @@ void bms_proc_hw_init(void)
 //*----------------------------------------------------------------------------
 void bms_proc_power_cleanup(void)
 {
-	// ToDo: what cleanup is needed ?
+	// Lock the BMS
+	bq40z80_seal();
 }
 
 //*----------------------------------------------------------------------------
@@ -164,6 +187,31 @@ uchar bms_proc_is_charging(ushort status)
 		return 0;
 }
 
+//*--------------------------------------------------------------------------------------
+//* Function Name       : bms_proc_wait_msg
+//* Object              : Read pending messages
+//* Input Parameters    : Rx Queue ptr and items buffer
+//* Output Parameters   : none.
+//*--------------------------------------------------------------------------------------
+static uchar bms_proc_wait_msg(xQueueHandle pRxQueue, ulong *ulQueueBuffer)
+{
+	uchar ucNext = 0;
+
+	if(pRxQueue == NULL)
+		return 0;
+
+	*ulQueueBuffer = 0;
+	while(uxQueueMessagesWaiting(pRxQueue))
+	{
+		if(xQueueReceive(pRxQueue, (ulQueueBuffer + ucNext), (portTickType)0) == pdPASS)
+		{
+			ucNext++;
+		}
+	}
+
+	return ucNext;
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : bms_proc_worker
 //* Object              :
@@ -172,34 +220,75 @@ uchar bms_proc_is_charging(ushort status)
 //* Notes    			:
 //* Context    			: CONTEXT_BMS
 //*----------------------------------------------------------------------------
-static void bms_proc_worker(void)
+static void bms_proc_worker(void const *param)
 {
-	static uchar bms_read_skip = 0;
-	ushort status = 0;
+	xQueueHandle	*RxQueue;
+	ulong 			ulRxData[10];
+	ushort 			status = 0;
 
+	//static uchar bms_unlock_stat 	= 0;
+	static uchar bms_read_skip 		= 0;
+
+	// Get rx queue ptr
+	RxQueue = (xQueueHandle *)param;
+
+	// Any requests, by anyone ?
+	if(bms_proc_wait_msg(*RxQueue, ulRxData) > 0)
+	{
+		// Process message request
+		switch(ulRxData[0])
+		{
+			case 0x27:
+			{
+				//printf("unlock\r\n");
+				if(!bq40z80_unseal())
+				{
+					bmss.bms_unlock_state = 1;
+				}
+
+				break;
+			}
+
+			case 0x2A:
+			{
+				//printf("lock\r\n");
+				if(!bq40z80_seal())
+				{
+					bmss.bms_unlock_state = 0;
+				}
+
+				break;
+			}
+
+			default:
+				break;
+		}
+	}
+
+	// Handle power off
 	bms_proc_power_off();
 
 	// We need to power off the BMS before cell removal
-	if(bmss.shutdown_req)
-	{
-		#if 1
-		//
-		// Will nuke all permanent data in backup RAM/GPS as
-		// this will disconnect discharge MOSFET !!!
-		//
-		bq40z80_unseal();		// unlock MAC access
-		bq40z80_shutdown();		// shutdown safely
-		//
-		#endif
-
-		bmss.shutdown_req = 0;
-	}
+	bms_proc_shutdown();
 
 	// Read status bits
 	status = bq40z80_read_status();
 
 	// Decide if batteries are charging
 	bmss.charger_on = bms_proc_is_charging(status);
+
+	// Read cell status
+	if(bmss.bms_unlock_state)
+	{
+		// Read cell status
+		bq40z80_read_da_status();
+
+		// Get pack voltage
+		bmss.pack_v = bq40z80_read_pack_voltage();
+
+		// Enforce faster read interval(when in BMS menu)
+		bms_read_skip = 0;
+	}
 
 	// Slow local update of BMS params
 	if(bms_read_skip == 0)
@@ -209,12 +298,11 @@ static void bms_proc_worker(void)
 
 		// Decide if we run on USB voltage based on BMS
 		// current draw from the battery pack
-		if(bq40z80_read_current() > PACK_CURR_THRSH)
+		bmss.curr = bq40z80_read_current();
+		if(bmss.curr > PACK_CURR_THRSH)
 			bmss.run_on_dc = 1;
 		else
 			bmss.run_on_dc = 0;
-
-		bq40z80_read_da_status();
 	}
 
 	bms_read_skip++;
@@ -235,9 +323,11 @@ void bms_proc_task(void const *arg)
 	vTaskDelay(BMS_PROC_START_DELAY);
 	printf("start\r\n");
 
-	bmss.charger_on 	= 0;
-	bmss.run_on_dc		= 0;
-	bmss.shutdown_req 	= 0;
+	// Init publics
+	bmss.charger_on 		= 0;
+	bmss.run_on_dc			= 0;
+	bmss.shutdown_req 		= 0;
+	bmss.bms_unlock_state	= 0;
 
 	// Detect BMS chip
 	bq40z80_init();
@@ -245,7 +335,7 @@ void bms_proc_task(void const *arg)
 bms_proc_loop:
 
 	// Process
-	bms_proc_worker();
+	bms_proc_worker(arg);
 
 	vTaskDelay(BMS_PROC_SLEEP_TIME);
 	goto bms_proc_loop;

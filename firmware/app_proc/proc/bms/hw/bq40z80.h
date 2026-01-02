@@ -20,11 +20,16 @@ uchar bq40z80_write_16bit_reg(uchar reg, ushort val);
 uchar bq40z80_read_16bit_reg(uchar reg, ushort *val);
 
 uchar bq40z80_shutdown(void);
+
 uchar bq40z80_unseal(void);
+uchar bq40z80_seal(void);
+
 uchar bq40z80_read_fw_ver(void);
 
 uchar bq40z80_read_soc(void);
 ushort bq40z80_read_runtime(void);
+
+ushort bq40z80_read_pack_voltage(void);
 
 ushort bq40z80_read_status(void);
 short bq40z80_read_current(void);

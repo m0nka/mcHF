@@ -19,57 +19,29 @@
 
 __attribute__((__common__)) struct BMSState {
 
-	//ulong a[10];	// adc channel voltage
-	//ulong s[5];		// branch voltage
-	ulong c[5];		// calculated cell voltage
-	//ulong e[5];		// channel errors, accumulated
-	ulong t[5];		// cell temperature
+	// read cell voltage
+	ulong c[5];
 
-	//ulong ba[5];	// balancer accumulator
+	// read cell temperature
+	ulong t[5];
 
-	//ulong k[4];
-	//ulong f[4];	// filtered values (long averaging)
-
-	//ulong chgr;
-	//ulong load;
-	//ulong curr;
-
-	//ulong t_err;	// total error, last cycle
-
-	//ulong ulCH1;
-	//ulong ulCH2;
-	//ulong ulCH3;
-	//ulong ulCH4;
-	//ulong ulCH5;
-	//ulong ulCH6;
-	//ulong ulCH8;
-	//ulong ulCH9;
-	//ulong ulCH10;
-	//ulong ulCH11;
-
-	//ulong usBalID[4];
-	//ulong usCV[4];
-	//ulong usChargeValue;
-	//ulong usLoadValue;
-
-	//short cal_adc[10];	// calibration value for ADC mV trimming
-	//short cal_res[10];	// calibration value for resistor divider trimming
-
-	//short vref;
+	short curr;
+	ulong pack_v;
 
 	// Reading ready
 	uchar rr;
 
-	//uchar lac;		// filter lenght
-
-	uchar perc;			// % value of SOC left
+	// % value of SOC left
+	uchar  perc;
 	ushort mins;
 
 	uchar charger_on;
-	//uchar h_prot_on;
 	uchar run_on_dc;
 
 	uchar shutdown_req;
+
+	// Seal/Unseal status
+	uchar bms_unlock_state;
 
 } BMSState;
 

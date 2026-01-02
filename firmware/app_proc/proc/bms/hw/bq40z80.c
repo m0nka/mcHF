@@ -214,7 +214,24 @@ uchar bq40z80_unseal(void)
 	if(bq40z80_write_16bit_reg(0x00, 0x3672) != 0)
 		return 2;
 
-	printf("== unseal cmd ok == \r\n");
+	//printf("== unseal cmd ok == \r\n");
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_seal
+//* Object              :
+//* Notes    			: lock bms
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_seal(void)
+{
+	if(bq40z80_write_16bit_reg(0x00, 0x0030) != 0)
+		return 1;
+
+	//printf("== seal cmd ok == \r\n");
 	return 0;
 }
 
@@ -321,6 +338,22 @@ ushort bq40z80_read_runtime(void)
 		return 0;
 
 	return 0xFFFF;
+}
+
+ushort bq40z80_read_pack_voltage(void)
+{
+	ushort volt;
+
+	if(!bms_loc_init)
+		return 0;
+
+	if(bq40z80_read_16bit_reg(0x09, &volt) == 0)
+	{
+		//printf("pack: %dmV \r\n", volt);
+		return volt;
+	}
+
+	return 0;
 }
 
 //*----------------------------------------------------------------------------
