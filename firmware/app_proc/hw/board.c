@@ -13,6 +13,7 @@
 #include "mchf_pro_board.h"
 #include "main.h"
 
+#include "board.h"
 #include "sdram.h"
 
 #define PWR_CFG_SMPS    0xCAFECAFE
@@ -623,3 +624,261 @@ void CPU_CACHE_Enable(void)
 	/* Enable D-Cache */
 	SCB_EnableDCache();
 }
+
+static void bsp_backlight_init(void)
+{
+	  GPIO_InitTypeDef  gpio_init_structure;
+
+	  /* LCD_BL_CTRL GPIO configuration */
+	  //LCD_BL_CTRL_GPIO_CLK_ENABLE();
+
+	  gpio_init_structure.Pin       = LCD_BL_CTRL_PIN;
+	  gpio_init_structure.Mode      = GPIO_MODE_OUTPUT_PP;
+	  gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
+
+	  HAL_GPIO_Init(LCD_BL_CTRL_GPIO_PORT, &gpio_init_structure);
+
+	  /* Assert back-light LCD_BL_CTRL pin */
+	  //HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+}
+
+#ifdef CONTEXT_ICC
+// M4 core Keyer IRQ setup
+static void EXTI23_IRQHandler_Config(void)
+{
+	GPIO_InitTypeDef   GPIO_InitStructure;
+
+	// Configure PC.13 pin as the EXTI input event line in interrupt mode for both CPU1 and CPU2
+	GPIO_InitStructure.Mode 	= GPIO_MODE_IT_FALLING;
+	GPIO_InitStructure.Pull 	= GPIO_PULLUP;
+	GPIO_InitStructure.Speed 	= GPIO_SPEED_FREQ_VERY_HIGH;
+
+	GPIO_InitStructure.Pin 		= PADDLE_DIT_PIN;
+	HAL_GPIO_Init(PADDLE_DIT_PORT, &GPIO_InitStructure);
+
+	GPIO_InitStructure.Pin 		= PADDLE_DAH;
+	HAL_GPIO_Init(PADDLE_DAH_PIO, &GPIO_InitStructure);
+
+	// Configure the second CPU (CM4) EXTI line for IT
+	HAL_EXTI_D2_EventInputConfig(EXTI_LINE2 , EXTI_MODE_IT,  ENABLE);
+	HAL_EXTI_D2_EventInputConfig(EXTI_LINE3 , EXTI_MODE_IT,  ENABLE);
+}
+#endif
+
+// 5V, 8V
+static void power_cntr_init(void)
+{
+	GPIO_InitTypeDef  gpio_init_structure;
+
+	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	gpio_init_structure.Pull  = GPIO_PULLDOWN;
+	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
+
+	// Not needed because of RF board power mod!
+	#if 0
+	// -----------------------------------------------------
+	// -----------------------------------------------------
+	// When no batteries installed, there will be missing
+	// LOAD_16V rail. We need to test and enable the charging
+	// regulator (BMS should do that!!!)
+	//
+	// Temporary put it on, for testing, but with batteries
+	// has to be removed !!!
+	//
+	// CHGR_ON is PD4, active low
+	gpio_init_structure.Pin   = GPIO_PIN_4;
+	HAL_GPIO_Init(GPIOD, &gpio_init_structure);
+	// ON
+	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_RESET);
+	printf("######## CHARGER IS ON !!! ########\r\n");
+	// -----------------------------------------------------
+	// -----------------------------------------------------
+	#endif
+
+	// 5V on is PG10
+	gpio_init_structure.Pin   = VCC_5V_ON;
+	HAL_GPIO_Init(VCC_5V_ON_PORT, &gpio_init_structure);
+
+	// 5V ON on start
+	#if 0
+	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, GPIO_PIN_RESET);
+	#else
+	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, GPIO_PIN_SET);
+	#endif
+
+	#if 0
+	// 8V on is PG9
+	gpio_init_structure.Pin   = GPIO_PIN_9;
+	HAL_GPIO_Init(GPIOG, &gpio_init_structure);
+	// 8V ON on start (actually 6V after mod)
+	HAL_GPIO_WritePin(GPIOG, GPIO_PIN_9, GPIO_PIN_RESET);
+	#endif
+}
+
+// Via stop mode
+void bsp_power_off(void)
+{
+	//printf("power off in\r\n");
+
+	// Stop all repaints
+	#ifdef CONTEXT_VIDEO
+	ui_proc_power_cleanup();
+	#endif
+
+	// Safely stop OS
+	portDISABLE_INTERRUPTS();
+
+	// Tasks hw cleanup
+	audio_proc_power_cleanup();
+	band_proc_power_cleanup();
+	#ifdef CONTEXT_ROTARY
+	rotary_proc_power_cleanup();
+	#endif
+	touch_proc_power_cleanup();
+	trx_proc_power_clean_up();
+	vfo_proc_power_cleanup();
+	radio_init_save_before_off();
+	#ifdef CONTEXT_BMS
+	bms_proc_power_cleanup();
+	#endif
+	#ifdef CONTEXT_LORA
+	lora_proc_power_cleanup();
+	#endif
+
+	HAL_Delay(3000);
+
+	#if 0
+	// Enter reason for reset, so the bootloader doesn't power back on the radio
+	WRITE_REG(BKP_REG_RESET_REASON, RESET_POWER_OFF);
+	HAL_PWR_DisableBkUpAccess();
+	// Restart to bootloader
+	NVIC_SystemReset();
+	#else
+	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+	LL_GPIO_ResetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
+	#endif
+}
+
+static void ptt_init(void)
+{
+	GPIO_InitTypeDef  gpio_init_structure;
+
+	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	gpio_init_structure.Pull  = GPIO_NOPULL;
+	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
+
+	// PTT line
+	gpio_init_structure.Pin   = PTT_PIN;
+	HAL_GPIO_Init(PTT_PIN_PORT, &gpio_init_structure);
+
+	// RX on start
+	HAL_GPIO_WritePin(PTT_PIN_PORT, PTT_PIN, GPIO_PIN_RESET);
+}
+
+static void power_led_init(void)
+{
+	GPIO_InitTypeDef  gpio_init_structure;
+
+	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	gpio_init_structure.Pull  = GPIO_NOPULL;
+	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
+
+	// PTT line
+	gpio_init_structure.Pin   = ON_LED;
+	HAL_GPIO_Init(ON_LED_PORT, &gpio_init_structure);
+
+	// On
+	HAL_GPIO_WritePin(ON_LED_PORT, ON_LED, GPIO_PIN_SET);
+}
+
+void bsp_hold_power(void)
+{
+#if 0
+	GPIO_InitTypeDef  GPIO_InitStruct;
+
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+
+	HAL_GPIO_WritePin(POWER_HOLD_PORT,POWER_HOLD, 1);	// hold power
+
+	GPIO_InitStruct.Pin   = POWER_HOLD;
+	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull  = GPIO_PULLDOWN;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+	HAL_GPIO_Init(POWER_HOLD_PORT, &GPIO_InitStruct);
+#else
+	LL_GPIO_InitTypeDef 		GPIO_InitStruct = {0};
+
+	// This is first ever call, so enable gpio clock
+	LL_AHB4_GRP1_EnableClock(LL_AHB4_GRP1_PERIPH_GPIOC);
+
+	// Hold the regulator line
+	LL_GPIO_SetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
+
+	GPIO_InitStruct.Pin 	= POWER_HOLD;
+	GPIO_InitStruct.Mode 	= LL_GPIO_MODE_OUTPUT;
+	GPIO_InitStruct.Pull 	= LL_GPIO_PULL_DOWN;
+	LL_GPIO_Init(POWER_HOLD_PORT, &GPIO_InitStruct);
+
+
+#endif
+}
+
+void bsp_gpio_clocks_on(void)
+{
+	// All GPIO clocks on
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+	__HAL_RCC_GPIOD_CLK_ENABLE();
+	__HAL_RCC_GPIOE_CLK_ENABLE();
+	__HAL_RCC_GPIOF_CLK_ENABLE();
+	__HAL_RCC_GPIOG_CLK_ENABLE();
+	__HAL_RCC_GPIOH_CLK_ENABLE();
+	__HAL_RCC_GPIOI_CLK_ENABLE();
+}
+
+uint8_t bsp_config(void)
+{
+	//LL_GPIO_InitTypeDef 		GPIO_InitStruct = {0};
+
+	// Enable CRC to Unlock GUI
+	__HAL_RCC_CRC_CLK_ENABLE();
+	//--MX_CRC_Init();
+
+	printf_init(1);
+	printf("---------------------------------  \r\n");
+	printf("-->%s v: %d.%d.%d\r\n", DEVICE_STRING, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE, MCHF_R_VER_BUILD);
+
+	// Useful during ushdr port
+	#ifndef REV_0_8_4_PATCH__
+	printf("== allow m4 core to take control and stall application processor == \r\n");
+	HAL_Delay(500);
+	bsp_wake_second_core();
+	while(1);
+	#endif
+
+	power_cntr_init();
+
+	power_led_init();
+
+	ptt_init();
+
+	bsp_backlight_init();
+
+	// DSP core Keyer IRQ
+	#ifdef CONTEXT_ICC
+	EXTI23_IRQHandler_Config();
+	#endif
+
+	// Task hw basic init (after LCD Reset!)
+	//--tasks_pre_os_init();
+
+	/* Print Clock configuration */
+	//printf( "== CPU running at %dMHz, Peripherals at %dMHz/%dMHz  ==\r\n" , (HAL_RCCEx_GetD1SysClockFreq()/1000000U)
+	//                                                                  	  , (HAL_RCC_GetPCLK1Freq()/1000000U)
+	//																	  , (HAL_RCC_GetPCLK2Freq()/1000000U) );
+
+	return 0;
+}
+

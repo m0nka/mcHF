@@ -23,7 +23,7 @@
 #ifndef WIN32
 #include "stm32h7xx_hal.h"
 
-#include "stm32h747i_discovery.h"
+#include "stm32h747i_discovery_errno.h"
 #include "otm8009a.h"
 #include "cmsis_os.h"
 
@@ -40,6 +40,8 @@
 #include "stm32h7xx_ll_bdma.h"
 #include "stm32h7xx_ll_spi.h"
 #include "stm32h7xx_ll_sdmmc.h"
+
+#include "board.h"
 
 /* FatFs includes component */
 #include "ff_gen_drv.h"
@@ -73,7 +75,7 @@
 #include "radio_init.h"
 #include "rtc.h"
 
-#include "bsp.h"
+//#include "bsp.h"
 #include "adc.h"
 #include "att.h"
 #include "WM.h"
@@ -152,7 +154,16 @@ struct ESPMessage {
 
 /* Exported macros -----------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void Error_Handler(int err);
+void 	NMI_Handler(void);
+void 	HardFault_Handler(void);
+void 	MemManage_Handler(void);
+void 	BusFault_Handler(void);
+void 	UsageFault_Handler(void);
+void 	SVC_Handler(void);
+void 	PendSV_Handler(void);
+void 	SysTick_Handler(void);
+
+void 	Error_Handler(int err);
 //void BSP_ErrorHandler(void);
 
 void printf_init(uchar is_shared);
