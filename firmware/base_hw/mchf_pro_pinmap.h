@@ -650,9 +650,9 @@
 // ----------------------------------------------------
 // PortA
 
-// PA0			RFM_RST, Lora driver
-#define RFM_RST							LL_GPIO_PIN_0
-#define RFM_RST_PORT					GPIOA
+// PA0			RFM_BUSY, Lora driver
+#define RFM_BUSY						LL_GPIO_PIN_0
+#define RFM_BUSY_PORT					GPIOA
 
 // PA1			ENC1_I
 #define ENC1_I							GPIO_PIN_1
@@ -663,7 +663,7 @@
 #define LORA_POWER_PORT					GPIOA
 //#define LORA_POWER_INV
 
-// PA3			RFM_DIO2, was Lora driver, now BT module power control
+// PA3			RFM_DIO2, Lora driver
 #define RFM_DIO2						GPIO_PIN_3
 #define RFM_DIO2_PORT					GPIOA
 

@@ -18,7 +18,7 @@
 
 #include "sx126x.h"
 
-static const char* TAG = "sx126x";
+//static const char* TAG = "sx126x";
 
 // Interrupt handlers
 
@@ -27,15 +27,15 @@ static void sx1262_busy_handler(void* pvParameters)
 {
     sx126x_handle_t* handle = (sx126x_handle_t*)pvParameters;
     if (handle == NULL) return;
-#if 0
-    if (gpio_get_level(handle->busy))
+
+    //if (gpio_get_level(handle->busy))
+    if(LL_GPIO_IsInputPinSet(RFM_BUSY_PORT, RFM_BUSY))
     {
         xSemaphoreTakeFromISR(handle->busy_semaphore, NULL);
     } else
     {
         xSemaphoreGiveFromISR(handle->busy_semaphore, NULL);
     }
-#endif
 }
 
 //IRAM_ATTR
@@ -55,12 +55,13 @@ static esp_err_t sx126x_busy_wait(sx126x_handle_t* handle)
 {
     if (handle == NULL)
     	return ESP_ERR_INVALID_ARG;
-#if 0
-    if(!gpio_get_level(handle->busy))
+
+    //if(!gpio_get_level(handle->busy))
+    if(!LL_GPIO_IsInputPinSet(RFM_BUSY_PORT, RFM_BUSY))
     {
         return ESP_OK;  // Don't take semaphore if not busy
     }
-#endif
+
     if(xSemaphoreTake(handle->busy_semaphore, handle->timeout) == pdTRUE) {
         return ESP_OK;
     }
@@ -652,27 +653,30 @@ esp_err_t sx126x_set_sync_word(sx126x_handle_t* handle, uint8_t sync_word) {
 
 // Public functions - management & control
 
-esp_err_t sx1262_reset(sx126x_handle_t* handle) {
-    if (handle == NULL) {
+esp_err_t sx1262_reset(sx126x_handle_t* handle)
+{
+    if (handle == NULL)
         return ESP_ERR_INVALID_ARG;
-    }
-#if 0
-    esp_err_t res = gpio_set_level(handle->reset, 0);
-    if (res != ESP_OK) {
-        return res;
-    }
+
+    //esp_err_t res = gpio_set_level(handle->reset, 0);
+    //if (res != ESP_OK) {
+    //    return res;
+    //}
+    LL_GPIO_ResetOutputPin(RFM_DIO0_PORT, RFM_DIO0);
     vTaskDelay(pdMS_TO_TICKS(10));
-    res = gpio_set_level(handle->reset, 1);
-    if (res != ESP_OK) {
-        return res;
-    }
+
+    //res = gpio_set_level(handle->reset, 1);
+    //if (res != ESP_OK) {
+    //    return res;
+    //}
+    LL_GPIO_SetOutputPin(RFM_DIO0_PORT, RFM_DIO0);
     vTaskDelay(pdMS_TO_TICKS(10));
-#endif
+
     return ESP_OK;
 }
 
-esp_err_t sx126x_init(sx126x_handle_t* handle, int spi_host_id, int nss, int reset,
-                      int dio1, int busy) {
+esp_err_t sx126x_init(sx126x_handle_t* handle, int spi_host_id, int nss, int reset, int dio1, int busy)
+{
     esp_err_t res;
 
     if (!handle)
@@ -689,7 +693,8 @@ esp_err_t sx126x_init(sx126x_handle_t* handle, int spi_host_id, int nss, int res
         vSemaphoreDelete(handle->busy_semaphore);
         return ESP_ERR_NO_MEM;
     }
-#if 0
+
+    #if 0
     spi_device_interface_config_t devcfg = {
         .command_bits   = 8,        // SX1262 uses 8-bit commands
         .clock_speed_hz = 1000000,  // SX1262 support maximum 16MHz SPI clock
@@ -735,12 +740,20 @@ esp_err_t sx126x_init(sx126x_handle_t* handle, int spi_host_id, int nss, int res
         .pull_up_en   = 1,
     };
     ESP_RETURN_ON_ERROR(gpio_config(&gpio_busy_conf), TAG, "Failed to configure busy pin");
-#endif
+
     ESP_RETURN_ON_ERROR(gpio_isr_handler_add(busy, sx1262_busy_handler, (void*)handle), TAG,
                         "Failed to add interrupt handler for busy pin");
+	#else
+    lora_gpio_init();
+    //lora_spi_init();
+	#endif
 
     handle->busy = busy;
 
+	// Lora power on
+	lora_spi_power_state(1);
+
+	// Chip reset
     res = sx1262_reset(handle);
 
     return res;
@@ -751,8 +764,8 @@ bool sx126x_is_busy(sx126x_handle_t* handle)
     if (handle == NULL)
     	return false;
 
-//!    return gpio_get_level(handle->busy) == 1;
-    return 0;
+    //return gpio_get_level(handle->busy) == 1;
+    return LL_GPIO_IsInputPinSet(RFM_BUSY_PORT, RFM_BUSY);
 }
 
 esp_err_t sx126x_irq_wait(sx126x_handle_t* handle, TickType_t timeout)
@@ -780,10 +793,10 @@ bool sx126x_get_irq_state(sx126x_handle_t* handle)
     if (handle == NULL)
     	return false;
 
-//!    int level = gpio_get_level(handle->dio1);
+    //int level = gpio_get_level(handle->dio1);
+    int level = LL_GPIO_IsInputPinSet(RFM_DIO1_PORT, RFM_DIO1);
 
-//!    return level == 1;
-    return 0;
+    return level == 1;
 }
 
 #endif

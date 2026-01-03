@@ -67,30 +67,33 @@ static void lora_spi_misc_gpio_config(void)
 	lora_spi_power_state(0);
 
 	// All low
-	//LL_GPIO_ResetOutputPin(RFM_RST_PORT,  RFM_RST); - this GND on the module!!!
 	LL_GPIO_ResetOutputPin(RFM_NSS_PORT,  RFM_NSS);
-	LL_GPIO_ResetOutputPin(RFM_DIO1_PORT, RFM_DIO1);
 	LL_GPIO_ResetOutputPin(RFM_DIO0_PORT, RFM_DIO0);
-
-	// Reset line, PA0
-	//GPIO_InitStruct.Pin       = RFM_RST;
-	//LL_GPIO_Init(RFM_RST_PORT, &GPIO_InitStruct);
 
 	// Chip select, PC1
 	GPIO_InitStruct.Pin       = RFM_NSS;
 	LL_GPIO_Init(RFM_NSS_PORT, &GPIO_InitStruct);
 
-	// GPIO1, PC4
-	GPIO_InitStruct.Pin       = RFM_DIO1;
-	LL_GPIO_Init(RFM_DIO1_PORT, &GPIO_InitStruct);
-
-	// GPIO0, PC5
+	// GPIO0, PC5 (NRST)
 	GPIO_InitStruct.Pin       = RFM_DIO0;
 	LL_GPIO_Init(RFM_DIO0_PORT, &GPIO_InitStruct);
 
 	// POWER, PA2
 	GPIO_InitStruct.Pin       = LORA_POWER;
 	LL_GPIO_Init(LORA_POWER_PORT, &GPIO_InitStruct);
+
+	// Busy(PA0) is input
+	GPIO_InitStruct.Mode      = LL_GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pin       = RFM_BUSY;
+	LL_GPIO_Init(RFM_BUSY_PORT, &GPIO_InitStruct);
+
+	// GPIO1, PC4 (IRQ) input
+	GPIO_InitStruct.Pin       = RFM_DIO1;
+	LL_GPIO_Init(RFM_DIO1_PORT, &GPIO_InitStruct);
+
+	// GPIO2, PC4, NC, so input
+	GPIO_InitStruct.Pin       = RFM_DIO2;
+	LL_GPIO_Init(RFM_DIO2_PORT, &GPIO_InitStruct);
 }
 
 static void lora_spi_gpio_config(void)
@@ -288,7 +291,6 @@ void lora_spi_power_state(uchar on)
 		#endif
 	}
 }
-
 
 #endif
 

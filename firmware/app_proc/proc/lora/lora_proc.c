@@ -83,30 +83,16 @@ void SPI1_DMA_TX_IRQHandler(void)
 //*----------------------------------------------------------------------------
 void lora_proc_task(void const * argument)
 {
-	//ulong 	ulNotificationValue = 0, ulNotif;
+	sx126x_handle_t radio_drv;
 
 	// Delay start, so UI can paint properly
 	vTaskDelay(LORA_PROC_START_DELAY);
 	printf("start\r\n");
 
-	//lora_spi_init();
-
-	#ifdef MESHCORE_REPEATER
-	setup();
-	#endif
+	// Radio driver init
+	sx126x_init(&radio_drv,0,0,0,0,0);
 
 lora_proc_loop:
-
-	#ifdef MESHCORE_REPEATER
-	loop();
-	#endif
-
-	// Wait key press
-	//ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, LORA_PROC_SLEEP_TIME);
-	//if((ulNotif) && (ulNotificationValue))
-	//{
-		// ..
-	//}
 
 	#ifdef SPI_GPIO_TEST
 	// Toggle misc pins
@@ -127,14 +113,16 @@ lora_proc_loop:
 
 void lora_proc_init(void)
 {
-	lora_gpio_init();
-
 	//--printf("lora pre-os init\r\n");
 }
 
 void lora_proc_power_cleanup(void)
 {
+	// Lora power off
+	lora_spi_power_state(0);
 
+	// ToDo: all pins inputs ?
+	//
 }
 
 #endif

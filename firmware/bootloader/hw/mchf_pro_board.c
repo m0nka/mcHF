@@ -584,6 +584,9 @@ void early_backup_domain_init(void)
 
 void bt_hw_power(void)
 {
+	// RFM_DIO2 is input on the Lora module
+	//
+#if 0
 	GPIO_InitTypeDef  gpio_init_structure;
 
 	gpio_init_structure.Pull  = GPIO_NOPULL;
@@ -595,6 +598,7 @@ void bt_hw_power(void)
 
 	// Power off
 	HAL_GPIO_WritePin(RFM_DIO2_PORT, RFM_DIO2, GPIO_PIN_SET);
+#endif
 }
 
 void lora_hw_power(void)
@@ -635,7 +639,7 @@ void mchf_pro_board_init(void)
 	hw_lcd_reset();
 
 	// BT module off
-	bt_hw_power();
+	//--bt_hw_power();
 
 	// LORA module off
 	lora_hw_power();
