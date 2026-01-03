@@ -13,6 +13,11 @@
 #ifndef __PROC_CONF_H
 #define __PROC_CONF_H
 
+// Are we running the OS and the HAL tick increase from the same
+// system timer ?
+//
+#define USE_SEPARATE_TIMER_FOR_HAL
+
 // -----------------------------------------------------------------------------
 // Firmware execution context (On/Off of any system process)
 //

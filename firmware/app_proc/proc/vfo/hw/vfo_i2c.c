@@ -19,8 +19,8 @@
   ******************************************************************************
   */
 
-#include "main.h"
 #include "mchf_pro_board.h"
+#include "main.h"
 
 //#include "stm32h747i_discovery_bus.h"
 #include "vfo_i2c.h"

@@ -874,10 +874,12 @@ uint8_t bsp_config(void)
 	// Task hw basic init (after LCD Reset!)
 	//--tasks_pre_os_init();
 
-	/* Print Clock configuration */
-	//printf( "== CPU running at %dMHz, Peripherals at %dMHz/%dMHz  ==\r\n" , (HAL_RCCEx_GetD1SysClockFreq()/1000000U)
-	//                                                                  	  , (HAL_RCC_GetPCLK1Freq()/1000000U)
-	//																	  , (HAL_RCC_GetPCLK2Freq()/1000000U) );
+	// Print Clock configuration
+	#if 0
+	printf( "CPU clcok %dMHz, Periph %dMHz/%dMHz \r\n" , (HAL_RCCEx_GetD1SysClockFreq()/1000000U)
+	                                                   , (HAL_RCC_GetPCLK1Freq()/1000000U)
+													   , (HAL_RCC_GetPCLK2Freq()/1000000U) );
+	#endif
 
 	return 0;
 }

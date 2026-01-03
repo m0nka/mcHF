@@ -77,19 +77,9 @@
 			<locationURI>PARENT-1-PROJECT_LOC/config/ft6x06_conf.h</locationURI>
 		</link>
 		<link>
-			<name>config/mt25tl01g_conf.h</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/config/mt25tl01g_conf.h</locationURI>
-		</link>
-		<link>
 			<name>config/proc_conf.h</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/config/proc_conf.h</locationURI>
-		</link>
-		<link>
-			<name>config/stm32h747i_discovery_conf.h</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/config/stm32h747i_discovery_conf.h</locationURI>
 		</link>
 		<link>
 			<name>config/stm32h7xx_hal_conf.h</name>
@@ -140,6 +130,11 @@
 			<name>hw/shared_i2c.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/hw/shared_i2c.c</locationURI>
+		</link>
+		<link>
+			<name>hw/stm32h7xx_hal_timebase_tim.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/hw/stm32h7xx_hal_timebase_tim.c</locationURI>
 		</link>
 		<link>
 			<name>startup/startup_stm32h747xx_CM7.s</name>

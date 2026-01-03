@@ -13,7 +13,8 @@
 #ifndef __VFO_I2C_H
 #define __VFO_I2C_H
 
-#include "stm32h747i_discovery_conf.h"
+//#include "stm32h747i_discovery_conf.h"
+#include "stm32h7xx_hal.h"
 
 #if (USE_HAL_I2C_REGISTER_CALLBACKS == 1)
 typedef struct
