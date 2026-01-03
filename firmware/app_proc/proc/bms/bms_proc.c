@@ -161,7 +161,8 @@ void bms_proc_hw_init(void)
 void bms_proc_power_cleanup(void)
 {
 	// Lock the BMS
-	bq40z80_seal();
+	if(bmss.bms_unlock_state)
+		bq40z80_seal();
 }
 
 //*----------------------------------------------------------------------------
