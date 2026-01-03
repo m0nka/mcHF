@@ -152,6 +152,29 @@ struct ESPMessage {
 } ESPMessage;
 #endif
 
+__attribute__((__common__)) struct PROC_STATE {
+
+	// Process handles
+	TaskHandle_t	hIccTask;
+	TaskHandle_t 	hTouchTask;
+	TaskHandle_t 	hUiTask;
+	TaskHandle_t 	hVfoTask;
+	TaskHandle_t 	hAudioTask;
+	TaskHandle_t 	hBandTask;
+	TaskHandle_t 	hTrxTask;
+	TaskHandle_t 	hKbdTask;
+	TaskHandle_t 	hLraTask;
+	TaskHandle_t 	hSdcTask;
+	TaskHandle_t 	hAppTask;
+
+	// Task messaging
+	xQueueHandle 	xBmsRxQueue;
+
+	// System timer
+	ulong 			epoch;
+
+} PROC_STATE;
+
 /* Exported macros -----------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 void 	NMI_Handler(void);

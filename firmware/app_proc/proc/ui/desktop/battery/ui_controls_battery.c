@@ -27,12 +27,12 @@
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
 
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
+
 #ifdef CONTEXT_BMS
 extern struct BMSState	bmss;
 #endif
-
-// System timer
-extern ulong epoch;
 
 uchar curr_batt_value = 0;
 uchar source_suppy = 0xff;
@@ -214,14 +214,14 @@ static void ui_controls_charge_progress(uchar val)
 
 	// Run timer
 	if(charge_timer == 0)
-		charge_timer = epoch;				// reset
-	else if((charge_timer + 300) < epoch)
+		charge_timer = ps.epoch;				// reset
+	else if((charge_timer + 300) < ps.epoch)
 	{
 		prog_bar_val += 5;
 		if(prog_bar_val > 100)
 			prog_bar_val = 0;
 
-		charge_timer = epoch;				// restart
+		charge_timer = ps.epoch;				// restart
 	}
 	else
 		return;

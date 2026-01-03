@@ -11,6 +11,7 @@
 **  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #include "mchf_pro_board.h"
+#include "main.h"
 
 #ifdef CONTEXT_ROTARY
 
@@ -49,9 +50,8 @@ extern struct	UI_DRIVER_STATE			ui_s;
 
 //extern struct 	S_METER					sm;
 
-extern TaskHandle_t 					hIccTask;
-extern TaskHandle_t 					hVfoTask;
-extern TaskHandle_t						hAudioTask;
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
 
 // ---------------------------------
 // Block s-meter refresh exports
@@ -161,9 +161,9 @@ static void rotary_update_audio_publics(int pot_diff)
 		//save_band_info();									// Save band info to eeprom
 	}
 
-	if(hAudioTask != NULL)
+	if(ps.hAudioTask != NULL)
 	{
-		xTaskNotify(hAudioTask, UI_NEW_AUDIO_EVENT, eSetValueWithOverwrite);
+		xTaskNotify(ps.hAudioTask, UI_NEW_AUDIO_EVENT, eSetValueWithOverwrite);
 	}
 }
 
@@ -354,13 +354,13 @@ static void rotary_update_freq_publics(int pot_diff)
 
 	if(tsu.band[tsu.curr_band].fixed_mode == 0)
 	{
-		if(hVfoTask != NULL)
-			xTaskNotify(hVfoTask, UI_NEW_FREQ_EVENT, eSetValueWithOverwrite);
+		if(ps.hVfoTask != NULL)
+			xTaskNotify(ps.hVfoTask, UI_NEW_FREQ_EVENT, eSetValueWithOverwrite);
 	}
 	else
 	{
-		if(hIccTask != NULL)
-			xTaskNotify(hIccTask, UI_ICC_NCO_FREQ, eSetValueWithOverwrite);
+		if(ps.hIccTask != NULL)
+			xTaskNotify(ps.hIccTask, UI_ICC_NCO_FREQ, eSetValueWithOverwrite);
 	}
 
 	// Save band info to eeprom

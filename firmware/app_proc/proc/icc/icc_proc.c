@@ -30,9 +30,8 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 extern struct 	TransceiverState 		ts;
 extern struct 	UI_SW					ui_sw;
 
-extern 			TaskHandle_t 			hIccTask;
-extern 			TaskHandle_t 			hUiTask;
-extern			TaskHandle_t 			hAudioTask;
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
 
 #ifdef CONTEXT_ICC
 
@@ -96,10 +95,10 @@ void HAL_HSEM_FreeCallback(uint32_t SemMask)
 		{
 			//printf("fft ready\r\n");
 
-			if(hIccTask != NULL)
+			if(ps.hIccTask != NULL)
 			{
 				xHigherPriorityTaskWoken = pdFALSE;
-				xTaskNotifyFromISR(hIccTask, UI_ICC_PROC_BROADCART, eSetBits, &xHigherPriorityTaskWoken );
+				xTaskNotifyFromISR(ps.hIccTask, UI_ICC_PROC_BROADCART, eSetBits, &xHigherPriorityTaskWoken );
 				portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 			}
 
@@ -112,11 +111,11 @@ void HAL_HSEM_FreeCallback(uint32_t SemMask)
 			//printf("tx\r\n");
 
 			tsu.rxtx = 1;
-			if(hAudioTask != NULL)
+			if(ps.hAudioTask != NULL)
 			{
 				xHigherPriorityTaskWoken = pdFALSE;
-				xTaskNotifyFromISR(hAudioTask, UI_RXTX_SWITCH, eSetBits, &xHigherPriorityTaskWoken );
-				portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+				xTaskNotifyFromISR(ps.hAudioTask, UI_RXTX_SWITCH, eSetBits, &xHigherPriorityTaskWoken );
+				portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 			}
 			break;
 		}
@@ -127,11 +126,11 @@ void HAL_HSEM_FreeCallback(uint32_t SemMask)
 			//printf("rx\r\n");
 
 			tsu.rxtx = 0;
-			if(hAudioTask != NULL)
+			if(ps.hAudioTask != NULL)
 			{
 				xHigherPriorityTaskWoken = pdFALSE;
-				xTaskNotifyFromISR(hAudioTask, UI_RXTX_SWITCH, eSetBits, &xHigherPriorityTaskWoken );
-				portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+				xTaskNotifyFromISR(ps.hAudioTask, UI_RXTX_SWITCH, eSetBits, &xHigherPriorityTaskWoken);
+				portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 			}
 			break;
 		}
@@ -563,8 +562,8 @@ static void icc_proc_delayed_dsp_init(void)
 				//printf("SAI state: %x\r\n", aRxBuffer[0]);
 
 			    // Notify local Audio task, so it can do Reset and I2C init
-			    if((hAudioTask != NULL)&&(aRxBuffer[0] == 0))
-			    	xTaskNotify(hAudioTask, UI_NEW_SAI_INIT_DONE, eSetValueWithOverwrite);
+			    if((ps.hAudioTask != NULL)&&(aRxBuffer[0] == 0))
+			    	xTaskNotify(ps.hAudioTask, UI_NEW_SAI_INIT_DONE, eSetValueWithOverwrite);
 			}
 			break;
 		}
@@ -757,8 +756,8 @@ static uchar icc_proc_dsp_off(void)
 	printf("DSP OFF...\r\n");
 
 	// Notify audio process to stop taking responses
-	if(hAudioTask != NULL)
-		xTaskNotify(hAudioTask, UI_NEW_SAI_CLEANUP, eSetValueWithOverwrite);
+	if(ps.hAudioTask != NULL)
+		xTaskNotify(ps.hAudioTask, UI_NEW_SAI_CLEANUP, eSetValueWithOverwrite);
 
 	// Give it time
 	vTaskDelay(100);

@@ -12,6 +12,7 @@
 ************************************************************************************/
 
 #include "mchf_pro_board.h"
+#include "main.h"
 
 #ifdef CONTEXT_VFO
 
@@ -27,8 +28,8 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 // DSP core state
 extern struct 	TransceiverState 		ts;
 
-extern 			TaskHandle_t 			hUiTask;
-extern TaskHandle_t 					hIccTask;
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
 
 uchar vfo_init_done = 0;
 uchar vfo_loc_demo_mode = 0;
@@ -119,8 +120,8 @@ static void vfo_proc_worker(ulong notif_val)
 			// Set VFO
 			if(vfo_proc_set_freq() == 0)
 			{
-				if(hUiTask != NULL)
-					xTaskNotify(hUiTask, UI_NEW_FREQ_EVENT, eSetValueWithOverwrite);
+				if(ps.hUiTask != NULL)
+					xTaskNotify(ps.hUiTask, UI_NEW_FREQ_EVENT, eSetValueWithOverwrite);
 			}
 			break;
 		}

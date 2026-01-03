@@ -23,7 +23,9 @@
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
 extern struct	UI_DRIVER_STATE			ui_s;
-extern 			TaskHandle_t 			hUiTask;
+
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
 
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_proc_worker
@@ -97,8 +99,8 @@ static void audio_proc_worker(ulong ulCmd)
 			codec_hw_volume();
 
 			// Notify UI
-			if(hUiTask != NULL)
-				xTaskNotify(hUiTask, UI_NEW_AUDIO_EVENT, eSetValueWithOverwrite);
+			if(ps.hUiTask != NULL)
+				xTaskNotify(ps.hUiTask, UI_NEW_AUDIO_EVENT, eSetValueWithOverwrite);
 
 			break;
 		}

@@ -33,7 +33,8 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 // DSP core state
 extern struct 	TransceiverState 		ts;
 
-extern ulong 	epoch;
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
 
 uchar ui_dsp_control_init_done 	= 0;
 uchar ui_dsp_version_done 		= 0;
@@ -84,12 +85,12 @@ static void ui_controls_clock_refresh(void)
 	static ulong clock_timer = 0;
 
 	// Update every 900mS
-	if((clock_timer + 900) > epoch)
+	if((clock_timer + 900) > ps.epoch)
 		return;							// Wait
 	else if(clock_timer == 0)
-		clock_timer = epoch;			// Init timer
+		clock_timer = ps.epoch;			// Init timer
 	else
-		clock_timer = epoch;			// Reset timer
+		clock_timer = ps.epoch;			// Reset timer
 
 	// Dump state from RTC
 	k_GetTime(&stimestructureget);
@@ -138,12 +139,12 @@ static void ui_controls_clock_panel_show_alive(void)
 		old_blinker = tsu.dsp_blinker;
 	}
 
-	if(epoch < (blink_timer + 800))
+	if(ps.epoch < (blink_timer + 800))
 		return;
 	else if(blink_timer == 0)
-		blink_timer = epoch;
+		blink_timer = ps.epoch;
 	else
-		blink_timer = epoch;
+		blink_timer = ps.epoch;
 
 	if(uc_keep_flag)
 		GUI_SetColor(GUI_DARKGREEN);

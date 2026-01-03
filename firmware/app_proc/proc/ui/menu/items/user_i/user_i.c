@@ -11,6 +11,7 @@
 **  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #include "mchf_pro_board.h"
+#include "main.h"
 
 #ifdef CONTEXT_VIDEO
 
@@ -30,6 +31,9 @@ extern struct	UI_DRIVER_STATE			ui_s;
   
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
+
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
 
 // Menu layout definitions from Flash
 extern const struct UIMenuLayout menu_layout[];
@@ -89,7 +93,7 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 //extern 	osMessageQId 			hEspMessage;
 //struct 	ESPMessage				esp_msg_x;
 
-extern TaskHandle_t 					hVfoTask;
+//extern TaskHandle_t 					hVfoTask;
 
 uchar user_i_theme_id;
 
@@ -259,8 +263,8 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 						tsu.demo_mode = 1;
 
 						// Wake up vfo task(use any notif id)
-						if(hVfoTask != NULL)
-							xTaskNotify(hVfoTask, 44, eSetValueWithOverwrite);
+						if(ps.hVfoTask != NULL)
+							xTaskNotify(ps.hVfoTask, 44, eSetValueWithOverwrite);
 					}
 					else
 					{

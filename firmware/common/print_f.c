@@ -91,7 +91,8 @@ SemaphoreHandle_t 	dPrintSemaphore = NULL;
 #endif
 
 #ifdef USE_TASK_SHARING
-extern ulong epoch;
+// FreeRTOS process state
+extern struct PROC_STATE ps;
 #include "task.h"
 #endif
 
@@ -165,9 +166,9 @@ void print_itm_header(void)
 
 	memset(header, 0, sizeof(header));
 	if(osKernelRunning())
-		sprintf(header, "%07d [%s] ", (int)epoch, pcTaskGetName(NULL));
+		sprintf(header, "%07d [%s] ", (int)(ps.epoch), pcTaskGetName(NULL));
 	else
-		sprintf(header, "%07d [%s] ", (int)epoch, "pre");
+		sprintf(header, "%07d [%s] ", (int)(ps.epoch), "pre");
 
 	HAL_UART_Transmit(&DEBUG_UART_Handle, (uint8_t *)header,  strlen(header), 0xFFFF);
 

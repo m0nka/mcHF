@@ -89,7 +89,8 @@ uchar cntr_id = 0;
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
 
-extern TaskHandle_t 					hVfoTask;
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
 
 // Menu items
 extern K_ModuleItem_Typedef  	dsp_s;				// Standard DSP Menu
@@ -833,7 +834,6 @@ static void ui_proc_change_mode(void)
 //* Output Parameters   :
 //* Functions called    : CONTEXT_VIDEO
 //*----------------------------------------------------------------------------
-//extern uchar lcd_touch_reset_done;
 static void ui_proc_emwin_init(void)
 {
 	int xSize, ySize;
@@ -846,14 +846,6 @@ static void ui_proc_emwin_init(void)
 		printf("Failed to initialize the SDRAM !!\n");
 		return;
 	}
-
-	#if 0
-	while(lcd_touch_reset_done == 0)
-	{
-		vTaskDelay(5);
-	}
-	printf("reset acknowledged\r\n");
-	#endif
 
 	// UI init
 	GUI_Init();
@@ -1004,8 +996,8 @@ void ui_proc_task(void const *arg)
 			//tsu.demo_mode = 1;
 
 			// Wake up vfo task(use any notif id)
-			if(hVfoTask != NULL)
-				xTaskNotify(hVfoTask, 44, eSetValueWithOverwrite);
+			if(ps.hVfoTask != NULL)
+				xTaskNotify(ps.hVfoTask, 44, eSetValueWithOverwrite);
 		}
 
 	}

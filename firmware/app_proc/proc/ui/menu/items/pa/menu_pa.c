@@ -24,13 +24,13 @@
 
 #include "menu_pa.h"
 
-extern GUI_CONST_STORAGE GUI_BITMAP bmtx;
+extern GUI_CONST_STORAGE GUI_BITMAP 	bmtx;
 
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
-extern TaskHandle_t 					hAudioTask;
-extern TaskHandle_t 					hIccTask;
-extern TaskHandle_t 					hTrxTask;
+
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
 
 // UI driver public state
 extern struct	UI_DRIVER_STATE			ui_s;
@@ -115,7 +115,7 @@ static void _toggle_rx_tx_loc(void)
 {
 	uchar new_state;
 
-	if((hAudioTask == NULL)||(hIccTask == NULL))
+	if((ps.hAudioTask == NULL)||(ps.hIccTask == NULL))
 		return;
 
 	if(tsu.rxtx)
@@ -127,9 +127,9 @@ static void _toggle_rx_tx_loc(void)
 	tsu.rxtx = new_state;
 
 	if(new_state)
-		xTaskNotify(hIccTask, 	UI_ICC_TUNE, 	eSetValueWithOverwrite);	// Change DSP mode to TUNE via cmd
+		xTaskNotify(ps.hIccTask, 	UI_ICC_TUNE, 	eSetValueWithOverwrite);	// Change DSP mode to TUNE via cmd
 
-	xTaskNotify(hAudioTask, UI_RXTX_SWITCH, eSetValueWithOverwrite);		// Switch Codec path
+	xTaskNotify(ps.hAudioTask, UI_RXTX_SWITCH, eSetValueWithOverwrite);		// Switch Codec path
 	vTaskDelay(100);
 
 	if(!tsu.rxtx)
@@ -137,7 +137,7 @@ static void _toggle_rx_tx_loc(void)
 		HAL_HSEM_FastTake(HSEM_ID_21);										// Fast DSP RX/TX switch
 		HAL_HSEM_Release (HSEM_ID_21, 0);
 
-		xTaskNotify(hIccTask, 	UI_ICC_TUNE, 	eSetValueWithOverwrite);	// Change DSP mode, TUNE OFF
+		xTaskNotify(ps.hIccTask, UI_ICC_TUNE, eSetValueWithOverwrite);	// Change DSP mode, TUNE OFF
 	}
 	else
 	{
@@ -207,8 +207,8 @@ static void _bias_set(WM_MESSAGE * pMsg)
 	msg |= (2|4|8) | (val1 << 16) | (val2 << 24) | (1 << 8);
 
 	#ifdef CONTEXT_TRX
-	if(hTrxTask != NULL)
-	xTaskNotify(hTrxTask, msg, eSetValueWithOverwrite);
+	if(ps.hTrxTask != NULL)
+		xTaskNotify(ps.hTrxTask, msg, eSetValueWithOverwrite);
 	#endif
 }
 

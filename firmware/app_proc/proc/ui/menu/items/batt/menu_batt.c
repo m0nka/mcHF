@@ -10,8 +10,8 @@
 **  Last Modified:                                                                 **
 **  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
-#include "main.h"
 #include "mchf_pro_board.h"
+#include "main.h"
 
 #ifdef CONTEXT_VIDEO
 
@@ -28,13 +28,14 @@ extern GUI_CONST_STORAGE GUI_BITMAP bmicon_power;
   
 // UI driver public state
 extern struct	UI_DRIVER_STATE			ui_s;
-extern 			TaskHandle_t 			hUiTask;
+
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
+
 extern struct 	BMSState				bmss;
 
 // Menu layout definitions from Flash
 extern const struct UIMenuLayout menu_layout[];
-
-extern xQueueHandle xBmsRxQueue;
 
 static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos);
 static void KillBatt(void);
@@ -729,7 +730,7 @@ static void _cbDialog1(WM_MESSAGE * pMsg)
 
 			// Unlock BMS
 			ulData[0] = 0x27;
-			menu_batt_send_msg(xBmsRxQueue, ulData, 1);
+			menu_batt_send_msg(ps.xBmsRxQueue, ulData, 1);
 
 			//hTimerWiFi = WM_CreateTimer(pMsg->hWin, 0, WIFI_TIMER_RESOLUTION, 0);
 			break;
@@ -1050,7 +1051,7 @@ static void KillBatt(void)
 
 	// Lock BMS
 	ulData[0] = 0x2A;
-	menu_batt_send_msg(xBmsRxQueue, ulData, 1);
+	menu_batt_send_msg(ps.xBmsRxQueue, ulData, 1);
 
 	//printf("kill menu\r\n");
 	GUI_EndDialog(hMulti,   0);
