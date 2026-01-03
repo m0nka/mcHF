@@ -1,16 +1,17 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #include "mchf_pro_board.h"
+#include "main.h"
 
 #ifdef CONTEXT_VIDEO
 
@@ -35,7 +36,9 @@ extern const struct UIMenuLayout menu_layout[];
 
 // UI driver public state
 extern struct	UI_DRIVER_STATE			ui_s;
-extern 			TaskHandle_t 			hUiTask;
+
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
 
 ICONVIEW_Handle	hIcon;
 //WM_HWIN      	hCPULoad;
@@ -254,7 +257,7 @@ static void _cbBk(WM_MESSAGE * pMsg)
 							{
 								// Scheduled destroy, not a direct call!
 								ui_s.req_state = MODE_DESKTOP;
-								xTaskNotify(hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
+								xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
 								ui_proc_clear_active();
 							}
 							else	// exit Menu item

@@ -1,14 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
@@ -435,7 +435,7 @@ static void UpdateExitBox(WM_HWIN hDlg)
 		TEXT_SetTextColor(hItem, GUI_DARKBLUE);
 
 		// Show balancer state
-		if((bmss.run_on_dc == 0)&&(bmss.usBalID[i] == 1))
+		if((bmss.run_on_dc == 0))//&&(bmss.usBalID[i] == 1))
 		{
 			TEXT_SetTextColor(hItem, GUI_LIGHTRED);
 			HEADER_SetItemText(hHeader, (i*2), "LOADED");

@@ -1,14 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #include "main.h"
 #include "mchf_pro_board.h"
@@ -24,8 +24,8 @@
 #include "touch_i2c.h"
 #endif
 
-extern TaskHandle_t hTouchTask;
-extern uchar lcd_touch_reset_done;
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
 
 uchar tp_init_done = 0;
 
@@ -57,7 +57,7 @@ void touch_proc_irq(void)
 		return;
 
 	xHigherPriorityTaskWoken = pdFALSE;
-	xTaskNotifyFromISR(hTouchTask, 0x01, eSetBits, &xHigherPriorityTaskWoken );
+	xTaskNotifyFromISR(ps.hTouchTask, 0x01, eSetBits, &xHigherPriorityTaskWoken );
 	portYIELD_FROM_ISR(xHigherPriorityTaskWoken );
 }
 
@@ -135,7 +135,7 @@ static int touch_proc_gt911_init(void)
 	i2c_err = BSP_I2C4_ReadReg(GT911_I2C_ADDRESS, 0x4880, data, 16);
 	if(i2c_err != 0)
 	{
-		printf("gt911 init err %d\r\n", i2c_err);
+		printf("gt911 init err %d\r\n", (int)i2c_err);
 		return 1;
 	}
 	//printf("FW: %s\r\n", (char *)data);
@@ -160,10 +160,10 @@ static int touch_proc_gt911_init(void)
 	//printf("config reg:\r\n");
 	//print_hex_array(data, 13);
 
+	#if 0
 	struct GT911_CONFIG *gtc = (struct GT911_CONFIG *)data;
 	//printf("x size %d, y size %d\r\n", gtc->x_max, gtc->y_max);
 
-	#if 0
 	printf("numtouch_max %d, switch1 %d switch2 %d shake_count %d filter %X\r\n",
 				gtc->numtouch_max,
 				gtc->switch1,
@@ -245,8 +245,6 @@ static void touch_proc_lcd_reset(uchar context)
 	gpio_init_structure.Mode  = GPIO_MODE_INPUT;
 	gpio_init_structure.Pull  = GPIO_NOPULL;
 	HAL_GPIO_Init(TS_INT_GPIO_PORT, &gpio_init_structure);
-
-	lcd_touch_reset_done = 1;
 }
 
 //

@@ -1,17 +1,22 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:                                                                       **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #ifndef __PROC_CONF_H
 #define __PROC_CONF_H
+
+// Are we running the OS and the HAL tick increase from the same
+// system timer ?
+//
+#define USE_SEPARATE_TIMER_FOR_HAL
 
 // -----------------------------------------------------------------------------
 // Firmware execution context (On/Off of any system process)

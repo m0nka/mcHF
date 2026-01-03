@@ -1,14 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 
 #ifdef BOOTLOADER
@@ -22,6 +22,7 @@
 #endif
 
 #ifdef DSP_CORE
+#include <string.h>
 #include "mchf_board.h"
 #endif
 
@@ -90,7 +91,8 @@ SemaphoreHandle_t 	dPrintSemaphore = NULL;
 #endif
 
 #ifdef USE_TASK_SHARING
-extern ulong epoch;
+// FreeRTOS process state
+extern struct PROC_STATE ps;
 #include "task.h"
 #endif
 
@@ -159,17 +161,24 @@ void SWD_Init(void)
 
 void print_itm_header(void)
 {
-	#ifdef USE_TASK_SHARING
+	#if defined (USE_TASK_SHARING)
 	char header[30];
 
 	memset(header, 0, sizeof(header));
 	if(osKernelRunning())
-		sprintf(header, "%07d [%s] ", (int)epoch, pcTaskGetName(NULL));
+		sprintf(header, "%07d [%s] ", (int)(ps.epoch), pcTaskGetName(NULL));
 	else
-		sprintf(header, "%07d [%s] ", (int)epoch, "pre");
+		sprintf(header, "%07d [%s] ", (int)(ps.epoch), "pre");
 
 	HAL_UART_Transmit(&DEBUG_UART_Handle, (uint8_t *)header,  strlen(header), 0xFFFF);
 
+	#elif defined (DSP_CORE)
+	char header[30];
+
+	memset(header, 0, sizeof(header));
+	sprintf(header, "%07d [%s] ", (int)HAL_GetTick(), "bb_");
+
+	HAL_UART_Transmit(&DEBUG_UART_Handle, (uint8_t *)header,  strlen(header), 0xFFFF);
 	#else
 	HAL_UART_Transmit(&DEBUG_UART_Handle, (uint8_t *)cpu_id_str,  sizeof(cpu_id_str) - 1, 0xFFFF);
 	#endif

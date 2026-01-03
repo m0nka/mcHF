@@ -1,17 +1,18 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 
 #include "mchf_pro_board.h"
+#include "main.h"
 
 #ifdef CONTEXT_VFO
 
@@ -27,8 +28,8 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 // DSP core state
 extern struct 	TransceiverState 		ts;
 
-extern 			TaskHandle_t 			hUiTask;
-extern TaskHandle_t 					hIccTask;
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
 
 uchar vfo_init_done = 0;
 uchar vfo_loc_demo_mode = 0;
@@ -114,11 +115,13 @@ static void vfo_proc_worker(ulong notif_val)
 	{
 		case UI_NEW_FREQ_EVENT:
 		{
+			//printf("vfo: %d\r\n",notif_val);
+
 			// Set VFO
 			if(vfo_proc_set_freq() == 0)
 			{
-				if(hUiTask != NULL)
-					xTaskNotify(hUiTask, UI_NEW_FREQ_EVENT, eSetValueWithOverwrite);
+				if(ps.hUiTask != NULL)
+					xTaskNotify(ps.hUiTask, UI_NEW_FREQ_EVENT, eSetValueWithOverwrite);
 			}
 			break;
 		}
@@ -188,6 +191,9 @@ void vfo_proc_task(void const *arg)
 
 	// Init CW gen
 	vfo_cw_gen_init();
+
+	// Delayed init
+	vfo_proc_set_freq();
 
 vfo_proc_loop:
 

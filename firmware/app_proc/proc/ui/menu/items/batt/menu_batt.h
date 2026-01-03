@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2021                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #ifndef __MENU_BATT_H
 #define __MENU_BATT_H
@@ -30,6 +29,8 @@
 #define ID_BUTTON_UI_RESET		  	(GUI_ID_USER + 0x59)
 #define ID_BUTTON_DSP_RESET		  	(GUI_ID_USER + 0x60)
 #define ID_BUTTON_EEP_RESET		  	(GUI_ID_USER + 0x61)
+
+#define ID_BUTTON_SHUTDOWN		  	(GUI_ID_USER + 0x62)
 
 #define SOPTS						SLIDER_CF_HORIZONTAL
 

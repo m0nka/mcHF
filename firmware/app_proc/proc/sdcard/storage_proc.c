@@ -1,14 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
@@ -39,7 +39,8 @@ static Diskio_drvTypeDef  	const 	*Storage_Driver[NUM_DISK_UNITS];
 uint8_t           					StorageID[NUM_DISK_UNITS];
 STORAGE_Status_t   					StorageStatus[NUM_DISK_UNITS];
 
-extern TaskHandle_t 				hSdcTask;
+// FreeRTOS process state
+extern struct PROC_STATE 			ps;
 
 //*----------------------------------------------------------------------------
 //* Function Name       : EXTI0_IRQHandler
@@ -56,7 +57,7 @@ void EXTI0_IRQHandler(void)
 		BaseType_t xHigherPriorityTaskWoken;
 
 		xHigherPriorityTaskWoken = pdFALSE;
-		xTaskNotifyFromISR(hSdcTask, 0x45, eSetBits, &xHigherPriorityTaskWoken);
+		xTaskNotifyFromISR(ps.hSdcTask, 0x45, eSetBits, &xHigherPriorityTaskWoken);
 		portYIELD_FROM_ISR(xHigherPriorityTaskWoken );
 
 		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_0);
@@ -187,7 +188,7 @@ static uint8_t storage_proc_init_msd(void)
 	// Try mount the storage
 	storage_proc_try_mount(MSD_DISK_UNIT);
 
-	#if 1
+	#if 0
 	if(StorageStatus[MSD_DISK_UNIT] != STORAGE_MOUNTED)
 		printf("card not ready!  \r\n");
 	else

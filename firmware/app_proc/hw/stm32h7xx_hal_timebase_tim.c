@@ -33,16 +33,13 @@
   *
   ******************************************************************************
   */
+#include "mchf_pro_board.h"
+#include "main.h"
 
-/* Includes ------------------------------------------------------------------*/
-#include "stm32h7xx_hal.h"
+#ifdef USE_SEPARATE_TIMER_FOR_HAL
 
-/* Private typedef -----------------------------------------------------------*/
-/* Private define ------------------------------------------------------------*/
-/* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
 static TIM_HandleTypeDef        TimHandle;
-/* Private function prototypes -----------------------------------------------*/
+
 void TIM6_DAC_IRQHandler(void);
 /* Private functions ---------------------------------------------------------*/
 
@@ -170,5 +167,6 @@ void TIM6_DAC_IRQHandler(void)
 {
   HAL_TIM_IRQHandler(&TimHandle);
 }
+#endif
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -1,14 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
@@ -89,7 +89,8 @@ uchar cntr_id = 0;
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
 
-extern TaskHandle_t 					hVfoTask;
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
 
 // Menu items
 extern K_ModuleItem_Typedef  	dsp_s;				// Standard DSP Menu
@@ -670,15 +671,15 @@ static void ui_proc_change_mode(void)
 		// Switch to menu mode
 		case MODE_MENU:
 		{
-			printf("Entering Menu mode...\r\n");
+			//printf("Entering Menu mode...\r\n");
 
 			// Destroy desktop controls
 			ui_controls_volume_quit();
 			ui_controls_clock_panel_quit();
 			ui_controls_spectrum_quit();
-#ifdef DESKTOP_SHOW_FREQUENCY
+			#ifdef DESKTOP_SHOW_FREQUENCY
 			ui_controls_frequency_quit();
-#endif
+			#endif
 
 			#ifdef DESKTOP_SHOW_SMETER
 			ui_controls_smeter_quit();
@@ -787,7 +788,7 @@ static void ui_proc_change_mode(void)
 		// Switch to desktop mode
 		case MODE_DESKTOP:
 		{
-			printf("Entering Desktop mode...\r\n");
+			//printf("Entering Desktop mode...\r\n");
 
 			// Destroy any Window Manager items
 			ui_menu_destroy();
@@ -833,7 +834,6 @@ static void ui_proc_change_mode(void)
 //* Output Parameters   :
 //* Functions called    : CONTEXT_VIDEO
 //*----------------------------------------------------------------------------
-//extern uchar lcd_touch_reset_done;
 static void ui_proc_emwin_init(void)
 {
 	int xSize, ySize;
@@ -846,14 +846,6 @@ static void ui_proc_emwin_init(void)
 		printf("Failed to initialize the SDRAM !!\n");
 		return;
 	}
-
-	#if 0
-	while(lcd_touch_reset_done == 0)
-	{
-		vTaskDelay(5);
-	}
-	printf("reset acknowledged\r\n");
-	#endif
 
 	// UI init
 	GUI_Init();
@@ -931,7 +923,7 @@ static void ui_proc_periodic(void)
 extern TaskHandle_t hUiTask;
 void ui_proc_power_cleanup(void)
 {
-	// Cleare screen
+	// Clear screen
 	GUI_SetBkColor(GUI_BLACK);
 	GUI_Clear();
 	GUI_Exec();
@@ -939,7 +931,11 @@ void ui_proc_power_cleanup(void)
 	// Show text
 	GUI_SetColor(GUI_WHITE);
 	GUI_SetFont(&GUI_Font32B_1);
+	#ifndef PCB_V9_REV_A
 	GUI_DispStringAt("Good bye!", 350, 200);
+	#else
+	GUI_DispStringAt("Good bye!", 325, 215);
+	#endif
 	GUI_Exec();
 }
 
@@ -1000,8 +996,8 @@ void ui_proc_task(void const *arg)
 			//tsu.demo_mode = 1;
 
 			// Wake up vfo task(use any notif id)
-			if(hVfoTask != NULL)
-				xTaskNotify(hVfoTask, 44, eSetValueWithOverwrite);
+			if(ps.hVfoTask != NULL)
+				xTaskNotify(ps.hVfoTask, 44, eSetValueWithOverwrite);
 		}
 
 	}

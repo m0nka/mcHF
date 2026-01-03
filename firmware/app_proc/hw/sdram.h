@@ -1,4 +1,15 @@
-
+/************************************************************************************
+**                                                                                 **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
+**                                                                                 **
+**---------------------------------------------------------------------------------**
+**                                                                                 **
+**  File name:                                                                     **
+**  Description:                                                                   **
+**  Last Modified:                                                                 **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
+************************************************************************************/
 #ifndef __SDRAM_H
 #define __SDRAM_H
 
@@ -7,7 +18,8 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32h747i_discovery_conf.h"
+#include "stm32h7xx_hal.h"
+ //#include "stm32h747i_discovery_conf.h"
 #include "stm32h747i_discovery_errno.h"
 //#include "../Components/is42s32800j/is42s32800j.h"
 
@@ -18,6 +30,8 @@ typedef struct
   void (* pMspDeInitCb)(SDRAM_HandleTypeDef *);
 }BSP_SDRAM_Cb_t;
 #endif /* (USE_HAL_SDRAM_REGISTER_CALLBACKS == 1) */
+
+#define BSP_SDRAM_IT_PRIORITY               	15U
 
 // SDRAM refresh counter (100Mhz SD clock)
 #define REFRESH_COUNT                    		((uint32_t)0x0603)

@@ -1,19 +1,20 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 
 #include "mchf_pro_board.h"
 #include "main.h"
 
+// Reserved FreeRTOS heap memory
 #if configAPPLICATION_ALLOCATED_HEAP == 1
 __attribute__((section(".axi_mem"))) uint8_t ucHeap[configTOTAL_HEAP_SIZE];
 #endif
@@ -24,36 +25,33 @@ extern struct	UI_DRIVER_STATE			ui_s;
 // DSP core state
 struct TransceiverState 				ts;
 
-TaskHandle_t 							hIccTask	= NULL;
-TaskHandle_t 							hTouchTask	= NULL;
-TaskHandle_t 							hUiTask		= NULL;
-TaskHandle_t 							hVfoTask	= NULL;
-TaskHandle_t 							hAudioTask	= NULL;
-TaskHandle_t 							hBandTask	= NULL;
-TaskHandle_t 							hTrxTask	= NULL;
-TaskHandle_t 							hKbdTask	= NULL;
-TaskHandle_t 							hLraTask	= NULL;
-TaskHandle_t 							hSdcTask	= NULL;
-TaskHandle_t 							hAppTask	= NULL;
+// FreeRTOS process state
+struct PROC_STATE 						ps;
 
-//QueueHandle_t 							hEspMessage;
-
-//#ifdef CONTEXT_DSP
-//osMessageQId 							hDspMessage;
-//#endif
-
+// App Loader messaging(inherited from Genie code)
 APPLOADER_QUEUE_PARAMETERS 				pxAppLoaderParameters;
 
-// Combined LCD/Touch reset flag
-uchar lcd_touch_reset_done = 0;
-
-ulong epoch = 0;
-
+//*----------------------------------------------------------------------------
+//* Function Name       : NMI_Handler
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void NMI_Handler(void)
 {
 	Error_Handler(11);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : HardFault_Handler
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void HardFault_Handler(void)
 {
 	printf( "====================\r\n");
@@ -74,31 +72,87 @@ void HardFault_Handler(void)
 	}
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : MemManage_Handler
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void MemManage_Handler(void)
 {
 	Error_Handler(13);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : BusFault_Handler
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void BusFault_Handler(void)
 {
 	Error_Handler(14);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : UsageFault_Handler
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void UsageFault_Handler(void)
 {
 	Error_Handler(15);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : DebugMon_Handler
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void DebugMon_Handler(void)
 {
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : SysTick_Handler
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void SysTick_Handler(void)
 {
-	epoch++;
+	// Local timers
+	(ps.epoch)++;
+
+	// Os Tick
 	osSystickHandler();
+
+	// Hal tick
+	#ifndef USE_SEPARATE_TIMER_FOR_HAL
+	HAL_IncTick();
+	#endif
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : Error_Handler
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void Error_Handler(int err)
 {
 	__disable_irq();
@@ -109,6 +163,14 @@ void Error_Handler(int err)
 }
 
 #ifdef configUSE_MALLOC_FAILED_HOOK
+//*----------------------------------------------------------------------------
+//* Function Name       : vApplicationMallocFailedHook
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void vApplicationMallocFailedHook(TaskHandle_t xTask, char *pcTaskName)
 {
   printf( "%s(): MALLOC FAILED !!!\n", pcTaskName );
@@ -118,6 +180,14 @@ void vApplicationMallocFailedHook(TaskHandle_t xTask, char *pcTaskName)
 #endif
 
 #ifdef configCHECK_FOR_STACK_OVERFLOW
+//*----------------------------------------------------------------------------
+//* Function Name       : vApplicationStackOverflowHook
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
 {
   printf( "%s(): STACK OVERFLOW !!!\n", pcTaskName );
@@ -136,6 +206,23 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
 //*----------------------------------------------------------------------------
 static void tasks_pre_os_init(void)
 {
+	// Clear all handles
+	ps.hIccTask		= NULL;
+	ps.hTouchTask	= NULL;
+	ps.hUiTask		= NULL;
+	ps.hVfoTask		= NULL;
+	ps.hAudioTask	= NULL;
+	ps.hBandTask	= NULL;
+	ps.hTrxTask		= NULL;
+	ps.hKbdTask		= NULL;
+	ps.hLraTask		= NULL;
+	ps.hSdcTask		= NULL;
+	ps.hAppTask		= NULL;
+
+	#ifdef CONTEXT_SD
+	storage_proc_init();
+	#endif
+
 	#ifdef CONTEXT_BMS
 	bms_proc_hw_init();
 	#endif
@@ -143,10 +230,6 @@ static void tasks_pre_os_init(void)
 	#ifdef CONTEXT_ROTARY
 	rotary_proc_hw_init();
 	#endif
-
-  	#ifdef CONTEXT_IPC_PROC
-	ipc_proc_init();
-  	#endif
 
   	#ifdef CONTEXT_AUDIO
 	audio_proc_hw_init();
@@ -174,10 +257,6 @@ static void tasks_pre_os_init(void)
 
 	#ifdef CONTEXT_LORA
 	lora_proc_init();
-	#endif
-
-	#ifdef CONTEXT_SD
-	storage_proc_init();
 	#endif
 
 	#ifdef CONTEXT_APP
@@ -217,13 +296,16 @@ static int start_proc(void)
 
     pxAppLoaderParameters.ulTasksStatus 			= 0;	// nothing running
 
+    // BMS messaging
+    ps.xBmsRxQueue = xQueueCreate(APP_LOADER_QUEUE_SIZE,(unsigned portCHAR)sizeof(ulong));
+
 	#ifdef CONTEXT_VIDEO
 	res = xTaskCreate(	(TaskFunction_t)ui_proc_task,\
 						UI_PROC_START_NAME,\
 						UI_PROC_STACK_SIZE,\
 						NULL,\
 						UI_PROC_PRIORITY,\
-						&hUiTask);
+						&(ps.hUiTask));
 
 	if(res != pdPASS)
 	{
@@ -239,7 +321,7 @@ static int start_proc(void)
 						TOUCH_PROC_STACK_SIZE,\
 						NULL,\
 						TOUCH_PROC_PRIORITY,\
-						&hTouchTask);
+						&(ps.hTouchTask));
 
     if(res != pdPASS)
     {
@@ -254,7 +336,7 @@ static int start_proc(void)
 						ICC_PROC_STACK_SIZE,\
 						NULL,\
 						ICC_PROC_PRIORITY,\
-						&hIccTask);
+						&(ps.hIccTask));
 
     if(res != pdPASS)
     {
@@ -284,7 +366,7 @@ static int start_proc(void)
 						VFO_PROC_STACK_SIZE,\
 						NULL,\
 						VFO_PROC_PRIORITY,\
-						&hVfoTask);
+						&(ps.hVfoTask));
 
     if(res != pdPASS)
     {
@@ -299,7 +381,7 @@ static int start_proc(void)
 						AUDIO_PROC_STACK_SIZE,\
 						NULL,\
 						AUDIO_PROC_PRIORITY,\
-						&hAudioTask);
+						&(ps.hAudioTask));
 
     if(res != pdPASS)
     {
@@ -312,7 +394,7 @@ static int start_proc(void)
     res = xTaskCreate(	(TaskFunction_t)bms_proc_task,\
     					BMS_PROC_START_NAME,\
 						BMS_PROC_STACK_SIZE,\
-						NULL,\
+						(void *)&(ps.xBmsRxQueue),\
 						BMS_PROC_PRIORITY,\
 						NULL);
 
@@ -331,7 +413,7 @@ static int start_proc(void)
 						BAND_PROC_STACK_SIZE,\
 						NULL,\
 						BAND_PROC_PRIORITY,\
-						&hBandTask);
+						&(ps.hBandTask));
 
     if(res != pdPASS)
     {
@@ -346,7 +428,7 @@ static int start_proc(void)
 						TRX_PROC_STACK_SIZE,\
 						NULL,\
 						TRX_PROC_PRIORITY,\
-						&hTrxTask);
+						&(ps.hTrxTask));
 
     if(res != pdPASS)
     {
@@ -361,7 +443,7 @@ static int start_proc(void)
 						KEYPAD_PROC_STACK_SIZE,\
 						NULL,\
 						KEYPAD_PROC_PRIORITY,\
-						&hKbdTask);
+						&(ps.hKbdTask));
 
     if(res != pdPASS)
     {
@@ -376,7 +458,7 @@ static int start_proc(void)
 						LORA_PROC_STACK_SIZE,\
 						NULL,\
 						LORA_PROC_PRIORITY,\
-						&hLraTask);
+						&(ps.hLraTask));
 
     if(res != pdPASS)
     {
@@ -391,7 +473,7 @@ static int start_proc(void)
 						SD_PROC_STACK_SIZE,\
 						NULL,\
 						SD_PROC_PRIORITY,\
-						&hSdcTask);
+						&(ps.hSdcTask));
 
     if(res != pdPASS)
     {
@@ -406,7 +488,7 @@ static int start_proc(void)
 						APP_PROC_STACK_SIZE,\
 						(void *)&pxAppLoaderParameters,\
 						APP_PROC_PRIORITY,\
-						&hAppTask);
+						&(ps.hAppTask));
 
     if(res != pdPASS)
     {
@@ -445,6 +527,9 @@ int main(void)
 
     // Enable the CPU Cache
     CPU_CACHE_Enable();
+
+    // Clear system timer
+    ps.epoch = 0;
 
     // HAL init
     HAL_Init();

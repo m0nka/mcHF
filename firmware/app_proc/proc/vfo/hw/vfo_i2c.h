@@ -1,23 +1,20 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA 2012-2020                      **
-**                            mail: djchrismarc@gmail.com                          **
-**                                 twitter: @bph_co                                **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
+**                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:                                                                       **
-**          The mcHF project is released for radio amateurs experimentation,       **
-**          non-commercial use only. All source files under GPL-3.0, unless        **
-**          third party drivers specifies otherwise. Thank you!                    **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #ifndef __VFO_I2C_H
 #define __VFO_I2C_H
 
-#include "stm32h747i_discovery_conf.h"
+//#include "stm32h747i_discovery_conf.h"
+#include "stm32h7xx_hal.h"
 
 #if (USE_HAL_I2C_REGISTER_CALLBACKS == 1)
 typedef struct

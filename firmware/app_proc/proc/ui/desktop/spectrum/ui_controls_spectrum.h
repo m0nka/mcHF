@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2021                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #ifndef UI_CONTROLS_SPECTRUM_H
 #define UI_CONTROLS_SPECTRUM_H
@@ -29,7 +28,11 @@
 //
 #define BAND_GUIDE_LEFT_LABLE_X		((SW_FRAME_X +                  0) +  20)
 #define BAND_GUIDE_MIDP_LABLE_X		((SW_FRAME_X + SPECTRUM_MID_POINT) - 250)
+#ifndef PCB_V9_REV_A
 #define BAND_GUIDE_RIGH_LABLE_X		((SW_FRAME_X +                854) - 150)
+#else
+#define BAND_GUIDE_RIGH_LABLE_X		((SW_FRAME_X +                800) - 150)
+#endif
 //
 #define BAND_GUIDE_LEFT_LABLE_Y		(SCOPE_Y + 70)
 #define BAND_GUIDE_MIDP_LABLE_Y		(SCOPE_Y + 20)

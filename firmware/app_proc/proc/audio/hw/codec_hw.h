@@ -1,18 +1,27 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2021                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #ifndef __CODEC_HW_H
 #define __CODEC_HW_H
+
+// Use CPU Mute line as audio final amp shutown
+//
+#define USE_HARD_MUTE
+//
+// Swap polarity
+//
+//#define HARD_MUTE_REV_POL
+
+// ------------------------------------------------------------------
 
 #define CS4245_CHIP_ID						0x01
 #define CS4245_POWER_CTRL					0x02

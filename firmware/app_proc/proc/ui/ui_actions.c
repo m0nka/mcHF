@@ -1,14 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
@@ -30,10 +30,8 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 // UI driver public state
 extern struct	UI_DRIVER_STATE			ui_s;
 
-extern TaskHandle_t 					hIccTask;
-extern TaskHandle_t 					hBandTask;
-extern TaskHandle_t 					hVfoTask;
-extern TaskHandle_t 					hAudioTask;
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
 
 extern 	osMessageQId 			hEspMessage;
 struct 	ESPMessage				esp_msg_a;
@@ -114,7 +112,7 @@ msg_read:
 //*----------------------------------------------------------------------------
 void ui_actions_change_demod_mode(uchar mode)
 {
-	if(hIccTask == NULL)
+	if(ps.hIccTask == NULL)
 	{
 		printf("not all drivers running, can't change band\r\n");
 		return;
@@ -187,7 +185,7 @@ void ui_actions_change_demod_mode(uchar mode)
 		ui_controls_keyer_quit();
 
 	// Notify ICC dispatcher
-	xTaskNotify(hIccTask, UI_ICC_DEMOD_MODE, eSetValueWithOverwrite);
+	xTaskNotify(ps.hIccTask, UI_ICC_DEMOD_MODE, eSetValueWithOverwrite);
 
 	// Repaint UI
 	ui_controls_demod_refresh();
@@ -202,7 +200,7 @@ void ui_actions_change_demod_mode(uchar mode)
 //*----------------------------------------------------------------------------
 void ui_actions_change_band(uchar band, uchar skip_destop_upd)
 {
-	if((hBandTask == NULL)||(hVfoTask == NULL)||(hAudioTask == NULL)||(hIccTask == NULL))
+	if((ps.hBandTask == NULL)||(ps.hVfoTask == NULL)||(ps.hAudioTask == NULL)||(ps.hIccTask == NULL))
 	{
 		printf("not all drivers running, can't change band\r\n");
 		return;
@@ -210,12 +208,12 @@ void ui_actions_change_band(uchar band, uchar skip_destop_upd)
 
 	tsu.curr_band = band;													// New band
 
-	xTaskNotify(hBandTask,	1, 				 	eSetValueWithOverwrite);	// Update analogue filters
-	xTaskNotify(hVfoTask, 	UI_NEW_FREQ_EVENT, 	eSetValueWithOverwrite);	// Update VFO
-	xTaskNotify(hAudioTask, UI_NEW_AUDIO_EVENT, eSetValueWithOverwrite);	// Update volume
+	xTaskNotify(ps.hBandTask,	1, 				 	eSetValueWithOverwrite);	// Update analogue filters
+	xTaskNotify(ps.hVfoTask, 	UI_NEW_FREQ_EVENT, 	eSetValueWithOverwrite);	// Update VFO
+	xTaskNotify(ps.hAudioTask, UI_NEW_AUDIO_EVENT, eSetValueWithOverwrite);	// Update volume
 
 	// Change all DSP parameters relating to band change together
-	xTaskNotify(hIccTask, 	UI_ICC_CHANGE_BAND, eSetValueWithOverwrite);	// Update DSP
+	xTaskNotify(ps.hIccTask, 	UI_ICC_CHANGE_BAND, eSetValueWithOverwrite);	// Update DSP
 
 	// Save band info to eeprom
 	//save_band_info();
@@ -240,7 +238,7 @@ void ui_actions_change_band(uchar band, uchar skip_destop_upd)
 //*----------------------------------------------------------------------------
 void ui_actions_change_vfo_mode(void)
 {
-	if(hIccTask == NULL)
+	if(ps.hIccTask == NULL)
 	{
 		printf("not all drivers running, can't change VFO mode\r\n");
 		return;
@@ -252,7 +250,7 @@ void ui_actions_change_vfo_mode(void)
 		tsu.band[tsu.curr_band].fixed_mode = 1;
 
 	// Notify ICC dispatcher
-	xTaskNotify(hIccTask, UI_ICC_NCO_FREQ, eSetValueWithOverwrite);	// Update NCO frequency(DSP)
+	xTaskNotify(ps.hIccTask, UI_ICC_NCO_FREQ, eSetValueWithOverwrite);	// Update NCO frequency(DSP)
 
 	// Change '0' to center frequency in Fixed mode
 	//--ui_controls_update_span();
@@ -267,7 +265,7 @@ void ui_actions_change_vfo_mode(void)
 //*----------------------------------------------------------------------------
 void ui_actions_change_active_vfo(void)
 {
-	if(hIccTask == NULL)
+	if(ps.hIccTask == NULL)
 	{
 		printf("not all drivers running, can't change VFO mode\r\n");
 		return;
@@ -279,8 +277,8 @@ void ui_actions_change_active_vfo(void)
 		tsu.band[tsu.curr_band].active_vfo = VFO_A;
 
 	// Notify ICC dispatcher
-	xTaskNotify(hIccTask, UI_ICC_NCO_FREQ, 	eSetValueWithOverwrite);	// Update NCO frequency(DSP)
-	xTaskNotify(hVfoTask, UI_NEW_FREQ_EVENT,eSetValueWithOverwrite);	// Update VFO
+	xTaskNotify(ps.hIccTask, UI_ICC_NCO_FREQ, 	eSetValueWithOverwrite);	// Update NCO frequency(DSP)
+	xTaskNotify(ps.hVfoTask, UI_NEW_FREQ_EVENT,eSetValueWithOverwrite);	// Update VFO
 
 	// Change '0' to center frequency in Fixed mode
 	//--ui_controls_update_span();
@@ -341,7 +339,7 @@ void ui_actions_jump_to_band_part(uchar band_part_id)
 	ulong vfo;
 	short nco;
 
-	if((hVfoTask == NULL)||(hIccTask == NULL))
+	if((ps.hVfoTask == NULL)||(ps.hIccTask == NULL))
 	{
 		printf("not all drivers running, can't jump to frequency\r\n");
 		return;
@@ -464,7 +462,7 @@ void ui_actions_jump_to_band_part(uchar band_part_id)
 			tsu.band[tsu.curr_band].vfo_b = vfo;
 
 		// Notify VFO controller
-		xTaskNotify(hVfoTask, UI_NEW_FREQ_EVENT, eSetValueWithOverwrite);
+		xTaskNotify(ps.hVfoTask, UI_NEW_FREQ_EVENT, eSetValueWithOverwrite);
 	}
 }
 
@@ -570,14 +568,14 @@ void ui_actions_change_atten(uchar val)
 //*----------------------------------------------------------------------------
 void ui_actions_change_audio_balance(uchar bal)
 {
-	if(hAudioTask == NULL)
+	if(ps.hAudioTask == NULL)
 		return;
 
 	tsu.band[tsu.curr_band].audio_balance = bal;
   	//printf("val %d\r\n", tsu.band[tsu.curr_band].audio_balance);
 
 	// Notify Codec controller
-  	xTaskNotify(hAudioTask, UI_NEW_AUDIO_EVENT, eSetValueWithOverwrite);	// Wake process up
+  	xTaskNotify(ps.hAudioTask, UI_NEW_AUDIO_EVENT, eSetValueWithOverwrite);	// Wake process up
 }
 
 //*----------------------------------------------------------------------------
@@ -589,14 +587,14 @@ void ui_actions_change_audio_balance(uchar bal)
 //*----------------------------------------------------------------------------
 void ui_actions_change_audio_volume(uchar vol)
 {
-	if(hAudioTask == NULL)
+	if(ps.hAudioTask == NULL)
 		return;
 
 	tsu.band[tsu.curr_band].volume = vol;
   	//printf("val %d\r\n", tsu.band[tsu.curr_band].volume);
 
 	// Notify Codec controller
-  	xTaskNotify(hAudioTask, UI_NEW_AUDIO_EVENT, eSetValueWithOverwrite);
+  	xTaskNotify(ps.hAudioTask, UI_NEW_AUDIO_EVENT, eSetValueWithOverwrite);
 }
 
 //*----------------------------------------------------------------------------
@@ -608,14 +606,14 @@ void ui_actions_change_audio_volume(uchar vol)
 //*----------------------------------------------------------------------------
 void ui_actions_change_stereo_mode(uchar mode)
 {
-	if(hIccTask == NULL)
+	if(ps.hIccTask == NULL)
 		return;
 
   	//printf("stereo mode %d\r\n", mode);
 	tsu.stereo_mode = mode;
 
 	// Notify ICC dispatcher
-	xTaskNotify(hIccTask, UI_ICC_STEREO, eSetValueWithOverwrite);
+	xTaskNotify(ps.hIccTask, UI_ICC_STEREO, eSetValueWithOverwrite);
 }
 
 //*----------------------------------------------------------------------------
@@ -627,14 +625,14 @@ void ui_actions_change_stereo_mode(uchar mode)
 //*----------------------------------------------------------------------------
 void ui_actions_change_filter(uchar id)
 {
-	if(hIccTask == NULL)
+	if(ps.hIccTask == NULL)
 		return;
 
   	//printf("filter id %d\r\n", id);
   	tsu.band[tsu.curr_band].filter = id;
 
   	// Notify ICC dispatcher
-	xTaskNotify(hIccTask, UI_ICC_FITER, eSetValueWithOverwrite);
+	xTaskNotify(ps.hIccTask, UI_ICC_FITER, eSetValueWithOverwrite);
 }
 
 //*----------------------------------------------------------------------------
@@ -646,14 +644,14 @@ void ui_actions_change_filter(uchar id)
 //*----------------------------------------------------------------------------
 void ui_actions_change_agc_mode(uchar mode)
 {
-	if(hIccTask == NULL)
+	if(ps.hIccTask == NULL)
 		return;
 
   	//printf("agc mode %d\r\n", mode);
 	tsu.agc_mode = mode;
 
 	// Notify ICC dispatcher
-	xTaskNotify(hIccTask, UI_ICC_AGC_MODE, eSetValueWithOverwrite);
+	xTaskNotify(ps.hIccTask, UI_ICC_AGC_MODE, eSetValueWithOverwrite);
 
 	// UI repaint
 	ui_controls_agc_init();
@@ -668,14 +666,14 @@ void ui_actions_change_agc_mode(uchar mode)
 //*----------------------------------------------------------------------------
 void ui_actions_change_rf_gain(uchar gain)
 {
-	if(hIccTask == NULL)
+	if(ps.hIccTask == NULL)
 		return;
 
   	//printf("rf gain %d\r\n", gain);
 	tsu.rf_gain = gain;
 
 	// Notify ICC dispatcher
-	xTaskNotify(hIccTask, UI_ICC_AGC_MODE, eSetValueWithOverwrite);
+	xTaskNotify(ps.hIccTask, UI_ICC_AGC_MODE, eSetValueWithOverwrite);
 
 	// UI repaint
 	ui_controls_agc_init();
@@ -710,11 +708,11 @@ void ui_actions_change_power_level(void)
 //*----------------------------------------------------------------------------
 void ui_actions_change_dsp_core(void)
 {
-	if(hIccTask == NULL)
+	if(ps.hIccTask == NULL)
 		return;
 
 	// Notify ICC dispatcher
-	xTaskNotify(hIccTask, UI_ICC_CHANGE_CORE, eSetValueWithOverwrite);
+	xTaskNotify(ps.hIccTask, UI_ICC_CHANGE_CORE, eSetValueWithOverwrite);
 
 	// UI repaint
 	ui_controls_agc_init();

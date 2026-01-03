@@ -1,14 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 
 #include "main.h"
@@ -781,8 +781,8 @@ void radio_init_on_reset(void)
 	// ToDo: Are we going to send those to the DSP core at all ?
 	radio_init_load_dsp_values();
 
-	//if(res == 0)
-	//	return;
+	if(res == 0)
+		return;
 
 	// Restore eeprom
 	radio_init_eep_defaults();

@@ -1,14 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #include "main.h"
 
@@ -22,7 +22,7 @@ static k_AlarmCallback AlarmCallback;
 #define BUTTON_WAKEUP_PIN                   GPIO_PIN_13
 RTC_HandleTypeDef RtcHandle;
 
-#if 0
+#if 1
 // Fix insane Date on startup
 void check_date_sanity(void)
 {
@@ -86,7 +86,7 @@ void k_CalendarBkupInit(void)
 	}
 
 	// Fix crazy dates
-//!	check_date_sanity();
+	check_date_sanity();
 }
 
 /**

@@ -1,14 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #include "main.h"
 #include "mchf_pro_board.h"
@@ -23,7 +23,9 @@
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
 extern struct	UI_DRIVER_STATE			ui_s;
-extern 			TaskHandle_t 			hUiTask;
+
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
 
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_proc_worker
@@ -64,7 +66,7 @@ static void audio_proc_worker(ulong ulCmd)
 
 			// Mute audio path
 			#ifdef USE_HARD_MUTE
-			#ifndef PCB_V9_REV_A
+			#ifdef HARD_MUTE_REV_POL
 			HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);
 			#else
 			HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);
@@ -97,8 +99,8 @@ static void audio_proc_worker(ulong ulCmd)
 			codec_hw_volume();
 
 			// Notify UI
-			if(hUiTask != NULL)
-				xTaskNotify(hUiTask, UI_NEW_AUDIO_EVENT, eSetValueWithOverwrite);
+			if(ps.hUiTask != NULL)
+				xTaskNotify(ps.hUiTask, UI_NEW_AUDIO_EVENT, eSetValueWithOverwrite);
 
 			break;
 		}
@@ -187,7 +189,7 @@ static void btm_proc_task(void *arg)
 			{
 				printf("== bt connected ==\r\n");
 				#ifdef USE_HARD_MUTE
-				#ifndef PCB_V9_REV_A
+				#ifdef HARD_MUTE_REV_POL
 				HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);	// mute
 				#else
 				HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);	// mute
@@ -198,7 +200,7 @@ static void btm_proc_task(void *arg)
 			{
 				printf("== bt disconnected ==\r\n");
 				#ifdef USE_HARD_MUTE
-				#ifndef PCB_V9_REV_A
+				#ifdef HARD_MUTE_REV_POL
 				HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_SET);	// unmute
 				#else
 				HAL_GPIO_WritePin(CODEC_MUTE_PORT, CODEC_MUTE, GPIO_PIN_RESET);	// unmute

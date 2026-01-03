@@ -1,17 +1,17 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
-#include "main.h"
 #include "mchf_pro_board.h"
+#include "main.h"
 
 #include "radio_init.h"
 
@@ -32,9 +32,8 @@ extern struct	UI_DRIVER_STATE			ui_s;
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
 
-// Process handle
-extern 			TaskHandle_t 			hKbdTask;
-extern 			TaskHandle_t 			hUiTask;
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
 
 //*----------------------------------------------------------------------------
 //* Function Name       : EXTI15_10_IRQHandler
@@ -73,7 +72,7 @@ void keypad_proc_irq(uchar id)
 	BaseType_t xHigherPriorityTaskWoken;
 
 	xHigherPriorityTaskWoken = pdFALSE;
-	xTaskNotifyFromISR(hKbdTask, id, eSetBits, &xHigherPriorityTaskWoken);
+	xTaskNotifyFromISR(ps.hKbdTask, id, eSetBits, &xHigherPriorityTaskWoken);
 	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
@@ -632,7 +631,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		{
 			printf("F1->Menu\r\n");
 			ui_s.req_state = MODE_MENU;
-			xTaskNotify(hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
+			xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
 		}
 		else
 		{
@@ -692,7 +691,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		if(!hold)
 		{
 			printf("F5->QuickLog\r\n");
-			GUI_StoreKeyMsg('L', 1);
+			//GUI_StoreKeyMsg('L', 1);
 		}
 		else
 			printf("F5 hold\r\n");

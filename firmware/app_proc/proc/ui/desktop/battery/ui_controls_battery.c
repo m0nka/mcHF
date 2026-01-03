@@ -1,14 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:               GNU GPLv3                                               **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
@@ -27,12 +27,19 @@
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
 
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
+
 #ifdef CONTEXT_BMS
 extern struct BMSState	bmss;
 #endif
 
 uchar curr_batt_value = 0;
 uchar source_suppy = 0xff;
+
+// Charge publics
+ulong 	charge_timer = 0;
+uchar	prog_bar_val = 0;
 
 #ifdef BATT_VERTICAL
 static void ui_controls_battery_progress(uchar val)
@@ -170,25 +177,136 @@ static void ui_controls_battery_progress(uchar val)
 	// Battery percentage text
 	GUI_DispStringAt(buf, x - 12,  BATTERY_Y + BATTERY_SIZE_Y - 22);
 
+	// Clear
+	//GUI_SetColor(GUI_LIGHTGRAY);
 	GUI_SetColor(GUI_BLACK);
+	GUI_FillRoundedRect(	(BATT_MINU_X + 0),
+							(BATTERY_Y + 3),
+							(BATT_MINU_X + 58),
+							(BATT_MINU_Y - 2),
+							2);
+
+	GUI_SetFont(&GUI_Font16B_ASCII);
+	GUI_SetColor(GUI_WHITE);
 
 	if((bmss.mins)&&(!bmss.run_on_dc))
 	{
 		if((bmss.mins/60) > 99)
 		{
 			sprintf(buf, "%2dh", bmss.mins/60);
-			GUI_DispStringAt(buf, x - 12, BATTERY_Y + BATTERY_SIZE_Y - 62);
+			GUI_DispStringAt(buf, BATT_MINU_X + 2, BATT_MINU_Y - BATT_MINU_TXT_Y);
 		}
 		else
 		{
 			sprintf(buf, "%2dh%2dm", bmss.mins/60, bmss.mins%60);
-			GUI_DispStringAt(buf, x - 26, BATTERY_Y + BATTERY_SIZE_Y - 62);
+			GUI_DispStringAt(buf, BATT_MINU_X  + 6, BATT_MINU_Y - BATT_MINU_TXT_Y);
 		}
 	}
 	else
-		GUI_DispStringAt("      ", x - 6, BATTERY_Y + BATTERY_SIZE_Y - 62);
+		GUI_DispStringAt("      ", BATT_MINU_X  + 6, BATT_MINU_Y - BATT_MINU_TXT_Y);
 	#else
-	GUI_DispStringAt("offline", x - 16, BATTERY_Y + BATTERY_SIZE_Y - 33);
+	GUI_DispStringAt("offline", x - 16, BATTERY_Y + BATTERY_SIZE_Y - BATT_MINU_TXT_Y);
+	#endif
+}
+static void ui_controls_charge_progress(uchar val)
+{
+	char 			buf[10];
+
+	// Run timer
+	if(charge_timer == 0)
+		charge_timer = ps.epoch;				// reset
+	else if((charge_timer + 300) < ps.epoch)
+	{
+		prog_bar_val += 5;
+		if(prog_bar_val > 100)
+			prog_bar_val = 0;
+
+		charge_timer = ps.epoch;				// restart
+	}
+	else
+		return;
+
+	if(val > 100)
+		val = 100;
+
+	// Clear
+	GUI_SetColor(GUI_LIGHTGRAY);
+	GUI_FillRoundedRect(	(BATTERY_X + 3),
+							(BATTERY_Y + 3),
+							(BATTERY_X + BATTERY_SIZE_X - 2),
+							(BATTERY_Y + BATTERY_SIZE_Y - 2),
+							2);
+	int x0 = BATTERY_X + 3;
+	int x1 = BATTERY_X + 2 + prog_bar_val/2;
+
+	//if(bmss.run_on_dc)
+	//	GUI_SetColor(GUI_MAGENTA);
+	//else if(val < 25)
+	//	GUI_SetColor(GUI_LIGHTRED);
+	//else
+		GUI_SetColor(BATT_COLOUR);
+
+	// Update
+	GUI_FillRect(x0, (BATTERY_Y + 3), x1, (BATTERY_Y + BATTERY_SIZE_Y - 2));
+
+	sprintf(buf, "%d%%", val);
+	int x  = BATTERY_X + BATTERY_SIZE_X/2 - 10;
+
+	if(val < 10)
+		x  += 9;
+	else if(val < 100)
+		x += 5;
+
+	#ifdef CONTEXT_BMS
+	//if(bmss.run_on_dc)
+	//	GUI_SetColor(GUI_BLACK);		// on USB suppy
+	//else
+	//{
+	//	if(val > 34)
+	//		GUI_SetColor(GUI_WHITE);	// on battery, good SOC, light colour
+	//	else
+			GUI_SetColor(GUI_RED);		// on battery, low SOC, need contrast
+	//}
+	#else
+	GUI_SetColor(GUI_BLACK);		// on USB suppy
+	#endif
+
+	GUI_SetFont(&GUI_Font20B_ASCII);
+
+	#ifdef CONTEXT_BMS
+
+	// Battery percentage text
+	GUI_DispStringAt(buf, x - 12,  BATTERY_Y + BATTERY_SIZE_Y - 22);
+
+	// Clear
+	//GUI_SetColor(GUI_LIGHTGRAY);
+	GUI_SetColor(GUI_BLACK);
+	GUI_FillRoundedRect(	(BATT_MINU_X + 0),
+							(BATTERY_Y + 3),
+							(BATT_MINU_X + 58),
+							(BATT_MINU_Y - 2),
+							2);
+
+	GUI_SetFont(&GUI_Font16B_ASCII);
+	GUI_SetColor(GUI_WHITE);
+
+	if((bmss.mins)&&(!bmss.run_on_dc))
+	{
+		if((bmss.mins/60) > 99)
+		{
+			sprintf(buf, "%2dh", bmss.mins/60);
+			GUI_DispStringAt(buf, BATT_MINU_X + 2, BATT_MINU_Y - BATT_MINU_TXT_Y);
+		}
+		else
+		{
+			sprintf(buf, "%2dh%2dm", bmss.mins/60, bmss.mins%60);
+			GUI_DispStringAt(buf, BATT_MINU_X  + 6, BATT_MINU_Y - BATT_MINU_TXT_Y);
+		}
+	}
+	else
+		GUI_DispStringAt("      ", BATT_MINU_X  + 6, BATT_MINU_Y - BATT_MINU_TXT_Y);
+	#else
+	GUI_DispStringAt("offline", x - 16, BATTERY_Y + BATTERY_SIZE_Y - BATT_MINU_TXT_Y);
 	#endif
 }
 #endif
@@ -203,7 +321,11 @@ static void ui_controls_battery_progress(uchar val)
 //*----------------------------------------------------------------------------
 void ui_controls_battery_init(void)
 {
-	curr_batt_value = 0;
+	// Reset publics
+	curr_batt_value	= 0;
+	source_suppy 	= 0xff;
+	charge_timer	= 0;
+	prog_bar_val 	= 0;
 
 	// Two pixel frame
 	GUI_SetColor(BATT_COLOUR);
@@ -211,7 +333,7 @@ void ui_controls_battery_init(void)
 	GUI_DrawRoundedRect((BATTERY_X +  1),(BATTERY_Y + 1),(BATTERY_X + BATTERY_SIZE_X + 1),(BATTERY_Y + BATTERY_SIZE_Y + 1), 2);
 
 	// Terminal
-	#ifdef BATT_VERTICA
+	#ifdef BATT_VERTICAL
 	// Vertical
 	GUI_FillRect(	(BATTERY_X + BATTERY_SIZE_X/2 - 10),
 					(BATTERY_Y - 5),
@@ -264,9 +386,7 @@ void ui_controls_battery_touch(void)
 //*----------------------------------------------------------------------------
 void ui_controls_battery_refresh(void)
 {
-	return;
-
-	#if 1
+	#if 0
 	// Exercise the progress bar
 	static uchar bv = 0;
 	static uchar vskip = 0;
@@ -285,14 +405,19 @@ void ui_controls_battery_refresh(void)
 	#else
 	// Real progress from BMS
 	#ifdef CONTEXT_BMS
-	if((curr_batt_value != bmss.perc)||(source_suppy != bmss.run_on_dc))
+	if(!(bmss.charger_on))
 	{
-		ui_controls_battery_progress(bmss.perc);
+		if((curr_batt_value != bmss.perc)||(source_suppy != bmss.run_on_dc))
+		{
+			ui_controls_battery_progress(bmss.perc);
 
-		// Save old values
-		curr_batt_value = bmss.perc;
-		source_suppy 	= bmss.run_on_dc;
+			// Save old values
+			curr_batt_value = bmss.perc;
+			source_suppy 	= bmss.run_on_dc;
+		}
 	}
+	else
+		ui_controls_charge_progress(bmss.perc);
 	#endif
 
 	#endif

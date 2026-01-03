@@ -1,14 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2025                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:                                                                       **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #ifndef __MCHF_PRO_BOARD_H
 #define __MCHF_PRO_BOARD_H
@@ -497,40 +497,6 @@ typedef void FAST_REFRESH(void);
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
-// CPU exceptions - main.c
-void 	NMI_Handler(void);
-void 	HardFault_Handler(void);
-void 	MemManage_Handler(void);
-void 	BusFault_Handler(void);
-void 	UsageFault_Handler(void);
-void 	SVC_Handler(void);
-void 	PendSV_Handler(void);
-void 	SysTick_Handler(void);
-
-// Exports in board file
-void 	mchf_pro_board_debug_led_init(void);
-void 	mchf_pro_board_blink_if_alive(uchar flags);
-
-void 	mchf_pro_board_read_cpu_details(void);
-void 	mchf_pro_board_start_gpio_clocks(void);
-
-void 	mchf_pro_board_mpu_config(void);
-void 	mchf_pro_board_cpu_cache_enable(void);
-
-uchar 	mchf_pro_board_system_clock_config(uchar clk_src);
-uchar 	mchf_pro_board_rtc_clock_config(uchar clk_src);
-void 	mchf_pro_board_rtc_clock_disable(void);
-
-void 	mchf_pro_board_swo_init(void);
-void 	mchf_pro_board_mco2_on(void);
-
-void 	mchf_pro_board_sensitive_hw_init(void);
-
-void 	SystemClockChange_Handler(void);
-void 	SystemClock_Config(void);
-void 	PeriphCommonClock_Config(void);
-void 	MPU_Config(void);
-void 	CPU_CACHE_Enable(void);
 
 // in main.c !
 void 	transceiver_init_eep_defaults(void);

@@ -77,19 +77,9 @@
 			<locationURI>PARENT-1-PROJECT_LOC/config/ft6x06_conf.h</locationURI>
 		</link>
 		<link>
-			<name>config/mt25tl01g_conf.h</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/config/mt25tl01g_conf.h</locationURI>
-		</link>
-		<link>
 			<name>config/proc_conf.h</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/config/proc_conf.h</locationURI>
-		</link>
-		<link>
-			<name>config/stm32h747i_discovery_conf.h</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/config/stm32h747i_discovery_conf.h</locationURI>
 		</link>
 		<link>
 			<name>config/stm32h7xx_hal_conf.h</name>
@@ -127,11 +117,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/hw/board.c</locationURI>
 		</link>
 		<link>
-			<name>hw/bsp.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/hw/bsp.c</locationURI>
-		</link>
-		<link>
 			<name>hw/rtc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/hw/rtc.c</locationURI>
@@ -145,11 +130,6 @@
 			<name>hw/shared_i2c.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/hw/shared_i2c.c</locationURI>
-		</link>
-		<link>
-			<name>hw/stm32h747i_discovery.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/hw/stm32h747i_discovery.c</locationURI>
 		</link>
 		<link>
 			<name>hw/stm32h7xx_hal_timebase_tim.c</name>
@@ -1090,11 +1070,6 @@
 			<name>proc/ui/ui_lib/keypad/c_keypad.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/ui_lib/keypad/c_keypad.c</locationURI>
-		</link>
-		<link>
-			<name>proc/lora/drivers/meshcore/repeater/repeater_main.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/drivers/meshcore/repeater/repeater_main.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/batt/menu_batt.c</name>

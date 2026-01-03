@@ -1,15 +1,14 @@
 /************************************************************************************
 **                                                                                 **
-**                             mcHF Pro QRP Transceiver                            **
-**                         Krassi Atanassov - M0NKA, 2013-2021                     **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
 **  File name:                                                                     **
 **  Description:                                                                   **
 **  Last Modified:                                                                 **
-**  Licence:       The mcHF project is released for radio amateurs experimentation **
-**               and non-commercial use only.Check 3rd party drivers for licensing **
+**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #ifndef UI_CONTROLS_LAYOUT_H
 #define UI_CONTROLS_LAYOUT_H
@@ -404,6 +403,10 @@
 //
 #define BATTERY_SIZE_X				54
 #define BATTERY_SIZE_Y				28
+
+#define BATT_MINU_X					(BATTERY_X + BATTERY_SIZE_X + 10)
+#define BATT_MINU_Y					(BATTERY_Y + BATTERY_SIZE_Y)
+#define BATT_MINU_TXT_Y				21
 //
 // ----------------------------------------------------------------------------
 // Filter

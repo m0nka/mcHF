@@ -1,5 +1,6 @@
 
 #include "mchf_pro_board.h"
+#include "main.h"
 
 #ifdef USE_MT48LC4M32B2P
 #include "MT48LC4M32B2P.h"
