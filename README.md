@@ -16,12 +16,11 @@ Both, hardware and firmware is designed by combining the great work of many hams
 
 <ul>
   <li>3-30 Mhz amateur bands transmit and receive</li>
-  <li>Large, 5inch IPS LCD with capacitive touch</li>
+  <li>Large, 4.3inch IPS LCD with capacitive touch</li>
   <li>Supported SSB, AM, FM and CW</li>
-  <li>Built in iambic keyer</li>
-  <li>Realtime waterfall and specturm scope</li>
+  <li>Realtime waterfall and spectrum scope</li>
   <li>25W output power</li>
-  <li>Built in 100Wh LiOn battery</li>
+  <li>Built in 80Wh LiOn battery</li>
   <li>Dual USB-C ports for power, charging and PC connection</li>
   <li>Support for Bluetooth stereo headphones</li>
 </ul>
