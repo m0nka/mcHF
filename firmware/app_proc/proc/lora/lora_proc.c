@@ -15,11 +15,8 @@
 
 #ifdef CONTEXT_LORA
 
+#include "sx126x.h"
 #include "lora_spi.h"
-
-#ifdef MESHCORE_REPEATER
-#include "repeater_main.h"
-#endif
 
 #include "lora_proc.h"
 

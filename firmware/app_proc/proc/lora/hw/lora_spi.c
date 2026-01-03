@@ -17,6 +17,7 @@
 
 #include "lora_spi.h"
 
+#if 0
 SPI_HandleTypeDef SpiHandle1;
 DMA_HandleTypeDef hdma_tx;
 DMA_HandleTypeDef hdma_rx;
@@ -52,6 +53,7 @@ static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferL
 
   return 0;
 }
+#endif
 
 static void lora_spi_misc_gpio_config(void)
 {
@@ -117,6 +119,7 @@ static void lora_spi_gpio_config(void)
 	LL_GPIO_Init(RFM_SCK_SPI1_PORT, &GPIO_InitStruct);
 }
 
+#if 0
 void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 {
   if (hspi->Instance == SPI1)
@@ -258,6 +261,7 @@ uchar lora_spi_init(void)
 	  return 0;
 
 }
+#endif
 
 void lora_gpio_init(void)
 {

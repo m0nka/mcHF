@@ -16,6 +16,7 @@
 // Test wiring to back board
 //#define SPI_GPIO_TEST
 
+#if 0
 #define SPI1_CLK_ENABLE()                __HAL_RCC_SPI1_CLK_ENABLE()
 #define DMA1_CLK_ENABLE()                __HAL_RCC_DMA1_CLK_ENABLE()
 #define SPI1_SCK_GPIO_CLK_ENABLE()       __HAL_RCC_GPIOA_CLK_ENABLE()
@@ -48,7 +49,7 @@ enum {
   TRANSFER_COMPLETE,
   TRANSFER_ERROR
 };
-
+#endif
 // -----------------------------------------------------------------------
 
 uchar lora_spi_init(void);
