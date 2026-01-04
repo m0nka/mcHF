@@ -92,6 +92,12 @@ void lora_proc_task(void const * argument)
 	// Radio driver init
 	sx126x_init(&radio_drv,0,0,0,0,0);
 
+	char version[100];
+	if(sx126x_read_version_string(&radio_drv, version, sizeof(version)) == 0)
+	{
+		printf("ver: %s \r\n", version);
+	}
+
 lora_proc_loop:
 
 	#ifdef SPI_GPIO_TEST

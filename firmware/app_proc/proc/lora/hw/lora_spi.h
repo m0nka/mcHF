@@ -16,6 +16,13 @@
 // Test wiring to back board
 //#define SPI_GPIO_TEST
 
+// Defines a default timeout delay in milliseconds for the SPI transfer
+#ifndef SPI_TRANSFER_TIMEOUT
+#define SPI_TRANSFER_TIMEOUT 1000
+#elif SPI_TRANSFER_TIMEOUT <= 0
+#error "SPI_TRANSFER_TIMEOUT cannot be less or equal to 0!"
+#endif
+
 #if 0
 #define SPI1_CLK_ENABLE()                __HAL_RCC_SPI1_CLK_ENABLE()
 #define DMA1_CLK_ENABLE()                __HAL_RCC_DMA1_CLK_ENABLE()
@@ -112,7 +119,7 @@ typedef struct {
 
 // -----------------------------------------------------------------------
 
-uchar lora_spi_init(void);
+void lora_spi_init(void);
 
 int spi_device_transmit(int device, spi_transaction_t *t);
 

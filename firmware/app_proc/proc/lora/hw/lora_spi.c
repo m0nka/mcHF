@@ -15,7 +15,11 @@
 
 #ifdef CONTEXT_LORA
 
+#include "sx126x.h"
 #include "lora_spi.h"
+
+// FreeRTOS process state
+extern struct PROC_STATE 			ps;
 
 #if 0
 SPI_HandleTypeDef SpiHandle1;
@@ -66,9 +70,9 @@ static void lora_spi_misc_gpio_config(void)
 	// Lora power off
 	lora_spi_power_state(0);
 
-	// All low
-	LL_GPIO_ResetOutputPin(RFM_NSS_PORT,  RFM_NSS);
-	LL_GPIO_ResetOutputPin(RFM_DIO0_PORT, RFM_DIO0);
+	// Initial state
+	LL_GPIO_SetOutputPin(RFM_NSS_PORT,  RFM_NSS);	// de-selected
+	LL_GPIO_SetOutputPin(RFM_DIO0_PORT, RFM_DIO0);	// in reset
 
 	// Chip select, PC1
 	GPIO_InitStruct.Pin       = RFM_NSS;
@@ -266,10 +270,173 @@ uchar lora_spi_init(void)
 }
 #endif
 
+void lora_spi_init(void)
+{
+	LL_SPI_InitTypeDef	SPI_InitStruct;
+
+  /* Configure SPI MASTER ****************************************************/
+  /* Enable SPI1 Clock */
+  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SPI1);
+
+  /* Configure the SPI1 parameters */
+  SPI_InitStruct.BaudRate          = LL_SPI_BAUDRATEPRESCALER_DIV32;
+  SPI_InitStruct.TransferDirection = LL_SPI_FULL_DUPLEX;
+  SPI_InitStruct.ClockPhase        = LL_SPI_PHASE_1EDGE;
+  SPI_InitStruct.ClockPolarity     = LL_SPI_POLARITY_LOW;
+  SPI_InitStruct.BitOrder          = LL_SPI_MSB_FIRST;
+  SPI_InitStruct.DataWidth         = LL_SPI_DATAWIDTH_8BIT;
+  SPI_InitStruct.NSS               = LL_SPI_NSS_SOFT;
+  SPI_InitStruct.CRCCalculation    = LL_SPI_CRCCALCULATION_DISABLE;
+  SPI_InitStruct.Mode              = LL_SPI_MODE_MASTER;
+
+  LL_SPI_Init(SPI1, &SPI_InitStruct);
+
+  /* Lock GPIO for master to avoid glitches on the clock output */
+  LL_SPI_EnableGPIOControl(SPI1);
+  LL_SPI_EnableMasterRxAutoSuspend(SPI1);
+
+#if 0
+  /* Set number of date to transmit */
+  LL_SPI_SetTransferSize(SPI1, SPIx_NbDataToTransmit);
+
+  /* Enable SPI1 */
+  LL_SPI_Enable(SPI1);
+
+  /* Enable TXP Interrupt */
+  LL_SPI_EnableIT_TXP(SPI1);
+
+  /* Enable RXP Interrupt */
+  LL_SPI_EnableIT_RXP(SPI1);
+
+  /* Enable SPI Errors Interrupt */
+  LL_SPI_EnableIT_CRCERR(SPI1);
+  LL_SPI_EnableIT_UDR(SPI1);
+  LL_SPI_EnableIT_OVR(SPI1);
+  LL_SPI_EnableIT_EOT(SPI1);
+#endif
+}
+
+static uchar spi_transfer(const uchar *tx_buffer, uchar *rx_buffer, uchar len)
+{
+	uchar 		ret = 0;
+	uint32_t 	tickstart, size = len/8;
+	uchar 		*tx_buf = (uchar *)tx_buffer;
+
+	if(len == 0)
+		return 1;
+
+	//--printf("total: %d \r\n", size);
+
+	LL_GPIO_ResetOutputPin(RFM_NSS_PORT,  RFM_NSS);
+
+    // Start transfer
+    LL_SPI_SetTransferSize(SPI1, size);
+    LL_SPI_Enable(SPI1);
+    LL_SPI_StartMasterTransfer(SPI1);
+
+    while(size--)
+    {
+    	tickstart = ps.epoch;
+    	while(!LL_SPI_IsActiveFlag_TXP(SPI1))
+    	{
+    		if((ps.epoch - tickstart) >= SPI_TRANSFER_TIMEOUT)
+    		{
+    			//--printf("spi tx err at: %d \r\n", (int)size);
+    			ret = 2;
+    			goto spi_abort;
+    		}
+    	}
+
+    	LL_SPI_TransmitData8(SPI1, tx_buf ? *tx_buf++ : 0XFF);
+
+    	tickstart = ps.epoch;
+    	while(!LL_SPI_IsActiveFlag_RXP(SPI1))
+    	{
+    		if((ps.epoch - tickstart) >= SPI_TRANSFER_TIMEOUT)
+    		{
+    			//--printf("spi rx err at: %d \r\n", (int)size);
+    			ret = 3;
+    			goto spi_abort;
+    		}
+    	}
+
+    	if (rx_buffer)
+    	{
+    		*rx_buffer++ = LL_SPI_ReceiveData8(SPI1);
+    	}
+    	else
+    	{
+    		LL_SPI_ReceiveData8(SPI1);
+    	}
+
+    	//if ((SPI_TRANSFER_TIMEOUT != HAL_MAX_DELAY) && (ps.epoch - tickstart >= SPI_TRANSFER_TIMEOUT))
+    	//{
+    	//	ret = 1;
+    	//	break;
+    	//}
+    }
+
+spi_abort:
+    // Add a delay before disabling SPI otherwise last-bit/last-clock may be truncated
+    // See https://github.com/stm32duino/Arduino_Core_STM32/issues/1294
+    // Computed delay is half SPI clock
+    //delayMicroseconds(1000);
+
+    /* Close transfer */
+    /* Clear flags */
+    LL_SPI_ClearFlag_EOT(SPI1);
+    LL_SPI_ClearFlag_TXTF(SPI1);
+
+    /* Disable SPI peripheral */
+    LL_SPI_Disable(SPI1);
+
+	LL_GPIO_SetOutputPin(RFM_NSS_PORT,  RFM_NSS);
+
+	return ret;
+}
+
 int spi_device_transmit(int device, spi_transaction_t *t)
 {
+	uchar tx_buff[10];
+	ulong out_len = t->length;
+	int  ret = 0;
+
 	printf("spi transfer \r\n");
-	return 0;
+
+	if(t->cmd == SX126X_CMD_READ_REGISTER)
+	{
+		tx_buff[0] = t->cmd;
+		out_len += 8;
+
+		if((t->flags & SPI_TRANS_VARIABLE_ADDR) == SPI_TRANS_VARIABLE_ADDR)
+		{
+			printf("add address \r\n");
+
+			tx_buff[1] = t->addr >> 8;
+			tx_buff[2] = t->addr & 0xFF;
+			out_len += 16;
+		}
+
+		if((t->flags & SPI_TRANS_VARIABLE_DUMMY) == SPI_TRANS_VARIABLE_DUMMY)
+		{
+			printf("add dummy \r\n");
+
+			tx_buff[3] = 0;
+			out_len += 8;
+		}
+
+		ret = spi_transfer(tx_buff, t->rx_buffer, out_len);
+
+		if(ret)
+			printf("spi res: %d \r\n", ret);
+	}
+	else
+	{
+		printf("not supported \r\n");
+		return 10;
+	}
+
+	return ret;
 }
 
 void lora_gpio_init(void)

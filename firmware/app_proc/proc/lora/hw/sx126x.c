@@ -615,14 +615,20 @@ esp_err_t sx126x_read_buffer(sx126x_handle_t* handle, uint8_t offset, uint8_t* o
 
 // Public functions - registers
 
-esp_err_t sx126x_read_version_string(sx126x_handle_t* handle, char* out_buffer, size_t buffer_size) {
-    if (out_buffer == NULL || buffer_size < 1) {
+esp_err_t sx126x_read_version_string(sx126x_handle_t* handle, char* out_buffer, size_t buffer_size)
+{
+    if (out_buffer == NULL || buffer_size < 1)
+    {
         return ESP_ERR_INVALID_ARG;
     }
+
     memset(out_buffer, '\0', buffer_size);
-    if (buffer_size > SX126X_VERSION_STRING_LENGTH) {
+
+    if (buffer_size > SX126X_VERSION_STRING_LENGTH)
+    {
         buffer_size = SX126X_VERSION_STRING_LENGTH;
     }
+
     return sx126x_read_register(handle, SX126X_REG_VERSION_STRING, (uint8_t*)out_buffer, buffer_size);
 }
 
@@ -730,7 +736,7 @@ esp_err_t sx126x_init(sx126x_handle_t* handle, int spi_host_id, int nss, int res
                         "Failed to add interrupt handler for busy pin");
 	#else
     lora_gpio_init();
-    //lora_spi_init();
+    lora_spi_init();
 	#endif
 
     handle->busy = busy;
