@@ -7,18 +7,8 @@
 
 #ifdef CONTEXT_LORA
 
-#include <iso646.h>
-#include <stdint.h>
-//#include "driver/spi_common.h"
-//#include "driver/spi_master.h"
-//#include "esp_check.h"
-//#include "esp_err.h"
-//#include "esp_log.h"
 #include "lora_spi.h"
-
 #include "sx126x.h"
-
-//static const char* TAG = "sx126x";
 
 // Interrupt handlers
 
@@ -75,7 +65,7 @@ static esp_err_t sx126x_command(sx126x_handle_t* handle, uint8_t command, const 
 {
     if (handle == NULL)
     	return ESP_ERR_INVALID_ARG;
-#if 0
+
     spi_transaction_t t = {
         .flags     = 0,
         .cmd       = command,
@@ -87,7 +77,6 @@ static esp_err_t sx126x_command(sx126x_handle_t* handle, uint8_t command, const 
     esp_err_t res = spi_device_transmit(handle->device, &t);
     if (res != ESP_OK)
     	return res;
-#endif
 
     return sx126x_busy_wait(handle);
 }
@@ -216,7 +205,7 @@ esp_err_t sx126x_get_irq_status(sx126x_handle_t* handle, uint16_t* out_irq_statu
     	return ESP_ERR_INVALID_ARG;
 
     uint8_t result[3];
-#if 0
+
     spi_transaction_t t = {
         .flags     = 0,
         .cmd       = SX126X_CMD_GET_IRQ_STATUS,
@@ -237,7 +226,7 @@ esp_err_t sx126x_get_irq_status(sx126x_handle_t* handle, uint16_t* out_irq_statu
     if (res == ESP_OK && out_chip_mode) {
         *out_chip_mode = (result[0] >> 4) & 0x07;
     }
-#endif
+
     return ESP_OK;
 }
 
@@ -247,7 +236,7 @@ esp_err_t sx126x_clear_irq_status(sx126x_handle_t* handle, uint16_t irq_mask) {
     uint8_t parameters[2];
     parameters[0] = (irq_mask >> 8) & 0xFF;
     parameters[1] = irq_mask & 0xFF;
-#if 0
+
     spi_transaction_t t = {
         .flags     = 0,
         .cmd       = SX126X_CMD_CLEAR_IRQ_STATUS,
@@ -255,9 +244,8 @@ esp_err_t sx126x_clear_irq_status(sx126x_handle_t* handle, uint16_t irq_mask) {
         .tx_buffer = parameters,
         .rx_buffer = NULL,
     };
+
     return spi_device_transmit(handle->device, &t);
-#endif
-    return 0;
 }
 
 esp_err_t sx126x_set_dio2_as_rf_switch_ctrl(sx126x_handle_t* handle, bool enable) {
@@ -519,7 +507,7 @@ esp_err_t sx126x_clear_device_errors(sx126x_handle_t* handle, uint8_t* out_comma
     if (handle == NULL) return ESP_ERR_INVALID_ARG;
 
     uint8_t result[2] = {0};
-#if 0
+
     spi_transaction_t t = {
         .flags     = 0,
         .cmd       = SX126X_CMD_CLEAR_DEVICE_ERRORS,
@@ -535,14 +523,15 @@ esp_err_t sx126x_clear_device_errors(sx126x_handle_t* handle, uint8_t* out_comma
 
     if (res == ESP_OK && out_command_status) *out_command_status = (result[0] >> 1) & 0x07;
     if (res == ESP_OK && out_chip_mode) *out_chip_mode = (result[0] >> 4) & 0x07;
-#endif
+
     return ESP_OK;
 }
 
 esp_err_t sx126x_write_register(sx126x_handle_t* handle, uint16_t address, const uint8_t* values, size_t length)
 {
-    if (handle == NULL) return ESP_ERR_INVALID_ARG;
-#if 0
+    if (handle == NULL)
+    	return ESP_ERR_INVALID_ARG;
+
     spi_transaction_ext_t t = {
         .base =
             {
@@ -555,9 +544,8 @@ esp_err_t sx126x_write_register(sx126x_handle_t* handle, uint16_t address, const
             },
         .address_bits = 16,
     };
+
     return spi_device_transmit(handle->device, (spi_transaction_t*)&t);
-#endif
-    return 0;
 }
 
 esp_err_t sx126x_read_register(sx126x_handle_t* handle, uint16_t address, uint8_t* out_values, size_t length)
@@ -565,7 +553,6 @@ esp_err_t sx126x_read_register(sx126x_handle_t* handle, uint16_t address, uint8_
     if (handle == NULL)
     	return ESP_ERR_INVALID_ARG;
 
-#if 0
     spi_transaction_ext_t t = {
         .base =
             {
@@ -579,16 +566,15 @@ esp_err_t sx126x_read_register(sx126x_handle_t* handle, uint16_t address, uint8_
         .address_bits = 16,
         .dummy_bits   = 8,
     };
+
     return spi_device_transmit(handle->device, (spi_transaction_t*)&t);
-#endif
-    return 0;
 }
 
 esp_err_t sx126x_write_buffer(sx126x_handle_t* handle, uint8_t offset, const uint8_t* values, size_t length)
 {
     if (handle == NULL)
     	return ESP_ERR_INVALID_ARG;
-#if 0
+
     spi_transaction_ext_t t = {
         .base =
             {
@@ -601,15 +587,15 @@ esp_err_t sx126x_write_buffer(sx126x_handle_t* handle, uint8_t offset, const uin
             },
         .address_bits = 8,
     };
+
     return spi_device_transmit(handle->device, (spi_transaction_t*)&t);
-#endif
 }
 
 esp_err_t sx126x_read_buffer(sx126x_handle_t* handle, uint8_t offset, uint8_t* out_values, size_t length)
 {
     if (handle == NULL)
     	return ESP_ERR_INVALID_ARG;
-#if 0
+
     spi_transaction_ext_t t = {
         .base =
             {
@@ -623,9 +609,8 @@ esp_err_t sx126x_read_buffer(sx126x_handle_t* handle, uint8_t offset, uint8_t* o
         .address_bits = 8,
         .dummy_bits   = 8,
     };
+
     return spi_device_transmit(handle->device, (spi_transaction_t*)&t);
-#endif
-    return 0;
 }
 
 // Public functions - registers

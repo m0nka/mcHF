@@ -266,6 +266,12 @@ uchar lora_spi_init(void)
 }
 #endif
 
+int spi_device_transmit(int device, spi_transaction_t *t)
+{
+	printf("spi transfer \r\n");
+	return 0;
+}
+
 void lora_gpio_init(void)
 {
 	lora_spi_misc_gpio_config();
