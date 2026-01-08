@@ -98,6 +98,8 @@ static void lora_spi_misc_gpio_config(void)
 	// GPIO2, PC4, NC, so input
 	GPIO_InitStruct.Pin       = RFM_DIO2;
 	LL_GPIO_Init(RFM_DIO2_PORT, &GPIO_InitStruct);
+
+	//printf("lora_spi_misc_gpio_config\r\n");
 }
 
 static void lora_spi_gpio_config(void)
@@ -106,24 +108,23 @@ static void lora_spi_gpio_config(void)
 
 	#ifndef SPI_GPIO_TEST
 	GPIO_InitStruct.Mode      = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitStruct.Pull      = LL_GPIO_PULL_DOWN;
+	GPIO_InitStruct.Speed     = LL_GPIO_SPEED_HIGH;
+	GPIO_InitStruct.Alternate = LL_GPIO_AF_5;
 	#else
 	GPIO_InitStruct.Mode      = LL_GPIO_MODE_OUTPUT;
 	#endif
 
-	GPIO_InitStruct.Pull      = LL_GPIO_PULL_DOWN;
-	GPIO_InitStruct.Speed     = LL_GPIO_SPEED_HIGH;
-
 	GPIO_InitStruct.Pin       = RFM_MISO_SPI1;
-	GPIO_InitStruct.Alternate = LL_GPIO_AF_5;
 	LL_GPIO_Init(RFM_MISO_SPI1_PORT, &GPIO_InitStruct);
 
 	GPIO_InitStruct.Pin       = RFM_MOSI_SPI1;
-	GPIO_InitStruct.Alternate = LL_GPIO_AF_5;
 	LL_GPIO_Init(RFM_MOSI_SPI1_PORT, &GPIO_InitStruct);
 
 	GPIO_InitStruct.Pin       = RFM_SCK_SPI1;
-	GPIO_InitStruct.Alternate = LL_GPIO_AF_5;
 	LL_GPIO_Init(RFM_SCK_SPI1_PORT, &GPIO_InitStruct);
+
+	//printf("lora_spi_gpio_config\r\n");
 }
 
 #if 0
@@ -279,7 +280,7 @@ void lora_spi_init(void)
   LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SPI1);
 
   /* Configure the SPI1 parameters */
-  SPI_InitStruct.BaudRate          = LL_SPI_BAUDRATEPRESCALER_DIV32;
+  SPI_InitStruct.BaudRate          = LL_SPI_BAUDRATEPRESCALER_DIV32;	// ~ 7.5Mhz
   SPI_InitStruct.TransferDirection = LL_SPI_FULL_DUPLEX;
   SPI_InitStruct.ClockPhase        = LL_SPI_PHASE_1EDGE;
   SPI_InitStruct.ClockPolarity     = LL_SPI_POLARITY_LOW;
@@ -397,35 +398,41 @@ spi_abort:
 
 int spi_device_transmit(int device, spi_transaction_t *t)
 {
-	uchar tx_buff[10];
+	uchar tx_buff[10], rx_buff[200], shift = 0;
 	ulong out_len = t->length;
 	int  ret = 0;
 
-	printf("spi transfer \r\n");
+	//printf("spi transfer \r\n");
 
 	if(t->cmd == SX126X_CMD_READ_REGISTER)
 	{
 		tx_buff[0] = t->cmd;
 		out_len += 8;
+		shift++;
 
 		if((t->flags & SPI_TRANS_VARIABLE_ADDR) == SPI_TRANS_VARIABLE_ADDR)
 		{
-			printf("add address \r\n");
+			//printf("add address \r\n");
 
 			tx_buff[1] = t->addr >> 8;
 			tx_buff[2] = t->addr & 0xFF;
 			out_len += 16;
+			shift += 2;
 		}
 
 		if((t->flags & SPI_TRANS_VARIABLE_DUMMY) == SPI_TRANS_VARIABLE_DUMMY)
 		{
-			printf("add dummy \r\n");
+			//printf("add dummy \r\n");
 
 			tx_buff[3] = 0;
 			out_len += 8;
+			shift++;
 		}
 
-		ret = spi_transfer(tx_buff, t->rx_buffer, out_len);
+		ret = spi_transfer(tx_buff, rx_buff, out_len);
+
+		// Copy without TX data
+		memcpy(t->rx_buffer, (rx_buff + shift), (out_len - shift));
 
 		if(ret)
 			printf("spi res: %d \r\n", ret);

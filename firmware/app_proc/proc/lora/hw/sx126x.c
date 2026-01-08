@@ -649,17 +649,9 @@ esp_err_t sx1262_reset(sx126x_handle_t* handle)
     if (handle == NULL)
         return ESP_ERR_INVALID_ARG;
 
-    //esp_err_t res = gpio_set_level(handle->reset, 0);
-    //if (res != ESP_OK) {
-    //    return res;
-    //}
     LL_GPIO_ResetOutputPin(RFM_DIO0_PORT, RFM_DIO0);
     vTaskDelay(pdMS_TO_TICKS(10));
 
-    //res = gpio_set_level(handle->reset, 1);
-    //if (res != ESP_OK) {
-    //    return res;
-    //}
     LL_GPIO_SetOutputPin(RFM_DIO0_PORT, RFM_DIO0);
     vTaskDelay(pdMS_TO_TICKS(10));
 
@@ -735,7 +727,6 @@ esp_err_t sx126x_init(sx126x_handle_t* handle, int spi_host_id, int nss, int res
     ESP_RETURN_ON_ERROR(gpio_isr_handler_add(busy, sx1262_busy_handler, (void*)handle), TAG,
                         "Failed to add interrupt handler for busy pin");
 	#else
-    lora_gpio_init();
     lora_spi_init();
 	#endif
 

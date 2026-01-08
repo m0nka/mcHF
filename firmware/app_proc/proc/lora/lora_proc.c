@@ -73,6 +73,20 @@ void SPI1_DMA_TX_IRQHandler(void)
 }
 #endif
 
+#ifdef SPI_GPIO_TEST
+void lora_proc_gpio_test(void)
+{
+	// Toggle misc pins
+	LL_GPIO_TogglePin(RFM_NSS_PORT, RFM_NSS);
+	LL_GPIO_TogglePin(RFM_DIO0_PORT, RFM_DIO0);
+	//
+	// Toggle spi pins
+	LL_GPIO_TogglePin(RFM_MISO_SPI1_PORT, RFM_MISO_SPI1);
+	LL_GPIO_TogglePin(RFM_MOSI_SPI1_PORT, RFM_MOSI_SPI1);
+	LL_GPIO_TogglePin(RFM_SCK_SPI1_PORT, RFM_SCK_SPI1);
+}
+#endif
+
 //*----------------------------------------------------------------------------
 //* Function Name       : lora_proc_task
 //* Object              :
@@ -90,6 +104,7 @@ void lora_proc_task(void const * argument)
 	printf("start\r\n");
 
 	// Radio driver init
+	#ifndef SPI_GPIO_TEST
 	sx126x_init(&radio_drv,0,0,0,0,0);
 
 	char version[100];
@@ -97,19 +112,12 @@ void lora_proc_task(void const * argument)
 	{
 		printf("ver: %s \r\n", version);
 	}
+	#endif
 
 lora_proc_loop:
 
 	#ifdef SPI_GPIO_TEST
-	// Toggle misc pins
-	LL_GPIO_TogglePin(RFM_NSS_PORT, RFM_NSS);
-	LL_GPIO_TogglePin(RFM_DIO1_PORT, RFM_DIO1);
-	LL_GPIO_TogglePin(RFM_DIO0_PORT, RFM_DIO0);
-	//
-	// Toggle spi pins
-	LL_GPIO_TogglePin(RFM_MISO_SPI1_PORT, RFM_MISO_SPI1);
-	LL_GPIO_TogglePin(RFM_MOSI_SPI1_PORT, RFM_MOSI_SPI1);
-	LL_GPIO_TogglePin(RFM_SCK_SPI1_PORT, RFM_SCK_SPI1);
+	lora_proc_gpio_test();
 	#endif
 
 	vTaskDelay(20);
@@ -119,6 +127,10 @@ lora_proc_loop:
 
 void lora_proc_init(void)
 {
+	//#ifdef SPI_GPIO_TEST
+	lora_gpio_init();
+	//#endif
+
 	//--printf("lora pre-os init\r\n");
 }
 
