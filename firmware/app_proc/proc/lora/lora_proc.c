@@ -20,6 +20,9 @@
 
 #include "lora_proc.h"
 
+sx126x_handle_t radio_drv;
+uchar			radio_init_done = 0;
+
 #ifdef CONTEXT_LORA__
 //*----------------------------------------------------------------------------
 //* Function Name       : SPI1_IRQHandler
@@ -87,6 +90,26 @@ void lora_proc_gpio_test(void)
 }
 #endif
 
+uchar lora_proc_radio_init(void)
+{
+	char version[100];
+
+	// Basic init
+	if(sx126x_init(&radio_drv,0,0,0,0,0))
+		return 1;
+
+	// Read ID string
+	if(sx126x_read_version_string(&radio_drv, version, sizeof(version)) != 0)
+		return 2;
+
+	printf("ver: %s \r\n", version);
+
+	// Enable driver
+	radio_init_done = 1;
+
+	return 0;
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : lora_proc_task
 //* Object              :
@@ -97,21 +120,13 @@ void lora_proc_gpio_test(void)
 //*----------------------------------------------------------------------------
 void lora_proc_task(void const * argument)
 {
-	sx126x_handle_t radio_drv;
-
 	// Delay start, so UI can paint properly
 	vTaskDelay(LORA_PROC_START_DELAY);
 	printf("start\r\n");
 
 	// Radio driver init
 	#ifndef SPI_GPIO_TEST
-	sx126x_init(&radio_drv,0,0,0,0,0);
-
-	char version[100];
-	if(sx126x_read_version_string(&radio_drv, version, sizeof(version)) == 0)
-	{
-		printf("ver: %s \r\n", version);
-	}
+	lora_proc_radio_init();
 	#endif
 
 lora_proc_loop:
@@ -127,9 +142,8 @@ lora_proc_loop:
 
 void lora_proc_init(void)
 {
-	//#ifdef SPI_GPIO_TEST
+	// Basic GPIO init before OS is run, keep here!
 	lora_gpio_init();
-	//#endif
 
 	//--printf("lora pre-os init\r\n");
 }
