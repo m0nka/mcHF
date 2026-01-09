@@ -16,16 +16,15 @@
 static void sx1262_busy_handler(void* pvParameters)
 {
     sx126x_handle_t* handle = (sx126x_handle_t*)pvParameters;
-    if (handle == NULL) return;
+
+    if (handle == NULL)
+    	return;
 
     //if (gpio_get_level(handle->busy))
     if(LL_GPIO_IsInputPinSet(RFM_BUSY_PORT, RFM_BUSY))
-    {
         xSemaphoreTakeFromISR(handle->busy_semaphore, NULL);
-    } else
-    {
+     else
         xSemaphoreGiveFromISR(handle->busy_semaphore, NULL);
-    }
 }
 
 //IRAM_ATTR

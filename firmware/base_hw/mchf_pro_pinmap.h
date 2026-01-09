@@ -663,9 +663,9 @@
 #define LORA_POWER_PORT					GPIOA
 //#define LORA_POWER_INV
 
-// PA3			RFM_DIO2, Lora driver
-#define RFM_DIO2						GPIO_PIN_3
-#define RFM_DIO2_PORT					GPIOA
+// PA3			RFM_DIO2, Lora driver - NC, reuse for rev B
+//#define RFM_DIO2						GPIO_PIN_3
+//#define RFM_DIO2_PORT					GPIOA
 
 // PA4			DAC1_OUT1
 #define DAC1_OUT1						GPIO_PIN_4
@@ -1239,6 +1239,9 @@
 //
 // EXTI_LINE2 - paddle
 // EXTI_LINE3 - paddle
+//
+// EXTI_LINE4 - ToDo: Lora IRQ
+// EXTI_LINE5 - ToDo: Lora Busy
 //
 // EXTI_LINE_6 - touch
 //
