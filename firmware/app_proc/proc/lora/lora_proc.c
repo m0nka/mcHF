@@ -104,6 +104,10 @@ uchar lora_proc_radio_init(void)
 
 	printf("ver: %s \r\n", version);
 
+	// Need IRQ by this point...
+	//if(sx126x_set_op_mode_standby(&radio_drv, 1) != 0)
+	//	return 3;
+
 	// Enable driver
 	radio_init_done = 1;
 
@@ -126,7 +130,8 @@ void lora_proc_task(void const * argument)
 
 	// Radio driver init
 	#ifndef SPI_GPIO_TEST
-	lora_proc_radio_init();
+	int err = lora_proc_radio_init();
+	if(err) printf("radio init err: %d \r\n", err);
 	#endif
 
 lora_proc_loop:

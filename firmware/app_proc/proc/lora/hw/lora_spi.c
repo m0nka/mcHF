@@ -402,7 +402,10 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 	ulong out_len = t->length;
 	int  ret = 0;
 
-	//printf("spi transfer \r\n");
+	//--printf("spi transfer \r\n");
+
+	if(t == NULL)
+		return 100;
 
 	if(t->cmd == SX126X_CMD_READ_REGISTER)
 	{
@@ -412,7 +415,7 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 
 		if((t->flags & SPI_TRANS_VARIABLE_ADDR) == SPI_TRANS_VARIABLE_ADDR)
 		{
-			//printf("add address \r\n");
+			//--printf("add address \r\n");
 
 			tx_buff[1] = t->addr >> 8;
 			tx_buff[2] = t->addr & 0xFF;
@@ -422,24 +425,34 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 
 		if((t->flags & SPI_TRANS_VARIABLE_DUMMY) == SPI_TRANS_VARIABLE_DUMMY)
 		{
-			//printf("add dummy \r\n");
+			//--printf("add dummy \r\n");
 
 			tx_buff[3] = 0;
 			out_len += 8;
 			shift++;
 		}
 
-		ret = spi_transfer(tx_buff, rx_buff, out_len);
 
-		// Copy without TX data
-		memcpy(t->rx_buffer, (rx_buff + shift), (out_len - shift));
+		ret = spi_transfer(tx_buff, rx_buff, out_len);
 
 		if(ret)
 			printf("spi res: %d \r\n", ret);
+		else
+		{
+			// To bytes
+			out_len /= 8;
+
+			// Copy without TX data
+			memcpy((uchar *)(t->rx_buffer), (uchar *)&rx_buff[shift], (out_len - shift));
+		}
+	}
+	else if(t->cmd == SX126X_CMD_SET_STANDBY)
+	{
+		ret = spi_transfer(t->tx_data, t->rx_data, out_len);
 	}
 	else
 	{
-		printf("not supported \r\n");
+		printf("not supported cmd: 0x%x \r\n", t->cmd);
 		return 10;
 	}
 

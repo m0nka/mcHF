@@ -205,7 +205,7 @@
 #define LORA_PROC_START_DELAY			1100
 #define LORA_PROC_SLEEP_TIME			portMAX_DELAY
 #define LORA_PROC_PRIORITY				osPriorityNormal
-#define LORA_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 8)
+#define LORA_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 16)
 
 // App loader service parameters
 #define APP_PROC_START_NAME				"app"

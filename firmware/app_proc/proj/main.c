@@ -158,7 +158,7 @@ void Error_Handler(int err)
 	__disable_irq();
 	printf(" Error Handler %d\n", err);
 
-	NVIC_SystemReset();
+	//NVIC_SystemReset();
 	while(1);
 }
 
