@@ -650,9 +650,8 @@
 // ----------------------------------------------------
 // PortA
 
-// PA0			RFM_BUSY, Lora driver
-#define RFM_BUSY						LL_GPIO_PIN_0
-#define RFM_BUSY_PORT					GPIOA
+// PA0			not in use
+//...
 
 // PA1			ENC1_I
 #define ENC1_I							GPIO_PIN_1
@@ -663,9 +662,9 @@
 #define LORA_POWER_PORT					GPIOA
 //#define LORA_POWER_INV
 
-// PA3			RFM_DIO2, Lora driver - NC, reuse for rev B
-//#define RFM_DIO2						GPIO_PIN_3
-//#define RFM_DIO2_PORT					GPIOA
+// PA3			(ex RFM_DIO2), Lora driver
+#define LORA_RESET						GPIO_PIN_3
+#define LORA_RESET_PORT					GPIOA
 
 // PA4			DAC1_OUT1
 #define DAC1_OUT1						GPIO_PIN_4
@@ -674,13 +673,13 @@
 // PA5			DAC1_OUT2
 #define DAC1_OUT2						GPIO_PIN_5
 
-// PA6			RFM_MISO_SPI1, Lora driver
-#define RFM_MISO_SPI1					LL_GPIO_PIN_6
-#define RFM_MISO_SPI1_PORT				GPIOA
+// PA6			LORA_MISO_SPI1, Lora driver
+#define LORA_MISO_SPI1					LL_GPIO_PIN_6
+#define LORA_MISO_SPI1_PORT				GPIOA
 
-// PA7			RFM_MOSI_SPI1, Lora driver
-#define RFM_MOSI_SPI1					LL_GPIO_PIN_7
-#define RFM_MOSI_SPI1_PORT				GPIOA
+// PA7			LORA_MOSI_SPI1, Lora driver
+#define LORA_MOSI_SPI1					LL_GPIO_PIN_7
+#define LORA_MOSI_SPI1_PORT				GPIOA
 
 // PA8			BMS_PWM, BMS CC control (TIM1_CH1)
 //#define BMS_PWM_PIN               		GPIO_PIN_8
@@ -728,9 +727,9 @@
 #define ATT_CLK               			LL_GPIO_PIN_2
 #define ATT_CLK_PORT         			GPIOB
 
-// PB3			RFM_SCK_SPI1, Lora driver
-#define RFM_SCK_SPI1               		LL_GPIO_PIN_3
-#define RFM_SCK_SPI1_PORT         		GPIOB
+// PB3			LORA_SCK_SPI1, Lora driver
+#define LORA_SCK_SPI1               	LL_GPIO_PIN_3
+#define LORA_SCK_SPI1_PORT         		GPIOB
 
 // PB4			ENC2_I
 #define ENC2_I_PIN               		GPIO_PIN_4
@@ -789,9 +788,9 @@
 #define FMC_SDNWE_PIN					GPIO_PIN_0
 #define FMC_SDNWE_PORT					GPIOC
 
-// PC1			RFM_NSS, Lora driver
-#define RFM_NSS							LL_GPIO_PIN_1
-#define RFM_NSS_PORT           			GPIOC
+// PC1			LORA_NSS, Lora driver
+#define LORA_NSS						LL_GPIO_PIN_1
+#define LORA_NSS_PORT           		GPIOC
 
 // PC2			MUTE
 #define CODEC_MUTE						GPIO_PIN_2
@@ -801,13 +800,13 @@
 #define ADC3_INP1						LL_GPIO_PIN_3
 #define ADC3_INP1_PORT           		GPIOC
 
-// PC4			RFM_DIO1, Lora driver
-#define RFM_DIO1						LL_GPIO_PIN_4
-#define RFM_DIO1_PORT           		GPIOC
+// PC4			LORA_DIO1, Lora driver
+#define LORA_DIO1						LL_GPIO_PIN_4
+#define LORA_DIO1_PORT           		GPIOC
 
-// PC5			RFM_DIO0, Lora driver
-#define RFM_DIO0						LL_GPIO_PIN_5
-#define RFM_DIO0_PORT           		GPIOC
+// PC5			BUSY (ex DIO0), Lora driver
+#define LORA_BUSY						LL_GPIO_PIN_5
+#define LORA_BUSY_PORT           		GPIOC
 
 // PC6			BAND0
 #define BAND0_PIN						GPIO_PIN_6
@@ -1240,8 +1239,8 @@
 // EXTI_LINE2 - paddle
 // EXTI_LINE3 - paddle
 //
-// EXTI_LINE4 - ToDo: Lora IRQ
-// EXTI_LINE5 - ToDo: Lora Busy
+// EXTI_LINE4 - Lora IRQ
+// EXTI_LINE5 - Lora Busy
 //
 // EXTI_LINE_6 - touch
 //

@@ -63,41 +63,44 @@ static void lora_spi_misc_gpio_config(void)
 {
 	LL_GPIO_InitTypeDef  GPIO_InitStruct;
 
-	GPIO_InitStruct.Mode      = LL_GPIO_MODE_OUTPUT;
-	GPIO_InitStruct.Pull      = LL_GPIO_PULL_NO;
-	GPIO_InitStruct.Speed     = LL_GPIO_SPEED_LOW;
-
 	// Lora power off
 	lora_spi_power_state(0);
 
 	// Initial state
-	LL_GPIO_SetOutputPin(RFM_NSS_PORT,  RFM_NSS);	// de-selected
-	LL_GPIO_SetOutputPin(RFM_DIO0_PORT, RFM_DIO0);	// in reset
+	LL_GPIO_SetOutputPin(LORA_NSS_PORT,   LORA_NSS);	// de-selected
+	LL_GPIO_SetOutputPin(LORA_RESET_PORT, LORA_RESET);	// in reset
 
-	// Chip select, PC1
-	GPIO_InitStruct.Pin       = RFM_NSS;
-	LL_GPIO_Init(RFM_NSS_PORT, &GPIO_InitStruct);
+	// Common
+	GPIO_InitStruct.Pull      = LL_GPIO_PULL_NO;
+	GPIO_InitStruct.Speed     = LL_GPIO_SPEED_LOW;
 
-	// GPIO0, PC5 (NRST) - ToDo: swap with busy
-	GPIO_InitStruct.Pin       = RFM_DIO0;
-	LL_GPIO_Init(RFM_DIO0_PORT, &GPIO_InitStruct);
+	// ----------------------------------------------
+	// Outputs
+	GPIO_InitStruct.Mode      = LL_GPIO_MODE_OUTPUT;
 
 	// POWER, PA2
 	GPIO_InitStruct.Pin       = LORA_POWER;
 	LL_GPIO_Init(LORA_POWER_PORT, &GPIO_InitStruct);
 
-	// Busy(PA0) is input - ToDo: swap with NRST
+	// Chip select, PC1
+	GPIO_InitStruct.Pin       = LORA_NSS;
+	LL_GPIO_Init(LORA_NSS_PORT, &GPIO_InitStruct);
+
+	// GPIO0, PA3 (NRST)
+	GPIO_InitStruct.Pin       = LORA_RESET;
+	LL_GPIO_Init(LORA_RESET_PORT, &GPIO_InitStruct);
+
+	// ----------------------------------------------
+	// Inputs
 	GPIO_InitStruct.Mode      = LL_GPIO_MODE_INPUT;
-	GPIO_InitStruct.Pin       = RFM_BUSY;
-	LL_GPIO_Init(RFM_BUSY_PORT, &GPIO_InitStruct);
 
-	// GPIO1, PC4 (IRQ) input
-	GPIO_InitStruct.Pin       = RFM_DIO1;
-	LL_GPIO_Init(RFM_DIO1_PORT, &GPIO_InitStruct);
+	// Busy(PC5)
+	GPIO_InitStruct.Pin       = LORA_BUSY;
+	LL_GPIO_Init(LORA_BUSY_PORT, &GPIO_InitStruct);
 
-	// GPIO2, PA3, NC, so input
-	//GPIO_InitStruct.Pin       = RFM_DIO2;
-	//LL_GPIO_Init(RFM_DIO2_PORT, &GPIO_InitStruct);
+	// DIO1, PC4 (IRQ)
+	GPIO_InitStruct.Pin       = LORA_DIO1;
+	LL_GPIO_Init(LORA_DIO1_PORT, &GPIO_InitStruct);
 
 	//printf("lora_spi_misc_gpio_config\r\n");
 }
@@ -115,14 +118,14 @@ static void lora_spi_gpio_config(void)
 	GPIO_InitStruct.Mode      = LL_GPIO_MODE_OUTPUT;
 	#endif
 
-	GPIO_InitStruct.Pin       = RFM_MISO_SPI1;
-	LL_GPIO_Init(RFM_MISO_SPI1_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin       = LORA_MISO_SPI1;
+	LL_GPIO_Init(LORA_MISO_SPI1_PORT, &GPIO_InitStruct);
 
-	GPIO_InitStruct.Pin       = RFM_MOSI_SPI1;
-	LL_GPIO_Init(RFM_MOSI_SPI1_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin       = LORA_MOSI_SPI1;
+	LL_GPIO_Init(LORA_MOSI_SPI1_PORT, &GPIO_InitStruct);
 
-	GPIO_InitStruct.Pin       = RFM_SCK_SPI1;
-	LL_GPIO_Init(RFM_SCK_SPI1_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin       = LORA_SCK_SPI1;
+	LL_GPIO_Init(LORA_SCK_SPI1_PORT, &GPIO_InitStruct);
 
 	//printf("lora_spi_gpio_config\r\n");
 }
@@ -326,9 +329,10 @@ static uchar spi_transfer(const uchar *tx_buffer, uchar *rx_buffer, uchar len)
 	if(len == 0)
 		return 1;
 
-	//--printf("total: %d \r\n", size);
+	printf("total: %d \r\n", size);
 
-	LL_GPIO_ResetOutputPin(RFM_NSS_PORT,  RFM_NSS);
+	// CS low
+	LL_GPIO_ResetOutputPin(LORA_NSS_PORT, LORA_NSS);
 
     // Start transfer
     LL_SPI_SetTransferSize(SPI1, size);
@@ -391,7 +395,8 @@ spi_abort:
     /* Disable SPI peripheral */
     LL_SPI_Disable(SPI1);
 
-	LL_GPIO_SetOutputPin(RFM_NSS_PORT,  RFM_NSS);
+    // CS high
+	LL_GPIO_SetOutputPin(LORA_NSS_PORT, LORA_NSS);
 
 	return ret;
 }

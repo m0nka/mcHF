@@ -21,7 +21,7 @@ static void sx1262_busy_handler(void* pvParameters)
     	return;
 
     //if (gpio_get_level(handle->busy))
-    if(LL_GPIO_IsInputPinSet(RFM_BUSY_PORT, RFM_BUSY))
+    if(LL_GPIO_IsInputPinSet(LORA_BUSY_PORT, LORA_BUSY))
         xSemaphoreTakeFromISR(handle->busy_semaphore, NULL);
      else
         xSemaphoreGiveFromISR(handle->busy_semaphore, NULL);
@@ -46,7 +46,7 @@ static esp_err_t sx126x_busy_wait(sx126x_handle_t* handle)
     	return ESP_ERR_INVALID_ARG;
 
     //if(!gpio_get_level(handle->busy))
-    if(!LL_GPIO_IsInputPinSet(RFM_BUSY_PORT, RFM_BUSY))
+    if(!LL_GPIO_IsInputPinSet(LORA_BUSY_PORT, LORA_BUSY))
     {
         return ESP_OK;  // Don't take semaphore if not busy
     }
@@ -648,10 +648,10 @@ esp_err_t sx1262_reset(sx126x_handle_t* handle)
     if (handle == NULL)
         return ESP_ERR_INVALID_ARG;
 
-    LL_GPIO_ResetOutputPin(RFM_DIO0_PORT, RFM_DIO0);
+    LL_GPIO_ResetOutputPin(LORA_RESET_PORT, LORA_RESET);
     vTaskDelay(pdMS_TO_TICKS(10));
 
-    LL_GPIO_SetOutputPin(RFM_DIO0_PORT, RFM_DIO0);
+    LL_GPIO_SetOutputPin(LORA_RESET_PORT, LORA_RESET);
     vTaskDelay(pdMS_TO_TICKS(10));
 
     return ESP_OK;
@@ -746,7 +746,7 @@ bool sx126x_is_busy(sx126x_handle_t* handle)
     	return false;
 
     //return gpio_get_level(handle->busy) == 1;
-    return LL_GPIO_IsInputPinSet(RFM_BUSY_PORT, RFM_BUSY);
+    return LL_GPIO_IsInputPinSet(LORA_BUSY_PORT, LORA_BUSY);
 }
 
 esp_err_t sx126x_irq_wait(sx126x_handle_t* handle, TickType_t timeout)
@@ -775,7 +775,7 @@ bool sx126x_get_irq_state(sx126x_handle_t* handle)
     	return false;
 
     //int level = gpio_get_level(handle->dio1);
-    int level = LL_GPIO_IsInputPinSet(RFM_DIO1_PORT, RFM_DIO1);
+    int level = LL_GPIO_IsInputPinSet(LORA_DIO1_PORT, LORA_DIO1);
 
     return level == 1;
 }

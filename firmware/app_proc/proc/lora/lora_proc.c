@@ -80,13 +80,13 @@ void SPI1_DMA_TX_IRQHandler(void)
 void lora_proc_gpio_test(void)
 {
 	// Toggle misc pins
-	LL_GPIO_TogglePin(RFM_NSS_PORT, RFM_NSS);
-	LL_GPIO_TogglePin(RFM_DIO0_PORT, RFM_DIO0);
+	LL_GPIO_TogglePin(LORA_NSS_PORT, LORA_NSS);
+	LL_GPIO_TogglePin(LORA_RESET_PORT, LORA_RESET);
 	//
 	// Toggle spi pins
-	LL_GPIO_TogglePin(RFM_MISO_SPI1_PORT, RFM_MISO_SPI1);
-	LL_GPIO_TogglePin(RFM_MOSI_SPI1_PORT, RFM_MOSI_SPI1);
-	LL_GPIO_TogglePin(RFM_SCK_SPI1_PORT, RFM_SCK_SPI1);
+	LL_GPIO_TogglePin(LORA_MISO_SPI1_PORT, LORA_MISO_SPI1);
+	LL_GPIO_TogglePin(LORA_MOSI_SPI1_PORT, LORA_MOSI_SPI1);
+	LL_GPIO_TogglePin(LORA_SCK_SPI1_PORT, LORA_SCK_SPI1);
 }
 #endif
 
@@ -95,7 +95,7 @@ uchar lora_proc_radio_init(void)
 	char version[100];
 
 	// Basic init
-	if(sx126x_init(&radio_drv,0,0,0,0,0))
+	if(sx126x_init(&radio_drv, 0, 0, 0, 0, 0))
 		return 1;
 
 	// Read ID string
@@ -150,7 +150,7 @@ void lora_proc_init(void)
 	// Basic GPIO init before OS is run, keep here!
 	lora_gpio_init();
 
-	//--printf("lora pre-os init\r\n");
+	//printf("lora pre-os init\r\n");
 }
 
 void lora_proc_power_cleanup(void)
