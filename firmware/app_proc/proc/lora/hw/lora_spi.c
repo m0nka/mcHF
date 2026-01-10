@@ -21,44 +21,6 @@
 // FreeRTOS process state
 extern struct PROC_STATE 			ps;
 
-#if 0
-SPI_HandleTypeDef SpiHandle1;
-DMA_HandleTypeDef hdma_tx;
-DMA_HandleTypeDef hdma_rx;
-
-const uint8_t LoraTxBuffer[] = "aaaaaaaaaaaaaaaa";
-
-#define BUFFER_ALIGNED_SIZE (((BUFFERSIZE+31)/32)*32)
-ALIGN_32BYTES(uint8_t LoraRxBuffer[BUFFER_ALIGNED_SIZE]);
-
-__IO uint32_t wTransferState = TRANSFER_WAIT;
-
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
-{
-  wTransferState = TRANSFER_COMPLETE;
-}
-
-void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
-{
-  wTransferState = TRANSFER_ERROR;
-}
-
-static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength)
-{
-  while (BufferLength--)
-  {
-    if((*pBuffer1) != *pBuffer2)
-    {
-      return BufferLength;
-    }
-    pBuffer1++;
-    pBuffer2++;
-  }
-
-  return 0;
-}
-#endif
-
 static void lora_spi_misc_gpio_config(void)
 {
 	LL_GPIO_InitTypeDef  GPIO_InitStruct;
@@ -147,150 +109,6 @@ static void lora_spi_gpio_config(void)
 
 	//printf("lora_spi_gpio_config\r\n");
 }
-
-#if 0
-void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
-{
-  if (hspi->Instance == SPI1)
-  {
-    SPI1_SCK_GPIO_CLK_ENABLE();
-    SPI1_MISO_GPIO_CLK_ENABLE();
-    SPI1_MOSI_GPIO_CLK_ENABLE();
-
-    SPI1_CLK_ENABLE();
-    DMA1_CLK_ENABLE();
-
-    hdma_tx.Instance                 = SPI1_TX_DMA_STREAM;
-    hdma_tx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
-    hdma_tx.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
-    hdma_tx.Init.MemBurst            = DMA_MBURST_INC4;
-    hdma_tx.Init.PeriphBurst         = DMA_PBURST_INC4;
-    hdma_tx.Init.Request             = SPI1_TX_DMA_REQUEST;
-    hdma_tx.Init.Direction           = DMA_MEMORY_TO_PERIPH;
-    hdma_tx.Init.PeriphInc           = DMA_PINC_DISABLE;
-    hdma_tx.Init.MemInc              = DMA_MINC_ENABLE;
-    hdma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-    hdma_tx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
-    hdma_tx.Init.Mode                = DMA_NORMAL;
-    hdma_tx.Init.Priority            = DMA_PRIORITY_LOW;
-
-    HAL_DMA_Init(&hdma_tx);
-
-    __HAL_LINKDMA(hspi, hdmatx, hdma_tx);
-/*
-    hdma_rx.Instance                 = SPI1_RX_DMA_STREAM;
-    hdma_rx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
-    hdma_rx.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
-    hdma_rx.Init.MemBurst            = DMA_MBURST_INC4;
-    hdma_rx.Init.PeriphBurst         = DMA_PBURST_INC4;
-    hdma_rx.Init.Request             = SPI1_RX_DMA_REQUEST;
-    hdma_rx.Init.Direction           = DMA_PERIPH_TO_MEMORY;
-    hdma_rx.Init.PeriphInc           = DMA_PINC_DISABLE;
-    hdma_rx.Init.MemInc              = DMA_MINC_ENABLE;
-    hdma_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-    hdma_rx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
-    hdma_rx.Init.Mode                = DMA_NORMAL;
-    hdma_rx.Init.Priority            = DMA_PRIORITY_HIGH;
-
-    HAL_DMA_Init(&hdma_rx);
-
-    __HAL_LINKDMA(hspi, hdmarx, hdma_rx);*/
-
-    HAL_NVIC_SetPriority(SPI1_DMA_TX_IRQn, 1, 1);
-    HAL_NVIC_EnableIRQ(SPI1_DMA_TX_IRQn);
-
-    //HAL_NVIC_SetPriority(SPI1_DMA_RX_IRQn, 15, 0);
-    //HAL_NVIC_EnableIRQ(SPI1_DMA_RX_IRQn);
-
-    HAL_NVIC_SetPriority(SPI1_IRQn, 1, 0);
-    HAL_NVIC_EnableIRQ(SPI1_IRQn);
-
-  }
-}
-
-uchar lora_spi_init(void)
-{
-	printf("spi start\r\n");
-
-	SpiHandle1.Instance               = SPI1;
-
-	SpiHandle1.Init.Mode              = SPI_MODE_MASTER;
-	SpiHandle1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
-	SpiHandle1.Init.Direction         = SPI_DIRECTION_2LINES;
-	SpiHandle1.Init.CLKPhase          = SPI_PHASE_1EDGE;
-
-	SpiHandle1.Init.CLKPolarity       = SPI_POLARITY_LOW;
-
-	SpiHandle1.Init.DataSize          = SPI_DATASIZE_8BIT;
-
-	SpiHandle1.Init.FirstBit          = SPI_FIRSTBIT_MSB;
-
-	SpiHandle1.Init.TIMode            = SPI_TIMODE_DISABLE;
-
-	SpiHandle1.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
-
-	SpiHandle1.Init.CRCPolynomial     = 7;
-
-	SpiHandle1.Init.CRCLength         = SPI_CRC_LENGTH_8BIT;
-
-	SpiHandle1.Init.NSS               = SPI_NSS_SOFT;
-
-	SpiHandle1.Init.NSSPMode          = SPI_NSS_PULSE_DISABLE;
-
-	SpiHandle1.Init.MasterKeepIOState = SPI_MASTER_KEEP_IO_STATE_ENABLE;  // Recommended setting to avoid glitches
-
-
-	if(HAL_SPI_Init(&SpiHandle1) != HAL_OK)
-
-	{
-		printf("spi err1\r\n");
-		return 1;
-
-	}
-
-
-
-	//if(HAL_SPI_TransmitReceive_DMA(&SpiHandle1, (uint8_t*)LoraTxBuffer, (uint8_t *)LoraRxBuffer, BUFFERSIZE) != HAL_OK)
-	if(HAL_SPI_Transmit_DMA(&SpiHandle1, (uint8_t*)LoraTxBuffer, BUFFERSIZE) != HAL_OK)
-	{
-		printf("spi err2\r\n");
-		return 2;
-
-	}
-	printf("spi tx ok\r\n");
-
-	while (wTransferState == TRANSFER_WAIT)
-
-	{
-
-	}
-
-	printf("spi wait ok\r\n");
-
-	// Invalidate cache prior to access by CPU
-
-	SCB_InvalidateDCache_by_Addr ((uint32_t *)LoraRxBuffer, BUFFERSIZE);
-
-
-	switch(wTransferState)
-
-	{
-
-		case TRANSFER_COMPLETE :
-	      if(Buffercmp((uint8_t*)LoraTxBuffer, (uint8_t*)LoraRxBuffer, BUFFERSIZE))
-	      {
-	        return 3;
-	      }
-	      break;
-	    default :
-	      return 4;
-	      break;
-	  }
-
-	  return 0;
-
-}
-#endif
 
 void lora_spi_init(void)
 {
@@ -430,53 +248,61 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 	if(t == NULL)
 		return 100;
 
-	if(t->cmd == SX126X_CMD_READ_REGISTER)
+	switch(t->cmd)
 	{
-		tx_buff[0] = t->cmd;
-		out_len += 8;
-		shift++;
-
-		if((t->flags & SPI_TRANS_VARIABLE_ADDR) == SPI_TRANS_VARIABLE_ADDR)
+		case SX126X_CMD_READ_REGISTER:
 		{
-			//--printf("add address \r\n");
-
-			tx_buff[1] = t->addr >> 8;
-			tx_buff[2] = t->addr & 0xFF;
-			out_len += 16;
-			shift += 2;
-		}
-
-		if((t->flags & SPI_TRANS_VARIABLE_DUMMY) == SPI_TRANS_VARIABLE_DUMMY)
-		{
-			//--printf("add dummy \r\n");
-
-			tx_buff[3] = 0;
+			tx_buff[0] = t->cmd;
 			out_len += 8;
 			shift++;
+
+			if((t->flags & SPI_TRANS_VARIABLE_ADDR) == SPI_TRANS_VARIABLE_ADDR)
+			{
+				//--printf("add address \r\n");
+				tx_buff[1] = t->addr >> 8;
+				tx_buff[2] = t->addr & 0xFF;
+				out_len += 16;
+				shift += 2;
+			}
+
+			if((t->flags & SPI_TRANS_VARIABLE_DUMMY) == SPI_TRANS_VARIABLE_DUMMY)
+			{
+				//--printf("add dummy \r\n");
+				tx_buff[3] = 0;
+				out_len += 8;
+				shift++;
+			}
+
+			ret = spi_transfer(tx_buff, rx_buff, out_len);
+
+			if(ret)
+				printf("spi res: %d \r\n", ret);
+			else
+			{
+				// To bytes
+				out_len /= 8;
+
+				// Copy without TX data
+				memcpy((uchar *)(t->rx_buffer), (uchar *)&rx_buff[shift], (out_len - shift));
+			}
+			break;
 		}
 
-
-		ret = spi_transfer(tx_buff, rx_buff, out_len);
-
-		if(ret)
-			printf("spi res: %d \r\n", ret);
-		else
+		case SX126X_CMD_SET_STANDBY:
+		case SX126X_CMD_SET_DIO3_AS_TXCO_CTRL:
+		case SX126X_CMD_SET_PACKET_TYPE:
+		case SX126X_CMD_SET_CAD_PARAMS:
+		case SX126X_CMD_SET_DIO_IRQ_PARAMS:
+		case SX126X_CMD_CALIBRATE:
+		case SX126X_CMD_SET_REGULATOR_MODE:
 		{
-			// To bytes
-			out_len /= 8;
-
-			// Copy without TX data
-			memcpy((uchar *)(t->rx_buffer), (uchar *)&rx_buff[shift], (out_len - shift));
+			ret = spi_transfer(t->tx_data, t->rx_data, out_len);
+			break;
 		}
-	}
-	else if(t->cmd == SX126X_CMD_SET_STANDBY)
-	{
-		ret = spi_transfer(t->tx_data, t->rx_data, out_len);
-	}
-	else
-	{
-		printf("not supported cmd: 0x%x \r\n", t->cmd);
-		return 10;
+
+		default:
+			printf("not supported cmd: 0x%x \r\n", t->cmd);
+			return 10;
 	}
 
 	return ret;

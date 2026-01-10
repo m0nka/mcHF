@@ -46,7 +46,7 @@ static esp_err_t sx126x_busy_wait(sx126x_handle_t* handle)
     //if(!gpio_get_level(handle->busy))
     if(!LL_GPIO_IsInputPinSet(LORA_BUSY_PORT, LORA_BUSY))
     {
-    	printf("not busy \r\n");
+    	//printf("not busy \r\n");
         return ESP_OK;  // Don't take semaphore if not busy
     }
 
@@ -644,14 +644,13 @@ esp_err_t sx126x_set_sync_word(sx126x_handle_t* handle, uint8_t sync_word) {
 
 esp_err_t sx1262_reset(sx126x_handle_t* handle)
 {
-    if (handle == NULL)
-        return ESP_ERR_INVALID_ARG;
+   // if (handle == NULL)
+   //     return ESP_ERR_INVALID_ARG;
 
     LL_GPIO_ResetOutputPin(LORA_RESET_PORT, LORA_RESET);
-    vTaskDelay(pdMS_TO_TICKS(10));
-
+    vTaskDelay(10);
     LL_GPIO_SetOutputPin(LORA_RESET_PORT, LORA_RESET);
-    vTaskDelay(pdMS_TO_TICKS(10));
+    vTaskDelay(10);
 
     return ESP_OK;
 }
@@ -724,19 +723,14 @@ esp_err_t sx126x_init(sx126x_handle_t* handle, int spi_host_id, int nss, int res
 
     ESP_RETURN_ON_ERROR(gpio_isr_handler_add(busy, sx1262_busy_handler, (void*)handle), TAG,
                         "Failed to add interrupt handler for busy pin");
-	#else
-    lora_spi_init();
 	#endif
 
     handle->busy = busy;
 
-	// Lora power on
-	lora_spi_power_state(1);
-
 	// Chip reset
-    res = sx1262_reset(handle);
+    //res = sx1262_reset(handle);
 
-    return res;
+    return ESP_OK;
 }
 
 bool sx126x_is_busy(sx126x_handle_t* handle)
