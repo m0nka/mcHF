@@ -13,6 +13,9 @@
 #ifndef __LORA_PROC_H
 #define __LORA_PROC_H
 
+void lora_proc_busy_irq(void);
+void lora_proc_dio1_irq(void);
+
 void lora_proc_init(void);
 void lora_proc_power_cleanup(void);
 void lora_proc_task(void const * argument);

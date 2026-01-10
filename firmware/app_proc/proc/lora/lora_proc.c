@@ -23,6 +23,18 @@
 sx126x_handle_t radio_drv;
 uchar			radio_init_done = 0;
 
+void lora_proc_busy_irq(void)
+{
+	//printf("busy\r\n");
+	sx1262_busy_handler((void *)&radio_drv);
+}
+
+void lora_proc_dio1_irq(void)
+{
+	//printf("dio1\r\n");
+	sx1262_dio1_handler((void *)&radio_drv);
+}
+
 #ifdef CONTEXT_LORA__
 //*----------------------------------------------------------------------------
 //* Function Name       : SPI1_IRQHandler
@@ -102,11 +114,14 @@ uchar lora_proc_radio_init(void)
 	if(sx126x_read_version_string(&radio_drv, version, sizeof(version)) != 0)
 		return 2;
 
-	printf("ver: %s \r\n", version);
+	if(version[0] > 0x80)
+		print_hex_array((uchar *)version, 16);
+	else
+		printf("ver: %s \r\n", version);
 
 	// Need IRQ by this point...
-	//if(sx126x_set_op_mode_standby(&radio_drv, 1) != 0)
-	//	return 3;
+	if(sx126x_set_op_mode_standby(&radio_drv, 1) != 0)
+		return 3;
 
 	// Enable driver
 	radio_init_done = 1;

@@ -91,16 +91,34 @@ static void lora_spi_misc_gpio_config(void)
 	LL_GPIO_Init(LORA_RESET_PORT, &GPIO_InitStruct);
 
 	// ----------------------------------------------
-	// Inputs
+	// Inputs/EXTI
 	GPIO_InitStruct.Mode      = LL_GPIO_MODE_INPUT;
-
-	// Busy(PC5)
-	GPIO_InitStruct.Pin       = LORA_BUSY;
-	LL_GPIO_Init(LORA_BUSY_PORT, &GPIO_InitStruct);
 
 	// DIO1, PC4 (IRQ)
 	GPIO_InitStruct.Pin       = LORA_DIO1;
+	GPIO_InitStruct.Pull      = LL_GPIO_PULL_UP;
 	LL_GPIO_Init(LORA_DIO1_PORT, &GPIO_InitStruct);
+
+	// Busy(PC5)
+	GPIO_InitStruct.Pin       = LORA_BUSY;
+	GPIO_InitStruct.Pull      = LL_GPIO_PULL_DOWN;
+	LL_GPIO_Init(LORA_BUSY_PORT, &GPIO_InitStruct);
+
+	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTC, LL_SYSCFG_EXTI_LINE4);
+	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTC, LL_SYSCFG_EXTI_LINE5);
+
+	LL_EXTI_EnableIT_0_31(LL_SYSCFG_EXTI_LINE4);
+	LL_EXTI_EnableIT_0_31(LL_SYSCFG_EXTI_LINE5);
+
+	LL_EXTI_EnableRisingTrig_0_31(LL_SYSCFG_EXTI_LINE4);
+	LL_EXTI_EnableFallingTrig_0_31(LL_SYSCFG_EXTI_LINE5);
+	LL_EXTI_EnableRisingTrig_0_31(LL_SYSCFG_EXTI_LINE5);
+
+	NVIC_SetPriority(EXTI4_IRQn, 15U);
+	NVIC_EnableIRQ  (EXTI4_IRQn);
+
+	NVIC_SetPriority(EXTI9_5_IRQn, 15U);
+	NVIC_EnableIRQ  (EXTI9_5_IRQn);
 
 	//printf("lora_spi_misc_gpio_config\r\n");
 }
@@ -329,7 +347,7 @@ static uchar spi_transfer(const uchar *tx_buffer, uchar *rx_buffer, uchar len)
 	if(len == 0)
 		return 1;
 
-	printf("total: %d \r\n", size);
+	//printf("total: %d \r\n", size);
 
 	// CS low
 	LL_GPIO_ResetOutputPin(LORA_NSS_PORT, LORA_NSS);
@@ -365,7 +383,7 @@ static uchar spi_transfer(const uchar *tx_buffer, uchar *rx_buffer, uchar len)
     		}
     	}
 
-    	if (rx_buffer)
+    	if(rx_buffer)
     	{
     		*rx_buffer++ = LL_SPI_ReceiveData8(SPI1);
     	}

@@ -43,28 +43,6 @@ STORAGE_Status_t   					StorageStatus[NUM_DISK_UNITS];
 extern struct PROC_STATE 			ps;
 
 //*----------------------------------------------------------------------------
-//* Function Name       : EXTI0_IRQHandler
-//* Object              :
-//* Notes    			: exti trap, line0
-//* Notes   			:
-//* Notes    			:
-//* Context    			: CONTEXT_IRQ
-//*----------------------------------------------------------------------------
-void EXTI0_IRQHandler(void)
-{
-	if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_0) != 0x00U)
-	{
-		BaseType_t xHigherPriorityTaskWoken;
-
-		xHigherPriorityTaskWoken = pdFALSE;
-		xTaskNotifyFromISR(ps.hSdcTask, 0x45, eSetBits, &xHigherPriorityTaskWoken);
-		portYIELD_FROM_ISR(xHigherPriorityTaskWoken );
-
-		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_0);
-	}
-}
-
-//*----------------------------------------------------------------------------
 //* Function Name       : storage_proc_try_mount
 //* Object              :
 //* Notes    			:

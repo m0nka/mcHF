@@ -146,6 +146,107 @@ void SysTick_Handler(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : EXTI0_IRQHandler
+//* Object              :
+//* Notes    			: exti trap, line0
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void EXTI0_IRQHandler(void)
+{
+	#if 0
+	if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_0) != 0x00U)
+	{
+		BaseType_t xHigherPriorityTaskWoken;
+
+		xHigherPriorityTaskWoken = pdFALSE;
+		xTaskNotifyFromISR(ps.hSdcTask, 0x45, eSetBits, &xHigherPriorityTaskWoken);
+		portYIELD_FROM_ISR(xHigherPriorityTaskWoken );
+
+		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_0);
+	}
+	#else
+	// Line 0
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_0) != RESET)
+	{
+		BaseType_t xHigherPriorityTaskWoken;
+
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_0);
+
+		xHigherPriorityTaskWoken = pdFALSE;
+		xTaskNotifyFromISR(ps.hSdcTask, 0x45, eSetBits, &xHigherPriorityTaskWoken);
+		portYIELD_FROM_ISR(xHigherPriorityTaskWoken );
+	}
+	#endif
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : EXTI4_IRQHandler
+//* Object              :
+//* Notes    			: Lora driver
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void EXTI4_IRQHandler(void)
+{
+	#if 0
+	if (__HAL_GPIO_EXTI_GET_IT(LORA_DIO1) != 0x00U)
+	{
+		lora_proc_dio1_irq();
+	    __HAL_GPIO_EXTI_CLEAR_IT(LORA_DIO1);
+	}
+	#else
+	// Line 4
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_4) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_4);
+		lora_proc_dio1_irq();
+	}
+	#endif
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : EXTI9_5_IRQHandler
+//* Object              :
+//* Notes    			: Shared between Touch and Lora drivers
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void EXTI9_5_IRQHandler(void)
+{
+	#if 0
+	if(__HAL_GPIO_EXTI_GET_IT(TS_INT_PIN) != 0x00U)
+	{
+	    touch_proc_irq();
+	    __HAL_GPIO_EXTI_CLEAR_IT(TS_INT_PIN);
+	}
+
+	if(__HAL_GPIO_EXTI_GET_IT(LORA_BUSY) != 0x00U)
+	{
+		lora_proc_busy_irq();
+	    __HAL_GPIO_EXTI_CLEAR_IT(LORA_BUSY);
+	}
+	#else
+	// Line 5
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_5) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_5);
+		lora_proc_busy_irq();
+	}
+
+	// Line 6
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_6) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_6);
+		touch_proc_irq();
+	}
+	#endif
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : Error_Handler
 //* Object              :
 //* Notes    			:

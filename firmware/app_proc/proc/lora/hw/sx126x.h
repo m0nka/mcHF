@@ -262,6 +262,10 @@ typedef enum {
     SX126X_PA_RAMP_ERR           = 0x0100,
 } sx126x_error_t;
 
+// Exti IRQs
+void sx1262_busy_handler(void* pvParameters);
+void sx1262_dio1_handler(void* pvParameters);
+
 // Commands
 esp_err_t sx126x_set_op_mode_sleep(sx126x_handle_t* handle, bool warm_start, bool rtc_timeout_disable);
 esp_err_t sx126x_set_op_mode_standby(sx126x_handle_t* handle, bool use_xosc);

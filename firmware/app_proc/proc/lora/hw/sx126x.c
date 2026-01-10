@@ -12,8 +12,7 @@
 
 // Interrupt handlers
 
-//IRAM_ATTR
-static void sx1262_busy_handler(void* pvParameters)
+void sx1262_busy_handler(void* pvParameters)
 {
     sx126x_handle_t* handle = (sx126x_handle_t*)pvParameters;
 
@@ -27,8 +26,7 @@ static void sx1262_busy_handler(void* pvParameters)
         xSemaphoreGiveFromISR(handle->busy_semaphore, NULL);
 }
 
-//IRAM_ATTR
-static void sx1262_dio1_handler(void* pvParameters)
+void sx1262_dio1_handler(void* pvParameters)
 {
     sx126x_handle_t* handle = (sx126x_handle_t*)pvParameters;
 
@@ -48,6 +46,7 @@ static esp_err_t sx126x_busy_wait(sx126x_handle_t* handle)
     //if(!gpio_get_level(handle->busy))
     if(!LL_GPIO_IsInputPinSet(LORA_BUSY_PORT, LORA_BUSY))
     {
+    	printf("not busy \r\n");
         return ESP_OK;  // Don't take semaphore if not busy
     }
 
