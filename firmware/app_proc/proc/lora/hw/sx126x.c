@@ -16,8 +16,10 @@ void sx1262_busy_handler(void* pvParameters)
 {
     sx126x_handle_t* handle = (sx126x_handle_t*)pvParameters;
 
-    if (handle == NULL)
+    if((handle == NULL)||(handle->busy_semaphore == NULL))
     	return;
+
+    //printf("busy=%d\r\n", LL_GPIO_IsInputPinSet(LORA_BUSY_PORT, LORA_BUSY));
 
     //if (gpio_get_level(handle->busy))
     if(LL_GPIO_IsInputPinSet(LORA_BUSY_PORT, LORA_BUSY))
@@ -30,8 +32,10 @@ void sx1262_dio1_handler(void* pvParameters)
 {
     sx126x_handle_t* handle = (sx126x_handle_t*)pvParameters;
 
-    if(handle == NULL)
+    if((handle == NULL)||(handle->interrupt_semaphore == NULL))
     	return;
+
+    //printf("dio1 irq\r\n");
 
     xSemaphoreGiveFromISR(handle->interrupt_semaphore, NULL);
 }
@@ -50,11 +54,14 @@ static esp_err_t sx126x_busy_wait(sx126x_handle_t* handle)
         return ESP_OK;  // Don't take semaphore if not busy
     }
 
+    //printf("take semaphore \r\n");
+
     if(xSemaphoreTake(handle->busy_semaphore, handle->timeout) == pdTRUE) {
         return ESP_OK;
     }
     else
     {
+    	printf("busy timeout \r\n");
         return ESP_ERR_TIMEOUT;
     }
 }
@@ -662,7 +669,7 @@ esp_err_t sx126x_init(sx126x_handle_t* handle, int spi_host_id, int nss, int res
     if (!handle)
     	return ESP_ERR_INVALID_ARG;
 
-    handle->timeout = pdMS_TO_TICKS(1000);
+    handle->timeout = 1000;	//pdMS_TO_TICKS(1000);
 
     handle->busy_semaphore = xSemaphoreCreateBinary();
     if (handle->busy_semaphore == NULL) {

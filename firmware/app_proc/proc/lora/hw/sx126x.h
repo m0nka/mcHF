@@ -122,6 +122,11 @@
 
 #define SX126X_VERSION_STRING_LENGTH 16
 
+//RADIOLIB_SX126X_REG_LORA_SYNC_WORD_MSB + LSB
+#define RADIOLIB_SX126X_SYNC_WORD_PUBLIC                        0x34        // actually 0x3444  NOTE: The low nibbles in each byte (0x_4_4) are masked out since apparently, they're reserved.
+#define RADIOLIB_SX126X_SYNC_WORD_PRIVATE                       0x12        // actually 0x1424        You couldn't make this up if you tried.
+
+
 // Chip mode (get status)
 #define SX126X_CHIP_MODE_STDBY_RC   0x02
 #define SX126X_CHIP_MODE_STDBY_XOSC 0x03
@@ -153,6 +158,11 @@
 #define SX126X_IRQ_TIMEOUT           (1 << 9)
 #define SX126X_IRQ_LRFHSSHOP         (1 << 14)
 #define SX126X_IRQ_ALL               0xFFFF
+
+// these macros are usually defined by Arduino, but some platforms undef them, so its safer to use our own
+#define RADIOLIB_MIN(a,b)			((a)<(b)?(a):(b))
+#define RADIOLIB_MAX(a,b)			((a)>(b)?(a):(b))
+#define RADIOLIB_ABS(x)         	((x)>0?(x):-(x))
 
 typedef struct {
     //spi_device_handle_t

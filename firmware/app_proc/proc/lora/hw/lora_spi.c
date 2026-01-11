@@ -21,6 +21,30 @@
 // FreeRTOS process state
 extern struct PROC_STATE 			ps;
 
+int32_t lora_spi_set_exti_irq(void)
+{
+	GPIO_InitTypeDef gpio_init_structure;
+
+	gpio_init_structure.Pin 	= LORA_BUSY;
+	gpio_init_structure.Pull 	= GPIO_PULLDOWN;
+	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_LOW;
+	gpio_init_structure.Mode 	= GPIO_MODE_IT_RISING_FALLING;
+	HAL_GPIO_Init(LORA_BUSY_PORT, &gpio_init_structure);
+
+	gpio_init_structure.Pin 	= LORA_DIO1;
+	gpio_init_structure.Pull 	= GPIO_PULLUP;
+	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_LOW;
+	gpio_init_structure.Mode 	= GPIO_MODE_IT_RISING;
+	HAL_GPIO_Init(LORA_DIO1_PORT, &gpio_init_structure);
+
+	//HAL_NVIC_SetPriority(EXTI4_IRQn, 15U, 0x00);
+	//HAL_NVIC_EnableIRQ  (EXTI4_IRQn);
+	//HAL_NVIC_SetPriority(EXTI9_5_IRQn, 15U, 0x00);
+	//HAL_NVIC_EnableIRQ  (EXTI9_5_IRQn);
+
+	return BSP_ERROR_NONE;
+}
+
 static void lora_spi_misc_gpio_config(void)
 {
 	LL_GPIO_InitTypeDef  GPIO_InitStruct;
@@ -52,6 +76,7 @@ static void lora_spi_misc_gpio_config(void)
 	GPIO_InitStruct.Pin       = LORA_RESET;
 	LL_GPIO_Init(LORA_RESET_PORT, &GPIO_InitStruct);
 
+	#if 0
 	// ----------------------------------------------
 	// Inputs/EXTI
 	GPIO_InitStruct.Mode      = LL_GPIO_MODE_INPUT;
@@ -76,11 +101,13 @@ static void lora_spi_misc_gpio_config(void)
 	LL_EXTI_EnableFallingTrig_0_31(LL_SYSCFG_EXTI_LINE5);
 	LL_EXTI_EnableRisingTrig_0_31(LL_SYSCFG_EXTI_LINE5);
 
-	NVIC_SetPriority(EXTI4_IRQn, 15U);
-	NVIC_EnableIRQ  (EXTI4_IRQn);
-
-	NVIC_SetPriority(EXTI9_5_IRQn, 15U);
-	NVIC_EnableIRQ  (EXTI9_5_IRQn);
+	//NVIC_SetPriority(EXTI4_IRQn, 15U);
+	//NVIC_EnableIRQ  (EXTI4_IRQn);
+	//NVIC_SetPriority(EXTI9_5_IRQn, 15U);
+	//NVIC_EnableIRQ  (EXTI9_5_IRQn);
+	#else
+	lora_spi_set_exti_irq();
+	#endif
 
 	//printf("lora_spi_misc_gpio_config\r\n");
 }
@@ -288,6 +315,34 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 			break;
 		}
 
+		case SX126X_CMD_WRITE_REGISTER:
+		{
+			tx_buff[0] = t->cmd;
+			out_len += 8;
+			shift++;
+
+			if((t->flags & SPI_TRANS_VARIABLE_ADDR) == SPI_TRANS_VARIABLE_ADDR)
+			{
+				//printf("add address \r\n");
+				tx_buff[1] = t->addr >> 8;
+				tx_buff[2] = t->addr & 0xFF;
+				out_len += 16;
+				shift += 2;
+			}
+
+			if((t->flags & SPI_TRANS_VARIABLE_DUMMY) == SPI_TRANS_VARIABLE_DUMMY)
+			{
+				//printf("add dummy \r\n");
+				tx_buff[3] = 0;
+				out_len += 8;
+				shift++;
+			}
+
+			ret = spi_transfer(tx_buff, rx_buff, out_len);
+
+			break;
+		}
+
 		case SX126X_CMD_SET_STANDBY:
 		case SX126X_CMD_SET_DIO3_AS_TXCO_CTRL:
 		case SX126X_CMD_SET_PACKET_TYPE:
@@ -295,6 +350,10 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 		case SX126X_CMD_SET_DIO_IRQ_PARAMS:
 		case SX126X_CMD_CALIBRATE:
 		case SX126X_CMD_SET_REGULATOR_MODE:
+		case SX126X_CMD_SET_MODULATION_PARAMS:
+		case SX126X_CMD_SET_PACKET_PARAMS:
+		case SX126X_CMD_SET_RF_FREQUENCY:
+		case SX126X_CMD_SET_RX:
 		{
 			ret = spi_transfer(t->tx_data, t->rx_data, out_len);
 			break;

@@ -200,18 +200,18 @@
 #define ICC_PROC_PRIORITY				osPriorityAboveNormal
 #define ICC_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 8)
 
-// Lora driver parameters
-#define LORA_PROC_START_NAME			"lor"
-#define LORA_PROC_START_DELAY			1100
-#define LORA_PROC_SLEEP_TIME			portMAX_DELAY
-#define LORA_PROC_PRIORITY				osPriorityNormal
-#define LORA_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 16)
-
 // App loader service parameters
 #define APP_PROC_START_NAME				"app"
 #define APP_PROC_START_DELAY			2000
 #define APP_PROC_SLEEP_TIME				portMAX_DELAY
 #define APP_PROC_PRIORITY				osPriorityNormal
 #define APP_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 64)
+
+// Lora driver parameters
+#define LORA_PROC_START_NAME			"lor"
+#define LORA_PROC_START_DELAY			3000
+#define LORA_PROC_SLEEP_TIME			portMAX_DELAY
+#define LORA_PROC_PRIORITY				osPriorityNormal
+#define LORA_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 16)
 
 #endif
