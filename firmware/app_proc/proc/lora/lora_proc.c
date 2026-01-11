@@ -130,6 +130,7 @@ uchar lora_proc_modem_setup(void)
 	}
 
 	// Calibrate All
+	#if 0
 	if(sx126x_calibrate(&radio_drv, true, true, true, true, true, true, true) != 0)
 	{
 		printf("calib err\r\n");
@@ -140,6 +141,7 @@ uchar lora_proc_modem_setup(void)
 
 	// Check some status ??
 	// ...
+	#endif
 
 	return 0;
 }
@@ -197,7 +199,7 @@ uchar lora_proc_radio_init(void)
 		return 10;
 
 	// Start IRQ
-	if(sx126x_set_dio_irq_params(&radio_drv, RADIOLIB_SX126X_IRQ_RX_DONE, RADIOLIB_SX126X_IRQ_RX_DONE, 0, 0) != 0)
+	if(sx126x_set_dio_irq_params(&radio_drv, RADIOLIB_SX126X_IRQ_ALL, RADIOLIB_SX126X_IRQ_RX_DONE, 0, 0) != 0)
 	{
 		printf("irq err\r\n");
 		return 11;
@@ -283,7 +285,7 @@ lora_proc_loop:
 				printf("irq stat: %d, %d, %d\r\n", a, b, c);
 			}
 
-			//sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_ALL);
+			sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_RX_DONE);
 			//sx126x_set_op_mode_rx(&radio_drv);
 		}
 	}
