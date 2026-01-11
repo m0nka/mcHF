@@ -25,12 +25,14 @@ int32_t lora_spi_set_exti_irq(void)
 {
 	GPIO_InitTypeDef gpio_init_structure;
 
+	// BUSY IRQ
 	gpio_init_structure.Pin 	= LORA_BUSY;
 	gpio_init_structure.Pull 	= GPIO_PULLDOWN;
 	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_LOW;
 	gpio_init_structure.Mode 	= GPIO_MODE_IT_RISING_FALLING;
 	HAL_GPIO_Init(LORA_BUSY_PORT, &gpio_init_structure);
 
+	// DIO1 IRQ
 	gpio_init_structure.Pin 	= LORA_DIO1;
 	gpio_init_structure.Pull 	= GPIO_PULLUP;
 	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_LOW;
@@ -354,6 +356,10 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 		case SX126X_CMD_SET_PACKET_PARAMS:
 		case SX126X_CMD_SET_RF_FREQUENCY:
 		case SX126X_CMD_SET_RX:
+		case SX126X_CMD_SET_DIO2_AS_RF_SWITCH_CTRL:
+		case SX126X_CMD_CLEAR_IRQ_STATUS:
+		case SX126X_CMD_GET_IRQ_STATUS:
+		case SX126X_CMD_SET_BUFFER_BASE_ADDRESS:
 		{
 			ret = spi_transfer(t->tx_data, t->rx_data, out_len);
 			break;

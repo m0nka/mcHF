@@ -25,6 +25,7 @@
 #define LORA_SF		SX126X_LORA_SPREADING_FACTOR_8
 #define LORA_CR		SX126X_LORA_CODING_RATE_4_8
 #define LORA_BW		SX126X_LORA_BANDWIDTH_62
+#define LORA_FR		869.618f
 
 sx126x_handle_t radio_drv;
 uchar			radio_init_done = 0;
@@ -112,7 +113,7 @@ uchar lora_proc_modem_setup(void)
 	// Set initial CAD parameters
 	if(sx126x_set_cad_params(&radio_drv,
 							RADIOLIB_SX126X_CAD_ON_8_SYMB,
-							(LORA_SF + 13),							// spreading factor
+							(LORA_SF + 13),
 							RADIOLIB_SX126X_CAD_PARAM_DET_MIN,
 							RADIOLIB_SX126X_CAD_GOTO_STDBY,
 							0) != 0)
@@ -183,20 +184,28 @@ uchar lora_proc_radio_init(void)
 	if(sx126x_set_packet_params_lora(&radio_drv, 16, true, preambleDetLength, true, false) != 0)
 		return 7;
 
-	// Set frequency
-	if(sx126x_set_rf_frequency(&radio_drv, 869.618f) != 0)
+	// Is it true ?
+	if(sx126x_set_dio2_as_rf_switch_ctrl(&radio_drv, true) != 0)
 		return 8;
+
+	// Set internal RX and TX buffer addresses(256 byte space)
+	if(sx126x_set_buffer_base_address(&radio_drv, 0x00, 0x80) != 0)
+		return 9;
+
+	// Set frequency
+	if(sx126x_set_rf_frequency(&radio_drv, LORA_FR) != 0)
+		return 10;
 
 	// Start IRQ
 	if(sx126x_set_dio_irq_params(&radio_drv, RADIOLIB_SX126X_IRQ_RX_DONE, RADIOLIB_SX126X_IRQ_RX_DONE, 0, 0) != 0)
 	{
 		printf("irq err\r\n");
-		return 9;
+		return 11;
 	}
 
 	// Start RX ?
 	if(sx126x_set_op_mode_rx(&radio_drv) != 0)
-		return 10;
+		return 12;
 
 	// ... next
 
@@ -260,9 +269,23 @@ lora_proc_loop:
 	#ifdef SPI_GPIO_TEST
 	lora_proc_gpio_test();
 	#else
-	if(sx126x_irq_wait(&radio_drv, 200) == 0)
+	if(radio_init_done)
 	{
-		printf("got irq\r\n");
+		if(sx126x_irq_wait(&radio_drv, 0) == 0)
+		{
+			printf("got irq\r\n");
+
+			ushort a = 0;
+			uchar b = 0, c = 0;
+
+			if(sx126x_get_irq_status(&radio_drv, &a, &b, &c) == 0)
+			{
+				printf("irq stat: %d, %d, %d\r\n", a, b, c);
+			}
+
+			//sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_ALL);
+			//sx126x_set_op_mode_rx(&radio_drv);
+		}
 	}
 	#endif
 
