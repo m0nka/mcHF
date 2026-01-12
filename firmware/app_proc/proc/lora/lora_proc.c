@@ -80,7 +80,7 @@ uchar lora_proc_find_chip(void)
 		if(version[0] > 0x80)
 			print_hex_array((uchar *)version, 6);
 		else
-			printf("ver: %s \r\n", version);
+			printf("ver: %s(%d) \r\n", version, i);
 		#endif
 
 		// Detected
@@ -96,18 +96,22 @@ uchar lora_proc_find_chip(void)
 
 uchar lora_proc_modem_setup(void)
 {
+	// Set standby mode
+	if(sx126x_set_op_mode_standby(&radio_drv, 1) != 0)
+		return 1;
+
 	// Setup TCXO
 	if(sx126x_set_dio3_as_txco_ctrl(&radio_drv, 1.6f, 5000.0f) != 0)
 	{
 		printf("tcxo err\r\n");
-		return 1;
+		return 2;
 	}
 
 	// Set modem type
 	if(sx126x_set_packet_type(&radio_drv, RADIOLIB_SX126X_PACKET_TYPE_LORA) != 0)
 	{
 		printf("pkt type err\r\n");
-		return 2;
+		return 3;
 	}
 
 	// Set initial CAD parameters
@@ -119,25 +123,30 @@ uchar lora_proc_modem_setup(void)
 							0) != 0)
 	{
 		printf("cad err\r\n");
-		return 3;
+		return 4;
 	}
 
 	// Clear IRQ
 	if(sx126x_set_dio_irq_params(&radio_drv, RADIOLIB_SX126X_IRQ_NONE, RADIOLIB_SX126X_IRQ_NONE, 0, 0) != 0)
 	{
 		printf("irq err\r\n");
-		return 4;
+		return 5;
 	}
 
 	// Calibrate All
 	#if 0
-	if(sx126x_calibrate(&radio_drv, true, true, true, true, true, true, true) != 0)
+	radio_drv.timeout = 5000;
+	if(sx126x_calibrate(&radio_drv, false, false, false, false, false, false, false) != 0)
 	{
 		printf("calib err\r\n");
 		return 5;
 	}
 
-	vTaskDelay(5);
+	// Restore timeout
+	radio_drv.timeout = 1000;
+
+	// Wait
+	vTaskDelay(50);
 
 	// Check some status ??
 	// ...
@@ -209,7 +218,39 @@ uchar lora_proc_radio_init(void)
 	if(sx126x_set_op_mode_rx(&radio_drv) != 0)
 		return 12;
 
-	// ... next
+	#if 0
+	// Get status test
+	uchar cmd_stat, chip_mode;
+	//radio_drv.timeout = 10000;
+	if(sx126x_get_status(&radio_drv, &cmd_stat, &chip_mode) == 0)
+	{
+		printf("status: %d, mode: %d \r\n", cmd_stat, chip_mode);
+	}
+	//radio_drv.timeout = 1000;
+	#endif
+
+	#if 1
+	// Memory access test
+	uchar mem[16];
+	if(sx126x_read_buffer(&radio_drv, 0x80, mem, 2) == 0)
+	{
+		print_hex_array(mem, 2);
+
+		mem[0] = 0x55;
+		mem[1] = 0xAA;
+
+		if(sx126x_write_buffer(&radio_drv, 0x80, mem, 2) == 0)
+		{
+			mem[0] = 0;
+			mem[1] = 0;
+
+			if(sx126x_read_buffer(&radio_drv, 0x80, mem, 2) == 0)
+			{
+				print_hex_array(mem, 2);
+			}
+		}
+	}
+	#endif
 
 	// Enable driver
 	radio_init_done = 1;
@@ -235,17 +276,7 @@ void lora_proc_task(void const * argument)
 	#ifndef SPI_GPIO_TEST
 	//
 	// EXTI IRQs on
-	#if 0
-	HAL_NVIC_SetPriority(EXTI4_IRQn, 15U, 0x00);
-	HAL_NVIC_EnableIRQ  (EXTI4_IRQn);
-	HAL_NVIC_SetPriority(EXTI9_5_IRQn, 15U, 0x00);
-	HAL_NVIC_EnableIRQ  (EXTI9_5_IRQn);
-	#else
-	NVIC_SetPriority(EXTI4_IRQn, 15U);
-	NVIC_EnableIRQ  (EXTI4_IRQn);
-	NVIC_SetPriority(EXTI9_5_IRQn, 15U);
-	NVIC_EnableIRQ  (EXTI9_5_IRQn);
-	#endif
+	lora_spi_activate_exti_irq();
 	//
 	// SPI HW init
 	lora_spi_init();
@@ -271,6 +302,7 @@ lora_proc_loop:
 	#ifdef SPI_GPIO_TEST
 	lora_proc_gpio_test();
 	#else
+	#if 0
 	if(radio_init_done)
 	{
 		if(sx126x_irq_wait(&radio_drv, 0) == 0)
@@ -289,6 +321,7 @@ lora_proc_loop:
 			//sx126x_set_op_mode_rx(&radio_drv);
 		}
 	}
+	#endif
 	#endif
 
 	vTaskDelay(20);

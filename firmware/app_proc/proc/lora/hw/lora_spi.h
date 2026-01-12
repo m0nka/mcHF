@@ -119,6 +119,7 @@ typedef struct {
 
 // -----------------------------------------------------------------------
 
+void lora_spi_activate_exti_irq(void);
 void lora_spi_init(void);
 
 int spi_device_transmit(int device, spi_transaction_t *t);

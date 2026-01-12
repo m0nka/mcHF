@@ -27,24 +27,34 @@ int32_t lora_spi_set_exti_irq(void)
 
 	// BUSY IRQ
 	gpio_init_structure.Pin 	= LORA_BUSY;
-	gpio_init_structure.Pull 	= GPIO_PULLDOWN;
+	gpio_init_structure.Pull 	= GPIO_PULLUP;
 	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_LOW;
 	gpio_init_structure.Mode 	= GPIO_MODE_IT_RISING_FALLING;
 	HAL_GPIO_Init(LORA_BUSY_PORT, &gpio_init_structure);
 
 	// DIO1 IRQ
 	gpio_init_structure.Pin 	= LORA_DIO1;
-	gpio_init_structure.Pull 	= GPIO_PULLUP;
+	gpio_init_structure.Pull 	= GPIO_PULLDOWN;
 	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_LOW;
 	gpio_init_structure.Mode 	= GPIO_MODE_IT_RISING;
 	HAL_GPIO_Init(LORA_DIO1_PORT, &gpio_init_structure);
 
-	//HAL_NVIC_SetPriority(EXTI4_IRQn, 15U, 0x00);
-	//HAL_NVIC_EnableIRQ  (EXTI4_IRQn);
-	//HAL_NVIC_SetPriority(EXTI9_5_IRQn, 15U, 0x00);
-	//HAL_NVIC_EnableIRQ  (EXTI9_5_IRQn);
-
 	return BSP_ERROR_NONE;
+}
+
+void lora_spi_activate_exti_irq(void)
+{
+	#if 0
+	HAL_NVIC_SetPriority(EXTI4_IRQn, 15U, 0x00);
+	HAL_NVIC_EnableIRQ  (EXTI4_IRQn);
+	HAL_NVIC_SetPriority(EXTI9_5_IRQn, 15U, 0x00);
+	HAL_NVIC_EnableIRQ  (EXTI9_5_IRQn);
+	#else
+	NVIC_SetPriority(EXTI4_IRQn, 15U);
+	NVIC_EnableIRQ  (EXTI4_IRQn);
+	NVIC_SetPriority(EXTI9_5_IRQn, 15U);
+	NVIC_EnableIRQ  (EXTI9_5_IRQn);
+	#endif
 }
 
 static void lora_spi_misc_gpio_config(void)
@@ -103,10 +113,6 @@ static void lora_spi_misc_gpio_config(void)
 	LL_EXTI_EnableFallingTrig_0_31(LL_SYSCFG_EXTI_LINE5);
 	LL_EXTI_EnableRisingTrig_0_31(LL_SYSCFG_EXTI_LINE5);
 
-	//NVIC_SetPriority(EXTI4_IRQn, 15U);
-	//NVIC_EnableIRQ  (EXTI4_IRQn);
-	//NVIC_SetPriority(EXTI9_5_IRQn, 15U);
-	//NVIC_EnableIRQ  (EXTI9_5_IRQn);
 	#else
 	lora_spi_set_exti_irq();
 	#endif
@@ -345,6 +351,82 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 			break;
 		}
 
+		case SX126X_CMD_READ_BUFFER:
+		{
+			//printf("read buffer \r\n");
+
+			tx_buff[0] = t->cmd;
+			out_len += 8;
+			shift++;
+
+			if((t->flags & SPI_TRANS_VARIABLE_ADDR) == SPI_TRANS_VARIABLE_ADDR)
+			{
+				//--printf("add address \r\n");
+				tx_buff[1] = t->addr;
+				//tx_buff[2] = t->addr & 0xFF;
+				out_len += 8;
+				shift += 1;
+			}
+
+			if((t->flags & SPI_TRANS_VARIABLE_DUMMY) == SPI_TRANS_VARIABLE_DUMMY)
+			{
+				//--printf("add dummy \r\n");
+				tx_buff[2] = 0;
+				out_len += 8;
+				shift++;
+			}
+
+			//print_hex_array(tx_buff, out_len/8);
+
+			ret = spi_transfer(tx_buff, rx_buff, out_len);
+
+			//if((t->rx_buffer != NULL)&&(out_len/8))
+			//	print_hex_array(rx_buff, out_len/8);
+
+			if(ret)
+				printf("spi res: %d \r\n", ret);
+			else
+			{
+				// To bytes
+				out_len /= 8;
+
+				// Copy without TX data
+				memcpy((uchar *)(t->rx_buffer), (uchar *)&rx_buff[shift], (out_len - shift));
+			}
+			break;
+		}
+
+		case SX126X_CMD_WRITE_BUFFER:
+		{
+			//printf("write buffer \r\n");
+
+			tx_buff[0] = t->cmd;
+			out_len += 8;
+			shift++;
+
+			if((t->flags & SPI_TRANS_VARIABLE_ADDR) == SPI_TRANS_VARIABLE_ADDR)
+			{
+				//printf("add address 0x%x \r\n", t->addr);
+				tx_buff[1] = t->addr;
+				out_len += 8;
+				shift += 1;
+			}
+
+			// Copy outgoing transfer
+			if(t->tx_buffer != NULL)
+				memcpy((tx_buff + 2), t->tx_buffer, ((out_len/8) - 2));
+
+			//print_hex_array(tx_buff, out_len/8 + 2);
+
+			ret = spi_transfer(tx_buff, rx_buff, out_len);
+
+			if(ret)
+				printf("spi res: %d \r\n", ret);
+
+			break;
+		}
+
+
 		case SX126X_CMD_SET_STANDBY:
 		case SX126X_CMD_SET_DIO3_AS_TXCO_CTRL:
 		case SX126X_CMD_SET_PACKET_TYPE:
@@ -360,6 +442,7 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 		case SX126X_CMD_GET_IRQ_STATUS:
 		case SX126X_CMD_SET_BUFFER_BASE_ADDRESS:
 		case SX126X_CMD_CLEAR_IRQ_STATUS:
+		case SX126X_CMD_GET_STATUS:
 		{
 			memset(tx_buff, 0, sizeof(tx_buff));
 			memset(rx_buff, 0, sizeof(rx_buff));
@@ -372,7 +455,7 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 			if(t->tx_buffer != NULL)
 				memcpy((tx_buff + 1), t->tx_data, ((out_len/8) - 1));
 
-			//--print_hex_array(tx_buff, out_len/8);
+			//print_hex_array(tx_buff, out_len/8);
 
 			ret = spi_transfer(tx_buff, rx_buff, out_len);
 
@@ -396,33 +479,7 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 
 			break;
 		}
-#if 0
-		case SX126X_CMD_CLEAR_IRQ_STATUS:
-		{
-			tx_buff[0] = t->cmd;
-			out_len += 8;
-			shift++;
 
-			ret = spi_transfer(tx_buff, rx_buff, out_len);
-
-			if(out_len/8)
-				print_hex_array(rx_buff, out_len/8);
-
-			if(ret)
-				printf("spi res: %d \r\n", ret);
-			else
-			{
-				// To bytes
-				out_len /= 8;
-
-				// Copy without TX data
-				memcpy((uchar *)(t->rx_data), (uchar *)&rx_buff[shift], (out_len - shift));
-			}
-
-			break;
-		}
-
-#endif
 		default:
 			printf("not supported cmd: 0x%x \r\n", t->cmd);
 			return 10;
