@@ -317,6 +317,8 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 				// To bytes
 				out_len /= 8;
 
+				//print_hex_array(rx_buff, out_len);
+
 				// Copy without TX data
 				memcpy((uchar *)(t->rx_buffer), (uchar *)&rx_buff[shift], (out_len - shift));
 			}
@@ -338,6 +340,7 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 				shift += 2;
 			}
 
+			#if 0
 			if((t->flags & SPI_TRANS_VARIABLE_DUMMY) == SPI_TRANS_VARIABLE_DUMMY)
 			{
 				//printf("add dummy \r\n");
@@ -345,6 +348,13 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 				out_len += 8;
 				shift++;
 			}
+			#endif
+
+			// Copy outgoing transfer
+			if(t->tx_buffer != NULL)
+				memcpy((tx_buff + 3), t->tx_buffer, ((out_len/8) - 3));
+
+			//print_hex_array(tx_buff, out_len/8);
 
 			ret = spi_transfer(tx_buff, rx_buff, out_len);
 
@@ -416,7 +426,7 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 			if(t->tx_buffer != NULL)
 				memcpy((tx_buff + 2), t->tx_buffer, ((out_len/8) - 2));
 
-			//print_hex_array(tx_buff, out_len/8 + 2);
+			//print_hex_array(tx_buff, out_len/8);
 
 			ret = spi_transfer(tx_buff, rx_buff, out_len);
 
@@ -453,7 +463,7 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 
 			// Copy outgoing transfer
 			if(t->tx_buffer != NULL)
-				memcpy((tx_buff + 1), t->tx_data, ((out_len/8) - 1));
+				memcpy((tx_buff + 1), t->tx_buffer, ((out_len/8) - 1));
 
 			//print_hex_array(tx_buff, out_len/8);
 

@@ -229,7 +229,7 @@ uchar lora_proc_radio_init(void)
 	//radio_drv.timeout = 1000;
 	#endif
 
-	#if 1
+	#if 0
 	// Memory access test
 	uchar mem[16];
 	if(sx126x_read_buffer(&radio_drv, 0x80, mem, 2) == 0)
@@ -247,6 +247,29 @@ uchar lora_proc_radio_init(void)
 			if(sx126x_read_buffer(&radio_drv, 0x80, mem, 2) == 0)
 			{
 				print_hex_array(mem, 2);
+			}
+		}
+	}
+	#endif
+
+	#if 0
+	// Register read/write test
+	uchar regs[10];
+	if(sx126x_read_register(&radio_drv, 0x038A, regs, 2) == 0)
+	{
+		print_hex_array(regs, 2);
+
+		regs[0] = 1;
+		regs[1] = 2;
+
+		if(sx126x_write_register(&radio_drv, 0x038A, regs, 2) == 0)
+		{
+			regs[0] = 0;
+			regs[1] = 0;
+
+			if(sx126x_read_register(&radio_drv, 0x038A, regs, 2) == 0)
+			{
+				print_hex_array(regs, 2);
 			}
 		}
 	}
@@ -302,7 +325,7 @@ lora_proc_loop:
 	#ifdef SPI_GPIO_TEST
 	lora_proc_gpio_test();
 	#else
-	#if 0
+	#if 1
 	if(radio_init_done)
 	{
 		if(sx126x_irq_wait(&radio_drv, 0) == 0)
