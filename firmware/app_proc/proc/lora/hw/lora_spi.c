@@ -453,6 +453,7 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 		case SX126X_CMD_SET_BUFFER_BASE_ADDRESS:
 		case SX126X_CMD_CLEAR_IRQ_STATUS:
 		case SX126X_CMD_GET_STATUS:
+		case SX126X_CMD_GET_RX_BUFFER_STATUS:
 		{
 			memset(tx_buff, 0, sizeof(tx_buff));
 			memset(rx_buff, 0, sizeof(rx_buff));

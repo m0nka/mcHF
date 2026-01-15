@@ -200,7 +200,7 @@ uchar lora_proc_radio_init(void)
 		return 8;
 
 	// Set internal RX and TX buffer addresses(256 byte space)
-	if(sx126x_set_buffer_base_address(&radio_drv, 0x00, 0x80) != 0)
+	if(sx126x_set_buffer_base_address(&radio_drv, 0x00, 0x00) != 0)
 		return 9;
 
 	// Set frequency
@@ -330,18 +330,39 @@ lora_proc_loop:
 	{
 		if(sx126x_irq_wait(&radio_drv, 0) == 0)
 		{
-			printf("got irq\r\n");
+			printf("-------------------- \r\n");
 
 			ushort a = 0;
 			uchar b = 0, c = 0;
 
+			// Get irq status
 			if(sx126x_get_irq_status(&radio_drv, &a, &b, &c) == 0)
 			{
 				printf("irq stat: %d, %d, %d\r\n", a, b, c);
-			}
 
-			sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_RX_DONE);
-			//sx126x_set_op_mode_rx(&radio_drv);
+				if(a)
+				{
+					uchar len, ptr;
+
+					// Get buffer status
+					if(sx126x_get_rx_buffer_status(&radio_drv, &len, &ptr) == 0)
+					{
+						printf("rx packet len %d, ptr %d \r\n", len, ptr);
+						char mem[128];
+
+						// Get buffer contents
+						if(sx126x_read_buffer(&radio_drv, ptr, mem, len) == 0)
+						{
+							print_hex_array(mem, len);
+							sx126x_clear_irq_status(&radio_drv, a);
+						}
+					}
+				}
+				else
+					sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_ALL);
+
+				sx126x_set_op_mode_rx(&radio_drv);
+			}
 		}
 	}
 	#endif
