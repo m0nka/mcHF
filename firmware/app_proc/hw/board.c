@@ -730,17 +730,31 @@ void bsp_power_off(void)
 
 	// Tasks hw cleanup
 	audio_proc_power_cleanup();
+
 	band_proc_power_cleanup();
+
 	#ifdef CONTEXT_ROTARY
 	rotary_proc_power_cleanup();
 	#endif
+
 	touch_proc_power_cleanup();
+
+	#ifdef CONTEXT_TRX
 	trx_proc_power_clean_up();
+	#endif
+
+	#ifdef CONTEXT_FAN
+	fan_proc_power_clean_up();
+	#endif
+
 	vfo_proc_power_cleanup();
+
 	radio_init_save_before_off();
+
 	#ifdef CONTEXT_BMS
 	bms_proc_power_cleanup();
 	#endif
+
 	#ifdef CONTEXT_LORA
 	lora_proc_power_cleanup();
 	#endif

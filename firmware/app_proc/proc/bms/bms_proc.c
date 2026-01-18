@@ -22,8 +22,8 @@
 
 struct BMSState	bmss;
 
-// System timer
-extern ulong epoch;
+// FreeRTOS process state
+extern struct PROC_STATE 			ps;
 
 // ToDo: reuse for PA temperature protection
 #if 0
@@ -304,6 +304,38 @@ static void bms_proc_worker(void const *param)
 			bmss.run_on_dc = 1;
 		else
 			bmss.run_on_dc = 0;
+	}
+
+	// Do we need a fan ?
+	if(bmss.charger_on)
+	{
+		static uchar fan_state = 0xFF;
+
+		#ifdef CONTEXT_FAN
+		if(ps.hFanTask != NULL)
+		{
+			if((bmss.curr > PACK_CURR_CHARGE)&&(fan_state == 0))
+			{
+				printf("notify fan on \r\n");
+
+				fan_state = 1;
+				xTaskNotify(ps.hFanTask, 1, eSetValueWithOverwrite);
+			}
+			else if((bmss.curr < PACK_CURR_CHARGE)&&(fan_state == 1))
+			{
+				printf("notify fan off \r\n");
+
+				fan_state = 0;
+				xTaskNotify(ps.hFanTask, 0, eSetValueWithOverwrite);
+			}
+			else if(fan_state == 0xFF)
+			{
+				printf("notify reset \r\n");
+
+				fan_state = 0;
+			}
+		}
+		#endif
 	}
 
 	bms_read_skip++;

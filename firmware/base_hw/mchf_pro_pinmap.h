@@ -696,7 +696,7 @@
 #define LCD_BL_CTRL_TIM_CH				LL_TIM_CHANNEL_CH2
 
 // PA10			FAN_ON
-#define FAN_CNTR						GPIO_PIN_10
+#define FAN_CNTR						LL_GPIO_PIN_10
 #define FAN_CNTR_PORT					GPIOA
 
 // ToDo: Allocate to DSP core for rig control and real time audio streaming

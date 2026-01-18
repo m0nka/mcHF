@@ -81,6 +81,12 @@
 #define CONTEXT_TRX
 //
 // -----------------------------------------------------------------------------------------------
+// Fan HW control
+//
+//
+#define CONTEXT_FAN
+//
+// -----------------------------------------------------------------------------------------------
 // Physical keyboard
 //
 //
@@ -192,6 +198,13 @@
 #define TRX_PROC_SLEEP_TIME				portMAX_DELAY
 #define TRX_PROC_PRIORITY				osPriorityNormal
 #define TRX_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 4)
+
+// FAN control process parameters
+#define FAN_PROC_START_NAME				"fan"
+#define FAN_PROC_START_DELAY			950
+#define FAN_PROC_SLEEP_TIME				portMAX_DELAY
+#define FAN_PROC_PRIORITY				osPriorityNormal
+#define FAN_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 2)
 
 // ICC(inter-core comms) process parameters
 #define ICC_PROC_START_NAME				"icc"

@@ -352,6 +352,10 @@ static void tasks_pre_os_init(void)
 	trx_proc_hw_init();
 	#endif
 
+	#ifdef CONTEXT_FAN
+	fan_proc_hw_init();
+	#endif
+
 	#ifdef CONTEXT_KEYPAD
 	keypad_proc_init();
 	#endif
@@ -538,6 +542,21 @@ static int start_proc(void)
     }
 	#endif
 
+	#ifdef CONTEXT_FAN
+    res = xTaskCreate((TaskFunction_t)fan_proc_task,\
+					FAN_PROC_START_NAME,\
+					FAN_PROC_STACK_SIZE,\
+					NULL,\
+					FAN_PROC_PRIORITY,\
+					&(ps.hTrxTask));
+
+    if(res != pdPASS)
+    {
+    	printf("unable to create fan process\r\n");
+    	return 10;
+    }
+	#endif
+
 	#ifdef CONTEXT_KEYPAD
     res = xTaskCreate(	(TaskFunction_t)keypad_proc_task,\
     					KEYPAD_PROC_START_NAME,\
@@ -549,7 +568,7 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create kbd process\r\n");
-    	return 10;
+    	return 11;
     }
 	#endif
 
@@ -564,7 +583,7 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create lora process\r\n");
-    	return 11;
+    	return 12;
     }
 	#endif
 
@@ -579,7 +598,7 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create sd card process\r\n");
-    	return 12;
+    	return 13;
     }
 	#endif
 
@@ -594,7 +613,7 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create app loader process\r\n");
-    	return 12;
+    	return 14;
     }
 	#endif
 

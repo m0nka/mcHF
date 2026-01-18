@@ -315,6 +315,7 @@
 									<listOptionValue builtIn="false" value="../../proc/band"/>
 									<listOptionValue builtIn="false" value="../../proc/pwm"/>
 									<listOptionValue builtIn="false" value="../../proc/trx"/>
+									<listOptionValue builtIn="false" value="../../proc/fan"/>
 									<listOptionValue builtIn="false" value="../../proc/keypad"/>
 									<listOptionValue builtIn="false" value="../../proc/lora"/>
 									<listOptionValue builtIn="false" value="../../proc/lora/hw"/>

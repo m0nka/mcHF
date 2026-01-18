@@ -90,6 +90,7 @@
 #include "vfo_proc.h"
 #include "band_proc.h"
 #include "trx_proc.h"
+#include "fan_proc.h"
 #include "keypad_proc.h"
 #include "lora_proc.h"
 #include "storage_proc.h"
@@ -162,6 +163,7 @@ __attribute__((__common__)) struct PROC_STATE {
 	TaskHandle_t 	hAudioTask;
 	TaskHandle_t 	hBandTask;
 	TaskHandle_t 	hTrxTask;
+	TaskHandle_t 	hFanTask;
 	TaskHandle_t 	hKbdTask;
 	TaskHandle_t 	hLraTask;
 	TaskHandle_t 	hSdcTask;

@@ -552,6 +552,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/dsp_proc.c</locationURI>
 		</link>
 		<link>
+			<name>proc/fan/fan_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/fan/fan_proc.c</locationURI>
+		</link>
+		<link>
 			<name>proc/icc/icc_proc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/icc/icc_proc.c</locationURI>
