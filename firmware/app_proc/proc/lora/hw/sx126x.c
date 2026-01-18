@@ -329,12 +329,18 @@ esp_err_t sx126x_set_tx_params(sx126x_handle_t* handle, int8_t power, bool pa_is
     return sx126x_command(handle, SX126X_CMD_SET_TX_PARAMS, parameters, NULL, sizeof(parameters));
 }
 
-esp_err_t sx126x_set_modulation_params_lora(sx126x_handle_t* handle, sx126x_lora_spreading_factor_t spreading_factor,
-                                            sx126x_lora_bandwidth_t bandwidth, sx126x_lora_coding_rate_t coding_rate,
-                                            bool low_data_rate_optimization) {
-    if (handle == NULL) return ESP_ERR_INVALID_ARG;
+esp_err_t sx126x_set_modulation_params_lora(sx126x_handle_t* 				handle,
+											sx126x_lora_spreading_factor_t 	spreading_factor,
+                                            sx126x_lora_bandwidth_t 		bandwidth,
+											sx126x_lora_coding_rate_t 		coding_rate,
+                                            bool 							low_data_rate_optimization)
+{
+    if (handle == NULL)
+    	return ESP_ERR_INVALID_ARG;
+
     uint8_t parameters[4] = {(uint8_t)spreading_factor, (uint8_t)bandwidth, (uint8_t)coding_rate,
                              low_data_rate_optimization ? 0x01 : 0x00};
+
     return sx126x_command(handle, SX126X_CMD_SET_MODULATION_PARAMS, parameters, NULL, sizeof(parameters));
 }
 
@@ -356,9 +362,16 @@ esp_err_t sx126x_set_modulation_params_gfsk(sx126x_handle_t* handle, uint32_t bi
     return sx126x_command(handle, SX126X_CMD_SET_MODULATION_PARAMS, parameters, NULL, sizeof(parameters));
 }
 
-esp_err_t sx126x_set_packet_params_lora(sx126x_handle_t* handle, uint16_t preamble_length, bool fixed_packet_length,
-                                        uint8_t payload_length, bool crc_enabled, bool inverted_iq) {
-    if (handle == NULL) return ESP_ERR_INVALID_ARG;
+esp_err_t sx126x_set_packet_params_lora(sx126x_handle_t* 	handle,
+										uint16_t 			preamble_length,
+										bool 				fixed_packet_length,
+                                        uint8_t 			payload_length,
+										bool 				crc_enabled,
+										bool 				inverted_iq)
+{
+    if (handle == NULL)
+    	return ESP_ERR_INVALID_ARG;
+
     uint8_t parameters[6] = {
         (preamble_length >> 8) & 0xFF,      // Preamble length MSB
         preamble_length & 0xFF,             // Preamble length LSB
@@ -367,6 +380,7 @@ esp_err_t sx126x_set_packet_params_lora(sx126x_handle_t* handle, uint16_t preamb
         crc_enabled ? 0x01 : 0x00,          // CRC enabled flag
         inverted_iq ? 0x01 : 0x00,          // Inverted IQ flag
     };
+
     return sx126x_command(handle, SX126X_CMD_SET_PACKET_PARAMS, parameters, NULL, sizeof(parameters));
 }
 
@@ -394,9 +408,16 @@ esp_err_t sx126x_set_packet_params_gfsk(sx126x_handle_t* handle, uint16_t preamb
     return sx126x_command(handle, SX126X_CMD_SET_PACKET_PARAMS, parameters, NULL, sizeof(parameters));
 }
 
-esp_err_t sx126x_set_cad_params(sx126x_handle_t* handle, sx126x_cad_symbol_num_t symbol_num, uint8_t det_peak,
-                                uint8_t det_min, bool exit_mode, uint32_t timeout) {
-    if (handle == NULL) return ESP_ERR_INVALID_ARG;
+esp_err_t sx126x_set_cad_params(sx126x_handle_t* 		handle,
+								sx126x_cad_symbol_num_t symbol_num,
+								uint8_t 				det_peak,
+                                uint8_t 				det_min,
+								bool 					exit_mode,
+								uint32_t 				timeout)
+{
+    if (handle == NULL)
+    	return ESP_ERR_INVALID_ARG;
+
     uint8_t parameters[7] = {
         (uint8_t)symbol_num,      //
         det_peak,                 //
@@ -406,6 +427,7 @@ esp_err_t sx126x_set_cad_params(sx126x_handle_t* handle, sx126x_cad_symbol_num_t
         (timeout >> 8) & 0xFF,    //
         timeout & 0xFF,           //
     };
+
     return sx126x_command(handle, SX126X_CMD_SET_CAD_PARAMS, parameters, NULL, sizeof(parameters));
 }
 
@@ -637,9 +659,13 @@ esp_err_t sx126x_read_version_string(sx126x_handle_t* handle, char* out_buffer, 
     return sx126x_read_register(handle, SX126X_REG_VERSION_STRING, (uint8_t*)out_buffer, buffer_size);
 }
 
-esp_err_t sx126x_set_sync_word_adv(sx126x_handle_t* handle, uint8_t sync_word, uint8_t control_bits) {
+esp_err_t sx126x_set_sync_word_adv(	sx126x_handle_t* handle,
+									uint8_t sync_word,
+									uint8_t control_bits)
+{
     uint8_t sync_word_buffer[2] = {(uint8_t)((sync_word & 0xF0) | ((control_bits & 0xF0) >> 4)),
                                    (uint8_t)(((sync_word & 0x0F) << 4) | (control_bits & 0x0F))};
+
     return sx126x_write_register(handle, SX126X_REG_LORA_SYNC_WORD_MSB, sync_word_buffer, 2);
 }
 

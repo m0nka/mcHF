@@ -822,6 +822,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/icc/hw/rsc_table.c</locationURI>
 		</link>
 		<link>
+			<name>proc/lora/hw/lora_radio.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/hw/lora_radio.c</locationURI>
+		</link>
+		<link>
 			<name>proc/lora/hw/lora_spi.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/hw/lora_spi.c</locationURI>

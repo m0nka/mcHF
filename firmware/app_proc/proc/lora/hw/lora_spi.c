@@ -274,7 +274,7 @@ spi_abort:
 
 int spi_device_transmit(int device, spi_transaction_t *t)
 {
-	uchar tx_buff[200], rx_buff[200], shift = 0;
+	uchar tx_buff[300], rx_buff[300], shift = 0;
 	ulong out_len = t->length;
 	int  ret = 0;
 
