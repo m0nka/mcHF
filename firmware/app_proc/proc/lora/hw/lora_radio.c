@@ -21,6 +21,8 @@
 
 #include "lora_radio.h"
 
+//#define CONT_RX
+
 // Temp as local const
 #define LORA_SF		SX126X_LORA_SPREADING_FACTOR_8
 #define LORA_CR		SX126X_LORA_CODING_RATE_4_8
@@ -184,9 +186,11 @@ uchar lora_radio_init(void)
 		return 11;
 	}
 
-	// Start RX ?
-	if(sx126x_set_op_mode_rx(&radio_drv) != 0)
+	// Start RX
+	#ifdef CONT_RX
+	if(sx126x_set_op_mode_rx_cont(&radio_drv) != 0)
 		return 12;
+	#endif
 
 	#if 0
 	// Get status test
@@ -248,6 +252,7 @@ uchar lora_radio_init(void)
 	return 0;
 }
 
+#ifdef CONT_RX
 void lora_radio_rx_check(void)
 {
 	ushort a = 0;
@@ -306,8 +311,134 @@ void lora_radio_rx_check(void)
 			sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_ALL);
 
 		// Restart RX
-		sx126x_set_op_mode_rx(&radio_drv);
+		sx126x_set_op_mode_rx_cont(&radio_drv);
 	}
 }
+#else
+
+#define RX_TIMEOUT_MS		200
+#define RX_TIMEOUT_F		(ulong)(((float)(RX_TIMEOUT_MS * 5)) * 1000.0f)/15.625f
+
+uchar rx_state = 0;	// idle
+
+void lora_radio_rx_check(void)
+{
+	ushort a = 0;
+	uchar  b = 0, c = 0;
+	uchar  len, ptr;
+	uchar  mem[256];
+
+	if(!rx_state)
+	{
+		//printf("start rx \r\n");
+
+		if(sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_ALL) != 0)
+		{
+			// fail 1
+		}
+
+		if(sx126x_set_buffer_base_address(&radio_drv, 0x00, 0x00) != 0)
+		{
+			// fail 2
+		}
+
+		if(sx126x_set_op_mode_rx(&radio_drv, RX_TIMEOUT_F) != 0)
+		{
+			// fail 3
+		}
+
+		if(sx126x_set_dio_irq_params(&radio_drv, RADIOLIB_SX126X_IRQ_ALL, RADIOLIB_SX126X_IRQ_RX_DONE|RADIOLIB_SX126X_IRQ_TIMEOUT, 0, 0) != 0)
+		{
+			// fail 4
+		}
+
+		rx_state = 1;	// wait
+		return;
+	}
+
+	// Check status
+	if(sx126x_irq_wait(&radio_drv, 0) != 0)
+		return;
+
+	// Get irq status
+	if(sx126x_get_irq_status(&radio_drv, &a, &b, &c) == 0)
+	{
+		//printf("irq stat: 0x%02x(%02x,%02x)\r\n", a, b, c);
+
+		if((a & RADIOLIB_SX126X_IRQ_TIMEOUT) == RADIOLIB_SX126X_IRQ_TIMEOUT)
+		{
+			//printf("--> timeout \r\n");
+			sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_TIMEOUT);
+			return;
+		}
+		else if(a)
+		{
+			printf("-------------------- \r\n");
+
+			if((a & RADIOLIB_SX126X_IRQ_CRC_ERR) == RADIOLIB_SX126X_IRQ_CRC_ERR)
+			{
+				printf("--> crc error \r\n");
+				sx126x_clear_irq_status(&radio_drv, a);
+				goto restart_rx;
+			}
+
+			if((a & RADIOLIB_SX126X_IRQ_HEADER_ERR) == RADIOLIB_SX126X_IRQ_HEADER_ERR)
+			{
+				printf("--> cad header error \r\n");
+				sx126x_clear_irq_status(&radio_drv, a);
+				goto restart_rx;
+			}
+
+			if((a & RADIOLIB_SX126X_IRQ_HEADER_ERR) == RADIOLIB_SX126X_IRQ_HEADER_ERR)
+			{
+				printf("--> header valid \r\n");
+				sx126x_clear_irq_status(&radio_drv, a);
+				goto restart_rx;
+			}
+
+			if((a & RADIOLIB_SX126X_IRQ_SYNC_WORD_VALID) == RADIOLIB_SX126X_IRQ_SYNC_WORD_VALID)
+			{
+				printf("--> sync word valid \r\n");
+			}
+
+			// Do we have fully valid data in buffer ? Then read it
+			if(((a & RADIOLIB_SX126X_IRQ_RX_DONE) == RADIOLIB_SX126X_IRQ_RX_DONE) &&\
+			   ((a & RADIOLIB_SX126X_IRQ_HEADER_VALID) == RADIOLIB_SX126X_IRQ_HEADER_VALID) &&\
+			   ((a & RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED) == RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED))
+			{
+				// Set standby mode (we are already in, right ?)
+				sx126x_set_op_mode_standby(&radio_drv, 0);
+
+				// Get buffer status
+				if(sx126x_get_rx_buffer_status(&radio_drv, &len, &ptr) == 0)
+				{
+					printf("rx packet len %d, ptr %d \r\n", len, ptr);
+
+					// Get buffer contents
+					if(sx126x_read_buffer(&radio_drv, ptr, mem, len) == 0)
+					{
+						print_hex_array(mem, len);
+						sx126x_clear_irq_status(&radio_drv, a);
+						goto restart_rx;
+					}
+				}
+			}
+
+			// Clear incomplete
+			sx126x_clear_irq_status(&radio_drv, a);
+			goto restart_rx;
+		}
+		else
+		{
+			sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_ALL);
+			goto restart_rx;
+		}
+	}
+
+restart_rx:
+	rx_state = 0;	// restart
+
+}
+#endif
 
 #endif

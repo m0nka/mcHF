@@ -113,9 +113,19 @@ esp_err_t sx126x_set_op_mode_tx(sx126x_handle_t* handle) {
     return sx126x_command(handle, SX126X_CMD_SET_TX, NULL, NULL, 0);
 }
 
-esp_err_t sx126x_set_op_mode_rx(sx126x_handle_t* handle) {
+esp_err_t sx126x_set_op_mode_rx_cont(sx126x_handle_t* handle) {
     if (handle == NULL) return ESP_ERR_INVALID_ARG;
     uint8_t timeout[3] = {0, 0, 0};  // Continuous RX
+    return sx126x_command(handle, SX126X_CMD_SET_RX, timeout, NULL, 3);
+}
+
+esp_err_t sx126x_set_op_mode_rx(sx126x_handle_t* handle, uint32_t timeoutx)
+{
+    if (handle == NULL)
+    	return ESP_ERR_INVALID_ARG;
+
+    uint8_t timeout[3] = { (uint8_t)((timeoutx >> 16) & 0xFF), (uint8_t)((timeoutx >> 8) & 0xFF), (uint8_t)(timeoutx & 0xFF) };
+
     return sx126x_command(handle, SX126X_CMD_SET_RX, timeout, NULL, 3);
 }
 
@@ -690,7 +700,7 @@ esp_err_t sx1262_reset(sx126x_handle_t* handle)
 
 esp_err_t sx126x_init(sx126x_handle_t* handle, int spi_host_id, int nss, int reset, int dio1, int busy)
 {
-    esp_err_t res;
+   // esp_err_t res;
 
     if (!handle)
     	return ESP_ERR_INVALID_ARG;
