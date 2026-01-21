@@ -151,20 +151,21 @@ uchar lora_radio_init(void)
 		return 5;
 
 	// Set sync word
-	if(sx126x_set_sync_word_adv(&radio_drv, RADIOLIB_SX126X_SYNC_WORD_PRIVATE, 0) != 0)
+	if(sx126x_set_sync_word(&radio_drv, RADIOLIB_SX126X_SYNC_WORD_PRIVATE) != 0)
 		return 6;
 
+	#if 0
     uint8_t maxDetLen = RADIOLIB_MIN(RADIOLIB_SX126X_SYNC_WORD_PRIVATE, 16);
     uchar preambleDetLength = maxDetLen >= 32 ? RADIOLIB_SX126X_GFSK_PREAMBLE_DETECT_32 :
                               maxDetLen >= 24 ? RADIOLIB_SX126X_GFSK_PREAMBLE_DETECT_24 :
                               maxDetLen >= 16 ? RADIOLIB_SX126X_GFSK_PREAMBLE_DETECT_16 :
                               maxDetLen >   0 ? RADIOLIB_SX126X_GFSK_PREAMBLE_DETECT_8 :
                               RADIOLIB_SX126X_GFSK_PREAMBLE_DETECT_OFF;
-
     //printf("payload len: %d \r\n", preambleDetLength);
+	#endif
 
 	// Set packet params
-	if(sx126x_set_packet_params_lora(&radio_drv, 8, false, preambleDetLength, true, false) != 0)
+	if(sx126x_set_packet_params_lora(&radio_drv, 8, false, 0, true, false) != 0)
 		return 7;
 
 	// Is it true ?
@@ -287,7 +288,7 @@ void lora_radio_rx_check(void)
 			printf("--> header valid \r\n");
 
 		if((a & RADIOLIB_SX126X_IRQ_HEADER_ERR) == RADIOLIB_SX126X_IRQ_HEADER_ERR)
-			printf("--> header valid \r\n");
+			printf("--> header error \r\n");
 
 		if((a & RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED) == RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED)
 			printf("--> preamble \r\n");
@@ -332,25 +333,9 @@ void lora_radio_rx_check(void)
 	{
 		//printf("start rx \r\n");
 
-		if(sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_ALL) != 0)
-		{
-			// fail 1
-		}
-
-		if(sx126x_set_buffer_base_address(&radio_drv, 0x00, 0x00) != 0)
-		{
-			// fail 2
-		}
-
-		if(sx126x_set_op_mode_rx(&radio_drv, RX_TIMEOUT_F) != 0)
-		{
-			// fail 3
-		}
-
-		if(sx126x_set_dio_irq_params(&radio_drv, RADIOLIB_SX126X_IRQ_ALL, RADIOLIB_SX126X_IRQ_RX_DONE|RADIOLIB_SX126X_IRQ_TIMEOUT, 0, 0) != 0)
-		{
-			// fail 4
-		}
+		sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_ALL);
+		sx126x_set_op_mode_rx(&radio_drv, RX_TIMEOUT_F);
+		sx126x_set_dio_irq_params(&radio_drv, RADIOLIB_SX126X_IRQ_ALL, RADIOLIB_SX126X_IRQ_RX_DONE|RADIOLIB_SX126X_IRQ_TIMEOUT, 0, 0);
 
 		rx_state = 1;	// wait
 		return;
@@ -374,6 +359,19 @@ void lora_radio_rx_check(void)
 		else if(a)
 		{
 			printf("-------------------- \r\n");
+			printf("irq stat: 0x%02x(%02x,%02x)\r\n", a, b, c);
+
+			if((a & RADIOLIB_SX126X_IRQ_RX_DONE) == RADIOLIB_SX126X_IRQ_RX_DONE)
+				printf("--> rx done \r\n");
+
+			if((a & RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED) == RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED)
+				printf("--> preamble \r\n");
+
+			if((a & RADIOLIB_SX126X_IRQ_HEADER_VALID) == RADIOLIB_SX126X_IRQ_HEADER_VALID)
+				printf("--> header valid \r\n");
+
+			if((a & RADIOLIB_SX126X_IRQ_SYNC_WORD_VALID) == RADIOLIB_SX126X_IRQ_SYNC_WORD_VALID)
+				printf("--> sync word valid \r\n");
 
 			if((a & RADIOLIB_SX126X_IRQ_CRC_ERR) == RADIOLIB_SX126X_IRQ_CRC_ERR)
 			{
@@ -384,21 +382,9 @@ void lora_radio_rx_check(void)
 
 			if((a & RADIOLIB_SX126X_IRQ_HEADER_ERR) == RADIOLIB_SX126X_IRQ_HEADER_ERR)
 			{
-				printf("--> cad header error \r\n");
+				printf("--> header error \r\n");
 				sx126x_clear_irq_status(&radio_drv, a);
 				goto restart_rx;
-			}
-
-			if((a & RADIOLIB_SX126X_IRQ_HEADER_ERR) == RADIOLIB_SX126X_IRQ_HEADER_ERR)
-			{
-				printf("--> header valid \r\n");
-				sx126x_clear_irq_status(&radio_drv, a);
-				goto restart_rx;
-			}
-
-			if((a & RADIOLIB_SX126X_IRQ_SYNC_WORD_VALID) == RADIOLIB_SX126X_IRQ_SYNC_WORD_VALID)
-			{
-				printf("--> sync word valid \r\n");
 			}
 
 			// Do we have fully valid data in buffer ? Then read it
@@ -407,7 +393,7 @@ void lora_radio_rx_check(void)
 			   ((a & RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED) == RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED))
 			{
 				// Set standby mode (we are already in, right ?)
-				sx126x_set_op_mode_standby(&radio_drv, 0);
+				//--sx126x_set_op_mode_standby(&radio_drv, 0);
 
 				// Get buffer status
 				if(sx126x_get_rx_buffer_status(&radio_drv, &len, &ptr) == 0)
@@ -425,13 +411,11 @@ void lora_radio_rx_check(void)
 			}
 
 			// Clear incomplete
-			sx126x_clear_irq_status(&radio_drv, a);
-			goto restart_rx;
+			//sx126x_clear_irq_status(&radio_drv, a);
 		}
 		else
 		{
-			sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_ALL);
-			goto restart_rx;
+			//sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_ALL);
 		}
 	}
 
