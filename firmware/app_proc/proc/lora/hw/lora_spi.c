@@ -191,7 +191,7 @@ void lora_spi_init(void)
 #endif
 }
 
-static uchar spi_transfer(const uchar *tx_buffer, uchar *rx_buffer, uchar len)
+static uchar spi_transfer(const uchar *tx_buffer, uchar *rx_buffer, ulong len)
 {
 	uchar 		ret = 0;
 	uint32_t 	tickstart, size = len/8;
@@ -363,7 +363,10 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 
 		case SX126X_CMD_READ_BUFFER:
 		{
-			//printf("read buffer \r\n");
+			//printf("read buffer %d \r\n", (int)(out_len/8));
+
+			memset(tx_buff, 0, sizeof(tx_buff));
+			memset(rx_buff, 0, sizeof(rx_buff));
 
 			tx_buff[0] = t->cmd;
 			out_len += 8;
@@ -373,7 +376,6 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 			{
 				//--printf("add address \r\n");
 				tx_buff[1] = t->addr;
-				//tx_buff[2] = t->addr & 0xFF;
 				out_len += 8;
 				shift += 1;
 			}
@@ -408,7 +410,10 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 
 		case SX126X_CMD_WRITE_BUFFER:
 		{
-			//printf("write buffer \r\n");
+			//printf("write buffer %d \r\n", (int)(out_len/8));
+
+			memset(tx_buff, 0, sizeof(tx_buff));
+			memset(rx_buff, 0, sizeof(rx_buff));
 
 			tx_buff[0] = t->cmd;
 			out_len += 8;
@@ -435,7 +440,6 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 
 			break;
 		}
-
 
 		case SX126X_CMD_SET_STANDBY:
 		case SX126X_CMD_SET_DIO3_AS_TXCO_CTRL:

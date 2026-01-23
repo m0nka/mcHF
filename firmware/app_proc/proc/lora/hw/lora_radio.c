@@ -31,6 +31,8 @@
 
 extern sx126x_handle_t radio_drv;
 
+uchar  lora_mem[256];
+
 static uchar lora_radio_find_chip(void)
 {
 	char version[100];
@@ -76,7 +78,7 @@ static uchar lora_radio_modem_setup(void)
 		return 1;
 
 	// Setup TCXO
-	if(sx126x_set_dio3_as_txco_ctrl(&radio_drv, 1.6f, 5000.0f) != 0)
+	if(sx126x_set_dio3_as_txco_ctrl(&radio_drv, 1.8f, 5000.0f) != 0)
 	{
 		printf("tcxo err\r\n");
 		return 2;
@@ -206,25 +208,60 @@ uchar lora_radio_init(void)
 
 	#if 0
 	// Memory access test
-	uchar mem[16];
-	if(sx126x_read_buffer(&radio_drv, 0x80, mem, 2) == 0)
+	//uchar mem[16];
+	if(sx126x_read_buffer(&radio_drv, 0x00, lora_mem, 2) == 0)
 	{
-		print_hex_array(mem, 2);
+		print_hex_array(lora_mem, 2);
 
-		mem[0] = 0x55;
-		mem[1] = 0xAA;
+		lora_mem[0] = 0x55;
+		lora_mem[1] = 0xAA;
 
-		if(sx126x_write_buffer(&radio_drv, 0x80, mem, 2) == 0)
+		if(sx126x_write_buffer(&radio_drv, 0x00, lora_mem, 2) == 0)
 		{
-			mem[0] = 0;
-			mem[1] = 0;
+			lora_mem[0] = 0;
+			lora_mem[1] = 0;
 
-			if(sx126x_read_buffer(&radio_drv, 0x80, mem, 2) == 0)
+			if(sx126x_read_buffer(&radio_drv, 0x00, lora_mem, 2) == 0)
 			{
-				print_hex_array(mem, 2);
+				print_hex_array(lora_mem, 2);
 			}
 		}
 	}
+	return 6;
+	#endif
+
+	#if 0
+	// Memory access test
+	int i;
+	ushort max_mem = 256;
+
+	// Clear FIFO
+	memset(lora_mem, 0, max_mem);
+	sx126x_write_buffer(&radio_drv, 0x00, lora_mem, max_mem);
+
+	// Read back
+	if(sx126x_read_buffer(&radio_drv, 0x00, lora_mem, max_mem) == 0)
+	{
+		print_hex_array(lora_mem, max_mem);
+	}
+	printf(" \r\n");
+
+	// Load with rnd
+	for(i = 0; i < max_mem; i++)
+		lora_mem[i] = i;
+	sx126x_write_buffer(&radio_drv, 0x00, lora_mem, max_mem);
+
+	// Clear local
+	memset(lora_mem, 0, max_mem);
+	printf(" \r\n");
+
+	// Read back
+	if(sx126x_read_buffer(&radio_drv, 0x00, lora_mem, max_mem) == 0)
+	{
+		print_hex_array(lora_mem, max_mem);
+	}
+
+	return 6;
 	#endif
 
 	#if 0
@@ -259,7 +296,7 @@ void lora_radio_rx_check(void)
 	ushort a = 0;
 	uchar  b = 0, c = 0;
 	uchar  len, ptr;
-	uchar  mem[256];
+	//uchar  mem[256];
 
 	// Check status
 	if(sx126x_irq_wait(&radio_drv, 0) != 0)
@@ -301,9 +338,9 @@ void lora_radio_rx_check(void)
 				printf("rx packet len %d, ptr %d \r\n", len, ptr);
 
 				// Get buffer contents
-				if(sx126x_read_buffer(&radio_drv, ptr, mem, len) == 0)
+				if(sx126x_read_buffer(&radio_drv, ptr, lora_mem, len) == 0)
 				{
-					print_hex_array(mem, len);
+					print_hex_array(lora_mem, len);
 					sx126x_clear_irq_status(&radio_drv, a);
 				}
 			}
@@ -327,7 +364,7 @@ void lora_radio_rx_check(void)
 	ushort a = 0;
 	uchar  b = 0, c = 0;
 	uchar  len, ptr;
-	uchar  mem[256];
+	//uchar  mem[256];
 
 	if(!rx_state)
 	{
@@ -359,7 +396,7 @@ void lora_radio_rx_check(void)
 		else if(a)
 		{
 			printf("-------------------- \r\n");
-			printf("irq stat: 0x%02x(%02x,%02x)\r\n", a, b, c);
+			//printf("irq stat: 0x%02x(%02x,%02x)\r\n", a, b, c);
 
 			if((a & RADIOLIB_SX126X_IRQ_RX_DONE) == RADIOLIB_SX126X_IRQ_RX_DONE)
 				printf("--> rx done \r\n");
@@ -401,9 +438,9 @@ void lora_radio_rx_check(void)
 					printf("rx packet len %d, ptr %d \r\n", len, ptr);
 
 					// Get buffer contents
-					if(sx126x_read_buffer(&radio_drv, ptr, mem, len) == 0)
+					if(sx126x_read_buffer(&radio_drv, ptr, lora_mem, len) == 0)
 					{
-						print_hex_array(mem, len);
+						print_hex_array(lora_mem, len);
 						sx126x_clear_irq_status(&radio_drv, a);
 						goto restart_rx;
 					}
