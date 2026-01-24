@@ -214,6 +214,59 @@ static uchar bms_proc_wait_msg(xQueueHandle pRxQueue, ulong *ulQueueBuffer)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : bms_proc_handle_fan
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+void bms_proc_handle_fan(void)
+{
+	static uchar fan_state = 0xFF;
+
+	if(bmss.charger_on)
+	{
+		//--printf("curr %d \r\n", bmss.curr);
+		if((bmss.curr > PACK_CURR_CHARGE)&&(fan_state == 0))
+		{
+			//printf("notify fan on \r\n");
+			fan_state = 1;
+
+			#ifdef CONTEXT_FAN
+			if(ps.hFanTask != NULL)
+				xTaskNotify(ps.hFanTask, 0x02, eSetValueWithOverwrite);
+			#endif
+		}
+		else if((bmss.curr < PACK_CURR_CHARGE)&&(fan_state == 1))
+		{
+			//printf("notify fan off \r\n");
+			fan_state = 0;
+
+			#ifdef CONTEXT_FAN
+			if(ps.hFanTask != NULL)
+				xTaskNotify(ps.hFanTask, 0x01, eSetValueWithOverwrite);
+			#endif
+		}
+		else if(fan_state == 0xFF)
+		{
+			//printf("notify reset \r\n");
+			fan_state = 0;
+		}
+	}
+	else if(fan_state == 1)
+	{
+		//printf("notify fan off \r\n");
+		fan_state = 0;
+
+		#ifdef CONTEXT_FAN
+		if(ps.hFanTask != NULL)
+			xTaskNotify(ps.hFanTask, 0x01, eSetValueWithOverwrite);
+		#endif
+	}
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : bms_proc_worker
 //* Object              :
 //* Notes    			:
@@ -307,36 +360,7 @@ static void bms_proc_worker(void const *param)
 	}
 
 	// Do we need a fan ?
-	if(bmss.charger_on)
-	{
-		static uchar fan_state = 0xFF;
-
-		#ifdef CONTEXT_FAN
-		if(ps.hFanTask != NULL)
-		{
-			if((bmss.curr > PACK_CURR_CHARGE)&&(fan_state == 0))
-			{
-				printf("notify fan on \r\n");
-
-				fan_state = 1;
-				xTaskNotify(ps.hFanTask, 1, eSetValueWithOverwrite);
-			}
-			else if((bmss.curr < PACK_CURR_CHARGE)&&(fan_state == 1))
-			{
-				printf("notify fan off \r\n");
-
-				fan_state = 0;
-				xTaskNotify(ps.hFanTask, 0, eSetValueWithOverwrite);
-			}
-			else if(fan_state == 0xFF)
-			{
-				printf("notify reset \r\n");
-
-				fan_state = 0;
-			}
-		}
-		#endif
-	}
+	bms_proc_handle_fan();
 
 	bms_read_skip++;
 	if(bms_read_skip > 50)

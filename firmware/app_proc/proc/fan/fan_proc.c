@@ -82,10 +82,10 @@ fan_proc_loop:
 	ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, TRX_PROC_SLEEP_TIME);
 	if((ulNotif)&&(ulNotificationValue))
 	{
-		if(ulNotificationValue)
-			LL_GPIO_SetOutputPin(FAN_CNTR_PORT, FAN_CNTR);
+		if(ulNotificationValue == 0x02)
+			LL_GPIO_SetOutputPin(FAN_CNTR_PORT, FAN_CNTR);		// On
 		else
-			LL_GPIO_ResetOutputPin(FAN_CNTR_PORT, FAN_CNTR);
+			LL_GPIO_ResetOutputPin(FAN_CNTR_PORT, FAN_CNTR);	// Off
 	}
 
 	goto fan_proc_loop;

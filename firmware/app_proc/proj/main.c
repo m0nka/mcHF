@@ -548,7 +548,7 @@ static int start_proc(void)
 					FAN_PROC_STACK_SIZE,\
 					NULL,\
 					FAN_PROC_PRIORITY,\
-					&(ps.hTrxTask));
+					&(ps.hFanTask));
 
     if(res != pdPASS)
     {
