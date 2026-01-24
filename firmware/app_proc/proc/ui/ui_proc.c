@@ -872,6 +872,32 @@ static void ui_proc_emwin_init(void)
 	//printf("ui_driver_emwin_init...ok\r\n");
 }
 
+#if 0
+static void _cbTool(WM_MESSAGE * pMsg)
+{
+	switch (pMsg->MsgId)
+	{
+		case WM_PAINT:
+			GUI_SetBkColor(GUI_WHITE);
+			GUI_Clear();
+			GUI_SetColor(GUI_BLUE);
+			GUI_SetFont(&GUI_Font32B_1);
+			GUI_DispString("Tool window");
+			break;
+	}
+}
+
+static void ui_proc_notification(void)
+{
+	WM_HWIN hTool;
+	WM_TOOLTIP_HANDLE hToolTip;
+
+	hTool = WM_CreateWindowAsChild(30, 30, 300, 100, WM_HBKWIN, WM_CF_SHOW, _cbTool, 0);
+	hToolTip = WM_TOOLTIP_Create(WM_HBKWIN, NULL, 0);
+	WM_TOOLTIP_AddTool(hToolTip, hTool, "I am a ToolTip");
+}
+#endif
+
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_periodic
 //* Object              :
@@ -884,9 +910,10 @@ static void ui_proc_periodic(void)
 	if(ui_s.cur_state != MODE_DESKTOP)
 		return;
 
-#ifdef DESKTOP_SHOW_FREQUENCY
+	#ifdef DESKTOP_SHOW_FREQUENCY
 	ui_controls_frequency_refresh(0);
-#endif
+	#endif
+
 	ui_controls_clock_panel_refresh();
 
 	//--ui_controls_volume_refresh();
@@ -917,6 +944,15 @@ static void ui_proc_periodic(void)
 
 	#ifdef CONTEXT_BMS
 	on_screen_power_refresh();
+	#endif
+
+	#if 0
+	static ulong x_wait = 0;
+	if(x_wait++ == 30)
+	{
+		//printf("activate \r\n");
+		ui_proc_notification();
+	}
 	#endif
 }
 

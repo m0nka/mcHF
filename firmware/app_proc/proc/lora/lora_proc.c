@@ -71,7 +71,11 @@ void lora_proc_modem_init(void)
 		vTaskSuspend(NULL);
 	}
 
-	printf("modem on\r\n");
+	#ifdef MESHCORE
+	printf("modem on(MC)\r\n");
+	#else
+	printf("modem on(MT)\r\n");
+	#endif
 
 	// Enable driver
 	radio_init_done = 1;

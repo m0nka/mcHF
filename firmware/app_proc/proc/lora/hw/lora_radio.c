@@ -21,30 +21,6 @@
 
 #include "lora_radio.h"
 
-#define MESHCORE
-
-// Temp as local const
-#ifdef MESHCORE
-// Meshcore UK
-#define LORA_SF		SX126X_LORA_SPREADING_FACTOR_8
-#define LORA_CR		SX126X_LORA_CODING_RATE_4_8
-#define LORA_BW		SX126X_LORA_BANDWIDTH_62
-#define LORA_FR		869.618f
-//
-#define LORA_PL		8
-#else
-// Meshtastic UK
-#define LORA_SF		SX126X_LORA_SPREADING_FACTOR_11
-#define LORA_CR		SX126X_LORA_CODING_RATE_4_5
-#define LORA_BW		SX126X_LORA_BANDWIDTH_250
-#define LORA_FR		869.525f
-//
-#define LORA_PL		16
-#endif
-
-#define RX_TIMEOUT_MS		2000
-#define RX_TIMEOUT_F		(ulong)(((float)(RX_TIMEOUT_MS * 5)) * 1000.0f)/15.625f
-
 uchar rx_state = 0;	// idle
 
 extern sx126x_handle_t radio_drv;
@@ -342,14 +318,14 @@ void lora_radio_signal_stats(void)
 
 	printf("PWR: %sdBm SNR: %sdB RSSI: %sdB \r\n", fbuf1, fbuf2, fbuf3);
 
-#if 0
-if(sx126x_get_rssi_inst(&radio_drv, &rssi) == 0)
-{
-	char fbuf[16];
-	ftoa(rssi, fbuf, sizeof(fbuf));
-	printf("packet rssi %sdBm \r\n", fbuf);
-}
-#endif
+	#if 0
+	if(sx126x_get_rssi_inst(&radio_drv, &rssi) == 0)
+	{
+		char fbuf[16];
+		ftoa(rssi, fbuf, sizeof(fbuf));
+		printf("packet rssi %sdBm \r\n", fbuf);
+	}
+	#endif
 }
 
 void lora_radio_rx_check(void)
@@ -362,8 +338,8 @@ void lora_radio_rx_check(void)
 	{
 		//printf("start rx \r\n");
 
-		sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_ALL);
-		sx126x_set_op_mode_rx(&radio_drv, RX_TIMEOUT_F);
+		sx126x_clear_irq_status	 (&radio_drv, RADIOLIB_SX126X_IRQ_ALL);
+		sx126x_set_op_mode_rx	 (&radio_drv, RX_TIMEOUT_F);
 		sx126x_set_dio_irq_params(&radio_drv, RADIOLIB_SX126X_IRQ_ALL, RADIOLIB_SX126X_IRQ_RX_DONE|RADIOLIB_SX126X_IRQ_TIMEOUT, 0, 0);
 
 		rx_state = 1;	// wait
@@ -422,41 +398,34 @@ void lora_radio_rx_check(void)
 			}
 
 			// Do we have fully valid data in buffer ? Then read it
-			if(((a & RADIOLIB_SX126X_IRQ_RX_DONE) == RADIOLIB_SX126X_IRQ_RX_DONE) &&\
-			   ((a & RADIOLIB_SX126X_IRQ_HEADER_VALID) == RADIOLIB_SX126X_IRQ_HEADER_VALID) &&\
-			   ((a & RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED) == RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED))
+			if(((a & RADIOLIB_SX126X_IRQ_RX_DONE) == RADIOLIB_SX126X_IRQ_RX_DONE) &&
+			   ((a & RADIOLIB_SX126X_IRQ_HEADER_VALID) == RADIOLIB_SX126X_IRQ_HEADER_VALID))
 			{
-				// Set standby mode (we are already in, right ?)
-				//--sx126x_set_op_mode_standby(&radio_drv, 0);
-
 				// Get buffer status
 				if(sx126x_get_rx_buffer_status(&radio_drv, &len, &ptr) == 0)
 				{
-					//printf("rx packet len %d, ptr %d \r\n", len, ptr);
-
 					// Get buffer contents
 					if(sx126x_read_buffer(&radio_drv, ptr, lora_mem, len) == 0)
 					{
-						printf("  \r\n");
+						printf("size: %d \r\n", len);
 						print_hex_array(lora_mem, len);
 						sx126x_clear_irq_status(&radio_drv, a);
 						goto restart_rx;
 					}
 				}
 			}
+			else if((a & RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED) == RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED)
+			{
+				printf("--> preamble only \r\n");
+			}
 
-			// Clear incomplete
-			//sx126x_clear_irq_status(&radio_drv, a);
-		}
-		else
-		{
-			//sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_ALL);
+			// Just in case
+			sx126x_clear_irq_status(&radio_drv, a);
 		}
 	}
 
 restart_rx:
 	rx_state = 0;	// restart
-
 }
 
 #endif
