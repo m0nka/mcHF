@@ -18,7 +18,13 @@
 #define PACK_CURR_THRSH						-50
 
 // Significant charge current threshold to put the fan on
-#define PACK_CURR_CHARGE					1000
+//
+// We have two threshold points as we turn off the fan while
+// the charger is in CV mode, and current can go up on fan off
+// thus creating a bif of a feedback loop
+//
+#define PACK_CURR_CHARGE_ON					1350
+#define PACK_CURR_CHARGE_OFF				1300
 
 __attribute__((__common__)) struct BMSState {
 

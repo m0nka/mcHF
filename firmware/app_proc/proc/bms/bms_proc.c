@@ -228,7 +228,7 @@ void bms_proc_handle_fan(void)
 	if(bmss.charger_on)
 	{
 		//--printf("curr %d \r\n", bmss.curr);
-		if((bmss.curr > PACK_CURR_CHARGE)&&(fan_state == 0))
+		if((bmss.curr > PACK_CURR_CHARGE_ON)&&(fan_state == 0))
 		{
 			//printf("notify fan on \r\n");
 			fan_state = 1;
@@ -238,7 +238,7 @@ void bms_proc_handle_fan(void)
 				xTaskNotify(ps.hFanTask, 0x02, eSetValueWithOverwrite);
 			#endif
 		}
-		else if((bmss.curr < PACK_CURR_CHARGE)&&(fan_state == 1))
+		else if((bmss.curr < PACK_CURR_CHARGE_OFF)&&(fan_state == 1))
 		{
 			//printf("notify fan off \r\n");
 			fan_state = 0;
