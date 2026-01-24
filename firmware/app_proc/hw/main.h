@@ -193,4 +193,7 @@ void 	Error_Handler(int err);
 
 void printf_init(uchar is_shared);
 
+// math_util.c
+void ftoa(float f, char *buf, size_t bufsiz);
+
 #endif

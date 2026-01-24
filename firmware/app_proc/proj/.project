@@ -157,6 +157,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/util/cpu_utils.c</locationURI>
 		</link>
 		<link>
+			<name>util/math_util.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/util/math_util.c</locationURI>
+		</link>
+		<link>
 			<name>Drivers/STM32H7xx_HAL_Driver/stm32h7xx_hal.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT12345/STM32CubeH7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c</locationURI>

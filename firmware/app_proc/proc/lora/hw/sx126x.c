@@ -471,14 +471,21 @@ esp_err_t sx126x_get_rx_buffer_status(sx126x_handle_t* handle, uint8_t* out_payl
     return res;
 }
 
-esp_err_t sx126x_get_packet_status_lora(sx126x_handle_t* handle, uint8_t* out_rx_status, uint8_t* out_rssi_sync,
-                                        uint8_t* out_rssi_avg) {
-    if (handle == NULL) return ESP_ERR_INVALID_ARG;
+esp_err_t sx126x_get_packet_status_lora(sx126x_handle_t* handle,
+										uint8_t* out_rx_status,
+										uint8_t* out_rssi_sync,
+                                        uint8_t* out_rssi_avg)
+{
+    if (handle == NULL)
+    	return ESP_ERR_INVALID_ARG;
+
     uint8_t   result[4] = {0};
     esp_err_t res       = sx126x_command(handle, SX126X_CMD_GET_PACKET_STATUS, NULL, result, sizeof(result));
+
     if (res == ESP_OK && out_rx_status) *out_rx_status = result[1];
     if (res == ESP_OK && out_rssi_sync) *out_rssi_sync = result[2];
     if (res == ESP_OK && out_rssi_avg) *out_rssi_avg = result[3];
+
     return res;
 }
 

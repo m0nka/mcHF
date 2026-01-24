@@ -244,12 +244,6 @@ static uchar spi_transfer(const uchar *tx_buffer, uchar *rx_buffer, ulong len)
     	{
     		LL_SPI_ReceiveData8(SPI1);
     	}
-
-    	//if ((SPI_TRANSFER_TIMEOUT != HAL_MAX_DELAY) && (ps.epoch - tickstart >= SPI_TRANSFER_TIMEOUT))
-    	//{
-    	//	ret = 1;
-    	//	break;
-    	//}
     }
 
 spi_abort:
@@ -285,6 +279,7 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 
 	switch(t->cmd)
 	{
+		// Read from register directly
 		case SX126X_CMD_READ_REGISTER:
 		{
 			tx_buff[0] = t->cmd;
@@ -325,6 +320,7 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 			break;
 		}
 
+		// Write to register directly
 		case SX126X_CMD_WRITE_REGISTER:
 		{
 			tx_buff[0] = t->cmd;
@@ -361,6 +357,7 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 			break;
 		}
 
+		// Read FIFO
 		case SX126X_CMD_READ_BUFFER:
 		{
 			//printf("read buffer %d \r\n", (int)(out_len/8));
@@ -408,6 +405,7 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 			break;
 		}
 
+		// Write to FIFO
 		case SX126X_CMD_WRITE_BUFFER:
 		{
 			//printf("write buffer %d \r\n", (int)(out_len/8));
@@ -441,23 +439,8 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 			break;
 		}
 
-		case SX126X_CMD_SET_STANDBY:
-		case SX126X_CMD_SET_DIO3_AS_TXCO_CTRL:
-		case SX126X_CMD_SET_PACKET_TYPE:
-		case SX126X_CMD_SET_CAD_PARAMS:
-		case SX126X_CMD_SET_DIO_IRQ_PARAMS:
-		case SX126X_CMD_CALIBRATE:
-		case SX126X_CMD_SET_REGULATOR_MODE:
-		case SX126X_CMD_SET_MODULATION_PARAMS:
-		case SX126X_CMD_SET_PACKET_PARAMS:
-		case SX126X_CMD_SET_RF_FREQUENCY:
-		case SX126X_CMD_SET_RX:
-		case SX126X_CMD_SET_DIO2_AS_RF_SWITCH_CTRL:
-		case SX126X_CMD_GET_IRQ_STATUS:
-		case SX126X_CMD_SET_BUFFER_BASE_ADDRESS:
-		case SX126X_CMD_CLEAR_IRQ_STATUS:
-		case SX126X_CMD_GET_STATUS:
-		case SX126X_CMD_GET_RX_BUFFER_STATUS:
+		// Send command
+		default:
 		{
 			memset(tx_buff, 0, sizeof(tx_buff));
 			memset(rx_buff, 0, sizeof(rx_buff));
@@ -495,9 +478,9 @@ int spi_device_transmit(int device, spi_transaction_t *t)
 			break;
 		}
 
-		default:
-			printf("not supported cmd: 0x%x \r\n", t->cmd);
-			return 10;
+		//default:
+		//	printf("not supported cmd: 0x%x \r\n", t->cmd);
+		//	return 10;
 	}
 
 	return ret;

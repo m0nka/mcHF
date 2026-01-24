@@ -21,13 +21,31 @@
 
 #include "lora_radio.h"
 
-//#define CONT_RX
+#define MESHCORE
 
 // Temp as local const
+#ifdef MESHCORE
+// Meshcore UK
 #define LORA_SF		SX126X_LORA_SPREADING_FACTOR_8
 #define LORA_CR		SX126X_LORA_CODING_RATE_4_8
 #define LORA_BW		SX126X_LORA_BANDWIDTH_62
 #define LORA_FR		869.618f
+//
+#define LORA_PL		8
+#else
+// Meshtastic UK
+#define LORA_SF		SX126X_LORA_SPREADING_FACTOR_11
+#define LORA_CR		SX126X_LORA_CODING_RATE_4_5
+#define LORA_BW		SX126X_LORA_BANDWIDTH_250
+#define LORA_FR		869.525f
+//
+#define LORA_PL		16
+#endif
+
+#define RX_TIMEOUT_MS		2000
+#define RX_TIMEOUT_F		(ulong)(((float)(RX_TIMEOUT_MS * 5)) * 1000.0f)/15.625f
+
+uchar rx_state = 0;	// idle
 
 extern sx126x_handle_t radio_drv;
 
@@ -153,8 +171,13 @@ uchar lora_radio_init(void)
 		return 5;
 
 	// Set sync word
+	#ifdef MESHCORE
 	if(sx126x_set_sync_word(&radio_drv, RADIOLIB_SX126X_SYNC_WORD_PRIVATE) != 0)
 		return 6;
+	#else
+	if(sx126x_set_sync_word_adv(&radio_drv, 0x2B, 0x00) != 0)
+		return 6;
+	#endif
 
 	#if 0
     uint8_t maxDetLen = RADIOLIB_MIN(RADIOLIB_SX126X_SYNC_WORD_PRIVATE, 16);
@@ -167,7 +190,7 @@ uchar lora_radio_init(void)
 	#endif
 
 	// Set packet params
-	if(sx126x_set_packet_params_lora(&radio_drv, 8, false, 0, true, false) != 0)
+	if(sx126x_set_packet_params_lora(&radio_drv, LORA_PL, false, 0, true, false) != 0)
 		return 7;
 
 	// Is it true ?
@@ -290,81 +313,50 @@ uchar lora_radio_init(void)
 	return 0;
 }
 
-#ifdef CONT_RX
-void lora_radio_rx_check(void)
+void lora_radio_signal_stats(void)
 {
-	ushort a = 0;
-	uchar  b = 0, c = 0;
-	uchar  len, ptr;
-	//uchar  mem[256];
+	uchar 	x, y, z;
+	float 	sig, rssi, snr;
+	char 	fbuf1[16], fbuf2[16], fbuf3[16];
 
-	// Check status
-	if(sx126x_irq_wait(&radio_drv, 0) != 0)
+	if(sx126x_get_packet_status_lora(&radio_drv, &x, &y, &z) != 0)
 		return;
 
-	printf("-------------------- \r\n");
+	//printf("packet stat: 0x%02x 0x%02x 0x%02x \r\n", x, y, z);
 
-	// Get irq status
-	if(sx126x_get_irq_status(&radio_drv, &a, &b, &c) == 0)
-	{
-		printf("irq stat: 0x%02x(%02x,%02x)\r\n", a, b, c);
+	// RssiPkt Lora
+	sig  = (float)(-1.0 * x/2.0);
 
-		if((a & RADIOLIB_SX126X_IRQ_TIMEOUT) == RADIOLIB_SX126X_IRQ_TIMEOUT)
-			printf("--> timeout \r\n");
+	// SignalRssiPkt Lora
+	if(y < 128)
+		snr = (float)(y/4.0);
+	else
+		snr = (float)((y - 256)/4.0);
 
-		if((a & RADIOLIB_SX126X_IRQ_CRC_ERR) == RADIOLIB_SX126X_IRQ_CRC_ERR)
-			printf("--> crc error \r\n");
+	// SnrPkt Lora
+	rssi = (float)(-1.0 * z/2.0);
 
-		if((a & RADIOLIB_SX126X_IRQ_HEADER_ERR) == RADIOLIB_SX126X_IRQ_HEADER_ERR)
-			printf("--> cad header error \r\n");
+	ftoa(sig,  fbuf1, sizeof(fbuf1));
+	ftoa(rssi, fbuf2, sizeof(fbuf2));
+	ftoa(snr,  fbuf3, sizeof(fbuf3));
 
-		if((a & RADIOLIB_SX126X_IRQ_RX_DONE) == RADIOLIB_SX126X_IRQ_RX_DONE)
-			printf("--> rx done \r\n");
+	printf("PWR: %sdBm SNR: %sdB RSSI: %sdB \r\n", fbuf1, fbuf2, fbuf3);
 
-		if((a & RADIOLIB_SX126X_IRQ_HEADER_VALID) == RADIOLIB_SX126X_IRQ_HEADER_VALID)
-			printf("--> header valid \r\n");
-
-		if((a & RADIOLIB_SX126X_IRQ_HEADER_ERR) == RADIOLIB_SX126X_IRQ_HEADER_ERR)
-			printf("--> header error \r\n");
-
-		if((a & RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED) == RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED)
-			printf("--> preamble \r\n");
-
-		if(a)
-		{
-			// Get buffer status
-			if(sx126x_get_rx_buffer_status(&radio_drv, &len, &ptr) == 0)
-			{
-				printf("rx packet len %d, ptr %d \r\n", len, ptr);
-
-				// Get buffer contents
-				if(sx126x_read_buffer(&radio_drv, ptr, lora_mem, len) == 0)
-				{
-					print_hex_array(lora_mem, len);
-					sx126x_clear_irq_status(&radio_drv, a);
-				}
-			}
-		}
-		else
-			sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_ALL);
-
-		// Restart RX
-		sx126x_set_op_mode_rx_cont(&radio_drv);
-	}
+#if 0
+if(sx126x_get_rssi_inst(&radio_drv, &rssi) == 0)
+{
+	char fbuf[16];
+	ftoa(rssi, fbuf, sizeof(fbuf));
+	printf("packet rssi %sdBm \r\n", fbuf);
 }
-#else
-
-#define RX_TIMEOUT_MS		200
-#define RX_TIMEOUT_F		(ulong)(((float)(RX_TIMEOUT_MS * 5)) * 1000.0f)/15.625f
-
-uchar rx_state = 0;	// idle
+#endif
+}
 
 void lora_radio_rx_check(void)
 {
-	ushort a = 0;
-	uchar  b = 0, c = 0;
-	uchar  len, ptr;
-	//uchar  mem[256];
+	ushort 	a = 0;
+	uchar  	b = 0, c = 0;
+	uchar  	len, ptr;
 
 	if(!rx_state)
 	{
@@ -395,9 +387,13 @@ void lora_radio_rx_check(void)
 		}
 		else if(a)
 		{
-			printf("-------------------- \r\n");
+			printf("------------------------------------------ \r\n");
 			//printf("irq stat: 0x%02x(%02x,%02x)\r\n", a, b, c);
 
+			// Get RSSI of packet
+			lora_radio_signal_stats();
+
+			#if 0
 			if((a & RADIOLIB_SX126X_IRQ_RX_DONE) == RADIOLIB_SX126X_IRQ_RX_DONE)
 				printf("--> rx done \r\n");
 
@@ -409,6 +405,7 @@ void lora_radio_rx_check(void)
 
 			if((a & RADIOLIB_SX126X_IRQ_SYNC_WORD_VALID) == RADIOLIB_SX126X_IRQ_SYNC_WORD_VALID)
 				printf("--> sync word valid \r\n");
+			#endif
 
 			if((a & RADIOLIB_SX126X_IRQ_CRC_ERR) == RADIOLIB_SX126X_IRQ_CRC_ERR)
 			{
@@ -435,11 +432,12 @@ void lora_radio_rx_check(void)
 				// Get buffer status
 				if(sx126x_get_rx_buffer_status(&radio_drv, &len, &ptr) == 0)
 				{
-					printf("rx packet len %d, ptr %d \r\n", len, ptr);
+					//printf("rx packet len %d, ptr %d \r\n", len, ptr);
 
 					// Get buffer contents
 					if(sx126x_read_buffer(&radio_drv, ptr, lora_mem, len) == 0)
 					{
+						printf("  \r\n");
 						print_hex_array(lora_mem, len);
 						sx126x_clear_irq_status(&radio_drv, a);
 						goto restart_rx;
@@ -460,6 +458,5 @@ restart_rx:
 	rx_state = 0;	// restart
 
 }
-#endif
 
 #endif
