@@ -35,10 +35,15 @@
 #endif
 
 #define RX_TIMEOUT_MS		2000
+#define TX_TIMEOUT_MS		2000
+
 #define RX_TIMEOUT_F		(ulong)(((float)(RX_TIMEOUT_MS * 5)) * 1000.0f)/15.625f
+#define TX_TIMEOUT_F		(ulong)(((float)(TX_TIMEOUT_MS * 5)) * 1000.0f)/15.625f
 
 // Exports
 uchar lora_radio_init(void);
+
 void  lora_radio_rx_check(void);
+void lora_radio_schedule_tx(void);
 
 #endif

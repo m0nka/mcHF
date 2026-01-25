@@ -100,6 +100,12 @@ void lora_proc_task(void const * argument)
 	lora_proc_modem_init();
 	#endif
 
+	// Tx on start
+	#if 0
+	if(radio_init_done)
+		lora_radio_schedule_tx();
+	#endif
+
 lora_proc_loop:
 
 	#ifdef SPI_GPIO_TEST

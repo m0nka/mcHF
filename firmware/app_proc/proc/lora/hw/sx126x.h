@@ -281,6 +281,7 @@ esp_err_t sx126x_set_op_mode_sleep(sx126x_handle_t* handle, bool warm_start, boo
 esp_err_t sx126x_set_op_mode_standby(sx126x_handle_t* handle, bool use_xosc);
 esp_err_t sx126x_set_op_mode_fs(sx126x_handle_t* handle);
 esp_err_t sx126x_set_op_mode_tx(sx126x_handle_t* handle);
+esp_err_t sx126x_set_op_mode_tx_t(sx126x_handle_t* handle, uint32_t timeoutx);
 esp_err_t sx126x_set_op_mode_rx_cont(sx126x_handle_t* handle);
 esp_err_t sx126x_set_op_mode_rx(sx126x_handle_t* handle, uint32_t timeoutx);
 esp_err_t sx126x_stop_timer_on_preamble(sx126x_handle_t* handle, bool stop);
