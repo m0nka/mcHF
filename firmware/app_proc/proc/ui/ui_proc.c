@@ -126,15 +126,20 @@ static void ui_proc_add_menu_items(void)
 
 static void ui_proc_cb(void)
 {
-#ifdef DESKTOP_SHOW_FREQUENCY
+	#ifdef DESKTOP_SHOW_FREQUENCY
 	ui_controls_frequency_refresh(0);
-#endif
+	#endif
+
+	#ifdef DESKTOP_SHOW_VOLUME
 	//ui_controls_volume_refresh();	// blink on constant refresh , ToDo: restore orig code
+	#endif
 }
 
 static void ui_proc_cb_sm(void)
 {
+	#ifdef DESKTOP_SHOW_CLOCK
 	//ui_controls_clock_panel_refresh();
+	#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -602,25 +607,43 @@ static void ui_proc_init_desktop(void)
 
 	//ui_proc_test_lcd();
 	#else
-#ifdef DESKTOP_SHOW_SDCARD
+
+	#ifdef DESKTOP_SHOW_SDCARD
 	ui_controls_sd_icon_init();
-#endif
+	#endif
+
+	#ifdef DESKTOP_SHOW_VOLUME
 	ui_controls_volume_init	  (WM_HBKWIN);
+	#endif
+
+	#ifdef DESKTOP_SHOW_CLOCK
 	ui_controls_clock_panel_init();
+	#endif
+
+	#ifdef DESKTOP_SHOW_SPECTRUM
 	ui_controls_spectrum_init (WM_HBKWIN);
-#ifdef DESKTOP_SHOW_FREQUENCY
+	#endif
+
+	#ifdef DESKTOP_SHOW_FREQUENCY
 	ui_controls_frequency_init(WM_HBKWIN);
-#endif
-#ifdef DESKTOP_SHOW_SMETER
+	#endif
+
+	#ifdef DESKTOP_SHOW_SMETER
 	ui_controls_smeter_init();
-#endif
+	#endif
+
 	ui_controls_filter_init();
+
 	ui_controls_cpu_stat_init();
+
 	//ui_controls_dsp_stat_init();
+
 	#ifdef DESKTOP_SHOW_BATTERY
 	ui_controls_battery_init();
 	#endif
+
 	ui_controls_tx_stat_init();
+
 	//--ui_controls_menu_button_init();
 
 	#if 0
@@ -674,9 +697,18 @@ static void ui_proc_change_mode(void)
 			//printf("Entering Menu mode...\r\n");
 
 			// Destroy desktop controls
+			#ifdef DESKTOP_SHOW_VOLUME
 			ui_controls_volume_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_CLOCK
 			ui_controls_clock_panel_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_SPECTRUM
 			ui_controls_spectrum_quit();
+			#endif
+
 			#ifdef DESKTOP_SHOW_FREQUENCY
 			ui_controls_frequency_quit();
 			#endif
@@ -684,7 +716,10 @@ static void ui_proc_change_mode(void)
 			#ifdef DESKTOP_SHOW_SMETER
 			ui_controls_smeter_quit();
 			#endif
-			ui_controls_spectrum_quit();
+
+			//#ifdef DESKTOP_SHOW_SPECTRUM
+			//ui_controls_spectrum_quit();
+			//#endif
 
 			WM_SetCallback		(WM_HBKWIN, 0);
 			WM_InvalidateWindow	(WM_HBKWIN);
@@ -735,17 +770,27 @@ static void ui_proc_change_mode(void)
 			printf("Entering FT8 mode...\r\n");
 
 			// Destroy desktop controls
+			#ifdef DESKTOP_SHOW_VOLUME
 			ui_controls_volume_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_CLOCK
 			ui_controls_clock_panel_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_SPECTRUM
 			ui_controls_spectrum_quit();
-#ifdef DESKTOP_SHOW_FREQUENCY
+			#endif
+
+			#ifdef DESKTOP_SHOW_FREQUENCY
 			ui_controls_frequency_quit();
-#endif
+			#endif
 
 			#ifdef DESKTOP_SHOW_SMETER
 			ui_controls_smeter_quit();
 			#endif
-			ui_controls_spectrum_quit();
+
+			//ui_controls_spectrum_quit();
 
 			WM_SetCallback		(WM_HBKWIN, 0);
 			WM_InvalidateWindow	(WM_HBKWIN);
@@ -914,20 +959,27 @@ static void ui_proc_periodic(void)
 	ui_controls_frequency_refresh(0);
 	#endif
 
+	#ifdef DESKTOP_SHOW_CLOCK
 	ui_controls_clock_panel_refresh();
+	#endif
 
+	#ifdef DESKTOP_SHOW_VOLUME
 	//--ui_controls_volume_refresh();
+	#endif
+
 	ui_controls_cpu_stat_refresh();
 	//ui_controls_dsp_stat_refresh();
+
 	#ifdef DESKTOP_SHOW_BATTERY
 	ui_controls_battery_refresh();
 	#endif
+
 	ui_controls_filter_refresh();
 	ui_controls_tx_stat_refresh();
 
-#ifdef DESKTOP_SHOW_SDCARD
+	#ifdef DESKTOP_SHOW_SDCARD
 	ui_controls_sd_icon_refresh();
-#endif
+	#endif
 
 	//--on_screen_keyboard_refresh();	// will not allow transparent dialog with moving background
 
@@ -939,7 +991,10 @@ static void ui_proc_periodic(void)
 	if((tsu.rxtx) && (tsu.band[tsu.curr_band].demod_mode == DEMOD_CW)) // && keyer shown
 		return;
 
+	#ifdef DESKTOP_SHOW_SPECTRUM
 	ui_controls_spectrum_refresh(ui_proc_cb);
+	#endif
+
 	//--ui_controls_smeter_refresh  (ui_proc_cb_sm);
 
 	#ifdef CONTEXT_BMS
@@ -1078,7 +1133,9 @@ ui_proc_loop:
 
 			case UI_NEW_AUDIO_EVENT:
 				//printf("UI_NEW_AUDIO_EVENT\r\n");
+				#ifdef DESKTOP_SHOW_VOLUME
 				ui_controls_volume_refresh();
+				#endif
 				break;
 
 			default:
