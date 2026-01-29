@@ -23,6 +23,7 @@ Both, hardware and firmware is designed by combining the great work of many hams
   <li>Built in 80Wh LiOn battery</li>
   <li>Dual USB-C ports for power, charging and PC connection</li>
   <li>Support for Bluetooth stereo headphones</li>
+  <li>Lora Sub-GHz radio</li>
 </ul>
 
 # Discussion Thread

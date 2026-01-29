@@ -19,6 +19,10 @@
 #include "lora_spi.h"
 #include "lora_radio.h"
 
+#ifdef MESHCORE
+#include "client.h"
+#endif
+
 #include "lora_proc.h"
 
 sx126x_handle_t radio_drv;
@@ -50,6 +54,14 @@ void lora_proc_gpio_test(void)
 }
 #endif
 
+//*----------------------------------------------------------------------------
+//* Function Name       : lora_proc_modem_init
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_LORA
+//*----------------------------------------------------------------------------
 void lora_proc_modem_init(void)
 {
 	// EXTI IRQs on
@@ -82,6 +94,30 @@ void lora_proc_modem_init(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : lora_proc_client_exec
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_LORA
+//*----------------------------------------------------------------------------
+void lora_proc_client_exec(void)
+{
+	uchar  msg[256];
+	ushort siz = 0;
+
+	if(!radio_init_done)
+		return;
+
+	// Wait RX packet (radio layer)
+	lora_radio_rx_check(msg, &siz);
+
+	// Process message(meshcore stack)
+	if(siz)
+		client_decode(msg, siz);
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : lora_proc_task
 //* Object              :
 //* Notes    			:
@@ -100,6 +136,10 @@ void lora_proc_task(void const * argument)
 	lora_proc_modem_init();
 	#endif
 
+	#ifdef MESHCORE_UNIT_TEST
+	client_unit_test();
+	#endif
+
 	// Tx on start
 	#if 0
 	if(radio_init_done)
@@ -111,14 +151,21 @@ lora_proc_loop:
 	#ifdef SPI_GPIO_TEST
 	lora_proc_gpio_test();
 	#else
-	if(radio_init_done)
-		lora_radio_rx_check();
+	lora_proc_client_exec();
 	#endif
 
 	vTaskDelay(5);
 	goto lora_proc_loop;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : lora_proc_init
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void lora_proc_init(void)
 {
 	// Basic GPIO init before OS is run, keep here!
@@ -127,6 +174,14 @@ void lora_proc_init(void)
 	//printf("lora pre-os init\r\n");
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : lora_proc_power_cleanup
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void lora_proc_power_cleanup(void)
 {
 	// Lora power off

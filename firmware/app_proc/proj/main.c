@@ -181,6 +181,7 @@ void EXTI0_IRQHandler(void)
 	#endif
 }
 
+#ifdef CONTEXT_LORA
 //*----------------------------------------------------------------------------
 //* Function Name       : EXTI4_IRQHandler
 //* Object              :
@@ -206,6 +207,7 @@ void EXTI4_IRQHandler(void)
 	}
 	#endif
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : EXTI9_5_IRQHandler
@@ -234,7 +236,9 @@ void EXTI9_5_IRQHandler(void)
 	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_5) != RESET)
 	{
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_5);
+		#ifdef CONTEXT_LORA
 		lora_proc_busy_irq();
+		#endif
 	}
 
 	// Line 6

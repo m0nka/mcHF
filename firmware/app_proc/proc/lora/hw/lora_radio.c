@@ -343,11 +343,17 @@ void lora_radio_signal_stats(void)
 	#endif
 }
 
-void lora_radio_rx_check(void)
+void lora_radio_rx_check(uchar *msg, ushort *size)
 {
 	ushort 	a = 0;
 	uchar  	b = 0, c = 0;
 	uchar  	len, ptr;
+
+	if((msg == NULL)||(size == NULL))
+		return;
+
+	// Nothing RX by default
+	*size = 0;
 
 	if(!rx_state)
 	{
@@ -422,8 +428,12 @@ void lora_radio_rx_check(void)
 					// Get buffer contents
 					if(sx126x_read_buffer(&radio_drv, ptr, lora_mem, len) == 0)
 					{
-						printf("size: %d \r\n", len);
-						print_hex_array(lora_mem, len);
+						//printf("size: %d \r\n", len);
+						//print_hex_array(lora_mem, len);
+
+						memcpy(msg, lora_mem, len);
+						*size = len;
+
 						sx126x_clear_irq_status(&radio_drv, a);
 						goto restart_rx;
 					}

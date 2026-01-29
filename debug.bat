@@ -1,1 +1,1 @@
-"C:\Program Files (x86)\BEL\Realterm\realterm.exe" baud=115200 port=9 rows=42 colors=RWLRYK scrollback=400 fontname="Lucida Console" fontsize=16
+"C:\Program Files (x86)\BEL\Realterm\realterm.exe" baud=115200 port=9 rows=55 colors=RYLRYK scrollback=400 fontname="Lucida Console" fontsize=16

@@ -93,7 +93,7 @@
 #define CONTEXT_KEYPAD
 //
 // -----------------------------------------------------------------------------------------------
-// Lora transceiver - wip
+// Lora transceiver
 //
 //
 #define CONTEXT_LORA
