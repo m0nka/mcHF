@@ -408,11 +408,14 @@ static int start_proc(void)
     // BMS messaging
     ps.xBmsRxQueue = xQueueCreate(APP_LOADER_QUEUE_SIZE,(unsigned portCHAR)sizeof(ulong));
 
+    // UI notifications
+    ps.xUiNotifRxQueue = xQueueCreate(APP_LOADER_QUEUE_SIZE,(unsigned portCHAR)sizeof(ulong));
+
 	#ifdef CONTEXT_VIDEO
 	res = xTaskCreate(	(TaskFunction_t)ui_proc_task,\
 						UI_PROC_START_NAME,\
 						UI_PROC_STACK_SIZE,\
-						NULL,\
+						(void *)&(ps.xUiNotifRxQueue),\
 						UI_PROC_PRIORITY,\
 						&(ps.hUiTask));
 
@@ -580,7 +583,7 @@ static int start_proc(void)
     res = xTaskCreate(	(TaskFunction_t)lora_proc_task,\
     					LORA_PROC_START_NAME,\
 						LORA_PROC_STACK_SIZE,\
-						NULL,\
+						(void *)&(ps.xUiNotifRxQueue),\
 						LORA_PROC_PRIORITY,\
 						&(ps.hLraTask));
 

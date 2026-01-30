@@ -1030,6 +1030,31 @@ void ui_proc_power_cleanup(void)
 	GUI_Exec();
 }
 
+//*--------------------------------------------------------------------------------------
+//* Function Name       : bms_proc_wait_msg
+//* Object              : Read pending messages
+//* Input Parameters    : Rx Queue ptr and items buffer
+//* Output Parameters   : none.
+//*--------------------------------------------------------------------------------------
+static uchar ui_proc_wait_msg(xQueueHandle pRxQueue, ulong *ulQueueBuffer)
+{
+	uchar ucNext = 0;
+
+	if(pRxQueue == NULL)
+		return 0;
+
+	*ulQueueBuffer = 0;
+	while(uxQueueMessagesWaiting(pRxQueue))
+	{
+		if(xQueueReceive(pRxQueue, (ulQueueBuffer + ucNext), (portTickType)0) == pdPASS)
+		{
+			ucNext++;
+		}
+	}
+
+	return ucNext;
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_task
 //* Object              :
@@ -1039,10 +1064,14 @@ void ui_proc_power_cleanup(void)
 //*----------------------------------------------------------------------------
 void ui_proc_task(void const *arg)
 {
-	ulong 	ulNotificationValue = 0, ulNotif;
+	ulong 			ulNotificationValue = 0, ulNotif;
+	xQueueHandle	*RxQueue;
 
 	vTaskDelay(UI_PROC_START_DELAY);
 	printf("start\r\n");
+
+	// Get rx queue ptr
+	RxQueue = (xQueueHandle *)arg;
 
 	// Backlight PWM
 	shared_tim_init();
@@ -1123,9 +1152,9 @@ ui_proc_loop:
 				cntr_id = 1;
 				WM_InvalidateWindow(WM_HBKWIN);
 				#else
-#ifdef DESKTOP_SHOW_FREQUENCY
+				#ifdef DESKTOP_SHOW_FREQUENCY
 				ui_controls_frequency_refresh(0);
-#endif
+				#endif
 				#endif
 
 				break;
@@ -1137,6 +1166,22 @@ ui_proc_loop:
 				ui_controls_volume_refresh();
 				#endif
 				break;
+
+			case UI_LORA_NOTIFICATION:
+			{
+				ulong ulRxData[10];
+
+				printf("UI_LORA_NOTIFICATION\r\n");
+
+				if(ui_proc_wait_msg(*RxQueue, ulRxData) > 0)
+				{
+					char txt[256];
+					char *tx = (char *)ulRxData[1];
+					strcpy(txt, tx);
+					printf("%s \r\n", txt);
+				}
+				break;
+			}
 
 			default:
 				break;

@@ -287,12 +287,17 @@ void client_unit_test(void)
 }
 #endif
 
-void client_decode(uchar *msg, ushort size)
+void client_decode(uchar *msg, ushort size, char *notif)
 {
 	meshcore_message_t message;
 
 	//printf("size: %d \r\n", size);
 	//print_hex_array(msg, size);
+
+	if((msg == NULL)||(notif == NULL)||(size == 0))
+		return;
+
+	*notif = 0;
 
     if(meshcore_deserialize(msg, size, &message) >= 0)
     {
@@ -348,15 +353,19 @@ void client_decode(uchar *msg, ushort size)
                 }
                 if (advert.name_valid) {
                     printf("Name: %s\r\n", advert.name);
-                } else {
+
+                    strcpy(notif, advert.name);
+                }
+                else
+                {
                     printf("Name: (not available)\r\n");
                 }
 
-                if (meshcore_advert_serialize(&advert, message.payload, &message.payload_length) < 0)
-                {
-                    printf("Failed to serialize node advertisement payload. \r\n");
-                    return;
-                }
+                //if (meshcore_advert_serialize(&advert, message.payload, &message.payload_length) < 0)
+                //{
+                 //   printf("Failed to serialize node advertisement payload. \r\n");
+                  //  return;
+                //}
 
             }
             else
@@ -417,6 +426,8 @@ void client_decode(uchar *msg, ushort size)
                     //printf("Timestamp: %x \r\n", (int)(grp_txt.decrypted.timestamp));
                     printf("Text Type: %d \r\n", grp_txt.decrypted.text_type);
                     printf("Message: '%s' \r\n", grp_txt.decrypted.text);
+
+                    strcpy(notif, grp_txt.decrypted.text);
 
                 } else {
                     printf("MAC verification: FAILURE\r\n");

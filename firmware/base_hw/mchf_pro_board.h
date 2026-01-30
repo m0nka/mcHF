@@ -194,6 +194,8 @@ __attribute__((__common__)) struct UI_DRIVER_STATE {
 #define	UI_NEW_AUDIO_EVENT			5
 // Cleanup, for codec reload
 #define	UI_NEW_SAI_CLEANUP			6
+
+#define UI_LORA_NOTIFICATION		7
 //
 // -----------------------------------------------------------------------------
 // DSP API codes

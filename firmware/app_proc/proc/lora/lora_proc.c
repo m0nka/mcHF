@@ -28,6 +28,9 @@
 sx126x_handle_t radio_drv;
 uchar			radio_init_done = 0;
 
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
+
 void lora_proc_busy_irq(void)
 {
 	//printf("busy\r\n");
@@ -94,6 +97,37 @@ void lora_proc_modem_init(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : file_b_send_msg
+//* Object              : Send message to queue
+//* Input Parameters    : none
+//* Output Parameters   : none
+//* Functions called    : none
+//*----------------------------------------------------------------------------
+static uchar lora_proc_send_msg(xQueueHandle pvQueueHandle, ulong *ulMessageBuffer, uchar ucNumberOfItems)
+{
+	ulong ulDummy;
+	uchar ucCount;
+
+	/* Clear Rx Queue before posting */
+	while( uxQueueMessagesWaiting(pvQueueHandle))
+	{
+		xQueueReceive(pvQueueHandle, (void *)&ulDummy, (portTickType)0);
+	}
+
+	/* Send all items */
+	for(ucCount = 0;ucCount < ucNumberOfItems;ucCount++)
+	{
+    	ulDummy = *ulMessageBuffer++;
+
+	    /* Insert the item */
+		if(xQueueSend(pvQueueHandle, (void *)&ulDummy, (portTickType)0) != pdPASS )
+			return 1;
+	}
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : lora_proc_client_exec
 //* Object              :
 //* Notes    			:
@@ -101,10 +135,12 @@ void lora_proc_modem_init(void)
 //* Notes    			:
 //* Context    			: CONTEXT_LORA
 //*----------------------------------------------------------------------------
-void lora_proc_client_exec(void)
+static void lora_proc_client_exec(xQueueHandle *RxQueue)
 {
 	uchar  msg[256];
 	ushort siz = 0;
+	char   notif[256];
+	ulong  ulData[10];
 
 	if(!radio_init_done)
 		return;
@@ -113,8 +149,30 @@ void lora_proc_client_exec(void)
 	lora_radio_rx_check(msg, &siz);
 
 	// Process message(meshcore stack)
-	if(siz)
-		client_decode(msg, siz);
+	if(siz == 0)
+		return;
+
+	// Unpack message
+	client_decode(msg, siz, notif);
+
+	// Notify UI
+	if((ps.hUiTask != NULL)&&(strlen(notif)))
+	{
+		//printf("text: %s(%x) \r\n", notif, (int)&notif[0]);
+
+		ulData[0] = 0x55;
+		ulData[1] = (ulong)notif;
+		ulData[2] = 0xAA;
+
+		// Fill queue
+		lora_proc_send_msg(*RxQueue, ulData, 3);
+
+		// Notify UI
+		xTaskNotify(ps.hUiTask, UI_LORA_NOTIFICATION, eSetValueWithOverwrite);
+
+		// Keep stack var valid until dumped by UI
+		vTaskDelay(200);
+	}
 }
 
 //*----------------------------------------------------------------------------
@@ -125,11 +183,16 @@ void lora_proc_client_exec(void)
 //* Notes    			:
 //* Context    			: CONTEXT_LORA
 //*----------------------------------------------------------------------------
-void lora_proc_task(void const * argument)
+void lora_proc_task(void const *arg)
 {
+	xQueueHandle	*RxQueue;
+
 	// Delay start, so UI can paint properly
 	vTaskDelay(LORA_PROC_START_DELAY);
 	printf("start\r\n");
+
+	// Get rx queue ptr
+	RxQueue = (xQueueHandle *)arg;
 
 	// Radio driver init
 	#ifndef SPI_GPIO_TEST
@@ -151,7 +214,7 @@ lora_proc_loop:
 	#ifdef SPI_GPIO_TEST
 	lora_proc_gpio_test();
 	#else
-	lora_proc_client_exec();
+	lora_proc_client_exec(RxQueue);
 	#endif
 
 	vTaskDelay(5);

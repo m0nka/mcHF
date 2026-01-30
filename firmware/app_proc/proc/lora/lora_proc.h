@@ -18,6 +18,6 @@ void lora_proc_dio1_irq(void);
 
 void lora_proc_init(void);
 void lora_proc_power_cleanup(void);
-void lora_proc_task(void const * argument);
+void lora_proc_task(void const *arg);
 
 #endif

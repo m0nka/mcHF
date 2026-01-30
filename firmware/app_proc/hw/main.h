@@ -172,6 +172,9 @@ __attribute__((__common__)) struct PROC_STATE {
 	// Task messaging
 	xQueueHandle 	xBmsRxQueue;
 
+	// UI Notification queue
+	xQueueHandle 	xUiNotifRxQueue;
+
 	// System timer
 	ulong 			epoch;
 
