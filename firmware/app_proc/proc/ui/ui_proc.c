@@ -917,32 +917,6 @@ static void ui_proc_emwin_init(void)
 	//printf("ui_driver_emwin_init...ok\r\n");
 }
 
-#if 0
-static void _cbTool(WM_MESSAGE * pMsg)
-{
-	switch (pMsg->MsgId)
-	{
-		case WM_PAINT:
-			GUI_SetBkColor(GUI_WHITE);
-			GUI_Clear();
-			GUI_SetColor(GUI_BLUE);
-			GUI_SetFont(&GUI_Font32B_1);
-			GUI_DispString("Tool window");
-			break;
-	}
-}
-
-static void ui_proc_notification(void)
-{
-	WM_HWIN hTool;
-	WM_TOOLTIP_HANDLE hToolTip;
-
-	hTool = WM_CreateWindowAsChild(30, 30, 300, 100, WM_HBKWIN, WM_CF_SHOW, _cbTool, 0);
-	hToolTip = WM_TOOLTIP_Create(WM_HBKWIN, NULL, 0);
-	WM_TOOLTIP_AddTool(hToolTip, hTool, "I am a ToolTip");
-}
-#endif
-
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_periodic
 //* Object              :
@@ -999,15 +973,6 @@ static void ui_proc_periodic(void)
 
 	#ifdef CONTEXT_BMS
 	on_screen_power_refresh();
-	#endif
-
-	#if 0
-	static ulong x_wait = 0;
-	if(x_wait++ == 30)
-	{
-		//printf("activate \r\n");
-		ui_proc_notification();
-	}
 	#endif
 }
 
@@ -1175,10 +1140,12 @@ ui_proc_loop:
 
 				if(ui_proc_wait_msg(*RxQueue, ulRxData) > 0)
 				{
-					char txt[256];
+					//char txt[256];
 					char *tx = (char *)ulRxData[1];
-					strcpy(txt, tx);
-					printf("%s \r\n", txt);
+					//strcpy(txt, tx);
+					//printf("%s \r\n", txt);
+
+					ui_controls_spectrum_show_notification(tx);
 				}
 				break;
 			}

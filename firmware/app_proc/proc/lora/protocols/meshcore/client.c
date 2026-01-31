@@ -54,7 +54,8 @@ unsigned int advert_bin_len = 108;
 uint8_t encoded_packet[256] = {0};
 #endif
 
-uint8_t key[16] = {0x8b, 0x33, 0x87, 0xe9, 0xc5, 0xcd, 0xea, 0x6a, 0xc9, 0xe5, 0xed, 0xba, 0xa1, 0x15, 0xcd, 0x72};
+uint8_t key_pb[16] = {0x8b, 0x33, 0x87, 0xe9, 0xc5, 0xcd, 0xea, 0x6a, 0xc9, 0xe5, 0xed, 0xba, 0xa1, 0x15, 0xcd, 0x72};
+uint8_t key_d9[16] = {0x9C, 0xD8, 0xFC, 0xF2, 0x2A, 0x47, 0x33, 0x3B, 0x59, 0x1D, 0x96, 0xA2, 0xB8, 0x48, 0xB7, 0x3F};
 
 const char* type_to_string(meshcore_payload_type_t type) {
     switch (type) {
@@ -390,9 +391,22 @@ void client_decode(uchar *msg, ushort size, char *notif)
 
                 // ToDo: all of this MAC verification and decryption should be moved somewhere else
 
+                uchar *pkey;
+
+                switch(grp_txt.channel_hash)
+                {
+                	case 0xD9:
+                		pkey = key_d9;
+                		break;
+                	default:
+                		pkey = key_pb;
+                		break;
+                }
+
+
                 uint8_t out[128];
                 size_t  out_len =
-                    hmac_sha256(key, sizeof(key), grp_txt.data, grp_txt.data_length, out, MESHCORE_CIPHER_MAC_SIZE);
+                    hmac_sha256(pkey, 16, grp_txt.data, grp_txt.data_length, out, MESHCORE_CIPHER_MAC_SIZE);
 
                 //printf("Calculated MAC [%d]: \r\n", out_len);
                 //print_hex_array(out, out_len);
@@ -406,7 +420,7 @@ void client_decode(uchar *msg, ushort size, char *notif)
                     memcpy(grp_txt.decrypted.data, grp_txt.data, grp_txt.data_length);
 
                     struct AES_ctx ctx;
-                    AES_init_ctx(&ctx, key);
+                    AES_init_ctx(&ctx, pkey);
                     for (uint8_t i = 0; i < (grp_txt.decrypted.data_length / 16); i++) {
                         AES_ECB_decrypt(&ctx, &grp_txt.decrypted.data[i * 16]);
                     }

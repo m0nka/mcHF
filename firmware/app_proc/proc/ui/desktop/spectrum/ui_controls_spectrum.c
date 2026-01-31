@@ -353,7 +353,11 @@ static void ui_controls_spectrum_show_band_guide(void)
 	static uchar band_guide_timeout = 0;
 
 	if(!ui_s.show_band_guide)
+	{
+		// Process notification updates, while not showing the guides
+		ui_controls_spectrum_show_notification(NULL);
 		return;
+	}
 
 	// Make it fade away
 	if(band_guide_timeout > (BAND_GUIDE_TIMEOUT - BAND_GUIDE_FADE_TRIG_VAL))
@@ -1115,6 +1119,70 @@ static void ui_controls_create_bottom_bar(void)
 	    GUI_DrawVLine((x0 + 6),(y0 - 4),(y0 - 1));
 	    GUI_DrawVLine((x0 + 7),(y0 - 4),(y0 - 1));
 	    GUI_DrawVLine((x0 + 8),(y0 - 4),(y0 - 1));
+	}
+}
+
+//
+// Alpha notification inside spectrum scope
+//
+void ui_controls_spectrum_show_notification(char *text)
+{
+	static uchar notif_timeout = 0;
+	static char txt[256];
+
+	ushort notif_size = 0;
+
+	if(text != NULL)
+	{
+		notif_timeout = 0;
+		strcpy(txt, text);
+		//printf("%s \r\n", txt);
+	}
+	else if(notif_timeout == 0)
+		return;
+
+	// Make it fade away
+	if(notif_timeout > (BAND_GUIDE_TIMEOUT - BAND_GUIDE_FADE_TRIG_VAL))
+	{
+		uchar fade_alpha = (BAND_GUIDE_START_ALPHA*2) -\
+			((notif_timeout - BAND_GUIDE_TIMEOUT + BAND_GUIDE_FADE_TRIG_VAL) * BAND_GUIDE_FADE_FACTOR);
+		//printf("fade: %d\r\n", fade_alpha);
+		GUI_SetAlpha(fade_alpha);
+	}
+	else
+		GUI_SetAlpha(BAND_GUIDE_START_ALPHA*2);
+
+	notif_size = strlen(txt)*13;
+
+	if(notif_size > (800 - BAND_GUIDE_LEFT_LABLE_X))
+		notif_size = (800 - BAND_GUIDE_LEFT_LABLE_X);
+
+	// ToDo: New line
+	// ...
+
+	// Label frame
+	GUI_SetColor		(GUI_WHITE);
+	GUI_FillRoundedRect	(BAND_GUIDE_LEFT_LABLE_X - 4,
+						 BAND_GUIDE_MIDP_LABLE_Y - 10,
+						 (BAND_GUIDE_LEFT_LABLE_X + notif_size),
+						 (BAND_GUIDE_MIDP_LABLE_Y + 12), 3);
+
+	// Label text
+	GUI_SetFont(&GUI_Font24B_ASCII);
+	GUI_SetColor(GUI_BLACK);
+	GUI_DispStringAt(txt, BAND_GUIDE_LEFT_LABLE_X, BAND_GUIDE_MIDP_LABLE_Y - 10);
+
+	GUI_SetAlpha(255);
+
+	// Increase timer
+	notif_timeout++;
+
+	// Hide it
+	if(notif_timeout > BAND_GUIDE_TIMEOUT)
+	{
+		//ui_s.show_band_guide = 0;
+		notif_timeout = 0;
+		txt[0] = 0;
 	}
 }
 
