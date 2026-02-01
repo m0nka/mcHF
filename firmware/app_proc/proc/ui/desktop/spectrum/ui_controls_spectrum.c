@@ -1129,16 +1129,23 @@ void ui_controls_spectrum_show_notification(char *text)
 {
 	static uchar notif_timeout = 0;
 	static char txt[256];
+	static char ext[256];	// ToDo: use proper structure to preserve state!
 
-	ushort notif_size = 0;
+	static ushort notif_size = 0;
+	static uchar  num_lines  = 1;
+	uchar  is_reload  = 0;
 
+	// Reload string(call by Notification), otherwise repaint saved string
 	if(text != NULL)
+		is_reload = 1;
+
+	if(is_reload)
 	{
 		notif_timeout = 0;
 		strcpy(txt, text);
 		//printf("%s \r\n", txt);
 	}
-	else if(notif_timeout == 0)
+	else if(notif_timeout == 0)	// Done, release execution
 		return;
 
 	// Make it fade away
@@ -1152,37 +1159,69 @@ void ui_controls_spectrum_show_notification(char *text)
 	else
 		GUI_SetAlpha(BAND_GUIDE_START_ALPHA*2);
 
-	notif_size = strlen(txt)*13;
+	// Calculate rough width(need per symbol walk about!)
+	ushort text_len = strlen(txt);
+	notif_size = text_len*10;
 
-	if(notif_size > (800 - BAND_GUIDE_LEFT_LABLE_X))
-		notif_size = (800 - BAND_GUIDE_LEFT_LABLE_X);
+	// Calculate extra lines of text
+	if(text_len > 80)
+	{
+		notif_size = (760 - BAND_GUIDE_LEFT_LABLE_X);
+		num_lines++;
+	}
 
-	// ToDo: New line
-	// ...
+	//if(is_reload)
+	//	printf("text len: %d, pixel cnt: %d, lines %d  \r\n", text_len, notif_size, num_lines);
 
 	// Label frame
 	GUI_SetColor		(GUI_WHITE);
 	GUI_FillRoundedRect	(BAND_GUIDE_LEFT_LABLE_X - 4,
-						 BAND_GUIDE_MIDP_LABLE_Y - 10,
-						 (BAND_GUIDE_LEFT_LABLE_X + notif_size),
-						 (BAND_GUIDE_MIDP_LABLE_Y + 12), 3);
+						(BAND_GUIDE_MIDP_LABLE_Y - 10),
+						(BAND_GUIDE_LEFT_LABLE_X + notif_size),
+						(BAND_GUIDE_MIDP_LABLE_Y + (25*num_lines)), 3);
 
 	// Label text
 	GUI_SetFont(&GUI_Font24B_ASCII);
 	GUI_SetColor(GUI_BLACK);
-	GUI_DispStringAt(txt, BAND_GUIDE_LEFT_LABLE_X, BAND_GUIDE_MIDP_LABLE_Y - 10);
+
+	if(num_lines == 1)
+	{
+		// Fit into a single line
+		GUI_DispStringAt(txt, BAND_GUIDE_LEFT_LABLE_X, BAND_GUIDE_MIDP_LABLE_Y - 10);
+		//if(is_reload) printf("0line: %s  \r\n", txt);
+	}
+	else if(num_lines > 1)
+	{
+		// Multiline print(2 for now)
+		if(is_reload)
+		{
+			strcpy(ext, txt + 80);
+			txt[80] = 0;
+		}
+
+		//if(is_reload) printf("1line: %s  \r\n", txt);
+		GUI_DispStringAt(txt, BAND_GUIDE_LEFT_LABLE_X, BAND_GUIDE_MIDP_LABLE_Y - 10);
+
+		//if(is_reload) printf("2line: %s  \r\n", ext);
+		GUI_DispStringAt(ext, BAND_GUIDE_LEFT_LABLE_X, BAND_GUIDE_MIDP_LABLE_Y - 10 + 25);
+	}
 
 	GUI_SetAlpha(255);
 
+	// ToDo: Use proper system timer!!
+	//
 	// Increase timer
 	notif_timeout++;
 
 	// Hide it
 	if(notif_timeout > BAND_GUIDE_TIMEOUT)
 	{
-		//ui_s.show_band_guide = 0;
-		notif_timeout = 0;
+		notif_timeout 	= 0;
+		notif_size 		= 0;
+		num_lines  		= 1;
+
 		txt[0] = 0;
+		ext[0] = 0;
 	}
 }
 

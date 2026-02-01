@@ -139,7 +139,7 @@ static void lora_proc_client_exec(xQueueHandle *RxQueue)
 {
 	uchar  msg[256];
 	ushort siz = 0;
-	char   notif[256];
+	char   notif[300];	// enough size for description text added to message
 	ulong  ulData[10];
 
 	if(!radio_init_done)

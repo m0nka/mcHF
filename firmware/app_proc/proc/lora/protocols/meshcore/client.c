@@ -305,9 +305,9 @@ void client_decode(uchar *msg, ushort size, char *notif)
         //printf("Decoded message:\r\n");
         printf("Type: %s [%d]\r\n", type_to_string(message.type), message.type);
         printf("Route: %s [%d]\r\n", route_to_string(message.route), message.route);
-        printf("Version: %d\r\n", message.version);
+        //printf("Version: %d\r\n", message.version);
         printf("Path Length: %d\r\n", message.path_length);
-        printf("Payload Length: %d\r\n", message.payload_length);
+        //printf("Payload Length: %d\r\n", message.payload_length);
 
 		#if 0
         if (message.path_length > 0)
@@ -328,46 +328,44 @@ void client_decode(uchar *msg, ushort size, char *notif)
             meshcore_advert_t advert;
             if (meshcore_advert_deserialize(message.payload, message.payload_length, &advert) >= 0)
             {
-                printf("Decoded node advertisement:\r\n");
-                printf("Public Key: \r\n");
-                print_hex_array(advert.pub_key, MESHCORE_PUB_KEY_SIZE);
+                //printf("Decoded node advertisement:\r\n");
+                //printf("Public Key: \r\n");
+                //print_hex_array(advert.pub_key, MESHCORE_PUB_KEY_SIZE);
 
                 //printf("Timestamp: %x\r\n", advert.timestamp);
                 //printf("Signature: \r\n");
                 //print_hex_array(advert.signature, MESHCORE_SIGNATURE_SIZE);
 
-                printf("Role: %s\r\n", role_to_string(advert.role));
-                if (advert.position_valid) {
-                    printf("Position: lat=%d, lon=%d\r\n", advert.position_lat, advert.position_lon);
-                } else {
-                    printf("Position: (not available)\r\n");
-                }
-                if (advert.extra1_valid) {
-                    printf("Extra1: %u\r\n", advert.extra1);
-                } else {
-                    printf("Extra1: (not available)\r\n");
-                }
-                if (advert.extra2_valid) {
-                    printf("Extra2: %u\r\n", advert.extra2);
-                } else {
-                    printf("Extra2: (not available)\r\n");
-                }
-                if (advert.name_valid) {
-                    printf("Name: %s\r\n", advert.name);
+                //printf("Role: %s\r\n", role_to_string(advert.role));
 
-                    strcpy(notif, advert.name);
+                //if (advert.position_valid) {
+                //    printf("Position: lat=%d, lon=%d\r\n", advert.position_lat, advert.position_lon);
+                //} else {
+                //    printf("Position: (not available)\r\n");
+                //}
+
+                //if (advert.extra1_valid) {
+                //    printf("Extra1: %u\r\n", advert.extra1);
+                //} else {
+                //    printf("Extra1: (not available)\r\n");
+                //}
+
+                //if (advert.extra2_valid) {
+                //    printf("Extra2: %u\r\n", advert.extra2);
+                //} else {
+                //    printf("Extra2: (not available)\r\n");
+                //}
+
+                if (advert.name_valid)
+                {
+                    //printf("Name: %s\r\n", advert.name);
+                    sprintf(notif, "[%2X] %s(%s advert)" , advert.pub_key[0], advert.name, role_to_string(advert.role));
                 }
                 else
                 {
-                    printf("Name: (not available)\r\n");
+                    //printf("Name: (not available)\r\n");
+                    sprintf(notif, "%2x: noname(%s advert)" , advert.pub_key[0], role_to_string(advert.role));
                 }
-
-                //if (meshcore_advert_serialize(&advert, message.payload, &message.payload_length) < 0)
-                //{
-                 //   printf("Failed to serialize node advertisement payload. \r\n");
-                  //  return;
-                //}
-
             }
             else
             {
@@ -392,21 +390,23 @@ void client_decode(uchar *msg, ushort size, char *notif)
                 // ToDo: all of this MAC verification and decryption should be moved somewhere else
 
                 uchar *pkey;
+                char  cname[10];
 
                 switch(grp_txt.channel_hash)
                 {
                 	case 0xD9:
                 		pkey = key_d9;
+                		strcpy(cname, "#test");
                 		break;
                 	default:
                 		pkey = key_pb;
+                		strcpy(cname, "public");
                 		break;
                 }
 
-
                 uint8_t out[128];
-                size_t  out_len =
-                    hmac_sha256(pkey, 16, grp_txt.data, grp_txt.data_length, out, MESHCORE_CIPHER_MAC_SIZE);
+                //size_t  out_len =
+                hmac_sha256(pkey, 16, grp_txt.data, grp_txt.data_length, out, MESHCORE_CIPHER_MAC_SIZE);
 
                 //printf("Calculated MAC [%d]: \r\n", out_len);
                 //print_hex_array(out, out_len);
@@ -441,7 +441,7 @@ void client_decode(uchar *msg, ushort size, char *notif)
                     printf("Text Type: %d \r\n", grp_txt.decrypted.text_type);
                     printf("Message: '%s' \r\n", grp_txt.decrypted.text);
 
-                    strcpy(notif, grp_txt.decrypted.text);
+                    sprintf(notif, "[%s] %s", cname, grp_txt.decrypted.text);
 
                 } else {
                     printf("MAC verification: FAILURE\r\n");
