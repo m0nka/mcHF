@@ -359,7 +359,7 @@ void client_decode(uchar *msg, ushort size, char *notif)
                 if (advert.name_valid)
                 {
                     //printf("Name: %s\r\n", advert.name);
-                    sprintf(notif, "[%2X] %s(%s advert)" , advert.pub_key[0], advert.name, role_to_string(advert.role));
+                    sprintf(notif, "[%2x] %s(%s advert)" , advert.pub_key[0], advert.name, role_to_string(advert.role));
                 }
                 else
                 {

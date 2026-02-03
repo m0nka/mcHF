@@ -1161,7 +1161,14 @@ void ui_controls_spectrum_show_notification(char *text)
 
 	// Calculate rough width(need per symbol walk about!)
 	ushort text_len = strlen(txt);
-	notif_size = text_len*10;
+	//notif_size = text_len*11 + 10;
+
+	ulong ns = 0;
+	for(int i = 0; i < strlen(txt); i++)
+	{
+		ns += GUI_GetCharDistX(txt[i]);
+	}
+	notif_size = ns + 20;
 
 	// Calculate extra lines of text
 	if(text_len > 80)
@@ -1170,15 +1177,22 @@ void ui_controls_spectrum_show_notification(char *text)
 		num_lines++;
 	}
 
-	//if(is_reload)
-	//	printf("text len: %d, pixel cnt: %d, lines %d  \r\n", text_len, notif_size, num_lines);
+	if(is_reload)
+		printf("text len: %d, pixel cnt: %d, lines %d \r\n", text_len, notif_size, num_lines);
 
 	// Label frame
 	GUI_SetColor		(GUI_WHITE);
 	GUI_FillRoundedRect	(BAND_GUIDE_LEFT_LABLE_X - 4,
 						(BAND_GUIDE_MIDP_LABLE_Y - 10),
 						(BAND_GUIDE_LEFT_LABLE_X + notif_size),
-						(BAND_GUIDE_MIDP_LABLE_Y + (25*num_lines)), 3);
+						(BAND_GUIDE_MIDP_LABLE_Y + (20*num_lines) + 10), 3);
+
+	// Label border
+	GUI_SetColor		(GUI_RED);
+	GUI_DrawRoundedRect	(BAND_GUIDE_LEFT_LABLE_X - 4,
+						(BAND_GUIDE_MIDP_LABLE_Y - 10),
+						(BAND_GUIDE_LEFT_LABLE_X + notif_size),
+						(BAND_GUIDE_MIDP_LABLE_Y + (20*num_lines) + 10), 3);
 
 	// Label text
 	GUI_SetFont(&GUI_Font24B_ASCII);
