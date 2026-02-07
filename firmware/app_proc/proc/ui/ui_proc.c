@@ -1126,26 +1126,39 @@ ui_proc_loop:
 			}
 
 			case UI_NEW_AUDIO_EVENT:
+			{
 				//printf("UI_NEW_AUDIO_EVENT\r\n");
 				#ifdef DESKTOP_SHOW_VOLUME
 				ui_controls_volume_refresh();
 				#endif
 				break;
+			}
 
 			case UI_LORA_NOTIFICATION:
 			{
 				ulong ulRxData[10];
 
-				printf("UI_LORA_NOTIFICATION\r\n");
-
+				// Get notification data
 				if(ui_proc_wait_msg(*RxQueue, ulRxData) > 0)
 				{
-					//char txt[256];
-					char *tx = (char *)ulRxData[1];
-					//strcpy(txt, tx);
-					//printf("%s \r\n", txt);
+					// Notification router
+					switch(ulRxData[0])
+					{
+						// Text notification - spectrum control
+						case 0x55:
+						{
+							printf("UI_LORA_NOTIFICATION - text\r\n");
+							ui_controls_spectrum_show_notification((char *)ulRxData[1]);
+							break;
+						}
 
-					ui_controls_spectrum_show_notification(tx);
+						case 0x67:
+						{
+							printf("UI_LORA_NOTIFICATION - data\r\n");
+							ui_controls_clock_show_notification(ulRxData[2]);
+							break;
+						}
+					}
 				}
 				break;
 			}

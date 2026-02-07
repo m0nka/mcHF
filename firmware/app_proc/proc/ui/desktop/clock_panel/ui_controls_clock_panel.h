@@ -26,6 +26,7 @@
 // Exports
 void ui_controls_clock_panel_init(void);
 void ui_controls_clock_panel_quit(void);
+void ui_controls_clock_show_notification(uchar notif);
 void ui_controls_clock_panel_refresh(void);
 void ui_controls_clock_panel_restore(void);
 

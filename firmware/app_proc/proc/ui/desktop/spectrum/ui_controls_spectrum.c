@@ -1148,6 +1148,9 @@ void ui_controls_spectrum_show_notification(char *text)
 	else if(notif_timeout == 0)	// Done, release execution
 		return;
 
+	// Notification font
+	GUI_SetFont(&GUI_Font24B_ASCII);
+
 	// Make it fade away
 	if(notif_timeout > (BAND_GUIDE_TIMEOUT - BAND_GUIDE_FADE_TRIG_VAL))
 	{
@@ -1159,65 +1162,69 @@ void ui_controls_spectrum_show_notification(char *text)
 	else
 		GUI_SetAlpha(BAND_GUIDE_START_ALPHA*2);
 
-	// Calculate rough width(need per symbol walk about!)
-	ushort text_len = strlen(txt);
-	//notif_size = text_len*11 + 10;
-
-	ulong ns = 0;
-	for(int i = 0; i < strlen(txt); i++)
-	{
-		ns += GUI_GetCharDistX(txt[i]);
-	}
-	notif_size = ns + 20;
-
-	// Calculate extra lines of text
-	if(text_len > 80)
-	{
-		notif_size = (760 - BAND_GUIDE_LEFT_LABLE_X);
-		num_lines++;
-	}
-
 	if(is_reload)
-		printf("text len: %d, pixel cnt: %d, lines %d \r\n", text_len, notif_size, num_lines);
+	{
+		ushort ns = 0;
+		ushort text_len = strlen(txt);
+
+		// Calculate string size in pixels(need font to be sent first!)
+		for(int i = 0; i < text_len; i++)
+			ns += GUI_GetCharDistX(txt[i]);
+
+		// Give it a bit of a border
+		notif_size = ns + 10;
+
+		// Calculate extra lines of text
+		if(notif_size > (780 - BAND_GUIDE_LEFT_LABLE_X))
+		{
+			notif_size = (780 - BAND_GUIDE_LEFT_LABLE_X);
+			num_lines++;
+
+			// Second line text
+			strcpy(ext, txt + text_len/2);
+			txt[text_len/2] = 0;
+		}
+
+		//printf("text_len: %d, notif_size: %d, num_lines %d \r\n", text_len, notif_size, num_lines);
+	}
 
 	// Label frame
 	GUI_SetColor		(GUI_WHITE);
-	GUI_FillRoundedRect	(BAND_GUIDE_LEFT_LABLE_X - 4,
+	GUI_FillRoundedRect	(BAND_GUIDE_LEFT_LABLE_X,
 						(BAND_GUIDE_MIDP_LABLE_Y - 10),
 						(BAND_GUIDE_LEFT_LABLE_X + notif_size),
-						(BAND_GUIDE_MIDP_LABLE_Y + (20*num_lines) + 10), 3);
+						(BAND_GUIDE_MIDP_LABLE_Y + (14*num_lines) + 5), 3);
 
 	// Label border
 	GUI_SetColor		(GUI_RED);
-	GUI_DrawRoundedRect	(BAND_GUIDE_LEFT_LABLE_X - 4,
+	GUI_DrawRoundedRect	(BAND_GUIDE_LEFT_LABLE_X,
 						(BAND_GUIDE_MIDP_LABLE_Y - 10),
 						(BAND_GUIDE_LEFT_LABLE_X + notif_size),
-						(BAND_GUIDE_MIDP_LABLE_Y + (20*num_lines) + 10), 3);
+						(BAND_GUIDE_MIDP_LABLE_Y + (14*num_lines) + 5), 3);
 
 	// Label text
-	GUI_SetFont(&GUI_Font24B_ASCII);
 	GUI_SetColor(GUI_BLACK);
 
 	if(num_lines == 1)
 	{
 		// Fit into a single line
-		GUI_DispStringAt(txt, BAND_GUIDE_LEFT_LABLE_X, BAND_GUIDE_MIDP_LABLE_Y - 10);
+		GUI_DispStringAt(txt, BAND_GUIDE_LEFT_LABLE_X + 5, BAND_GUIDE_MIDP_LABLE_Y - 10);
 		//if(is_reload) printf("0line: %s  \r\n", txt);
 	}
 	else if(num_lines > 1)
 	{
-		// Multiline print(2 for now)
-		if(is_reload)
-		{
-			strcpy(ext, txt + 80);
-			txt[80] = 0;
-		}
+		// Multi-line print(2 for now)
+		//if(is_reload)
+		//{
+		//	strcpy(ext, txt + 80);
+		//	txt[80] = 0;
+		//}
 
 		//if(is_reload) printf("1line: %s  \r\n", txt);
-		GUI_DispStringAt(txt, BAND_GUIDE_LEFT_LABLE_X, BAND_GUIDE_MIDP_LABLE_Y - 10);
+		GUI_DispStringAt(txt, BAND_GUIDE_LEFT_LABLE_X + 5, BAND_GUIDE_MIDP_LABLE_Y - 10);
 
 		//if(is_reload) printf("2line: %s  \r\n", ext);
-		GUI_DispStringAt(ext, BAND_GUIDE_LEFT_LABLE_X, BAND_GUIDE_MIDP_LABLE_Y - 10 + 25);
+		GUI_DispStringAt(ext, BAND_GUIDE_LEFT_LABLE_X + 5, BAND_GUIDE_MIDP_LABLE_Y - 10 + 20);
 	}
 
 	GUI_SetAlpha(255);

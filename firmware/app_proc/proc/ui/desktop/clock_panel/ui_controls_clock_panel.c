@@ -156,14 +156,8 @@ static void ui_controls_clock_panel_show_alive(void)
 	uc_keep_flag = !uc_keep_flag;
 }
 
-
 static void ui_controls_clock_panel_dsp_details(void)
 {
-	//static uchar ui_dsp_control_init_done = 0;
-	//static uchar ui_dsp_version_done = 0;
-	//static uchar loc_fix_mode = 0xFF;
-	//static short loc_nco_freq = 0xFFFF;
-
 	char   	buff[20];
 
 	if(ui_dsp_control_init_done == 0)
@@ -295,6 +289,17 @@ void ui_controls_clock_panel_restore(void)
 	uchar year = sdatestructureget.Year;
 	sprintf(buf,"%02d/%02d/%04d",sdatestructureget.Date,sdatestructureget.Month, (year + 2000));
 	GUI_DispStringAt(buf,(CLOCK_X + CLOCK_DATES_SHIFT), (CLOCK_Y + 2));
+}
+
+void ui_controls_clock_show_notification(uchar notif)
+{
+	GUI_SetColor(CLOCK_PANEL_COL);
+	GUI_FillRect(570, 192, 580, 198);
+
+	GUI_SetColor(GUI_DARKGREEN);
+	GUI_SetFont(&GUI_Font8x8_1);
+
+	GUI_DispStringAt("MC", 570, 192);
 }
 
 //*----------------------------------------------------------------------------

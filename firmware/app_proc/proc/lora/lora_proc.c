@@ -155,23 +155,36 @@ static void lora_proc_client_exec(xQueueHandle *RxQueue)
 	// Unpack message
 	client_decode(msg, siz, notif);
 
-	// Notify UI
-	if((ps.hUiTask != NULL)&&(strlen(notif)))
-	{
-		//printf("text: %s(%x) \r\n", notif, (int)&notif[0]);
+	//printf("text: %s(%d) \r\n", notif, strlen(notif));
 
+	// Notify UI
+	if(strlen(notif))
+	{
 		ulData[0] = 0x55;
 		ulData[1] = (ulong)notif;
+
+		// Fill queue
+		lora_proc_send_msg(*RxQueue, ulData, 2);
+
+		// Notify UI
+		if(ps.hUiTask != NULL)
+			xTaskNotify(ps.hUiTask, UI_LORA_NOTIFICATION, eSetValueWithOverwrite);
+
+		// Keep stack var valid until dumped by UI
+		vTaskDelay(200);
+	}
+	else
+	{
+		ulData[0] = 0x67;
+		ulData[1] = 0x00;
 		ulData[2] = 0xAA;
 
 		// Fill queue
 		lora_proc_send_msg(*RxQueue, ulData, 3);
 
 		// Notify UI
-		xTaskNotify(ps.hUiTask, UI_LORA_NOTIFICATION, eSetValueWithOverwrite);
-
-		// Keep stack var valid until dumped by UI
-		vTaskDelay(200);
+		if(ps.hUiTask != NULL)
+			xTaskNotify(ps.hUiTask, UI_LORA_NOTIFICATION, eSetValueWithOverwrite);
 	}
 }
 
