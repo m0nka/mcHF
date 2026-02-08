@@ -146,6 +146,111 @@ void SysTick_Handler(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : EXTI0_IRQHandler
+//* Object              :
+//* Notes    			: exti trap, line0
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void EXTI0_IRQHandler(void)
+{
+	#if 0
+	if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_0) != 0x00U)
+	{
+		BaseType_t xHigherPriorityTaskWoken;
+
+		xHigherPriorityTaskWoken = pdFALSE;
+		xTaskNotifyFromISR(ps.hSdcTask, 0x45, eSetBits, &xHigherPriorityTaskWoken);
+		portYIELD_FROM_ISR(xHigherPriorityTaskWoken );
+
+		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_0);
+	}
+	#else
+	// Line 0
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_0) != RESET)
+	{
+		BaseType_t xHigherPriorityTaskWoken;
+
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_0);
+
+		xHigherPriorityTaskWoken = pdFALSE;
+		xTaskNotifyFromISR(ps.hSdcTask, 0x45, eSetBits, &xHigherPriorityTaskWoken);
+		portYIELD_FROM_ISR(xHigherPriorityTaskWoken );
+	}
+	#endif
+}
+
+#ifdef CONTEXT_LORA
+//*----------------------------------------------------------------------------
+//* Function Name       : EXTI4_IRQHandler
+//* Object              :
+//* Notes    			: Lora driver
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void EXTI4_IRQHandler(void)
+{
+	#if 0
+	if (__HAL_GPIO_EXTI_GET_IT(LORA_DIO1) != 0x00U)
+	{
+		lora_proc_dio1_irq();
+	    __HAL_GPIO_EXTI_CLEAR_IT(LORA_DIO1);
+	}
+	#else
+	// Line 4
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_4) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_4);
+		lora_proc_dio1_irq();
+	}
+	#endif
+}
+#endif
+
+//*----------------------------------------------------------------------------
+//* Function Name       : EXTI9_5_IRQHandler
+//* Object              :
+//* Notes    			: Shared between Touch and Lora drivers
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void EXTI9_5_IRQHandler(void)
+{
+	#if 0
+	if(__HAL_GPIO_EXTI_GET_IT(TS_INT_PIN) != 0x00U)
+	{
+	    touch_proc_irq();
+	    __HAL_GPIO_EXTI_CLEAR_IT(TS_INT_PIN);
+	}
+
+	if(__HAL_GPIO_EXTI_GET_IT(LORA_BUSY) != 0x00U)
+	{
+		lora_proc_busy_irq();
+	    __HAL_GPIO_EXTI_CLEAR_IT(LORA_BUSY);
+	}
+	#else
+	// Line 5
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_5) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_5);
+		#ifdef CONTEXT_LORA
+		lora_proc_busy_irq();
+		#endif
+	}
+
+	// Line 6
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_6) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_6);
+		touch_proc_irq();
+	}
+	#endif
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : Error_Handler
 //* Object              :
 //* Notes    			:
@@ -158,7 +263,7 @@ void Error_Handler(int err)
 	__disable_irq();
 	printf(" Error Handler %d\n", err);
 
-	NVIC_SystemReset();
+	//NVIC_SystemReset();
 	while(1);
 }
 
@@ -251,6 +356,10 @@ static void tasks_pre_os_init(void)
 	trx_proc_hw_init();
 	#endif
 
+	#ifdef CONTEXT_FAN
+	fan_proc_hw_init();
+	#endif
+
 	#ifdef CONTEXT_KEYPAD
 	keypad_proc_init();
 	#endif
@@ -299,11 +408,14 @@ static int start_proc(void)
     // BMS messaging
     ps.xBmsRxQueue = xQueueCreate(APP_LOADER_QUEUE_SIZE,(unsigned portCHAR)sizeof(ulong));
 
+    // UI notifications
+    ps.xUiNotifRxQueue = xQueueCreate(APP_LOADER_QUEUE_SIZE,(unsigned portCHAR)sizeof(ulong));
+
 	#ifdef CONTEXT_VIDEO
 	res = xTaskCreate(	(TaskFunction_t)ui_proc_task,\
 						UI_PROC_START_NAME,\
 						UI_PROC_STACK_SIZE,\
-						NULL,\
+						(void *)&(ps.xUiNotifRxQueue),\
 						UI_PROC_PRIORITY,\
 						&(ps.hUiTask));
 
@@ -437,6 +549,21 @@ static int start_proc(void)
     }
 	#endif
 
+	#ifdef CONTEXT_FAN
+    res = xTaskCreate((TaskFunction_t)fan_proc_task,\
+					FAN_PROC_START_NAME,\
+					FAN_PROC_STACK_SIZE,\
+					NULL,\
+					FAN_PROC_PRIORITY,\
+					&(ps.hFanTask));
+
+    if(res != pdPASS)
+    {
+    	printf("unable to create fan process\r\n");
+    	return 10;
+    }
+	#endif
+
 	#ifdef CONTEXT_KEYPAD
     res = xTaskCreate(	(TaskFunction_t)keypad_proc_task,\
     					KEYPAD_PROC_START_NAME,\
@@ -448,7 +575,7 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create kbd process\r\n");
-    	return 10;
+    	return 11;
     }
 	#endif
 
@@ -456,14 +583,14 @@ static int start_proc(void)
     res = xTaskCreate(	(TaskFunction_t)lora_proc_task,\
     					LORA_PROC_START_NAME,\
 						LORA_PROC_STACK_SIZE,\
-						NULL,\
+						(void *)&(ps.xUiNotifRxQueue),\
 						LORA_PROC_PRIORITY,\
 						&(ps.hLraTask));
 
     if(res != pdPASS)
     {
     	printf("unable to create lora process\r\n");
-    	return 11;
+    	return 12;
     }
 	#endif
 
@@ -478,7 +605,7 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create sd card process\r\n");
-    	return 12;
+    	return 13;
     }
 	#endif
 
@@ -493,7 +620,7 @@ static int start_proc(void)
     if(res != pdPASS)
     {
     	printf("unable to create app loader process\r\n");
-    	return 12;
+    	return 14;
     }
 	#endif
 

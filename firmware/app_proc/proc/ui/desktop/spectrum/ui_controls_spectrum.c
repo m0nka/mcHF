@@ -353,7 +353,11 @@ static void ui_controls_spectrum_show_band_guide(void)
 	static uchar band_guide_timeout = 0;
 
 	if(!ui_s.show_band_guide)
+	{
+		// Process notification updates, while not showing the guides
+		ui_controls_spectrum_show_notification(NULL);
 		return;
+	}
 
 	// Make it fade away
 	if(band_guide_timeout > (BAND_GUIDE_TIMEOUT - BAND_GUIDE_FADE_TRIG_VAL))
@@ -1115,6 +1119,130 @@ static void ui_controls_create_bottom_bar(void)
 	    GUI_DrawVLine((x0 + 6),(y0 - 4),(y0 - 1));
 	    GUI_DrawVLine((x0 + 7),(y0 - 4),(y0 - 1));
 	    GUI_DrawVLine((x0 + 8),(y0 - 4),(y0 - 1));
+	}
+}
+
+//
+// Alpha notification inside spectrum scope
+//
+void ui_controls_spectrum_show_notification(char *text)
+{
+	static uchar notif_timeout = 0;
+	static char txt[256];
+	static char ext[256];	// ToDo: use proper structure to preserve state!
+
+	static ushort notif_size = 0;
+	static uchar  num_lines  = 1;
+	uchar  is_reload  = 0;
+
+	// Reload string(call by Notification), otherwise repaint saved string
+	if(text != NULL)
+		is_reload = 1;
+
+	if(is_reload)
+	{
+		notif_timeout = 0;
+		strcpy(txt, text);
+		//printf("%s \r\n", txt);
+	}
+	else if(notif_timeout == 0)	// Done, release execution
+		return;
+
+	// Notification font
+	GUI_SetFont(&GUI_Font24B_ASCII);
+
+	// Make it fade away
+	if(notif_timeout > (BAND_GUIDE_TIMEOUT - BAND_GUIDE_FADE_TRIG_VAL))
+	{
+		uchar fade_alpha = (BAND_GUIDE_START_ALPHA*2) -\
+			((notif_timeout - BAND_GUIDE_TIMEOUT + BAND_GUIDE_FADE_TRIG_VAL) * BAND_GUIDE_FADE_FACTOR);
+		//printf("fade: %d\r\n", fade_alpha);
+		GUI_SetAlpha(fade_alpha);
+	}
+	else
+		GUI_SetAlpha(BAND_GUIDE_START_ALPHA*2);
+
+	if(is_reload)
+	{
+		ushort ns = 0;
+		ushort text_len = strlen(txt);
+
+		// Calculate string size in pixels(need font to be sent first!)
+		for(int i = 0; i < text_len; i++)
+			ns += GUI_GetCharDistX(txt[i]);
+
+		// Give it a bit of a border
+		notif_size = ns + 10;
+
+		// Calculate extra lines of text
+		if(notif_size > (780 - BAND_GUIDE_LEFT_LABLE_X))
+		{
+			notif_size = (780 - BAND_GUIDE_LEFT_LABLE_X);
+			num_lines++;
+
+			// Second line text
+			strcpy(ext, txt + text_len/2);
+			txt[text_len/2] = 0;
+		}
+
+		//printf("text_len: %d, notif_size: %d, num_lines %d \r\n", text_len, notif_size, num_lines);
+	}
+
+	// Label frame
+	GUI_SetColor		(GUI_WHITE);
+	GUI_FillRoundedRect	(BAND_GUIDE_LEFT_LABLE_X,
+						(BAND_GUIDE_MIDP_LABLE_Y - 10),
+						(BAND_GUIDE_LEFT_LABLE_X + notif_size),
+						(BAND_GUIDE_MIDP_LABLE_Y + (14*num_lines) + 5), 3);
+
+	// Label border
+	GUI_SetColor		(GUI_RED);
+	GUI_DrawRoundedRect	(BAND_GUIDE_LEFT_LABLE_X,
+						(BAND_GUIDE_MIDP_LABLE_Y - 10),
+						(BAND_GUIDE_LEFT_LABLE_X + notif_size),
+						(BAND_GUIDE_MIDP_LABLE_Y + (14*num_lines) + 5), 3);
+
+	// Label text
+	GUI_SetColor(GUI_BLACK);
+
+	if(num_lines == 1)
+	{
+		// Fit into a single line
+		GUI_DispStringAt(txt, BAND_GUIDE_LEFT_LABLE_X + 5, BAND_GUIDE_MIDP_LABLE_Y - 10);
+		//if(is_reload) printf("0line: %s  \r\n", txt);
+	}
+	else if(num_lines > 1)
+	{
+		// Multi-line print(2 for now)
+		//if(is_reload)
+		//{
+		//	strcpy(ext, txt + 80);
+		//	txt[80] = 0;
+		//}
+
+		//if(is_reload) printf("1line: %s  \r\n", txt);
+		GUI_DispStringAt(txt, BAND_GUIDE_LEFT_LABLE_X + 5, BAND_GUIDE_MIDP_LABLE_Y - 10);
+
+		//if(is_reload) printf("2line: %s  \r\n", ext);
+		GUI_DispStringAt(ext, BAND_GUIDE_LEFT_LABLE_X + 5, BAND_GUIDE_MIDP_LABLE_Y - 10 + 20);
+	}
+
+	GUI_SetAlpha(255);
+
+	// ToDo: Use proper system timer!!
+	//
+	// Increase timer
+	notif_timeout++;
+
+	// Hide it
+	if(notif_timeout > BAND_GUIDE_TIMEOUT)
+	{
+		notif_timeout 	= 0;
+		notif_size 		= 0;
+		num_lines  		= 1;
+
+		txt[0] = 0;
+		ext[0] = 0;
 	}
 }
 

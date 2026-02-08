@@ -15,66 +15,188 @@
 
 #ifdef CONTEXT_LORA
 
+#include "sx126x.h"
 #include "lora_spi.h"
+#include "lora_radio.h"
 
-#ifdef MESHCORE_REPEATER
-#include "repeater_main.h"
+#ifdef MESHCORE
+#include "client.h"
 #endif
 
 #include "lora_proc.h"
 
-#ifdef CONTEXT_LORA__
-//*----------------------------------------------------------------------------
-//* Function Name       : SPI1_IRQHandler
-//* Object              :
-//* Notes    			: LORA SPI irq handler
-//* Notes   			:
-//* Notes    			:
-//* Context    			: CONTEXT_IRQ
-//*----------------------------------------------------------------------------
-/*void SPI1_IRQHandler(void)
+sx126x_handle_t radio_drv;
+uchar			radio_init_done = 0;
+
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
+
+void lora_proc_busy_irq(void)
 {
-    if(LL_SPI_IsActiveFlag_OVR(SPI1) || LL_SPI_IsActiveFlag_UDR(SPI1))
-    {
-    	lora_spi_err_callback();
-    }
-
-    if(LL_SPI_IsActiveFlag_RXP(SPI1) && LL_SPI_IsEnabledIT_RXP(SPI1))
-    {
-    	lora_spi_rx_callback();
-    	return;
-    }
-
-    if((LL_SPI_IsActiveFlag_TXP(SPI1) && LL_SPI_IsEnabledIT_TXP(SPI1)))
-    {
-    	lora_spi_tx_callback();
-    	return;
-    }
-
-    if(LL_SPI_IsActiveFlag_EOT(SPI1) && LL_SPI_IsEnabledIT_EOT(SPI1))
-    {
-    	lora_spi_eot_callback();
-    	return;
-    }
-}*/
-extern SPI_HandleTypeDef SpiHandle1;
-extern DMA_HandleTypeDef hdma_tx;
-extern DMA_HandleTypeDef hdma_rx;
-void SPI1_IRQHandler(void)
-{
-  HAL_SPI_IRQHandler(&SpiHandle1);
+	//printf("busy\r\n");
+	sx1262_busy_handler((void *)&radio_drv);
 }
 
-void SPI1_DMA_RX_IRQHandler(void)
+void lora_proc_dio1_irq(void)
 {
-  HAL_DMA_IRQHandler(SpiHandle1.hdmarx);
+	//printf("dio1\r\n");
+	sx1262_dio1_handler((void *)&radio_drv);
 }
 
-void SPI1_DMA_TX_IRQHandler(void)
+#ifdef SPI_GPIO_TEST
+void lora_proc_gpio_test(void)
 {
-  HAL_DMA_IRQHandler(SpiHandle1.hdmatx);
+	// Toggle misc pins
+	LL_GPIO_TogglePin(LORA_NSS_PORT, LORA_NSS);
+	LL_GPIO_TogglePin(LORA_RESET_PORT, LORA_RESET);
+	//
+	// Toggle spi pins
+	LL_GPIO_TogglePin(LORA_MISO_SPI1_PORT, LORA_MISO_SPI1);
+	LL_GPIO_TogglePin(LORA_MOSI_SPI1_PORT, LORA_MOSI_SPI1);
+	LL_GPIO_TogglePin(LORA_SCK_SPI1_PORT, LORA_SCK_SPI1);
 }
 #endif
+
+//*----------------------------------------------------------------------------
+//* Function Name       : lora_proc_modem_init
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_LORA
+//*----------------------------------------------------------------------------
+void lora_proc_modem_init(void)
+{
+	// EXTI IRQs on
+	lora_spi_activate_exti_irq();
+
+	// SPI HW init
+	lora_spi_init();
+
+	// Radio init
+	int err = lora_radio_init();
+	if(err)
+	{
+		printf("radio init err: %d \r\n", err);
+
+		// Lora power off
+		lora_spi_power_state(0);
+
+		// Unload
+		vTaskSuspend(NULL);
+	}
+
+	#ifdef MESHCORE
+	printf("modem on(MC)\r\n");
+	#else
+	printf("modem on(MT)\r\n");
+	#endif
+
+	// Enable driver
+	radio_init_done = 1;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : file_b_send_msg
+//* Object              : Send message to queue
+//* Input Parameters    : none
+//* Output Parameters   : none
+//* Functions called    : none
+//*----------------------------------------------------------------------------
+static uchar lora_proc_send_msg(xQueueHandle pvQueueHandle, ulong *ulMessageBuffer, uchar ucNumberOfItems)
+{
+	ulong ulDummy;
+	uchar ucCount;
+
+	/* Clear Rx Queue before posting */
+	while( uxQueueMessagesWaiting(pvQueueHandle))
+	{
+		xQueueReceive(pvQueueHandle, (void *)&ulDummy, (portTickType)0);
+	}
+
+	/* Send all items */
+	for(ucCount = 0;ucCount < ucNumberOfItems;ucCount++)
+	{
+    	ulDummy = *ulMessageBuffer++;
+
+	    /* Insert the item */
+		if(xQueueSend(pvQueueHandle, (void *)&ulDummy, (portTickType)0) != pdPASS )
+			return 1;
+	}
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : lora_proc_client_exec
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_LORA
+//*----------------------------------------------------------------------------
+static void lora_proc_client_exec(xQueueHandle *RxQueue)
+{
+	//uchar  msg[256];
+	//ushort siz = 0;
+	char   notif[300];	// enough size for description text added to message
+	ulong  ulData[10];
+
+	struct LORA_PACKET_RX lprx;
+
+	if(!radio_init_done)
+		return;
+
+	lprx.avail = 0;
+
+	// Wait RX packet (radio layer)
+	lora_radio_rx_check(&lprx);
+
+	// Process message(meshcore stack)
+	if(lprx.raw_rx_size != 0)
+	{
+		// Unpack message
+		client_decode(&lprx, lprx.raw_rx_msg, lprx.raw_rx_size, notif);
+		//printf("text: %s(%d) \r\n", notif, strlen(notif));
+
+		// Notify UI
+		if(strlen(notif))
+		{
+			ulData[0] = 0x55;
+			ulData[1] = (ulong)notif;
+			ulData[2] = (ulong)&lprx;
+
+			// Fill queue
+			lora_proc_send_msg(*RxQueue, ulData, 3);
+
+			// Notify UI
+			if(ps.hUiTask != NULL)
+				xTaskNotify(ps.hUiTask, UI_LORA_NOTIFICATION, eSetValueWithOverwrite);
+
+			// Keep stack var valid until dumped by UI
+			vTaskDelay(200);
+
+			return;
+		}
+	}
+
+	if((lprx.raw_rx_size != 0)||(lprx.avail))
+	{
+		ulData[0] = 0x67;
+		ulData[1] = 0x00;
+		ulData[2] = (ulong)&lprx;
+
+		// Fill queue
+		lora_proc_send_msg(*RxQueue, ulData, 3);
+
+		// Notify UI
+		if(ps.hUiTask != NULL)
+			xTaskNotify(ps.hUiTask, UI_LORA_NOTIFICATION, eSetValueWithOverwrite);
+
+		// Keep stack var valid until dumped by UI
+		vTaskDelay(200);
+	}
+}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : lora_proc_task
@@ -84,60 +206,75 @@ void SPI1_DMA_TX_IRQHandler(void)
 //* Notes    			:
 //* Context    			: CONTEXT_LORA
 //*----------------------------------------------------------------------------
-void lora_proc_task(void const * argument)
+void lora_proc_task(void const *arg)
 {
-	//ulong 	ulNotificationValue = 0, ulNotif;
+	xQueueHandle	*RxQueue;
 
 	// Delay start, so UI can paint properly
 	vTaskDelay(LORA_PROC_START_DELAY);
 	printf("start\r\n");
 
-	//lora_spi_init();
+	// Get rx queue ptr
+	RxQueue = (xQueueHandle *)arg;
 
-	#ifdef MESHCORE_REPEATER
-	setup();
+	// Radio driver init
+	#ifndef SPI_GPIO_TEST
+	lora_proc_modem_init();
+	#endif
+
+	#ifdef MESHCORE_UNIT_TEST
+	client_unit_test();
+	#endif
+
+	// Tx on start
+	#if 0
+	if(radio_init_done)
+		lora_radio_schedule_tx();
 	#endif
 
 lora_proc_loop:
 
-	#ifdef MESHCORE_REPEATER
-	loop();
-	#endif
-
-	// Wait key press
-	//ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, LORA_PROC_SLEEP_TIME);
-	//if((ulNotif) && (ulNotificationValue))
-	//{
-		// ..
-	//}
-
 	#ifdef SPI_GPIO_TEST
-	// Toggle misc pins
-	LL_GPIO_TogglePin(RFM_NSS_PORT, RFM_NSS);
-	LL_GPIO_TogglePin(RFM_DIO1_PORT, RFM_DIO1);
-	LL_GPIO_TogglePin(RFM_DIO0_PORT, RFM_DIO0);
-	//
-	// Toggle spi pins
-	LL_GPIO_TogglePin(RFM_MISO_SPI1_PORT, RFM_MISO_SPI1);
-	LL_GPIO_TogglePin(RFM_MOSI_SPI1_PORT, RFM_MOSI_SPI1);
-	LL_GPIO_TogglePin(RFM_SCK_SPI1_PORT, RFM_SCK_SPI1);
+	lora_proc_gpio_test();
+	#else
+	lora_proc_client_exec(RxQueue);
 	#endif
 
-	vTaskDelay(20);
-
+	vTaskDelay(5);
 	goto lora_proc_loop;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : lora_proc_init
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void lora_proc_init(void)
 {
+	// Basic GPIO init before OS is run, keep here!
 	lora_gpio_init();
 
-	//--printf("lora pre-os init\r\n");
+	//printf("lora pre-os init\r\n");
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : lora_proc_power_cleanup
+//* Object              :
+//* Notes    			:
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_RESET
+//*----------------------------------------------------------------------------
 void lora_proc_power_cleanup(void)
 {
+	// Lora power off
+	lora_spi_power_state(0);
 
+	// ToDo: all pins inputs ?
+	//
 }
 
 #endif

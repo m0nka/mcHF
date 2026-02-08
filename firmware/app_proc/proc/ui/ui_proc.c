@@ -126,15 +126,20 @@ static void ui_proc_add_menu_items(void)
 
 static void ui_proc_cb(void)
 {
-#ifdef DESKTOP_SHOW_FREQUENCY
+	#ifdef DESKTOP_SHOW_FREQUENCY
 	ui_controls_frequency_refresh(0);
-#endif
+	#endif
+
+	#ifdef DESKTOP_SHOW_VOLUME
 	//ui_controls_volume_refresh();	// blink on constant refresh , ToDo: restore orig code
+	#endif
 }
 
 static void ui_proc_cb_sm(void)
 {
+	#ifdef DESKTOP_SHOW_CLOCK
 	//ui_controls_clock_panel_refresh();
+	#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -602,25 +607,43 @@ static void ui_proc_init_desktop(void)
 
 	//ui_proc_test_lcd();
 	#else
-#ifdef DESKTOP_SHOW_SDCARD
+
+	#ifdef DESKTOP_SHOW_SDCARD
 	ui_controls_sd_icon_init();
-#endif
+	#endif
+
+	#ifdef DESKTOP_SHOW_VOLUME
 	ui_controls_volume_init	  (WM_HBKWIN);
+	#endif
+
+	#ifdef DESKTOP_SHOW_CLOCK
 	ui_controls_clock_panel_init();
+	#endif
+
+	#ifdef DESKTOP_SHOW_SPECTRUM
 	ui_controls_spectrum_init (WM_HBKWIN);
-#ifdef DESKTOP_SHOW_FREQUENCY
+	#endif
+
+	#ifdef DESKTOP_SHOW_FREQUENCY
 	ui_controls_frequency_init(WM_HBKWIN);
-#endif
-#ifdef DESKTOP_SHOW_SMETER
+	#endif
+
+	#ifdef DESKTOP_SHOW_SMETER
 	ui_controls_smeter_init();
-#endif
+	#endif
+
 	ui_controls_filter_init();
+
 	ui_controls_cpu_stat_init();
+
 	//ui_controls_dsp_stat_init();
+
 	#ifdef DESKTOP_SHOW_BATTERY
 	ui_controls_battery_init();
 	#endif
+
 	ui_controls_tx_stat_init();
+
 	//--ui_controls_menu_button_init();
 
 	#if 0
@@ -674,9 +697,18 @@ static void ui_proc_change_mode(void)
 			//printf("Entering Menu mode...\r\n");
 
 			// Destroy desktop controls
+			#ifdef DESKTOP_SHOW_VOLUME
 			ui_controls_volume_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_CLOCK
 			ui_controls_clock_panel_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_SPECTRUM
 			ui_controls_spectrum_quit();
+			#endif
+
 			#ifdef DESKTOP_SHOW_FREQUENCY
 			ui_controls_frequency_quit();
 			#endif
@@ -684,7 +716,10 @@ static void ui_proc_change_mode(void)
 			#ifdef DESKTOP_SHOW_SMETER
 			ui_controls_smeter_quit();
 			#endif
-			ui_controls_spectrum_quit();
+
+			//#ifdef DESKTOP_SHOW_SPECTRUM
+			//ui_controls_spectrum_quit();
+			//#endif
 
 			WM_SetCallback		(WM_HBKWIN, 0);
 			WM_InvalidateWindow	(WM_HBKWIN);
@@ -735,17 +770,27 @@ static void ui_proc_change_mode(void)
 			printf("Entering FT8 mode...\r\n");
 
 			// Destroy desktop controls
+			#ifdef DESKTOP_SHOW_VOLUME
 			ui_controls_volume_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_CLOCK
 			ui_controls_clock_panel_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_SPECTRUM
 			ui_controls_spectrum_quit();
-#ifdef DESKTOP_SHOW_FREQUENCY
+			#endif
+
+			#ifdef DESKTOP_SHOW_FREQUENCY
 			ui_controls_frequency_quit();
-#endif
+			#endif
 
 			#ifdef DESKTOP_SHOW_SMETER
 			ui_controls_smeter_quit();
 			#endif
-			ui_controls_spectrum_quit();
+
+			//ui_controls_spectrum_quit();
 
 			WM_SetCallback		(WM_HBKWIN, 0);
 			WM_InvalidateWindow	(WM_HBKWIN);
@@ -884,23 +929,31 @@ static void ui_proc_periodic(void)
 	if(ui_s.cur_state != MODE_DESKTOP)
 		return;
 
-#ifdef DESKTOP_SHOW_FREQUENCY
+	#ifdef DESKTOP_SHOW_FREQUENCY
 	ui_controls_frequency_refresh(0);
-#endif
-	ui_controls_clock_panel_refresh();
+	#endif
 
+	#ifdef DESKTOP_SHOW_CLOCK
+	ui_controls_clock_panel_refresh();
+	#endif
+
+	#ifdef DESKTOP_SHOW_VOLUME
 	//--ui_controls_volume_refresh();
+	#endif
+
 	ui_controls_cpu_stat_refresh();
 	//ui_controls_dsp_stat_refresh();
+
 	#ifdef DESKTOP_SHOW_BATTERY
 	ui_controls_battery_refresh();
 	#endif
+
 	ui_controls_filter_refresh();
 	ui_controls_tx_stat_refresh();
 
-#ifdef DESKTOP_SHOW_SDCARD
+	#ifdef DESKTOP_SHOW_SDCARD
 	ui_controls_sd_icon_refresh();
-#endif
+	#endif
 
 	//--on_screen_keyboard_refresh();	// will not allow transparent dialog with moving background
 
@@ -912,7 +965,10 @@ static void ui_proc_periodic(void)
 	if((tsu.rxtx) && (tsu.band[tsu.curr_band].demod_mode == DEMOD_CW)) // && keyer shown
 		return;
 
+	#ifdef DESKTOP_SHOW_SPECTRUM
 	ui_controls_spectrum_refresh(ui_proc_cb);
+	#endif
+
 	//--ui_controls_smeter_refresh  (ui_proc_cb_sm);
 
 	#ifdef CONTEXT_BMS
@@ -939,6 +995,31 @@ void ui_proc_power_cleanup(void)
 	GUI_Exec();
 }
 
+//*--------------------------------------------------------------------------------------
+//* Function Name       : bms_proc_wait_msg
+//* Object              : Read pending messages
+//* Input Parameters    : Rx Queue ptr and items buffer
+//* Output Parameters   : none.
+//*--------------------------------------------------------------------------------------
+static uchar ui_proc_wait_msg(xQueueHandle pRxQueue, ulong *ulQueueBuffer)
+{
+	uchar ucNext = 0;
+
+	if(pRxQueue == NULL)
+		return 0;
+
+	*ulQueueBuffer = 0;
+	while(uxQueueMessagesWaiting(pRxQueue))
+	{
+		if(xQueueReceive(pRxQueue, (ulQueueBuffer + ucNext), (portTickType)0) == pdPASS)
+		{
+			ucNext++;
+		}
+	}
+
+	return ucNext;
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_task
 //* Object              :
@@ -948,10 +1029,14 @@ void ui_proc_power_cleanup(void)
 //*----------------------------------------------------------------------------
 void ui_proc_task(void const *arg)
 {
-	ulong 	ulNotificationValue = 0, ulNotif;
+	ulong 			ulNotificationValue = 0, ulNotif;
+	xQueueHandle	*RxQueue;
 
 	vTaskDelay(UI_PROC_START_DELAY);
 	printf("start\r\n");
+
+	// Get rx queue ptr
+	RxQueue = (xQueueHandle *)arg;
 
 	// Backlight PWM
 	shared_tim_init();
@@ -1032,18 +1117,52 @@ ui_proc_loop:
 				cntr_id = 1;
 				WM_InvalidateWindow(WM_HBKWIN);
 				#else
-#ifdef DESKTOP_SHOW_FREQUENCY
+				#ifdef DESKTOP_SHOW_FREQUENCY
 				ui_controls_frequency_refresh(0);
-#endif
+				#endif
 				#endif
 
 				break;
 			}
 
 			case UI_NEW_AUDIO_EVENT:
+			{
 				//printf("UI_NEW_AUDIO_EVENT\r\n");
+				#ifdef DESKTOP_SHOW_VOLUME
 				ui_controls_volume_refresh();
+				#endif
 				break;
+			}
+
+			case UI_LORA_NOTIFICATION:
+			{
+				ulong ulRxData[10];
+
+				// Get notification data
+				if(ui_proc_wait_msg(*RxQueue, ulRxData) > 0)
+				{
+					// Notification router
+					switch(ulRxData[0])
+					{
+						// Text notification - spectrum control
+						case 0x55:
+						{
+							//printf("UI_LORA_NOTIFICATION - text\r\n");
+							ui_controls_spectrum_show_notification((char *)ulRxData[1]);
+							ui_controls_clock_show_notification(ulRxData[2]);
+							break;
+						}
+
+						case 0x67:
+						{
+							//printf("UI_LORA_NOTIFICATION - data\r\n");
+							ui_controls_clock_show_notification(ulRxData[2]);
+							break;
+						}
+					}
+				}
+				break;
+			}
 
 			default:
 				break;

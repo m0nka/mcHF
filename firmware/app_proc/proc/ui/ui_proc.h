@@ -16,8 +16,11 @@
 // Enable individual desktop controls
 #define 	DESKTOP_SHOW_BATTERY
 #define 	DESKTOP_SHOW_SMETER
+#define 	DESKTOP_SHOW_SPECTRUM
 #define 	DESKTOP_SHOW_FREQUENCY
 #define 	DESKTOP_SHOW_SDCARD
+#define 	DESKTOP_SHOW_CLOCK
+#define 	DESKTOP_SHOW_VOLUME
 
 // Disable individual controls
 #define 	SPECTRUM_WATERFALL

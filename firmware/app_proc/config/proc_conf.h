@@ -81,16 +81,22 @@
 #define CONTEXT_TRX
 //
 // -----------------------------------------------------------------------------------------------
+// Fan HW control
+//
+//
+#define CONTEXT_FAN
+//
+// -----------------------------------------------------------------------------------------------
 // Physical keyboard
 //
 //
 #define CONTEXT_KEYPAD
 //
 // -----------------------------------------------------------------------------------------------
-// Lora transceiver - wip
+// Lora transceiver
 //
 //
-//#define CONTEXT_LORA
+#define CONTEXT_LORA
 //
 
 // -----------------------------------------------------------------------------------------------
@@ -193,6 +199,13 @@
 #define TRX_PROC_PRIORITY				osPriorityNormal
 #define TRX_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 4)
 
+// FAN control process parameters
+#define FAN_PROC_START_NAME				"fan"
+#define FAN_PROC_START_DELAY			950
+#define FAN_PROC_SLEEP_TIME				portMAX_DELAY
+#define FAN_PROC_PRIORITY				osPriorityNormal
+#define FAN_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 2)
+
 // ICC(inter-core comms) process parameters
 #define ICC_PROC_START_NAME				"icc"
 #define ICC_PROC_START_DELAY			1000
@@ -200,18 +213,18 @@
 #define ICC_PROC_PRIORITY				osPriorityAboveNormal
 #define ICC_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 8)
 
-// Lora driver parameters
-#define LORA_PROC_START_NAME			"lor"
-#define LORA_PROC_START_DELAY			1100
-#define LORA_PROC_SLEEP_TIME			portMAX_DELAY
-#define LORA_PROC_PRIORITY				osPriorityNormal
-#define LORA_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 4)
-
 // App loader service parameters
 #define APP_PROC_START_NAME				"app"
 #define APP_PROC_START_DELAY			2000
 #define APP_PROC_SLEEP_TIME				portMAX_DELAY
 #define APP_PROC_PRIORITY				osPriorityNormal
 #define APP_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 64)
+
+// Lora driver parameters
+#define LORA_PROC_START_NAME			"lor"
+#define LORA_PROC_START_DELAY			3000
+#define LORA_PROC_SLEEP_TIME			portMAX_DELAY
+#define LORA_PROC_PRIORITY				osPriorityNormal
+#define LORA_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 16)
 
 #endif

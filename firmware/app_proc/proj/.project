@@ -157,6 +157,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/util/cpu_utils.c</locationURI>
 		</link>
 		<link>
+			<name>util/math_util.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/util/math_util.c</locationURI>
+		</link>
+		<link>
 			<name>Drivers/STM32H7xx_HAL_Driver/stm32h7xx_hal.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT12345/STM32CubeH7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c</locationURI>
@@ -552,6 +557,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/dsp/dsp_proc.c</locationURI>
 		</link>
 		<link>
+			<name>proc/fan/fan_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/fan/fan_proc.c</locationURI>
+		</link>
+		<link>
 			<name>proc/icc/icc_proc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/icc/icc_proc.c</locationURI>
@@ -817,9 +827,19 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/icc/hw/rsc_table.c</locationURI>
 		</link>
 		<link>
+			<name>proc/lora/hw/lora_radio.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/hw/lora_radio.c</locationURI>
+		</link>
+		<link>
 			<name>proc/lora/hw/lora_spi.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/hw/lora_spi.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/hw/sx126x.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/hw/sx126x.c</locationURI>
 		</link>
 		<link>
 			<name>proc/sdcard/fs/diskio.c</name>
@@ -935,6 +955,11 @@
 			<name>Middlewares/OpenAMP/libmetal/generic/generic_io.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT12345/STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/system/generic/generic_io.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshcore/client.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/client.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/battery/ui_controls_battery.c</name>
@@ -1072,6 +1097,26 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/ui_lib/keypad/c_keypad.c</locationURI>
 		</link>
 		<link>
+			<name>proc/lora/protocols/meshcore/core/packet.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/core/packet.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshcore/crypto/aes.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/crypto/aes.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshcore/crypto/hmac_sha256.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/crypto/hmac_sha256.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshcore/crypto/sha256.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/crypto/sha256.c</locationURI>
+		</link>
+		<link>
 			<name>proc/ui/menu/items/batt/menu_batt.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/batt/menu_batt.c</locationURI>
@@ -1160,6 +1205,31 @@
 			<name>proc/ui/ui_lib/STemWin/OS/GUI_X_OS.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/ui_lib/STemWin/OS/GUI_X_OS.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshcore/core/chat/grp_payload.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/core/chat/grp_payload.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshcore/core/payload/ack.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/core/payload/ack.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshcore/core/payload/advert.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/core/payload/advert.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshcore/core/payload/grp_txt.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/core/payload/grp_txt.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshcore/core/payload/request.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/core/payload/request.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/batt/res/icon_power.c</name>
