@@ -291,15 +291,61 @@ void ui_controls_clock_panel_restore(void)
 	GUI_DispStringAt(buf,(CLOCK_X + CLOCK_DATES_SHIFT), (CLOCK_Y + 2));
 }
 
-void ui_controls_clock_show_notification(uchar notif)
+void ui_controls_clock_show_notification(ulong lora_data)
 {
-	GUI_SetColor(CLOCK_PANEL_COL);
-	GUI_FillRect(570, 192, 580, 198);
+	struct LORA_PACKET_RX lprx;
+	char   buff[40];
 
+	// Valid ptr ?
+	if(lora_data == 0)
+		return;
+
+	// Copy, as sender used temp stack
+	memcpy(&lprx, (LORA_PACKET_RX *)lora_data, sizeof(LORA_PACKET_RX));
+	//printf("packet type: %d \r\n", lprx.mesh_id);
+
+	// -------------------------------------
+	// Packet type
+	GUI_SetColor(CLOCK_PANEL_COL);
+	GUI_FillRect(570, 190, 590, 200);
 	GUI_SetColor(GUI_DARKGREEN);
 	GUI_SetFont(&GUI_Font8x8_1);
 
-	GUI_DispStringAt("MC", 570, 192);
+	if(lprx.mesh_id == MESH_ID_MC)
+		GUI_DispStringAt("MC", 572, 192);
+	else if(lprx.mesh_id == MESH_ID_MT)
+		GUI_DispStringAt("MT", 572, 192);
+	else
+		GUI_DispStringAt("NA", 572, 192);
+
+	// -------------------------------------
+	// Signal info - power
+	GUI_SetColor(CLOCK_PANEL_COL);
+	GUI_FillRect(590, 190, 660, 200);
+	GUI_SetColor(GUI_RED);
+	GUI_SetFont(&GUI_Font8x8_1);
+
+	sprintf(buff, "%sdBm", lprx.sig_pwr);
+	GUI_DispStringAt(buff, 592, 192);
+
+	// -------------------------------------
+	// Signal info - SNR
+	GUI_SetColor(CLOCK_PANEL_COL);
+	GUI_FillRect(670, 190, 740, 200);
+	GUI_SetColor(GUI_DARKGREEN);
+	GUI_SetFont(&GUI_Font8x8_1);
+
+	sprintf(buff, "%sdB", lprx.sig_snr);
+	GUI_DispStringAt(buff, 672, 192);
+
+	// -------------------------------------
+	// Message type
+	GUI_SetColor(CLOCK_PANEL_COL);
+	GUI_FillRect(750, 190, 796, 200);
+	GUI_SetColor(GUI_BLACK);
+	GUI_SetFont(&GUI_Font8x8_1);
+
+	GUI_DispStringAt(lprx.msg_type, 752, 192);
 }
 
 //*----------------------------------------------------------------------------

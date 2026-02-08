@@ -56,6 +56,7 @@ uint8_t encoded_packet[256] = {0};
 
 uint8_t key_pb[16] = {0x8b, 0x33, 0x87, 0xe9, 0xc5, 0xcd, 0xea, 0x6a, 0xc9, 0xe5, 0xed, 0xba, 0xa1, 0x15, 0xcd, 0x72};
 uint8_t key_d9[16] = {0x9C, 0xD8, 0xFC, 0xF2, 0x2A, 0x47, 0x33, 0x3B, 0x59, 0x1D, 0x96, 0xA2, 0xB8, 0x48, 0xB7, 0x3F};
+uint8_t key_84[16] = {0xAB, 0xE6, 0x10, 0xD6, 0x1D, 0xEE, 0x50, 0x8C, 0x0A, 0xC1, 0x87, 0x93, 0xC3, 0x6C, 0x41, 0xC3};
 
 const char* type_to_string(meshcore_payload_type_t type) {
     switch (type) {
@@ -85,6 +86,38 @@ const char* type_to_string(meshcore_payload_type_t type) {
             return "Custom raw";
         default:
             return "UNKNOWN";
+    }
+}
+
+const char* type_to_string_short(meshcore_payload_type_t type)
+{
+    switch (type) {
+        case MESHCORE_PAYLOAD_TYPE_REQ:
+            return "Req";
+        case MESHCORE_PAYLOAD_TYPE_RESPONSE:
+            return "Resp";
+        case MESHCORE_PAYLOAD_TYPE_TXT_MSG:
+            return "TxtM";
+        case MESHCORE_PAYLOAD_TYPE_ACK:
+            return "Ack";
+        case MESHCORE_PAYLOAD_TYPE_ADVERT:
+            return "Adv";
+        case MESHCORE_PAYLOAD_TYPE_GRP_TXT:
+            return "GTxt";
+        case MESHCORE_PAYLOAD_TYPE_GRP_DATA:
+            return "GDat";
+        case MESHCORE_PAYLOAD_TYPE_ANON_REQ:
+            return "AnReq";
+        case MESHCORE_PAYLOAD_TYPE_PATH:
+            return "Path";
+        case MESHCORE_PAYLOAD_TYPE_TRACE:
+            return "Trace";
+        case MESHCORE_PAYLOAD_TYPE_MULTIPART:
+            return "Mprt";
+        case MESHCORE_PAYLOAD_TYPE_RAW_CUSTOM:
+            return "Raw";
+        default:
+            return "Unk";
     }
 }
 
@@ -288,14 +321,14 @@ void client_unit_test(void)
 }
 #endif
 
-void client_decode(uchar *msg, ushort size, char *notif)
+void client_decode(struct LORA_PACKET_RX *lp, uchar *msg, ushort size, char *notif)
 {
 	meshcore_message_t message;
 
 	//printf("size: %d \r\n", size);
 	//print_hex_array(msg, size);
 
-	if((msg == NULL)||(notif == NULL)||(size == 0))
+	if((msg == NULL)||(notif == NULL)||(size == 0)||(lp == NULL))
 		return;
 
 	*notif = 0;
@@ -303,11 +336,14 @@ void client_decode(uchar *msg, ushort size, char *notif)
     if(meshcore_deserialize(msg, size, &message) >= 0)
     {
         //printf("Decoded message:\r\n");
-        printf("Type: %s [%d]\r\n", type_to_string(message.type), message.type);
-        printf("Route: %s [%d]\r\n", route_to_string(message.route), message.route);
+        //printf("Type: %s [%d]\r\n", type_to_string(message.type), message.type);
+        //printf("Route: %s [%d]\r\n", route_to_string(message.route), message.route);
         //printf("Version: %d\r\n", message.version);
-        printf("Path Length: %d\r\n", message.path_length);
+        //printf("Path Length: %d\r\n", message.path_length);
         //printf("Payload Length: %d\r\n", message.payload_length);
+
+    	memset(lp->msg_type, 0, 8);
+        strcpy(lp->msg_type, type_to_string_short(message.type));
 
 		#if 0
         if (message.path_length > 0)
@@ -369,7 +405,7 @@ void client_decode(uchar *msg, ushort size, char *notif)
             }
             else
             {
-                printf("Failed to decode node advertisement payload. \r\n");
+                //printf("Failed to decode node advertisement payload. \r\n");
                 return;
             }
         }
@@ -377,18 +413,15 @@ void client_decode(uchar *msg, ushort size, char *notif)
         {
             meshcore_grp_txt_t grp_txt;
             if (meshcore_grp_txt_deserialize(message.payload, message.payload_length, &grp_txt) >= 0) {
-                printf("Decoded group text message:\r\n");
-                printf("Channel Hash: %02X\r\n", grp_txt.channel_hash);
-                printf("Data Length: %d\r\n", grp_txt.data_length);
+                //printf("Decoded group text message:\r\n");
+                //printf("Channel Hash: %02X\r\n", grp_txt.channel_hash);
+                //printf("Data Length: %d\r\n", grp_txt.data_length);
 
                 //printf("Received MAC: \r\n", grp_txt.data_length);
                 //print_hex_array(grp_txt.mac, MESHCORE_CIPHER_MAC_SIZE);
 
                 //printf("Data [%d]: \r\n", grp_txt.data_length);
                 //print_hex_array(grp_txt.data, grp_txt.data_length);
-
-                // ToDo: all of this MAC verification and decryption should be moved somewhere else
-
                 uchar *pkey;
                 char  cname[10];
 
@@ -398,6 +431,14 @@ void client_decode(uchar *msg, ushort size, char *notif)
                 		pkey = key_d9;
                 		strcpy(cname, "#test");
                 		break;
+
+                	// jokes
+                	case 0x84:
+                		pkey = key_84;
+                		strcpy(cname, "#jokes");
+                		break;
+
+                	// Public channel
                 	default:
                 		pkey = key_pb;
                 		strcpy(cname, "public");
@@ -413,7 +454,7 @@ void client_decode(uchar *msg, ushort size, char *notif)
 
                 if (memcmp(out, grp_txt.mac, MESHCORE_CIPHER_MAC_SIZE) == 0)
                 {
-                    printf("MAC verification: SUCCESS\r\n");
+                    //printf("MAC verification: SUCCESS\r\n");
 
                     // Copy encrypted data to buffer for decryption, AES works in-place
                     grp_txt.decrypted.data_length = grp_txt.data_length;
@@ -438,13 +479,14 @@ void client_decode(uchar *msg, ushort size, char *notif)
                     grp_txt.decrypted.text[text_length]  = '\0';
 
                     //printf("Timestamp: %x \r\n", (int)(grp_txt.decrypted.timestamp));
-                    printf("Text Type: %d \r\n", grp_txt.decrypted.text_type);
-                    printf("Message: '%s' \r\n", grp_txt.decrypted.text);
+                    //printf("Text Type: %d \r\n", grp_txt.decrypted.text_type);
+                    //printf("Message: '%s' \r\n", grp_txt.decrypted.text);
 
                     sprintf(notif, "[%s] %s", cname, grp_txt.decrypted.text);
 
                 } else {
-                    printf("MAC verification: FAILURE\r\n");
+                    //printf("MAC verification: FAILURE\r\n");
+                	sprintf(notif, "MAC fail, ch hash: 0x%02X", grp_txt.channel_hash);
                 }
 
                 //if (meshcore_grp_txt_serialize(&grp_txt, message.payload, &message.payload_length) < 0) {
@@ -455,12 +497,12 @@ void client_decode(uchar *msg, ushort size, char *notif)
             }
             else
             {
-                printf("Failed to decode group text message payload.\r\n");
+                //printf("Failed to decode group text message payload.\r\n");
                 return;
             }
         }
     } else {
-        printf("Failed to decode message.\r\n");
+        //printf("Failed to decode message.\r\n");
         return;
     }
 

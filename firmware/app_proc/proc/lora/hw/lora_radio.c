@@ -304,11 +304,14 @@ uchar lora_radio_init(void)
 	return 0;
 }
 
-void lora_radio_signal_stats(void)
+static void lora_radio_signal_stats(struct LORA_PACKET_RX *lp)
 {
 	uchar 	x, y, z;
 	float 	sig, rssi, snr;
 	char 	fbuf1[16], fbuf2[16], fbuf3[16];
+
+	if(lp == NULL)
+		return;
 
 	if(sx126x_get_packet_status_lora(&radio_drv, &x, &y, &z) != 0)
 		return;
@@ -331,7 +334,12 @@ void lora_radio_signal_stats(void)
 	ftoa(rssi, fbuf2, sizeof(fbuf2));
 	ftoa(snr,  fbuf3, sizeof(fbuf3));
 
-	printf("PWR: %sdBm SNR: %sdB RSSI: %sdB \r\n", fbuf1, fbuf2, fbuf3);
+	//printf("PWR: %sdBm SNR: %sdB RSSI: %sdB \r\n", fbuf1, fbuf2, fbuf3);
+
+	// Copy to message(ToDo: do we need int representation of signal values or just as info ?)
+	strcpy(lp->sig_pwr,  fbuf1);
+	strcpy(lp->sig_snr,  fbuf2);
+	strcpy(lp->sig_rssi, fbuf3);
 
 	#if 0
 	if(sx126x_get_rssi_inst(&radio_drv, &rssi) == 0)
@@ -343,17 +351,17 @@ void lora_radio_signal_stats(void)
 	#endif
 }
 
-void lora_radio_rx_check(uchar *msg, ushort *size)
+void lora_radio_rx_check(struct LORA_PACKET_RX *lp)
 {
 	ushort 	a = 0;
 	uchar  	b = 0, c = 0;
 	uchar  	len, ptr;
 
-	if((msg == NULL)||(size == NULL))
+	if(lp == NULL)
 		return;
 
 	// Nothing RX by default
-	*size = 0;
+	lp->raw_rx_size = 0;
 
 	if(!rx_state)
 	{
@@ -384,11 +392,11 @@ void lora_radio_rx_check(uchar *msg, ushort *size)
 		}
 		else if(a)
 		{
-			printf("------------------------------------------ \r\n");
+			//printf("------------------------------------------ \r\n");
 			//printf("irq stat: 0x%02x(%02x,%02x)\r\n", a, b, c);
 
 			// Get RSSI of packet
-			lora_radio_signal_stats();
+			lora_radio_signal_stats(lp);
 
 			#if 0
 			if((a & RADIOLIB_SX126X_IRQ_RX_DONE) == RADIOLIB_SX126X_IRQ_RX_DONE)
@@ -422,6 +430,8 @@ void lora_radio_rx_check(uchar *msg, ushort *size)
 			if(((a & RADIOLIB_SX126X_IRQ_RX_DONE) == RADIOLIB_SX126X_IRQ_RX_DONE) &&
 			   ((a & RADIOLIB_SX126X_IRQ_HEADER_VALID) == RADIOLIB_SX126X_IRQ_HEADER_VALID))
 			{
+				lp->mesh_id = MESH_ID_MC;
+
 				// Get buffer status
 				if(sx126x_get_rx_buffer_status(&radio_drv, &len, &ptr) == 0)
 				{
@@ -431,8 +441,9 @@ void lora_radio_rx_check(uchar *msg, ushort *size)
 						//printf("size: %d \r\n", len);
 						//print_hex_array(lora_mem, len);
 
-						memcpy(msg, lora_mem, len);
-						*size = len;
+						memcpy(lp->raw_rx_msg, lora_mem, len);
+						lp->raw_rx_size = len;
+						lp->avail = 1;
 
 						sx126x_clear_irq_status(&radio_drv, a);
 						goto restart_rx;
@@ -441,7 +452,9 @@ void lora_radio_rx_check(uchar *msg, ushort *size)
 			}
 			else if((a & RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED) == RADIOLIB_SX126X_IRQ_PREAMBLE_DETECTED)
 			{
-				printf("--> preamble only \r\n");
+				//printf("--> preamble only \r\n");
+				lp->mesh_id = MESH_ID_MT;
+				lp->avail = 1;
 			}
 
 			// Just in case

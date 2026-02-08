@@ -96,46 +96,6 @@
 #include "storage_proc.h"
 #include "os_apploader.h"
 
-/* Exported types ------------------------------------------------------------*/
-typedef struct Bitmap_Res_s
-{
-  uint16_t       x;
-  uint16_t       y;
-} Bitmap_Res_t;
-
-typedef struct Demo_Header_s
-{
-  uint32_t       demo_id;
-  uint32_t       icon_addr;
-  Bitmap_Res_t   icon_res;
-  uint32_t       logo_addr;
-  Bitmap_Res_t   logo_res;
-  uint32_t       sw_flags;
-  uint32_t       reserved[2];
-  unsigned char  demo_descr[32];
-} Demo_Header_t;
-
-typedef enum Demo_Id_e
-{
-  DEMO_ID_0,
-  DEMO_ID_1,
-  DEMO_ID_2,
-  DEMO_ID_3,
-  DEMO_ID_4,
-  DEMO_ID_INVALID,
-} Demo_Id_t;
-
-typedef enum AutoDemoEvent_e
-{
-  AUTO_DEMO_DISABLE,
-  AUTO_DEMO_ENABLE,
-  AUTO_DEMO_RESET
-} AutoDemoEvent_t;
-
-/* Exported variables --------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
-#define SW_FLAG_AUTO_DEMO         (1L << 0)
-
 #if 0
 #define	TASK_PROC_IDLE				0
 #define	TASK_PROC_WORK				1
@@ -152,6 +112,30 @@ struct ESPMessage {
 
 } ESPMessage;
 #endif
+
+// ----------------------------------------------------------------------
+#define MESH_ID_MC			0x01
+#define MESH_ID_MT			0x02
+
+typedef struct LORA_PACKET_RX
+{
+	uchar	avail;
+	uchar	mesh_id;
+
+	uchar	raw_rx_msg[256];
+	ushort	raw_rx_size;
+
+	char	sig_pwr[16];
+	char	sig_snr[16];
+	char	sig_rssi[16];
+
+	char	msg_type[8];
+
+	char	decoded_text[300];
+
+} LORA_PACKET_RX;
+
+// ----------------------------------------------------------------------
 
 __attribute__((__common__)) struct PROC_STATE {
 

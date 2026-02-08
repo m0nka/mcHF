@@ -137,47 +137,54 @@ static uchar lora_proc_send_msg(xQueueHandle pvQueueHandle, ulong *ulMessageBuff
 //*----------------------------------------------------------------------------
 static void lora_proc_client_exec(xQueueHandle *RxQueue)
 {
-	uchar  msg[256];
-	ushort siz = 0;
+	//uchar  msg[256];
+	//ushort siz = 0;
 	char   notif[300];	// enough size for description text added to message
 	ulong  ulData[10];
+
+	struct LORA_PACKET_RX lprx;
 
 	if(!radio_init_done)
 		return;
 
+	lprx.avail = 0;
+
 	// Wait RX packet (radio layer)
-	lora_radio_rx_check(msg, &siz);
+	lora_radio_rx_check(&lprx);
 
 	// Process message(meshcore stack)
-	if(siz == 0)
-		return;
-
-	// Unpack message
-	client_decode(msg, siz, notif);
-
-	//printf("text: %s(%d) \r\n", notif, strlen(notif));
-
-	// Notify UI
-	if(strlen(notif))
+	if(lprx.raw_rx_size != 0)
 	{
-		ulData[0] = 0x55;
-		ulData[1] = (ulong)notif;
-
-		// Fill queue
-		lora_proc_send_msg(*RxQueue, ulData, 2);
+		// Unpack message
+		client_decode(&lprx, lprx.raw_rx_msg, lprx.raw_rx_size, notif);
+		//printf("text: %s(%d) \r\n", notif, strlen(notif));
 
 		// Notify UI
-		if(ps.hUiTask != NULL)
-			xTaskNotify(ps.hUiTask, UI_LORA_NOTIFICATION, eSetValueWithOverwrite);
+		if(strlen(notif))
+		{
+			ulData[0] = 0x55;
+			ulData[1] = (ulong)notif;
+			ulData[2] = (ulong)&lprx;
 
-		// Keep stack var valid until dumped by UI
-		vTaskDelay(200);
+			// Fill queue
+			lora_proc_send_msg(*RxQueue, ulData, 3);
+
+			// Notify UI
+			if(ps.hUiTask != NULL)
+				xTaskNotify(ps.hUiTask, UI_LORA_NOTIFICATION, eSetValueWithOverwrite);
+
+			// Keep stack var valid until dumped by UI
+			vTaskDelay(200);
+
+			return;
+		}
 	}
-	else
+
+	if((lprx.raw_rx_size != 0)||(lprx.avail))
 	{
 		ulData[0] = 0x67;
 		ulData[1] = 0x00;
-		ulData[2] = 0xAA;
+		ulData[2] = (ulong)&lprx;
 
 		// Fill queue
 		lora_proc_send_msg(*RxQueue, ulData, 3);
@@ -185,6 +192,9 @@ static void lora_proc_client_exec(xQueueHandle *RxQueue)
 		// Notify UI
 		if(ps.hUiTask != NULL)
 			xTaskNotify(ps.hUiTask, UI_LORA_NOTIFICATION, eSetValueWithOverwrite);
+
+		// Keep stack var valid until dumped by UI
+		vTaskDelay(200);
 	}
 }
 

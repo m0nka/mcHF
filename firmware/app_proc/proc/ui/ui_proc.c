@@ -1147,14 +1147,15 @@ ui_proc_loop:
 						// Text notification - spectrum control
 						case 0x55:
 						{
-							printf("UI_LORA_NOTIFICATION - text\r\n");
+							//printf("UI_LORA_NOTIFICATION - text\r\n");
 							ui_controls_spectrum_show_notification((char *)ulRxData[1]);
+							ui_controls_clock_show_notification(ulRxData[2]);
 							break;
 						}
 
 						case 0x67:
 						{
-							printf("UI_LORA_NOTIFICATION - data\r\n");
+							//printf("UI_LORA_NOTIFICATION - data\r\n");
 							ui_controls_clock_show_notification(ulRxData[2]);
 							break;
 						}
