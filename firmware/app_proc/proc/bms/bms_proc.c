@@ -17,13 +17,18 @@
 
 #include "shared_i2c.h"
 #include "bq40z80.h"
+#include "bq25730.h"
 
 #include "bms_proc.h"
 
-struct BMSState	bmss;
+// Local state
+struct BMSState				bmss;
+
+// Charger chip state
+bq25730_config_t 			chip_cfg;
 
 // FreeRTOS process state
-extern struct PROC_STATE 			ps;
+extern struct PROC_STATE 	ps;
 
 // ToDo: reuse for PA temperature protection
 #if 0
@@ -266,6 +271,21 @@ void bms_proc_handle_fan(void)
 	}
 }
 
+void bms_proc_init_charger(void)
+{
+	// BQ25730 chip configuration
+	chip_cfg.dev_addr 		= BQ25730_DEFAULT_ADDR;
+	chip_cfg.adc_mode 		= ADC_CONV_CONT;
+	chip_cfg.watchdog_adj	= WDTMR_ADJ_DISABLE;
+	chip_cfg.rsr 			= RSNS_5MOHM;
+	chip_cfg.rac 			= RSNS_5MOHM;
+	chip_cfg.vsysmin 		= VSYSMIN_TARGET;
+	chip_cfg.icharge 		= ICHRG_TARGET;
+
+	// Init
+	bq25730_init(&chip_cfg);
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : bms_proc_worker
 //* Object              :
@@ -388,6 +408,9 @@ void bms_proc_task(void const *arg)
 
 	// Detect BMS chip
 	bq40z80_init();
+
+	// Charger chip init
+	bms_proc_init_charger();
 
 bms_proc_loop:
 

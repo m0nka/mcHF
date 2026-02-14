@@ -802,6 +802,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/audio/hw/codec_hw.c</locationURI>
 		</link>
 		<link>
+			<name>proc/bms/hw/bq25730.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/bms/hw/bq25730.c</locationURI>
+		</link>
+		<link>
 			<name>proc/bms/hw/bq40z80.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/bms/hw/bq40z80.c</locationURI>
