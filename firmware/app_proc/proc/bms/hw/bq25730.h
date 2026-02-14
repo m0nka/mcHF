@@ -8,7 +8,7 @@
 #define FRAMEWORK_ZEPHYR    	2
 #define SELECTED_FRAMEWORK  	FRAMEWORK_STM32CUBE
 
-#define VSYSMIN_TARGET  		(float)11.0
+#define VSYSMIN_TARGET  		(float)13.0
 #define ICHRG_TARGET    		(float)0.2
 
 #define BQ25730_DEFAULT_ADDR 	0x6B
@@ -90,12 +90,12 @@ typedef struct
 }bq25730_config_t;
 
 // Exports
-void bq25730_init(bq25730_config_t *cfg);
+uchar bq25730_init(bq25730_config_t *cfg);
 void bq25730_lowpwr_on(bq25730_config_t *cfg);
-void bq25730_lowpwr_off(bq25730_config_t *cfg);
-void bq25730_set_watchdog(bq25730_config_t *cfg);
-void bq25730_adc_enable_all(bq25730_config_t *cfg);
-void bq25730_adc_setmode(bq25730_config_t *cfg);
+uchar bq25730_lowpwr_off(bq25730_config_t *cfg);
+uchar bq25730_set_watchdog(bq25730_config_t *cfg);
+uchar bq25730_adc_enable_all(bq25730_config_t *cfg);
+uchar bq25730_adc_setmode(bq25730_config_t *cfg);
 void bq25730_adc_start_conversion(bq25730_config_t *cfg);
 float bq25730_read_vbus(bq25730_config_t *cfg);
 float bq25730_read_vsys(bq25730_config_t *cfg);
@@ -103,7 +103,7 @@ float bq25730_read_vbat(bq25730_config_t *cfg);
 float bq25730_read_vsysmin(bq25730_config_t *cfg);
 bool bq25730_set_vsysmin(bq25730_config_t *cfg);
 bool bq25730_set_rsense(bq25730_config_t *cfg);
-void bq25730_ibat_on(bq25730_config_t *cfg);
+uchar bq25730_ibat_on(bq25730_config_t *cfg);
 void bq25730_ibat_off(bq25730_config_t *cfg);
 void bq25730_read_ibat(bq25730_config_t *cfg, float *ibat_charge, float *ibat_discharge);
 float bq25730_read_iin(bq25730_config_t *cfg);

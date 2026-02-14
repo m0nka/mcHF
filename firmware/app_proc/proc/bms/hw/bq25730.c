@@ -9,7 +9,7 @@
 
 #include "bq25730.h"
 
-static void bq25730_i2c_write_registers(uint8_t dev_addr, uint8_t word_addr, uint8_t *data, uint8_t len)
+static uchar bq25730_i2c_write_registers(uint8_t dev_addr, uint8_t word_addr, uint8_t *data, uint8_t len)
 {
 	#if SELECTED_FRAMEWORK == FRAMEWORK_ARDUINO
     Wire.begin();
@@ -26,11 +26,14 @@ static void bq25730_i2c_write_registers(uint8_t dev_addr, uint8_t word_addr, uin
 	if(err != 0)
 	{
 		printf("write block %d\r\n", (int)err);
+		return 1;
 	}
 	#endif
+
+	return 0;
 }
 
-static void bq25730_i2c_read_registers(uint8_t dev_addr, uint8_t word_addr, uint8_t *data, uint8_t len)
+static uchar bq25730_i2c_read_registers(uint8_t dev_addr, uint8_t word_addr, uint8_t *data, uint8_t len)
 {
 	#if SELECTED_FRAMEWORK == FRAMEWORK_ARDUINO
     Wire.begin();
@@ -49,30 +52,47 @@ static void bq25730_i2c_read_registers(uint8_t dev_addr, uint8_t word_addr, uint
 	if(err != 0)
 	{
 		printf("read block %d\r\n", (int)err);
+		return 1;
 	}
 	#endif
+
+	return 0;
 }
 
-void bq25730_init(bq25730_config_t *cfg)
+uchar bq25730_init(bq25730_config_t *cfg)
 {
-	#if SELECTED_FRAMEWORK == FRAMEWORK_ARDUINO
-    Wire.setSCL(cfg->pin_i2c_scl);
-    Wire.setSDA(cfg->pin_i2c_sda);
-	#endif
+	// Do we have device on the bus ?
+	if(shared_i2c_is_ready(cfg->dev_addr, 10) != 0)
+		return 1;
 
     // Disable Low-power & Disable watchdog on ChargeOption0
-    bq25730_set_watchdog(cfg);
-    bq25730_lowpwr_off(cfg);
+    if(bq25730_set_watchdog(cfg))
+    	return 2;
 
-    // Enable ADC and set ADC conversion mode as continuous-mode
-    bq25730_adc_enable_all(cfg);
-    bq25730_adc_setmode(cfg);
+    if(bq25730_lowpwr_off(cfg))
+    	return 3;
+
+    // Enable ADC
+    if(bq25730_adc_enable_all(cfg))
+    	return 4;
+
+    // Set ADC conversion mode as continuous-mode
+    if(bq25730_adc_setmode(cfg))
+    	return 5;
 
     // Enable IBAT buffer to measure battery current
-    bq25730_ibat_on(cfg);
+    if(bq25730_ibat_on(cfg))
+    	return 6;
 
     // Set a new VSYSMIN value
-    bq25730_set_vsysmin(cfg);
+    if(!bq25730_set_vsysmin(cfg))
+    	return 7;
+
+    bq25730_read_vbat(cfg);
+    bq25730_read_vbus(cfg);
+    bq25730_read_vsys(cfg);
+
+    return 0;
 }
 
 void bq25730_lowpwr_on(bq25730_config_t *cfg)
@@ -87,44 +107,72 @@ void bq25730_lowpwr_on(bq25730_config_t *cfg)
     delay(10);
 }
 
-void bq25730_lowpwr_off(bq25730_config_t *cfg)
+uchar bq25730_lowpwr_off(bq25730_config_t *cfg)
 {
     uint8_t databuf[2];
+
     // Read current value of ChargeOption0
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT0, databuf, 2);
+    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT0, databuf, 2))
+    	return 1;
+
     delay(10);
+
     // Disable low-power mode to ChargeOption0
     databuf[1] &= ~(1 << CHRGOPT0_EN_LWPWR);  
-    bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT0, databuf, 2);
+
+    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT0, databuf, 2))
+    	return 2;
+
     delay(10);
+
+    return 0;
 }
 
-void bq25730_set_watchdog(bq25730_config_t *cfg)
+uchar bq25730_set_watchdog(bq25730_config_t *cfg)
 {
     uint8_t databuf;
+
     // Read current value of ChargeOption0 (2nd byte)
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT0+1, &databuf, 1);
+    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT0+1, &databuf, 1))
+    	return 1;
+
     delay(10);
+
+    //printf("wd: %x \r\n", databuf);
     databuf &= ~(3 << CHRGOPT0_WDTMR_ADJ);
     databuf |= (cfg->watchdog_adj << CHRGOPT0_WDTMR_ADJ);
-    bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT0+1, &databuf, 1);
+
+    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT0+1, &databuf, 1))
+    	return 2;
+
     delay(10);
+
+    return 0;
 }
 
-void bq25730_adc_enable_all(bq25730_config_t *cfg)
+uchar bq25730_adc_enable_all(bq25730_config_t *cfg)
 {
     uint8_t databuf;
+
     // Enable ADC for all inputs
     databuf = databuf | 0xFF; 
-    bq25730_i2c_write_registers(cfg->dev_addr, ADDR_ADCOPT, &databuf, 1);
+
+    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_ADCOPT, &databuf, 1))
+    	return 1;
+
     delay(10);
+
+    return 0;
 }
 
-void bq25730_adc_setmode(bq25730_config_t *cfg)
+uchar bq25730_adc_setmode(bq25730_config_t *cfg)
 {
     uint8_t databuf;
+
     // Read current ADCOPT (2nd byte)
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCOPT+1, &databuf, 1);
+    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCOPT+1, &databuf, 1))
+    	return 1;
+
     delay(10);
 
     if (cfg->adc_mode == ADC_CONV_ONESHOT) {
@@ -133,9 +181,14 @@ void bq25730_adc_setmode(bq25730_config_t *cfg)
     else if (cfg->adc_mode == ADC_CONV_CONT) {
         databuf |= (1 << ADCOPT_ADC_CONV);
     }
+
     // Set ADC conversion mode
-    bq25730_i2c_write_registers(cfg->dev_addr, ADDR_ADCOPT+1, &databuf, 1);
+    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_ADCOPT+1, &databuf, 1))
+    	return 2;
+
     delay(10);
+
+    return 0;
 }
 
 void bq25730_adc_start_conversion(bq25730_config_t *cfg)
@@ -153,27 +206,42 @@ void bq25730_adc_start_conversion(bq25730_config_t *cfg)
 float bq25730_read_vbus(bq25730_config_t *cfg)
 {
     uint8_t databuf;
+
     // Read current ADCVBUS
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCVBUS, &databuf, 1);
+    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCVBUS, &databuf, 1))
+    	return 0;
+
     delay(10);
+
+    printf("vbus: %dmV \r\n", ((databuf*96) + 0));
     return (float)(VBUS_LSB * databuf);
 }
 
 float bq25730_read_vsys(bq25730_config_t *cfg)
 {
     uint8_t databuf;
+
     // Read current ADCVBUS
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCVSYS, &databuf, 1);
+    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCVSYS, &databuf, 1))
+    	return 0;
+
     delay(10);
+
+    printf("vsys: %dmV \r\n", ((databuf*64) + 2880));
     return (float)(VSYS_LSB * databuf) + VSYS_OFFSET;
 }
 
 float bq25730_read_vbat(bq25730_config_t *cfg)
 {
     uint8_t databuf;
+
     // Read current ADCVBUS
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCVBAT, &databuf, 1);
+    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCVBAT, &databuf, 1))
+    	return 0;
+
     delay(10);
+
+    printf("vbat: %dmV \r\n", ((databuf*64) + 2880));
     return (float)(VBAT_LSB * databuf) + VBAT_OFFSET;
 }
 
@@ -189,13 +257,16 @@ float bq25730_read_vsysmin(bq25730_config_t *cfg)
 bool bq25730_set_vsysmin(bq25730_config_t *cfg)
 {
     uint8_t databuf;
+
     // Read current ADCVBUS
     databuf = (uint8_t)(cfg->vsysmin / VSYSMIN_LSB);
     if ((databuf > WORD_VSYSMIN_MAX) || (databuf < WORD_VSYSMIN_MIN)) {
         return false;
     }
+
     bq25730_i2c_write_registers(cfg->dev_addr, ADDR_VSYSMIN, &databuf, 1);
     delay(10);
+
     return true;
 }
 
@@ -220,16 +291,25 @@ bool bq25730_set_rsense(bq25730_config_t *cfg)
     return true;
 }
 
-void bq25730_ibat_on(bq25730_config_t *cfg)
+uchar bq25730_ibat_on(bq25730_config_t *cfg)
 {
     uint8_t databuf;
+
     // Read current value of ChargeOption1 (2nd byte)
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1);
+    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1))
+    	return 1;
+
     delay(10);
+
     // Enable IBAT at ChargeOption1
     databuf |= (1 << CHRGOPT1_EN_IBAT);  
-    bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1);
+
+    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1))
+    	return 2;
+
     delay(10);
+
+    return 0;
 }
 
 void bq25730_ibat_off(bq25730_config_t *cfg)

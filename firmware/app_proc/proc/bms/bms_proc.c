@@ -274,7 +274,7 @@ void bms_proc_handle_fan(void)
 void bms_proc_init_charger(void)
 {
 	// BQ25730 chip configuration
-	chip_cfg.dev_addr 		= BQ25730_DEFAULT_ADDR;
+	chip_cfg.dev_addr 		= (BQ25730_DEFAULT_ADDR<<1);
 	chip_cfg.adc_mode 		= ADC_CONV_CONT;
 	chip_cfg.watchdog_adj	= WDTMR_ADJ_DISABLE;
 	chip_cfg.rsr 			= RSNS_5MOHM;
@@ -283,7 +283,9 @@ void bms_proc_init_charger(void)
 	chip_cfg.icharge 		= ICHRG_TARGET;
 
 	// Init
-	bq25730_init(&chip_cfg);
+	uchar res = bq25730_init(&chip_cfg);
+	if(res)
+		printf("charger init err: %d \r\n", res);
 }
 
 //*----------------------------------------------------------------------------
