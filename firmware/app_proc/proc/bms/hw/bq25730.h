@@ -28,9 +28,15 @@
 
 #define CHRGOPT0_EN_LWPWR   	7
 #define CHRGOPT0_WDTMR_ADJ  	5
+
+// 0x31
 #define CHRGOPT1_EN_IBAT    	7
 #define CHRGOPT1_RSNS_RAC   	3
 #define CHRGOPT1_RSNS_RSR   	2
+
+// 0x30
+#define CHRGOPT1_EN_PTM   		2
+
 #define WDTMR_ADJ_DISABLE   	0
 #define WDTMR_ADJ_5SEC      	1
 #define WDTMR_ADJ_88SEC     	2
@@ -104,6 +110,7 @@ float bq25730_read_vsysmin(bq25730_config_t *cfg);
 bool bq25730_set_vsysmin(bq25730_config_t *cfg);
 bool bq25730_set_rsense(bq25730_config_t *cfg);
 uchar bq25730_ibat_on(bq25730_config_t *cfg);
+uchar bq25730_toggle_ptm(bq25730_config_t *cfg, uchar ptm_on);
 void bq25730_ibat_off(bq25730_config_t *cfg);
 void bq25730_read_ibat(bq25730_config_t *cfg, float *ibat_charge, float *ibat_discharge);
 float bq25730_read_iin(bq25730_config_t *cfg);
