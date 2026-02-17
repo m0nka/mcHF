@@ -25,6 +25,8 @@
 #define ADDR_ADCIIN     		0x2B
 #define ADDR_ADCICHG    		0x29
 #define ADDR_ADCIDCHG   		0x28
+#define ADDR_MANUF_ID   		0x2E
+#define ADDR_CHIP_ID   			0x2F
 
 #define CHRGOPT0_EN_LWPWR   	7
 #define CHRGOPT0_WDTMR_ADJ  	5
@@ -53,6 +55,7 @@
 #define VSYS_OFFSET 			(float)2.88
 #define VBAT_LSB 				(float)0.064
 #define VBAT_OFFSET 			(float)2.88
+#define VBAT_OFFSET_5S 			8160
 #define VSYSMIN_LSB 			(float)0.1
 #define ICHG_10MOHM_LSB 		(float)0.064
 #define ICHG_5MOHM_LSB 			(float)0.128
@@ -103,9 +106,9 @@ uchar bq25730_set_watchdog(bq25730_config_t *cfg);
 uchar bq25730_adc_enable_all(bq25730_config_t *cfg);
 uchar bq25730_adc_setmode(bq25730_config_t *cfg);
 void bq25730_adc_start_conversion(bq25730_config_t *cfg);
-float bq25730_read_vbus(bq25730_config_t *cfg);
-float bq25730_read_vsys(bq25730_config_t *cfg);
-float bq25730_read_vbat(bq25730_config_t *cfg);
+ulong bq25730_read_vbus(bq25730_config_t *cfg);
+ulong bq25730_read_vsys(bq25730_config_t *cfg);
+ulong bq25730_read_vbat(bq25730_config_t *cfg);
 float bq25730_read_vsysmin(bq25730_config_t *cfg);
 bool bq25730_set_vsysmin(bq25730_config_t *cfg);
 bool bq25730_set_rsense(bq25730_config_t *cfg);
@@ -116,6 +119,7 @@ void bq25730_read_ibat(bq25730_config_t *cfg, float *ibat_charge, float *ibat_di
 float bq25730_read_iin(bq25730_config_t *cfg);
 bool bq25730_set_icharge(bq25730_config_t *cfg);
 bool bq25730_set_vcharge(bq25730_config_t *cfg);
+uchar bq25730_read_chip_id(bq25730_config_t *cfg);
 
 // Choose to use delay() based on framework
 #if SELECTED_FRAMEWORK == FRAMEWORK_ARDUINO
