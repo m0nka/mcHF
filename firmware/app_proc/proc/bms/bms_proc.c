@@ -279,8 +279,6 @@ void bms_proc_init_charger(void)
 	chip_cfg.watchdog_adj	= WDTMR_ADJ_DISABLE;
 	chip_cfg.rsr 			= RSNS_5MOHM;
 	chip_cfg.rac 			= RSNS_5MOHM;
-	chip_cfg.vsysmin 		= VSYSMIN_TARGET;
-	chip_cfg.icharge 		= ICHRG_TARGET;
 
 	// Init
 	uchar res = bq25730_init(&chip_cfg);
@@ -379,6 +377,10 @@ static void bms_proc_worker(void const *param)
 			bmss.run_on_dc = 1;
 		else
 			bmss.run_on_dc = 0;
+
+		bq25730_read_chg_stat(&chip_cfg);
+		bq25730_read_ibat(&chip_cfg, NULL, NULL);
+		bq25730_read_iin(&chip_cfg);
 	}
 
 	// Do we need a fan ?

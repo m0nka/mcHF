@@ -11,7 +11,7 @@
 
 static uchar bq25730_i2c_write_registers(uint8_t dev_addr, uint8_t word_addr, uint8_t *data, uint8_t len)
 {
-	ulong err = shared_i2c_write_reg(dev_addr, word_addr, data, len);
+	ulong err = shared_i2c_write_reg(0xD7, word_addr, data, len);
 	if(err != 0)
 	{
 		printf("write block %d\r\n", (int)err);
@@ -23,7 +23,7 @@ static uchar bq25730_i2c_write_registers(uint8_t dev_addr, uint8_t word_addr, ui
 
 static uchar bq25730_i2c_read_registers(uint8_t dev_addr, uint8_t word_addr, uint8_t *data, uint8_t len)
 {
-	ulong err = shared_i2c_read_reg(dev_addr, word_addr, data, len );
+	ulong err = shared_i2c_read_reg(0xD6, word_addr, data, len );
 	if(err != 0)
 	{
 		printf("read block %d\r\n", (int)err);
@@ -64,18 +64,31 @@ uchar bq25730_init(bq25730_config_t *cfg)
     	return 7;
 
     // Set a new VSYSMIN value
-    if(!bq25730_set_vsysmin(cfg))
+    if(!bq25730_set_vsysmin(cfg, VSYSMIN_TARGET))
     	return 8;
 
-    // Enable pass through mode
-    if(bq25730_toggle_ptm(cfg, 1))
+    // Set charger voltage
+    if(!bq25730_set_vcharge(cfg, VCHARGE_TARGET))
     	return 9;
+
+    // Set charging current
+    if(!bq25730_set_icharge(cfg, ICHRG_TARGET))
+    	return 10;
+
+    //if(!bq25730_set_rsense(cfg))
+    //	return 11;
+
+    // Enable pass through mode
+    //if(bq25730_toggle_ptm(cfg, 1))
+    //	return 12;
+
+    // Read charger status on start
+    //bq25730_read_chg_stat(cfg);
 
     printf("vbat: %dmV \r\n", (int)bq25730_read_vbat(cfg));
     printf("vbus: %dmV \r\n", (int)bq25730_read_vbus(cfg));
     printf("vsys: %dmV \r\n", (int)bq25730_read_vsys(cfg));
-
-    bq25730_read_ibat(cfg, NULL, NULL);
+    //bq25730_read_ibat(cfg, NULL, NULL);
 
     //printf("charger in PTM mode \r\n");
     return 0;
@@ -121,11 +134,20 @@ uchar bq25730_set_watchdog(bq25730_config_t *cfg)
     	return 1;
 
     //printf("wd: %x \r\n", databuf);
+
     databuf &= ~(3 << CHRGOPT0_WDTMR_ADJ);
     databuf |= (cfg->watchdog_adj << CHRGOPT0_WDTMR_ADJ);
 
+    //printf("wd: %x \r\n", databuf);
+
     if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT0+1, &databuf, 1))
     	return 2;
+
+    // Read current value of ChargeOption0 (2nd byte)
+    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT0+1, &databuf, 1))
+    	return 1;
+
+    //printf("wd: %x \r\n", databuf);
 
     return 0;
 }
@@ -224,17 +246,27 @@ float bq25730_read_vsysmin(bq25730_config_t *cfg)
     return (float)(VSYSMIN_LSB * databuf);
 }
 
-bool bq25730_set_vsysmin(bq25730_config_t *cfg)
+bool bq25730_set_vsysmin(bq25730_config_t *cfg, ulong vsys_min_mV)
 {
     uint8_t databuf;
 
-    // Read current ADCVBUS
-    databuf = (uint8_t)(cfg->vsysmin / VSYSMIN_LSB);
-    if ((databuf > WORD_VSYSMIN_MAX) || (databuf < WORD_VSYSMIN_MIN)) {
-        return false;
-    }
+	#if 0
+    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_VSYSMIN, &databuf, 1))
+    	return false;
 
-    bq25730_i2c_write_registers(cfg->dev_addr, ADDR_VSYSMIN, &databuf, 1);
+    printf("vsysmin read: %02x \r\n", databuf);
+	#endif
+
+    // Check range
+    if((vsys_min_mV > WORD_VSYSMIN_MAX)||(vsys_min_mV < WORD_VSYSMIN_MIN))
+       return false;
+
+    databuf = vsys_min_mV/VSYSMIN_LSB;
+
+    //printf("vsysmin set: 0x%x(%dmV) \r\n", databuf, (int)vsys_min_mV);
+
+    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_VSYSMIN, &databuf, 1))
+    	return false;
 
     return true;
 }
@@ -242,22 +274,31 @@ bool bq25730_set_vsysmin(bq25730_config_t *cfg)
 bool bq25730_set_rsense(bq25730_config_t *cfg)
 {
     uint8_t databuf;
-    if ((cfg->rsr != RSNS_10MOHM) || (cfg->rsr != RSNS_5MOHM)) {
-        return false;
-    }
-    if ((cfg->rac != RSNS_10MOHM) || (cfg->rac != RSNS_5MOHM)) {
-        return false;
-    }
+
+    //if ((cfg->rsr != RSNS_10MOHM) || (cfg->rsr != RSNS_5MOHM)) {
+    //    return false;
+    //}
+    //if ((cfg->rac != RSNS_10MOHM) || (cfg->rac != RSNS_5MOHM)) {
+    //    return false;
+    //}
 
     // Read current value of ChargeOption1 (2nd byte)
     bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1);
+
+    printf("chg opt read: %02x \r\n", databuf);
 
     // Set RNS_RSR and RSNS_RAC to RSNS_5MOHM or RSNS_10MOHM
     databuf &= ~((1 << CHRGOPT1_RSNS_RSR) | (1 << CHRGOPT1_RSNS_RAC));
     databuf |= (cfg->rsr << CHRGOPT1_RSNS_RSR);
     databuf |= (cfg->rac << CHRGOPT1_RSNS_RAC);
 
+    printf("chg opt modf: %02x \r\n", databuf);
+
     bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1);
+
+    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1);
+
+    printf("chg opt read: %02x \r\n", databuf);
 
     return true;
 }
@@ -270,31 +311,49 @@ uchar bq25730_ibat_on(bq25730_config_t *cfg)
     if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1))
     	return 1;
 
+    //printf("chg opt read: %02x \r\n", databuf);
+
     // Enable IBAT at ChargeOption1
     databuf |= (1 << CHRGOPT1_EN_IBAT);
 
+    //printf("chg opt modf: %02x \r\n", databuf);
+
     if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1))
     	return 2;
+
+    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1))
+    	return 1;
+
+    //printf("chg opt read: %02x \r\n", databuf);
 
     return 0;
 }
 
 uchar bq25730_toggle_ptm(bq25730_config_t *cfg, uchar ptm_on)
 {
-    uint8_t databuf;
+    uint8_t databuf[2];
 
     // Read current value of ChargeOption1 (1st byte)
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1, &databuf, 1))
+    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1, databuf, 2))
     	return 1;
+
+    printf("chg opt read: %02x%02x \r\n", databuf[0], databuf[1]);
 
     // Toggle pass through mode on ChargeOption1
     if(ptm_on)
-    	databuf |= (1 << CHRGOPT1_EN_PTM);
+    	databuf[0] |= (1 << CHRGOPT1_EN_PTM);
     else
-    	databuf &= ~(1 << CHRGOPT1_EN_PTM);
+    	databuf[0] &= ~(1 << CHRGOPT1_EN_PTM);
 
-    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT1, &databuf, 1))
+    printf("chg opt modf: %02x%02x \r\n", databuf[0], databuf[1]);
+
+    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT1, databuf, 2))
     	return 2;
+
+    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1, databuf, 2))
+    	return 1;
+
+    printf("chg opt read: %02x%02x \r\n", databuf[0], databuf[1]);
 
     return 0;
 }
@@ -310,6 +369,16 @@ void bq25730_ibat_off(bq25730_config_t *cfg)
     databuf &= ~(1 << CHRGOPT1_EN_IBAT);  
 
     bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1);
+}
+
+void bq25730_read_chg_stat(bq25730_config_t *cfg)
+{
+    uint8_t databuf[2];
+
+    // Read status bits
+    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRG_STAT, databuf, 2);
+
+    printf("stat: %02x %02x \r\n", databuf[0], databuf[1]);
 }
 
 void bq25730_read_ibat(bq25730_config_t *cfg, float *ibat_charge, float *ibat_discharge)
@@ -330,8 +399,7 @@ void bq25730_read_ibat(bq25730_config_t *cfg, float *ibat_charge, float *ibat_di
     //    lsb_discharge = IDCHG_5MOHM_LSB;
     //}
 
-    printf("b_ch: %dmA \r\n", databuf[1] * 128);
-    printf("b_dc: %dmA \r\n", databuf[0] * 512);
+    printf("dis: %dmA ch: %dmA\r\n", databuf[0]*512, databuf[1]*128);
 
     //*ibat_charge = (float)(databuf[1] * lsb_charge);
     //*ibat_discharge = (float)(databuf[0] * lsb_discharge);
@@ -344,6 +412,8 @@ float bq25730_read_iin(bq25730_config_t *cfg)
     // Read current ADCVBUS
     bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCIIN, &databuf, 1);
 
+    printf("in %dmA\r\n", databuf*100);
+
     if(cfg->rac == RSNS_10MOHM){
         return (float)(IIN_10MOHM_LSB * databuf);
     }
@@ -352,48 +422,69 @@ float bq25730_read_iin(bq25730_config_t *cfg)
     }
 }
 
-bool bq25730_set_icharge(bq25730_config_t *cfg)
+//*----------------------------------------------------------------------------
+//* Function Name       : bq25730_set_icharge
+//* Object              :
+//* Notes    			: set charging current
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+bool bq25730_set_icharge(bq25730_config_t *cfg, ulong ch_cur_mA)
 {
     uint8_t databuf[2];
-    uint16_t word;
-    float icharge_lsb;
 
-    if (cfg->rsr == RSNS_10MOHM) {
-        icharge_lsb = ICHG_10MOHM_LSB; 
-    }
-    else if(cfg->rsr == RSNS_5MOHM) {
-        icharge_lsb = ICHG_5MOHM_LSB; 
-    }
-    else{
-        return false;
-    }
-    word = (uint8_t)(cfg->icharge / icharge_lsb) << 6;
-    if(word > WORD_ICHRG_MAX){
-        return false;
-    }
+    // Check range
+    if((cfg->rsr == RSNS_10MOHM)&&(ch_cur_mA > WORD_ICHRG_MAX))
+    	return false;
+    else if((cfg->rsr == RSNS_5MOHM)&&(ch_cur_mA > WORD_ICHRG_MAX*2))
+    	return false;
 
-    databuf[0] = (uint8_t)word;
-    databuf[1] = (uint8_t)(word >> 8);
+    databuf[0] = (uint8_t)ch_cur_mA;
+    databuf[1] = (uint8_t)(ch_cur_mA >> 8);
 
-    bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGCURR, databuf, 2);
+    printf("icharge set: 0x%02x%02x(%dmA) \r\n", databuf[1], databuf[0], (int)ch_cur_mA);
+
+    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGCURR, databuf, 2))
+    	return false;
+
+    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGCURR, databuf, 2);
+
+    printf("icharge read: 0x%02x%02x \r\n", databuf[1], databuf[0]);
 
     return true;
 }
 
-bool bq25730_set_vcharge(bq25730_config_t *cfg)
+//*----------------------------------------------------------------------------
+//* Function Name       : bq25730_set_vcharge
+//* Object              :
+//* Notes    			: set charging voltage
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+bool bq25730_set_vcharge(bq25730_config_t *cfg, ulong ch_v_mV)
 {
     uint8_t databuf[2];
-    uint16_t word;
-    word = (uint16_t)(cfg->vcharge / VCHRG_LSB) << 3;
-    if((word > WORD_VCHRG_MAX) || (word < WORD_VCHRG_MIN))
-    {
-        return false; 
-    }
 
-    databuf[0] = (uint8_t)word;
-    databuf[1] = (uint8_t)(word >> 8);
+    // Check range
+    if((ch_v_mV > WORD_VCHRG_MAX) || (ch_v_mV < WORD_VCHRG_MIN))
+        return false;
 
-    bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGVOLT, databuf, 2);
+    databuf[0] = (uint8_t)ch_v_mV;
+    databuf[1] = (uint8_t)(ch_v_mV >> 8);
+
+    //printf("vcharge set: 0x%02x%02x(%dmV) \r\n", databuf[0], databuf[1], (int)ch_v_mV);
+
+    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGVOLT, databuf, 2))
+    	return false;
+
+	#if 0
+    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGVOLT, databuf, 2))
+    	return false;
+
+    printf("vcharge read: %02x %02x \r\n", databuf[0], databuf[1]);
+	#endif
 
     return true;
 }
