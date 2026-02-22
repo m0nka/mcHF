@@ -9,7 +9,7 @@
 
 #include "bq25730.h"
 
-static uchar bq25730_i2c_write_registers(uint8_t dev_addr, uint8_t word_addr, uint8_t *data, uint8_t len)
+static uchar bq25730_i2c_write_registers(uint8_t word_addr, uint8_t *data, uint8_t len)
 {
 	ulong err = shared_i2c_write_reg(0xD7, word_addr, data, len);
 	if(err != 0)
@@ -21,7 +21,7 @@ static uchar bq25730_i2c_write_registers(uint8_t dev_addr, uint8_t word_addr, ui
 	return 0;
 }
 
-static uchar bq25730_i2c_read_registers(uint8_t dev_addr, uint8_t word_addr, uint8_t *data, uint8_t len)
+static uchar bq25730_i2c_read_registers(uint8_t word_addr, uint8_t *data, uint8_t len)
 {
 	ulong err = shared_i2c_read_reg(0xD6, word_addr, data, len );
 	if(err != 0)
@@ -36,7 +36,7 @@ static uchar bq25730_i2c_read_registers(uint8_t dev_addr, uint8_t word_addr, uin
 uchar bq25730_init(bq25730_config_t *cfg)
 {
 	// Do we have device on the bus ?
-	if(shared_i2c_is_ready(cfg->dev_addr, 10) != 0)
+	if(shared_i2c_is_ready((BQ25730_DEFAULT_ADDR<<1), 10) != 0)
 		return 1;
 
 	// Read manuf and chip id
@@ -99,12 +99,12 @@ void bq25730_lowpwr_on(bq25730_config_t *cfg)
     uint8_t databuf[2];
 
     // Read current value of ChargeOption0
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT0, databuf, 2);
+    bq25730_i2c_read_registers(ADDR_CHRGOPT0, databuf, 2);
 
     // Enable low-power mode to ChargeOption0
     databuf[1] |= (1 << CHRGOPT0_EN_LWPWR);  
 
-    bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT0, databuf, 2);
+    bq25730_i2c_write_registers(ADDR_CHRGOPT0, databuf, 2);
 
 }
 
@@ -113,13 +113,13 @@ uchar bq25730_lowpwr_off(bq25730_config_t *cfg)
     uint8_t databuf[2];
 
     // Read current value of ChargeOption0
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT0, databuf, 2))
+    if(bq25730_i2c_read_registers(ADDR_CHRGOPT0, databuf, 2))
     	return 1;
 
     // Disable low-power mode to ChargeOption0
     databuf[1] &= ~(1 << CHRGOPT0_EN_LWPWR);  
 
-    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT0, databuf, 2))
+    if(bq25730_i2c_write_registers(ADDR_CHRGOPT0, databuf, 2))
     	return 2;
 
     return 0;
@@ -130,7 +130,7 @@ uchar bq25730_set_watchdog(bq25730_config_t *cfg)
     uint8_t databuf;
 
     // Read current value of ChargeOption0 (2nd byte)
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT0+1, &databuf, 1))
+    if(bq25730_i2c_read_registers(ADDR_CHRGOPT0+1, &databuf, 1))
     	return 1;
 
     //printf("wd: %x \r\n", databuf);
@@ -140,11 +140,11 @@ uchar bq25730_set_watchdog(bq25730_config_t *cfg)
 
     //printf("wd: %x \r\n", databuf);
 
-    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT0+1, &databuf, 1))
+    if(bq25730_i2c_write_registers(ADDR_CHRGOPT0+1, &databuf, 1))
     	return 2;
 
     // Read current value of ChargeOption0 (2nd byte)
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT0+1, &databuf, 1))
+    if(bq25730_i2c_read_registers(ADDR_CHRGOPT0+1, &databuf, 1))
     	return 1;
 
     //printf("wd: %x \r\n", databuf);
@@ -159,7 +159,7 @@ uchar bq25730_adc_enable_all(bq25730_config_t *cfg)
     // Enable ADC for all inputs
     databuf = databuf | 0xFF; 
 
-    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_ADCOPT, &databuf, 1))
+    if(bq25730_i2c_write_registers(ADDR_ADCOPT, &databuf, 1))
     	return 1;
 
     return 0;
@@ -170,7 +170,7 @@ uchar bq25730_adc_setmode(bq25730_config_t *cfg)
     uint8_t databuf;
 
     // Read current ADCOPT (2nd byte)
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCOPT+1, &databuf, 1))
+    if(bq25730_i2c_read_registers(ADDR_ADCOPT+1, &databuf, 1))
     	return 1;
 
     if (cfg->adc_mode == ADC_CONV_ONESHOT) {
@@ -181,7 +181,7 @@ uchar bq25730_adc_setmode(bq25730_config_t *cfg)
     }
 
     // Set ADC conversion mode
-    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_ADCOPT+1, &databuf, 1))
+    if(bq25730_i2c_write_registers(ADDR_ADCOPT+1, &databuf, 1))
     	return 2;
 
     return 0;
@@ -192,12 +192,12 @@ void bq25730_adc_start_conversion(bq25730_config_t *cfg)
     uint8_t databuf;
 
     // Read current ADCOPT (2nd byte)
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCOPT+1, &databuf, 1);
+    bq25730_i2c_read_registers(ADDR_ADCOPT+1, &databuf, 1);
 
     // Set start ADC flag
     databuf |= (1 << ADCOPT_ADC_START);
 
-    bq25730_i2c_write_registers(cfg->dev_addr, ADDR_ADCOPT+1, &databuf, 1);
+    bq25730_i2c_write_registers(ADDR_ADCOPT+1, &databuf, 1);
 }
 
 ulong bq25730_read_vbus(bq25730_config_t *cfg)
@@ -205,7 +205,7 @@ ulong bq25730_read_vbus(bq25730_config_t *cfg)
     uint8_t databuf;
 
     // Read current ADCVBUS
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCVBUS, &databuf, 1))
+    if(bq25730_i2c_read_registers(ADDR_ADCVBUS, &databuf, 1))
     	return 0;
 
     //return (float)(VBUS_LSB * databuf);
@@ -217,7 +217,7 @@ ulong bq25730_read_vsys(bq25730_config_t *cfg)
     uint8_t databuf;
 
     // Read current ADCVBUS
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCVSYS, &databuf, 1))
+    if(bq25730_i2c_read_registers(ADDR_ADCVSYS, &databuf, 1))
     	return 0;
 
     //return (float)(VSYS_LSB * databuf) + VSYS_OFFSET;
@@ -229,7 +229,7 @@ ulong bq25730_read_vbat(bq25730_config_t *cfg)
     uint8_t databuf;
 
     // Read current ADCVBUS
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCVBAT, &databuf, 1))
+    if(bq25730_i2c_read_registers(ADDR_ADCVBAT, &databuf, 1))
     	return 0;
 
     //return (float)(VBAT_LSB * databuf) + VBAT_OFFSET;
@@ -241,7 +241,7 @@ float bq25730_read_vsysmin(bq25730_config_t *cfg)
     uint8_t databuf;
 
     // Read current ADCVBUS
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_VSYSMIN, &databuf, 1);
+    bq25730_i2c_read_registers(ADDR_VSYSMIN, &databuf, 1);
 
     return (float)(VSYSMIN_LSB * databuf);
 }
@@ -251,7 +251,7 @@ bool bq25730_set_vsysmin(bq25730_config_t *cfg, ulong vsys_min_mV)
     uint8_t databuf;
 
 	#if 0
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_VSYSMIN, &databuf, 1))
+    if(bq25730_i2c_read_registers(ADDR_VSYSMIN, &databuf, 1))
     	return false;
 
     printf("vsysmin read: %02x \r\n", databuf);
@@ -265,7 +265,7 @@ bool bq25730_set_vsysmin(bq25730_config_t *cfg, ulong vsys_min_mV)
 
     //printf("vsysmin set: 0x%x(%dmV) \r\n", databuf, (int)vsys_min_mV);
 
-    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_VSYSMIN, &databuf, 1))
+    if(bq25730_i2c_write_registers(ADDR_VSYSMIN, &databuf, 1))
     	return false;
 
     return true;
@@ -283,7 +283,7 @@ bool bq25730_set_rsense(bq25730_config_t *cfg)
     //}
 
     // Read current value of ChargeOption1 (2nd byte)
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1);
+    bq25730_i2c_read_registers(ADDR_CHRGOPT1+1, &databuf, 1);
 
     printf("chg opt read: %02x \r\n", databuf);
 
@@ -294,9 +294,9 @@ bool bq25730_set_rsense(bq25730_config_t *cfg)
 
     printf("chg opt modf: %02x \r\n", databuf);
 
-    bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1);
+    bq25730_i2c_write_registers(ADDR_CHRGOPT1+1, &databuf, 1);
 
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1);
+    bq25730_i2c_read_registers(ADDR_CHRGOPT1+1, &databuf, 1);
 
     printf("chg opt read: %02x \r\n", databuf);
 
@@ -308,7 +308,7 @@ uchar bq25730_ibat_on(bq25730_config_t *cfg)
     uint8_t databuf;
 
     // Read current value of ChargeOption1 (2nd byte)
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1))
+    if(bq25730_i2c_read_registers(ADDR_CHRGOPT1+1, &databuf, 1))
     	return 1;
 
     //printf("chg opt read: %02x \r\n", databuf);
@@ -318,10 +318,10 @@ uchar bq25730_ibat_on(bq25730_config_t *cfg)
 
     //printf("chg opt modf: %02x \r\n", databuf);
 
-    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1))
+    if(bq25730_i2c_write_registers(ADDR_CHRGOPT1+1, &databuf, 1))
     	return 2;
 
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1))
+    if(bq25730_i2c_read_registers(ADDR_CHRGOPT1+1, &databuf, 1))
     	return 1;
 
     //printf("chg opt read: %02x \r\n", databuf);
@@ -334,7 +334,7 @@ uchar bq25730_toggle_ptm(bq25730_config_t *cfg, uchar ptm_on)
     uint8_t databuf[2];
 
     // Read current value of ChargeOption1 (1st byte)
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1, databuf, 2))
+    if(bq25730_i2c_read_registers(ADDR_CHRGOPT1, databuf, 2))
     	return 1;
 
     printf("chg opt read: %02x%02x \r\n", databuf[0], databuf[1]);
@@ -347,10 +347,10 @@ uchar bq25730_toggle_ptm(bq25730_config_t *cfg, uchar ptm_on)
 
     printf("chg opt modf: %02x%02x \r\n", databuf[0], databuf[1]);
 
-    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT1, databuf, 2))
+    if(bq25730_i2c_write_registers(ADDR_CHRGOPT1, databuf, 2))
     	return 2;
 
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1, databuf, 2))
+    if(bq25730_i2c_read_registers(ADDR_CHRGOPT1, databuf, 2))
     	return 1;
 
     printf("chg opt read: %02x%02x \r\n", databuf[0], databuf[1]);
@@ -363,12 +363,12 @@ void bq25730_ibat_off(bq25730_config_t *cfg)
     uint8_t databuf;
 
     // Read current value of ChargeOption1 (2nd byte)
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1);
+    bq25730_i2c_read_registers(ADDR_CHRGOPT1+1, &databuf, 1);
 
     // Enable IBAT at ChargeOption1
     databuf &= ~(1 << CHRGOPT1_EN_IBAT);  
 
-    bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGOPT1+1, &databuf, 1);
+    bq25730_i2c_write_registers(ADDR_CHRGOPT1+1, &databuf, 1);
 }
 
 void bq25730_read_chg_stat(bq25730_config_t *cfg)
@@ -376,7 +376,7 @@ void bq25730_read_chg_stat(bq25730_config_t *cfg)
     uint8_t databuf[2];
 
     // Read status bits
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRG_STAT, databuf, 2);
+    bq25730_i2c_read_registers(ADDR_CHRG_STAT, databuf, 2);
 
     printf("stat: %02x %02x \r\n", databuf[0], databuf[1]);
 }
@@ -388,7 +388,7 @@ void bq25730_read_ibat(bq25730_config_t *cfg, float *ibat_charge, float *ibat_di
     //float lsb_discharge;
 
     // Read charging & discharging current of ADCIBAT 
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCIDCHG, databuf, 2);
+    bq25730_i2c_read_registers(ADDR_ADCIDCHG, databuf, 2);
 
     //if(cfg->rsr == RSNS_10MOHM){
      //   lsb_charge = ICHG_10MOHM_LSB;
@@ -410,7 +410,7 @@ float bq25730_read_iin(bq25730_config_t *cfg)
     uint8_t databuf;
 
     // Read current ADCVBUS
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_ADCIIN, &databuf, 1);
+    bq25730_i2c_read_registers(ADDR_ADCIIN, &databuf, 1);
 
     printf("in %dmA\r\n", databuf*100);
 
@@ -443,14 +443,13 @@ bool bq25730_set_icharge(bq25730_config_t *cfg, ulong ch_cur_mA)
     databuf[0] = (uint8_t)ch_cur_mA;
     databuf[1] = (uint8_t)(ch_cur_mA >> 8);
 
-    printf("icharge set: 0x%02x%02x(%dmA) \r\n", databuf[1], databuf[0], (int)ch_cur_mA);
+    //printf("icharge set: 0x%02x%02x(%dmA) \r\n", databuf[1], databuf[0], (int)ch_cur_mA);
 
-    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGCURR, databuf, 2))
+    if(bq25730_i2c_write_registers(ADDR_CHRGCURR, databuf, 2))
     	return false;
 
-    bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGCURR, databuf, 2);
-
-    printf("icharge read: 0x%02x%02x \r\n", databuf[1], databuf[0]);
+    //bq25730_i2c_read_registers(ADDR_CHRGCURR, databuf, 2);
+    //printf("icharge read: 0x%02x%02x \r\n", databuf[1], databuf[0]);
 
     return true;
 }
@@ -476,11 +475,11 @@ bool bq25730_set_vcharge(bq25730_config_t *cfg, ulong ch_v_mV)
 
     //printf("vcharge set: 0x%02x%02x(%dmV) \r\n", databuf[0], databuf[1], (int)ch_v_mV);
 
-    if(bq25730_i2c_write_registers(cfg->dev_addr, ADDR_CHRGVOLT, databuf, 2))
+    if(bq25730_i2c_write_registers(ADDR_CHRGVOLT, databuf, 2))
     	return false;
 
 	#if 0
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHRGVOLT, databuf, 2))
+    if(bq25730_i2c_read_registers(ADDR_CHRGVOLT, databuf, 2))
     	return false;
 
     printf("vcharge read: %02x %02x \r\n", databuf[0], databuf[1]);
@@ -494,11 +493,11 @@ uchar bq25730_read_chip_id(bq25730_config_t *cfg)
     uint8_t databuf[2];
 
     // Read manuf id
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_MANUF_ID, databuf, 1))
+    if(bq25730_i2c_read_registers(ADDR_MANUF_ID, databuf, 1))
     	return 1;
 
     // Read chip id
-    if(bq25730_i2c_read_registers(cfg->dev_addr, ADDR_CHIP_ID, databuf + 1, 1))
+    if(bq25730_i2c_read_registers(ADDR_CHIP_ID, databuf + 1, 1))
     	return 2;
 
     //printf("cid: 0x%x%x\r\n", databuf[0], databuf[1]);

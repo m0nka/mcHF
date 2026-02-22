@@ -274,7 +274,6 @@ void bms_proc_handle_fan(void)
 void bms_proc_init_charger(void)
 {
 	// BQ25730 chip configuration
-	chip_cfg.dev_addr 		= (BQ25730_DEFAULT_ADDR<<1);
 	chip_cfg.adc_mode 		= ADC_CONV_CONT;
 	chip_cfg.watchdog_adj	= WDTMR_ADJ_DISABLE;
 	chip_cfg.rsr 			= RSNS_5MOHM;
@@ -379,8 +378,8 @@ static void bms_proc_worker(void const *param)
 			bmss.run_on_dc = 0;
 
 		bq25730_read_chg_stat(&chip_cfg);
-		bq25730_read_ibat(&chip_cfg, NULL, NULL);
-		bq25730_read_iin(&chip_cfg);
+		//bq25730_read_ibat(&chip_cfg, NULL, NULL);
+		//bq25730_read_iin(&chip_cfg);
 	}
 
 	// Do we need a fan ?

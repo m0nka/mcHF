@@ -10,7 +10,7 @@
 
 #define VCHARGE_TARGET  		21000
 #define VSYSMIN_TARGET  		15400
-#define ICHRG_TARGET    		900
+#define ICHRG_TARGET    		1500
 
 #define BQ25730_DEFAULT_ADDR 	0x6B
 #define ADDR_CHRGOPT0   		0x00
@@ -77,7 +77,6 @@
 
 typedef struct
 {
-    uint8_t dev_addr;
     uint8_t adc_mode;
     uint8_t watchdog_adj;
     uint8_t rsr;
