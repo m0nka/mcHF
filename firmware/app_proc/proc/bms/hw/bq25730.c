@@ -75,8 +75,9 @@ uchar bq25730_init(bq25730_config_t *cfg)
     if(!bq25730_set_icharge(cfg, ICHRG_TARGET))
     	return 10;
 
-    //if(!bq25730_set_rsense(cfg))
-    //	return 11;
+    // Default 5mOhm, but send anyway
+    if(!bq25730_set_rsense(cfg))
+    	return 11;
 
     // Enable pass through mode
     //if(bq25730_toggle_ptm(cfg, 1))
@@ -85,10 +86,10 @@ uchar bq25730_init(bq25730_config_t *cfg)
     // Read charger status on start
     //bq25730_read_chg_stat(cfg);
 
-    printf("vbat: %dmV \r\n", (int)bq25730_read_vbat(cfg));
-    printf("vbus: %dmV \r\n", (int)bq25730_read_vbus(cfg));
-    printf("vsys: %dmV \r\n", (int)bq25730_read_vsys(cfg));
-    bq25730_read_ibat(cfg, NULL, NULL);
+    //printf("vbat: %dmV \r\n", (int)bq25730_read_vbat(cfg));
+    //printf("vbus: %dmV \r\n", (int)bq25730_read_vbus(cfg));
+    //printf("vsys: %dmV \r\n", (int)bq25730_read_vsys(cfg));
+    //bq25730_read_ibat(cfg, NULL, NULL);
 
     //printf("charger in PTM mode \r\n");
     return 0;
@@ -289,20 +290,19 @@ bool bq25730_set_rsense(bq25730_config_t *cfg)
     // Read current value of ChargeOption1 (2nd byte)
     bq25730_i2c_read_registers(ADDR_CHRGOPT1+1, &databuf, 1);
 
-    printf("chg opt read: %02x \r\n", databuf);
+    //printf("chg opt read: %02x \r\n", databuf);
 
     // Set RNS_RSR and RSNS_RAC to RSNS_5MOHM or RSNS_10MOHM
     databuf &= ~((1 << CHRGOPT1_RSNS_RSR) | (1 << CHRGOPT1_RSNS_RAC));
     databuf |= (cfg->rsr << CHRGOPT1_RSNS_RSR);
     databuf |= (cfg->rac << CHRGOPT1_RSNS_RAC);
 
-    printf("chg opt modf: %02x \r\n", databuf);
+    //printf("chg opt modf: %02x \r\n", databuf);
 
     bq25730_i2c_write_registers(ADDR_CHRGOPT1+1, &databuf, 1);
 
-    bq25730_i2c_read_registers(ADDR_CHRGOPT1+1, &databuf, 1);
-
-    printf("chg opt read: %02x \r\n", databuf);
+    //bq25730_i2c_read_registers(ADDR_CHRGOPT1+1, &databuf, 1);
+    //printf("chg opt read: %02x \r\n", databuf);
 
     return true;
 }
@@ -452,24 +452,48 @@ ushort bq25730_read_iin(bq25730_config_t *cfg)
 //*----------------------------------------------------------------------------
 bool bq25730_set_icharge(bq25730_config_t *cfg, ulong ch_cur_mA)
 {
-    uint8_t databuf[2];
+    uchar 	databuf[2], rd_buff[2];
+    ushort 	word;
+    ushort	icharge_lsb, limit;
 
-    // Check range
-    if((cfg->rsr == RSNS_10MOHM)&&(ch_cur_mA > WORD_ICHRG_MAX))
-    	return false;
-    else if((cfg->rsr == RSNS_5MOHM)&&(ch_cur_mA > WORD_ICHRG_MAX*2))
+    // Set divider and limit
+    if(cfg->rsr == RSNS_10MOHM)
+    {
+    	icharge_lsb = ICHG_10MOHM_LSB;
+    	limit = WORD_ICHRG_MAX;
+    }
+    else if(cfg->rsr == RSNS_5MOHM)
+    {
+    	icharge_lsb = ICHG_5MOHM_LSB;
+    	limit = WORD_ICHRG_MAX*2;
+    }
+    else
     	return false;
 
-    databuf[0] = (uint8_t)ch_cur_mA;
-    databuf[1] = (uint8_t)(ch_cur_mA >> 8);
+    // Check limit
+    if(ch_cur_mA > limit)
+        return false;
+
+    // Convert to register bit format
+    word = (uint8_t)(ch_cur_mA / icharge_lsb) << 6;
+
+    databuf[0] = (uint8_t)word;
+    databuf[1] = (uint8_t)(word >> 8);
 
     //printf("icharge set: 0x%02x%02x(%dmA) \r\n", databuf[1], databuf[0], (int)ch_cur_mA);
 
     if(bq25730_i2c_write_registers(ADDR_CHRGCURR, databuf, 2))
     	return false;
 
-    //bq25730_i2c_read_registers(ADDR_CHRGCURR, databuf, 2);
-    //printf("icharge read: 0x%02x%02x \r\n", databuf[1], databuf[0]);
+    // Read back
+    if(bq25730_i2c_read_registers(ADDR_CHRGCURR, rd_buff, 2))
+    	return false;
+
+    //printf("icharge read: 0x%02x%02x \r\n", rd_buff[1], rd_buff[0]);
+
+    // Verify
+    if((databuf[1] != rd_buff[1])||(databuf[0] != rd_buff[0]))
+    	return false;
 
     return true;
 }
@@ -520,7 +544,7 @@ uchar bq25730_read_chip_id(bq25730_config_t *cfg)
     if(bq25730_i2c_read_registers(ADDR_CHIP_ID, databuf + 1, 1))
     	return 2;
 
-    printf("chid: 0x%x%x\r\n", databuf[0], databuf[1]);
+    //printf("chid: 0x%x%x\r\n", databuf[0], databuf[1]);
 
     // Correct identity ?
     if((databuf[0] != 0x40)||(databuf[1] != 0xD5))

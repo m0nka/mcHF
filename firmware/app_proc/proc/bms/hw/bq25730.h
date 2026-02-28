@@ -10,7 +10,7 @@
 
 #define VCHARGE_TARGET  		21000
 #define VSYSMIN_TARGET  		15400
-#define ICHRG_TARGET    		1500
+#define ICHRG_TARGET    		600
 
 #define BQ25730_DEFAULT_ADDR 	0x6B
 #define ADDR_CHRGOPT0   		0x00
@@ -59,8 +59,8 @@
 #define VBAT_OFFSET 			(float)2.88
 #define VBAT_OFFSET_5S 			8160
 #define VSYSMIN_LSB 			100
-#define ICHG_10MOHM_LSB 		(float)0.064
-#define ICHG_5MOHM_LSB 			(float)0.128
+#define ICHG_10MOHM_LSB 		64
+#define ICHG_5MOHM_LSB 			128
 #define IDCHG_10MOHM_LSB 		(float)0.256
 #define IDCHG_5MOHM_LSB 		(float)0.512
 #define IIN_10MOHM_LSB 			(float)0.05

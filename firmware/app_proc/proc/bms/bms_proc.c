@@ -287,7 +287,14 @@ void bms_proc_init_charger(void)
 
 void bms_proc_charger_handler(void)
 {
+	static uchar skip_on_start = 0;
 	ushort stat, chv, dcv, curr, vsys, vbat, vbus;
+
+	if(skip_on_start < 20)
+	{
+		skip_on_start++;
+		return;
+	}
 
 	stat = bq25730_read_chg_stat(&chip_cfg);
 	curr = bq25730_read_iin(&chip_cfg);
@@ -297,7 +304,7 @@ void bms_proc_charger_handler(void)
 
 	bq25730_read_ibat(&chip_cfg, &chv, &dcv);
 
-	printf("stat: %04x %d %d %d %d %d %d \r\n", stat, chv, dcv, curr, vsys, vbat, vbus);
+	printf("[%04x] vsys:%d vbat:%d vbus:%d ch:%d dc:%d cr:%d \r\n", stat, vsys, vbat, vbus, chv, dcv, curr);
 }
 
 //*----------------------------------------------------------------------------
