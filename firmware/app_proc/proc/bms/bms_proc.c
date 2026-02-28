@@ -285,6 +285,21 @@ void bms_proc_init_charger(void)
 		printf("charger init err: %d \r\n", res);
 }
 
+void bms_proc_charger_handler(void)
+{
+	ushort stat, chv, dcv, curr, vsys, vbat, vbus;
+
+	stat = bq25730_read_chg_stat(&chip_cfg);
+	curr = bq25730_read_iin(&chip_cfg);
+	vsys = bq25730_read_vsys(&chip_cfg);
+	vbat = bq25730_read_vbat(&chip_cfg);
+	vbus = bq25730_read_vbus(&chip_cfg);
+
+	bq25730_read_ibat(&chip_cfg, &chv, &dcv);
+
+	printf("stat: %04x %d %d %d %d %d %d \r\n", stat, chv, dcv, curr, vsys, vbat, vbus);
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : bms_proc_worker
 //* Object              :
@@ -338,6 +353,9 @@ static void bms_proc_worker(void const *param)
 		}
 	}
 
+	// How often do we need to handle it ?
+	bms_proc_charger_handler();
+
 	// Handle power off
 	bms_proc_power_off();
 
@@ -376,10 +394,6 @@ static void bms_proc_worker(void const *param)
 			bmss.run_on_dc = 1;
 		else
 			bmss.run_on_dc = 0;
-
-		bq25730_read_chg_stat(&chip_cfg);
-		//bq25730_read_ibat(&chip_cfg, NULL, NULL);
-		//bq25730_read_iin(&chip_cfg);
 	}
 
 	// Do we need a fan ?
