@@ -32,6 +32,12 @@
 
 #define ID_BUTTON_SHUTDOWN		  	(GUI_ID_USER + 0x62)
 
+#define ID_BUTTON_IC1		  		(GUI_ID_USER + 0x63)
+#define ID_BUTTON_IC2		  		(GUI_ID_USER + 0x64)
+#define ID_BUTTON_IC3		  		(GUI_ID_USER + 0x65)
+#define ID_BUTTON_IC4		  		(GUI_ID_USER + 0x66)
+#define ID_BUTTON_IC5		  		(GUI_ID_USER + 0x67)
+
 #define SOPTS						SLIDER_CF_HORIZONTAL
 
 #define BATT_MAX_COLUMN				8

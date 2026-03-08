@@ -304,7 +304,7 @@ void bms_proc_charger_handler(void)
 
 	bq25730_read_ibat(&chip_cfg, &chv, &dcv);
 
-	printf("[%04x] vsys:%d vbat:%d vbus:%d ch:%d dc:%d cr:%d \r\n", stat, vsys, vbat, vbus, chv, dcv, curr);
+	//printf("[%04x] vsys:%d vbat:%d vbus:%d ch:%d dc:%d cr:%d \r\n", stat, vsys, vbat, vbus, chv, dcv, curr);
 }
 
 //*----------------------------------------------------------------------------

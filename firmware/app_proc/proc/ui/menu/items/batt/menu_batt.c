@@ -59,13 +59,32 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 	{ WINDOW_CreateIndirect,	"", 					ID_WINDOW_0,			0,    	0,		800,	430, 	0, 		0x64, 	0 },
 };
 
+static const GUI_WIDGET_CREATE_INFO _aDialogCreate0[] =
+{
+	// -----------------------------------------------------------------------------------------------------------------------------
+	//							name					id						x		y		xsize	ysize	?		?		?
+	// -----------------------------------------------------------------------------------------------------------------------------
+	// Self
+   	{ WINDOW_CreateIndirect,   	"", 			0,              0,   	0, 		TBL1X, 	430, 	FRAMEWIN_CF_MOVEABLE },
+	//
+	// Blocks
+	{ BUTTON_CreateIndirect, 	"USB-PD",	 	ID_BUTTON_IC1,	10, 	90, 	80, 	120, 	0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"Charger",	 	ID_BUTTON_IC2,	200, 	90, 	120, 	120, 	0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"BMS",		 	ID_BUTTON_IC3,	300, 	300, 	120, 	120, 	0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"Battery",		ID_BUTTON_IC4,	470, 	300, 	120, 	120, 	0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"System",		ID_BUTTON_IC5,	470, 	30, 	120, 	120, 	0, 		0x0, 	0 },
+	//
+	//
+	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT0,		10,		110,	125, 			30,  				0, 		0x0,	0 },
+};
+
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate1[] =
 {
 	// -----------------------------------------------------------------------------------------------------------------------------
 	//							name					id						x		y		xsize	ysize	?		?		?
 	// -----------------------------------------------------------------------------------------------------------------------------
 	// Self
- 	{ WINDOW_CreateIndirect,   	"", 		0,              	0,   	0, 		TBL1X, 	400, 		FRAMEWIN_CF_MOVEABLE 		  },
+ 	{ WINDOW_CreateIndirect,   	"", 		0,              	0,   	0, 		TBL1X, 	430, 		FRAMEWIN_CF_MOVEABLE 		  },
 	//
 	// Balancer state header
 	{ HEADER_CreateIndirect, 	"", 		ID_HEADER_0, 		10, 	10, 	710, 			25, 				0, 		0x0, 	0 },
@@ -90,7 +109,7 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate1[] =
 
 	{ BUTTON_CreateIndirect, 	"Shutdown",	ID_BUTTON_SHUTDOWN,	20, 	350, 	120, 			45, 				0, 		0x0, 	0 },
 };
-
+#if 0
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate2[] =
 {
 	// -----------------------------------------------------------------------------------------------------------------------------
@@ -106,7 +125,7 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate2[] =
 	{ RADIO_CreateIndirect, 	"", 		ID_RADIO_0, 		5, 		315, 	140, 	40, 		0, 			0x1002,			0 },
 	{ RADIO_CreateIndirect, 	"", 		ID_RADIO_1, 		160, 	315, 	140, 	40, 		0, 			0x1002,			0 },
 };
-
+#endif
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate3[] =
 {
 	// -----------------------------------------------------------------------------------------------------------------------------
@@ -119,7 +138,7 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate3[] =
 	{ BUTTON_CreateIndirect, 	"Power OFF",		 	ID_BUTTON_DSP_RESET,	40, 	120, 	120, 	45, 	0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"Kill Backup",	 		ID_BUTTON_EEP_RESET,	40, 	200, 	120, 	45, 	0, 		0x0, 	0 },
 };
-
+#if 0
 // Default ListView values
 static const char * _aTable_1[BATT_MAX_ROW][BATT_MAX_COLUMN + 1] = {
 
@@ -137,7 +156,7 @@ static const char * _aTable_1[BATT_MAX_ROW][BATT_MAX_COLUMN + 1] = {
 		{ "ch16", 	"Cell4 temp",	 	"", 	"", 	"",	 	"", 	"", 	"",  0 }
 
 };
-
+#endif
 WM_HWIN   			hBdialog;
 LISTWHEEL_Handle 	hMulti;
 WM_HTIMER 			hTimerBatt;
@@ -643,6 +662,61 @@ static void _cbSettingsControl(WM_MESSAGE * pMsg, int Id, int NCode)
 	}
 }
 
+static void _cbDialog0(WM_MESSAGE * pMsg)
+{
+	int 	Id, NCode;
+	WM_HWIN hDlg;
+	WM_HWIN 	hItem;
+
+	hDlg = pMsg->hWin;
+
+	switch (pMsg->MsgId)
+	{
+		case WM_INIT_DIALOG:
+		{
+			for(int i = 0; i < 5; i++)
+			{
+				hItem = WM_GetDialogItem(pMsg->hWin, ID_BUTTON_IC1 + i);
+				BUTTON_SetFont(hItem,&GUI_Font20B_1);
+			}
+
+			break;
+		}
+
+		case WM_PAINT:
+			//UpdateCalibrationFrame(hDlg);
+			break;
+
+		case WM_NOTIFY_PARENT:
+		{
+			Id    = WM_GetId(pMsg->hWinSrc);    /* Id of widget */
+			NCode = pMsg->Data.v;               /* Notification code */
+
+			//_cbSettingsControl(pMsg,Id,NCode);
+			break;
+		}
+
+		// Process key messages not supported by ICON_VIEW control
+		case WM_KEY:
+		{
+			switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
+			{
+		        // Return from menu
+		        case GUI_KEY_HOME:
+		        {
+		        	//printf("GUI_KEY_HOME\r\n");
+		        	GUI_EndDialog(pMsg->hWin, 0);
+		        	break;
+		        }
+			}
+			break;
+		}
+
+		default:
+			WM_DefaultProc(pMsg);
+			break;
+	}
+}
 
 //
 // Monitor Tab
@@ -791,6 +865,7 @@ static void _cbDialog1(WM_MESSAGE * pMsg)
 	}
 }
 
+#if 0
 //
 // Calibration Tab
 //
@@ -901,6 +976,7 @@ static void _cbDialog2(WM_MESSAGE * pMsg)
 			break;
 	}
 }
+#endif
 
 //
 // Settings Tab
@@ -974,14 +1050,17 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			#endif
 
 		    // Create dialog windows to add them as pages
+		    hDialog = GUI_CreateDialogBox(_aDialogCreate0, GUI_COUNTOF(_aDialogCreate0), _cbDialog0, WM_UNATTACHED, 0, 0);
+		    MULTIPAGE_AddPage(hMulti, hDialog, " Routing ");
+
 		    hDialog = GUI_CreateDialogBox(_aDialogCreate1, GUI_COUNTOF(_aDialogCreate1), _cbDialog1, WM_UNATTACHED, 0, 0);
-		    MULTIPAGE_AddPage(hMulti, hDialog, "Monitor");
+		    MULTIPAGE_AddPage(hMulti, hDialog, " BMS ");
 
 		    //hDialog = GUI_CreateDialogBox(_aDialogCreate2, GUI_COUNTOF(_aDialogCreate2), _cbDialog2, WM_UNATTACHED, 0, 0);
 		    //MULTIPAGE_AddPage(hMulti, hDialog, "Calibration");
 
 		    hDialog = GUI_CreateDialogBox(_aDialogCreate3, GUI_COUNTOF(_aDialogCreate3), _cbDialog3, WM_UNATTACHED, 0, 0);
-		    MULTIPAGE_AddPage(hMulti, hDialog, "Charger");
+		    MULTIPAGE_AddPage(hMulti, hDialog, " Charger ");
 
 		    // Set alignment of tabs
 		    MULTIPAGE_SetRotation(hMulti, MULTIPAGE_CF_ROTATE_CW);
