@@ -20,7 +20,7 @@
 #include "lora_radio.h"
 
 #ifdef MESHCORE
-#include "client.h"
+#include "mc_client.h"
 #endif
 
 #include "lora_proc.h"

@@ -10,8 +10,8 @@
 **  Last Modified:                                                                 **
 **  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
-#ifndef __CLIENT_H
-#define __CLIENT_H
+#ifndef __MC_CLIENT_H
+#define __MC_CLIENT_H
 
 // Full test of the library
 //#define MESHCORE_UNIT_TEST
