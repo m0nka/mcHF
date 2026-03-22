@@ -1,6 +1,8 @@
 #ifndef __CH224A_H
 #define __CH224A_H
 
-uchar ch224a_init(void);
+#define CH224A_I2C_ADDR			(0x22 << 1)
+
+uchar ch224a_detect(void);
 
 #endif

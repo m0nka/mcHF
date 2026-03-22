@@ -18,6 +18,7 @@
 #include "shared_i2c.h"
 #include "bq40z80.h"
 #include "bq25730.h"
+#include "ch224a.h"
 
 #include "bms_proc.h"
 
@@ -289,13 +290,14 @@ void bms_proc_charger_handler(void)
 {
 	static uchar skip_on_start = 0;
 
-	if(skip_on_start < 20)
+	if(skip_on_start < 10)
 	{
 		skip_on_start++;
 		return;
 	}
+	skip_on_start = 0;
 
-	#if 0
+	#if 1
 	ushort stat, chv, dcv, curr, vsys, vbat, vbus;
 	stat = bq25730_read_chg_stat(&chip_cfg);
 	curr = bq25730_read_iin(&chip_cfg);
@@ -303,7 +305,7 @@ void bms_proc_charger_handler(void)
 	vbat = bq25730_read_vbat(&chip_cfg);
 	vbus = bq25730_read_vbus(&chip_cfg);
 	bq25730_read_ibat(&chip_cfg, &chv, &dcv);
-	//printf("[%04x] vsys:%d vbat:%d vbus:%d ch:%d dc:%d cr:%d \r\n", stat, vsys, vbat, vbus, chv, dcv, curr);
+	printf("[%04x] vsys:%d vbat:%d vbus:%d ch:%d dc:%d cr:%d \r\n", stat, vsys, vbat, vbus, chv, dcv, curr);
 	#else
 	bq25730_read_chg_stat(&chip_cfg);
 	bq25730_read_iin(&chip_cfg);
@@ -367,7 +369,8 @@ static void bms_proc_worker(void const *param)
 	}
 
 	// How often do we need to handle it ?
-	bms_proc_charger_handler();
+	if(ch224a_detect() == 0)
+		bms_proc_charger_handler();
 
 	// Handle power off
 	bms_proc_power_off();
