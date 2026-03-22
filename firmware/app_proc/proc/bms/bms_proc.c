@@ -288,14 +288,14 @@ void bms_proc_init_charger(void)
 
 void bms_proc_charger_handler(void)
 {
-	static uchar skip_on_start = 0;
+	static uchar skip_on_print = 0;
 
-	if(skip_on_start < 10)
+	if(skip_on_print < 20)
 	{
-		skip_on_start++;
+		skip_on_print++;
 		return;
 	}
-	skip_on_start = 0;
+	skip_on_print = 0;
 
 	#if 1
 	ushort stat, chv, dcv, curr, vsys, vbat, vbus;
