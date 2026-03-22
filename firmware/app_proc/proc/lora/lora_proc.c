@@ -31,6 +31,9 @@ uchar			radio_init_done = 0;
 // FreeRTOS process state
 extern struct PROC_STATE 				ps;
 
+// UI driver public state
+extern struct	UI_DRIVER_STATE			ui_s;
+
 void lora_proc_busy_irq(void)
 {
 	//printf("busy\r\n");
@@ -107,6 +110,9 @@ static uchar lora_proc_send_msg(xQueueHandle pvQueueHandle, ulong *ulMessageBuff
 {
 	ulong ulDummy;
 	uchar ucCount;
+
+	if(ui_s.cur_state != MODE_DESKTOP)
+		return 55;
 
 	/* Clear Rx Queue before posting */
 	while( uxQueueMessagesWaiting(pvQueueHandle))
