@@ -200,10 +200,10 @@ static void _cbBkWindow(WM_MESSAGE* pMsg)
 static void _cbCallback(WM_MESSAGE * pMsg)
 {
 	WM_HWIN 			hDlg,hText,hList,hEdit;
-	SCROLLBAR_Handle 	hScrollV;
+	//SCROLLBAR_Handle 	hScrollV;
 	int     			NCode,Id;
 
-	GUI_PID_STATE * pState;
+	//GUI_PID_STATE * pState;
 	hDlg = pMsg->hWin;
 
 	switch (pMsg->MsgId)
@@ -222,7 +222,8 @@ static void _cbCallback(WM_MESSAGE * pMsg)
 			hList = WM_GetDialogItem(pMsg->hWin, ID_LISTBOX1);
 			LISTBOX_SetFont(hList, &GUI_Font8x16_1);								// use proportional font
 			LISTBOX_SetTextColor(hList,LISTBOX_CI_UNSEL,GUI_WHITE);
-			hScrollV = SCROLLBAR_CreateAttached(hList, SCROLLBAR_CF_VERTICAL);
+			//hScrollV =
+			SCROLLBAR_CreateAttached(hList, SCROLLBAR_CF_VERTICAL);
 			//
 			TEXT_SetText(	  hText, "  UTC   dB   DT Freq       Message       ");
 			//
@@ -248,7 +249,8 @@ static void _cbCallback(WM_MESSAGE * pMsg)
 			hList = WM_GetDialogItem(pMsg->hWin, ID_LISTBOX2);
 			LISTBOX_SetFont(hList, &GUI_Font8x16_1);								// use proportional font
 			LISTBOX_SetTextColor(hList,LISTBOX_CI_UNSEL,GUI_WHITE);
-			hScrollV = SCROLLBAR_CreateAttached(hList, SCROLLBAR_CF_VERTICAL);
+			//hScrollV =
+			SCROLLBAR_CreateAttached(hList, SCROLLBAR_CF_VERTICAL);
 			//
 			TEXT_SetText(	  hText, "  UTC   dB   DT Freq       Message       ");
 			//

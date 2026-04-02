@@ -1138,6 +1138,10 @@ ui_proc_loop:
 			{
 				ulong ulRxData[10];
 
+				// Only on main screen
+				if(ui_s.cur_state != MODE_DESKTOP)
+					break;
+
 				// Get notification data
 				if(ui_proc_wait_msg(*RxQueue, ulRxData) > 0)
 				{

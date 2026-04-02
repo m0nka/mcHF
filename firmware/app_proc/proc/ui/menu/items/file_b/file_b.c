@@ -290,7 +290,7 @@ static void file_b_load_app(char *chAppName,uchar ucIsScript)
 	// Check func result
 	if((ulData[1] & 0xFF) != 0x00)
 	{
-		printf("err exec: %d \r\n",ulData[1] & 0xFF);
+		printf("err exec: %d \r\n", (int)(ulData[1] & 0xFF));
 
 		//vTaskSuspendAll();
 		//s_sprintf(chCertPath,"Exec Err: %d",(uchar)(ulData[1] & 0xFF));

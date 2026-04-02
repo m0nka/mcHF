@@ -149,6 +149,7 @@ void keypad_proc_init(void)
 	NVIC_SetPriority(EXTI15_10_IRQn, 15);
 }
 
+#if 0
 //*----------------------------------------------------------------------------
 //* Function Name       : keypad_handle_multitap
 //* Object              :
@@ -175,6 +176,7 @@ static void keypad_handle_multitap(uchar max_ids)
 	if(ks.tap_id > max_ids) ks.tap_id = 0;
 #endif
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : keypad_cmd_processor

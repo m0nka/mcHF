@@ -104,7 +104,7 @@ EXTI_HandleTypeDef hsd_exti[SD_INSTANCES_NBR];
 /** @defgroup STM32H747I_DISCO_SD_Private_Variables Private Variables
   * @{
   */
-static uint32_t PinDetect[SD_INSTANCES_NBR]  = {SD_DET};
+//static uint32_t PinDetect[SD_INSTANCES_NBR]  = {SD_DET};
 
 #if (USE_HAL_SD_REGISTER_CALLBACKS == 1)
 /* Is Msp Callbacks registered   */
@@ -127,7 +127,7 @@ static void SD_RxCpltCallback(SD_HandleTypeDef *hsd);
 static void SD_DriveTransceiver_1_8V_Callback(FlagStatus status);
 #endif
 #endif /* (USE_HAL_SD_REGISTER_CALLBACKS == 1)   */
-static void SD_EXTI_Callback(void);
+//static void SD_EXTI_Callback(void);
 /**
   * @}
   */
@@ -824,6 +824,7 @@ static void SD_RxCpltCallback(SD_HandleTypeDef *hsd)
 }
 #endif
 
+#if 0
 /**
   * @brief  SD EXTI line detection callbacks.
   * @retval None
@@ -834,6 +835,7 @@ uint32_t sd_status = SD_PRESENT;
     BSP_SD_DetectCallback(0,sd_status);
 
 }
+#endif
 
 /**
   * @brief  Initializes the SD MSP.

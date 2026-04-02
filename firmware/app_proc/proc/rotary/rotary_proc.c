@@ -63,6 +63,7 @@ extern struct PROC_STATE 				ps;
 extern ulong s_met_pos;
 #endif
 
+#if 0
 static void rotary_init_side_encoder_switch_pin(void)
 {
 #if 0
@@ -75,7 +76,9 @@ static void rotary_init_side_encoder_switch_pin(void)
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 #endif
 }
+#endif
 
+#if 0
 static void rotary_check_side_encoder_switch(void)
 {
 #if 0
@@ -99,6 +102,7 @@ static void rotary_check_side_encoder_switch(void)
 	}
 #endif
 }
+#endif
 
 static void rotary_update_audio_publics(int pot_diff)
 {

@@ -77,6 +77,7 @@ WM_HTIMER 		hTimerTime;
 uint8_t 		DisableAutoRefresh = 0;
 CALENDAR_DATE  	hDate;
 
+#if 0
 static const GUI_POINT aPoints[3][4] = {
 
   // Hour Needle
@@ -96,7 +97,9 @@ static const GUI_POINT aPoints[3][4] = {
    { 1 * AA_FACTOR,-34 * AA_FACTOR},
    {0 * AA_FACTOR,-34 * AA_FACTOR}},
 };
+#endif
 
+#if 0
 static void DrawNeedle(uint32_t index, uint16_t x0, uint16_t y0) 
 {
   /* draw Needles */
@@ -111,7 +114,9 @@ static void DrawNeedle(uint32_t index, uint16_t x0, uint16_t y0)
     GUI_AA_FillPolygon(aPointsDest[index], 4, AA_FACTOR * x0, AA_FACTOR * y0);
   }
 }
+#endif
 
+#if 0
 static void GUI_UpdateClock(uint16_t x0, uint16_t y0, uint8_t hour, uint8_t min, uint8_t sec)
 {
   int8_t i = 0;
@@ -167,6 +172,7 @@ static void GUI_UpdateClock(uint16_t x0, uint16_t y0, uint8_t hour, uint8_t min,
 
   GUI_AA_DisableHiRes();
 }
+#endif
 
 static void _cbDialog(WM_MESSAGE * pMsg)
 {

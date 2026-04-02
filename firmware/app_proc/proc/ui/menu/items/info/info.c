@@ -148,7 +148,7 @@ static void about_print_fw_gui(WM_HWIN hItem)
 	ulong hal = HAL_GetHalVersion();
 
     memset(fw_id,0,sizeof(fw_id));
-    sprintf(p,"Misc: HAL v: %d.%d.%d, emWin v %s", (hal >> 24), (hal >> 16)&0xFF, (hal >> 8)&0xFF, GUI_GetVersionString());
+    sprintf(p,"Misc: HAL v: %d.%d.%d, emWin v %s", (int)(hal >> 24), (int)((hal >> 16)&0xFF), (int)((hal >> 8)&0xFF), GUI_GetVersionString());
 
     LISTBOX_AddString(hItem, fw_id);
 }
@@ -176,14 +176,14 @@ static void about_print_fw_cpu_id(WM_HWIN hItem)
 	sn3			= HAL_GetUIDw2();
 
     memset(fw_id,0,sizeof(fw_id));
-    sprintf(p,"CPUID: 0x%x(Rev: 0x%x), SN: %x-%x-%x",dev_id, chip_rev, sn1, sn2, sn3);
+    sprintf(p,"CPUID: 0x%x(Rev: 0x%x), SN: %x-%x-%x",(int)dev_id, (int)chip_rev, (int)sn1, (int)sn2, (int)sn3);
 
     LISTBOX_AddString(hItem, fw_id);
 }
 
 static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 {
-	WM_HWIN hItem;
+	//WM_HWIN hItem;
 
 	switch(Id)
 	{
@@ -411,7 +411,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 	//WM_HWIN 			hItem;
 	int 				Id, NCode;
 	WM_HWIN 			hList;
-	SCROLLBAR_Handle 	hScrollV;
+	//SCROLLBAR_Handle 	hScrollV;
 
 	switch (pMsg->MsgId)
 	{
@@ -420,7 +420,8 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			hList = WM_GetDialogItem(pMsg->hWin, ID_LISTBOX2);
 			LISTBOX_SetFont(hList, &GUI_Font24B_ASCII);
 			LISTBOX_SetTextColor(hList,LISTBOX_CI_UNSEL, GUI_DARKBLUE);
-			hScrollV = SCROLLBAR_CreateAttached(hList, SCROLLBAR_CF_VERTICAL);
+			//hScrollV =
+			SCROLLBAR_CreateAttached(hList, SCROLLBAR_CF_VERTICAL);
 			about_print_fw_auth(hList);
 
 			hList = WM_GetDialogItem(pMsg->hWin, ID_LISTBOX1);

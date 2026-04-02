@@ -94,9 +94,11 @@
                                      (((((Color & 0xFF00U) >> 8) >>2) & 0x3FU) << 5) |\
                                      (((((Color & 0xFF0000U) >> 16) >>3) & 0x1FU) << 11))
 
+#ifndef CONVERTRGB5652ARGB8888
 #define CONVERTRGB5652ARGB8888(Color)(((((((Color >> 11) & 0x1FU) * 527) + 23) >> 6) << 16) |\
                                      ((((((Color >> 5) & 0x3FU) * 259) + 33) >> 6) << 8) |\
                                      ((((Color & 0x1FU) * 527) + 23) >> 6) | 0xFF000000)
+#endif
 
 /**
   * @}

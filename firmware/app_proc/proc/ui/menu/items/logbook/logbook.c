@@ -124,7 +124,7 @@ static const char * _aTable_1[][11] = {
 
 static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 {
-	WM_HWIN hItem;
+	//WM_HWIN hItem;
 
 	switch(Id)
 	{

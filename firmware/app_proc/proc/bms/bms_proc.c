@@ -17,13 +17,19 @@
 
 #include "shared_i2c.h"
 #include "bq40z80.h"
+#include "bq25730.h"
+#include "ch224a.h"
 
 #include "bms_proc.h"
 
-struct BMSState	bmss;
+// Local state
+struct BMSState				bmss;
+
+// Charger chip state
+bq25730_config_t 			chip_cfg;
 
 // FreeRTOS process state
-extern struct PROC_STATE 			ps;
+extern struct PROC_STATE 	ps;
 
 // ToDo: reuse for PA temperature protection
 #if 0
@@ -266,6 +272,49 @@ void bms_proc_handle_fan(void)
 	}
 }
 
+void bms_proc_init_charger(void)
+{
+	// BQ25730 chip configuration
+	chip_cfg.adc_mode 		= ADC_CONV_CONT;
+	chip_cfg.watchdog_adj	= WDTMR_ADJ_DISABLE;
+	chip_cfg.rsr 			= RSNS_5MOHM;
+	chip_cfg.rac 			= RSNS_5MOHM;
+
+	// Init
+	uchar res = bq25730_init(&chip_cfg);
+	if(res)
+		printf("charger init err: %d \r\n", res);
+}
+
+void bms_proc_charger_handler(void)
+{
+	static uchar skip_on_print = 0;
+
+	if(skip_on_print < 20)
+	{
+		skip_on_print++;
+		return;
+	}
+	skip_on_print = 0;
+
+	#if 1
+	ushort stat, chv, dcv, curr, vsys, vbat, vbus;
+	stat = bq25730_read_chg_stat(&chip_cfg);
+	curr = bq25730_read_iin(&chip_cfg);
+	vsys = bq25730_read_vsys(&chip_cfg);
+	vbat = bq25730_read_vbat(&chip_cfg);
+	vbus = bq25730_read_vbus(&chip_cfg);
+	bq25730_read_ibat(&chip_cfg, &chv, &dcv);
+	printf("[%04x] vsys:%d vbat:%d vbus:%d ch:%d dc:%d cr:%d \r\n", stat, vsys, vbat, vbus, chv, dcv, curr);
+	#else
+	bq25730_read_chg_stat(&chip_cfg);
+	bq25730_read_iin(&chip_cfg);
+	bq25730_read_vsys(&chip_cfg);
+	bq25730_read_vbat(&chip_cfg);
+	bq25730_read_vbus(&chip_cfg);
+	#endif
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : bms_proc_worker
 //* Object              :
@@ -318,6 +367,10 @@ static void bms_proc_worker(void const *param)
 				break;
 		}
 	}
+
+	// How often do we need to handle it ?
+	if(ch224a_detect() == 0)
+		bms_proc_charger_handler();
 
 	// Handle power off
 	bms_proc_power_off();
@@ -388,6 +441,9 @@ void bms_proc_task(void const *arg)
 
 	// Detect BMS chip
 	bq40z80_init();
+
+	// Charger chip init
+	bms_proc_init_charger();
 
 bms_proc_loop:
 

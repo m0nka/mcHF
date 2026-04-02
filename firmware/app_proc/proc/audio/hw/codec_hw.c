@@ -92,7 +92,7 @@ extern struct 	TransceiverState 		ts;
 //#define SAMP_FREQ  					AUDIO_FREQUENCY_192K
 //
 // ------------------------------------------------------------------------------
-
+#if 0
 static void codec_hw_decode_register(uchar data, uchar id)
 {
 	switch(id)
@@ -237,7 +237,9 @@ static void codec_hw_decode_register(uchar data, uchar id)
 			break;
 	}
 }
+#endif
 
+#if 0
 static void codec_hw_show_registers(char *msg)
 {
 	uchar data[20];
@@ -257,6 +259,7 @@ static void codec_hw_show_registers(char *msg)
 		codec_hw_decode_register(data[i], i);
 	}
 }
+#endif
 
 static void codec_hw_update_register(uchar id, bool force, uchar value)
 {
@@ -573,9 +576,9 @@ void codec_hw_reset(void)
 // context audio proc
 void codec_task_init(void)
 {
-	uchar data[20];
+	//uchar data[20];
 	uchar val;
-	int i;
+	//int i;
 
 	// Read chip ID - always read first, otherwise comms fail next
 	if(shared_i2c_read_reg(0x98, CS4245_CHIP_ID, &val, 1) != 0)

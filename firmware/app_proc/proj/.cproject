@@ -300,8 +300,6 @@
 									<listOptionValue builtIn="false" value="../../proc/ui/ui_lib/keypad"/>
 									<listOptionValue builtIn="false" value="../../proc/ui/ui_lib"/>
 									<listOptionValue builtIn="false" value="../../proc/ui/ui_state"/>
-									<listOptionValue builtIn="false" value="../../proc/ipc"/>
-									<listOptionValue builtIn="false" value="../../proc/ipc/hw"/>
 									<listOptionValue builtIn="false" value="../../proc/rotary"/>
 									<listOptionValue builtIn="false" value="../../proc/bms"/>
 									<listOptionValue builtIn="false" value="../../proc/bms/hw"/>
@@ -324,6 +322,8 @@
 									<listOptionValue builtIn="false" value="../../proc/lora/protocols/meshcore/crypto"/>
 									<listOptionValue builtIn="false" value="../../proc/lora/protocols/meshcore/core/chat"/>
 									<listOptionValue builtIn="false" value="../../proc/lora/protocols/meshcore/core/payload"/>
+									<listOptionValue builtIn="false" value="../../proc/lora/protocols/meshtastic"/>
+									<listOptionValue builtIn="false" value="../../proc/lora/protocols/meshtastic/inc"/>
 									<listOptionValue builtIn="false" value="../../proc/dsp"/>
 									<listOptionValue builtIn="false" value="../../proc/sdcard"/>
 									<listOptionValue builtIn="false" value="../../proc/sdcard/fs"/>

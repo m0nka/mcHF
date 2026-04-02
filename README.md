@@ -10,7 +10,7 @@ The hardware is designed to be modular with mostly off the shelf components that
 
 Both, hardware and firmware is designed by combining the great work of many hams. Please feel free to make one yourself and contribute.
 
-[![mcHF](https://img.youtube.com/vi/kt2p1det-wE/0.jpg)](https://www.youtube.com/watch?v=kt2p1det-wE)
+[![mcHF](https://img.youtube.com/vi/7Q5eKNbZNY8/0.jpg)](https://www.youtube.com/watch?v=7Q5eKNbZNY8)
 
 # Features
 

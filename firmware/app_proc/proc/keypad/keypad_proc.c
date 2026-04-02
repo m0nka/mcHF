@@ -164,6 +164,7 @@ void keypad_proc_init(void)
 	ks.irq_id	= 0;
 }
 
+#if 0
 //*----------------------------------------------------------------------------
 //* Function Name       : keypad_handle_multitap
 //* Object              :
@@ -190,6 +191,7 @@ static void keypad_handle_multitap(uchar max_ids)
 	if(ks.tap_id > max_ids) ks.tap_id = 0;
 #endif
 }
+#endif
 
 //uchar bc_mode_toggle = 0;
 

@@ -47,6 +47,7 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 #define KE_CF						0x64
 #endif
 
+#if 0
 static const GUI_WIDGET_CREATE_INFO KeyerDialog[] =
 {
 	// -----------------------------------------------------------------------------------------------------------------------------
@@ -60,6 +61,7 @@ static const GUI_WIDGET_CREATE_INFO KeyerDialog[] =
 	{ BUTTON_CreateIndirect, 	"-",		ID_BUTTON_DAH,		0, 		0, 		104, 			   	122, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	".",		ID_BUTTON_DIT,		0, 		128, 	104, 			   	122, 				0, 		0x0, 	0 },
 };
+#endif
 
 //uchar	local_dah_press = 0;
 //uchar	local_dit_press = 0;
@@ -67,6 +69,7 @@ static const GUI_WIDGET_CREATE_INFO KeyerDialog[] =
 WM_HWIN 	hKeyerDialog = 0;
 //WM_HTIMER   hTimerKeyer;
 
+#if 0
 static void KEH_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 {
 	//HAL_GPIO_WritePin(GPIOG,GPIO_PIN_12, 0);		// doesn't work
@@ -120,7 +123,9 @@ static void KEH_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			break;
 	}
 }
+#endif
 
+#if 0
 static void KeyerHandler(WM_MESSAGE *pMsg)
 {
 	WM_HWIN hItem;
@@ -217,6 +222,7 @@ static void KeyerHandler(WM_MESSAGE *pMsg)
 			break;
 	}
 }
+#endif
 
 #if 0
 static void ui_controls_keyer_draw_top(uchar press)

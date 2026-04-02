@@ -802,9 +802,19 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/audio/hw/codec_hw.c</locationURI>
 		</link>
 		<link>
+			<name>proc/bms/hw/bq25730.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/bms/hw/bq25730.c</locationURI>
+		</link>
+		<link>
 			<name>proc/bms/hw/bq40z80.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/bms/hw/bq40z80.c</locationURI>
+		</link>
+		<link>
+			<name>proc/bms/hw/ch224a.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/bms/hw/ch224a.c</locationURI>
 		</link>
 		<link>
 			<name>proc/icc/hw/mbox_hsem.c</name>
@@ -957,9 +967,19 @@
 			<locationURI>copy_PARENT12345/STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/system/generic/generic_io.c</locationURI>
 		</link>
 		<link>
-			<name>proc/lora/protocols/meshcore/client.c</name>
+			<name>proc/lora/protocols/meshcore/mc_client.c</name>
 			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/client.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/mc_client.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshtastic/mt_client.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshtastic/mt_client.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshtastic/mt_unit_test.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshtastic/mt_unit_test.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/desktop/battery/ui_controls_battery.c</name>

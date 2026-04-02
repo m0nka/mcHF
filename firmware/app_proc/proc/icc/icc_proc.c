@@ -346,7 +346,7 @@ static uchar icc_proc_init_rpc(void)
 static ulong icc_proc_wake_second_core(void)
 {
 	int32_t timeout = 0xFFFF;
-	int 	i;
+	//int 	i;
 
 	#if 0
 	ulong  chk;
@@ -788,6 +788,8 @@ static uchar icc_proc_dsp_off(void)
 	printf("local RPC destroyed\r\n");
 
 	//CLEAR_BIT(RCC->GCR, RCC_BOOT_C2) ;
+
+	return 0;
 }
 
 #if 0

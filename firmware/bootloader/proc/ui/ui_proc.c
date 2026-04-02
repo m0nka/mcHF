@@ -47,6 +47,7 @@ extern uchar 	soc;
 extern short	pack_curr;
 extern ushort  	pack_volt;
 
+#if 0
 static void draw_atlas_circle(ushort c2x,ushort c2y, uchar dir)
 {
 	short factorX = -12;
@@ -68,7 +69,9 @@ static void draw_atlas_circle(ushort c2x,ushort c2y, uchar dir)
 	lcd_low_DrawCircle(c2x, 			c2y, 				18, 0xff3c8bc7);
 	lcd_low_FillCircle(c2x, 			c2y, 			 	 9, 0xffffce23);
 }
+#endif
 
+#if 0
 static void draw_atlas_ui(void)
 {
 	uchar i, j, k;
@@ -104,6 +107,7 @@ static void draw_atlas_ui(void)
 	lcd_low_SetTextColor(lcd_low_COLOR_WHITE);
 	lcd_low_DisplayStringAt(50, 160, (uint8_t *)"BOOTLOADER", LEFT_MODE);
 }
+#endif
 
 uchar bare_lcd_init(void)
 {

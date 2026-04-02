@@ -119,11 +119,11 @@ DMA2D_HandleTypeDef hlcd_dma2d;
 LTDC_HandleTypeDef  hltdc;
 BSP_LCD_Ctx_t       Lcd_Ctx[LCD_INSTANCES_NBR];
 
-static int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size);
+//static int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size);
 
-static void LTDC_MspInit(LTDC_HandleTypeDef *hltdc);
-static void DMA2D_MspInit(DMA2D_HandleTypeDef *hdma2d);
-static void DMA2D_MspDeInit(DMA2D_HandleTypeDef *hdma2d);
+//static void LTDC_MspInit(LTDC_HandleTypeDef *hltdc);
+//static void DMA2D_MspInit(DMA2D_HandleTypeDef *hdma2d);
+//static void DMA2D_MspDeInit(DMA2D_HandleTypeDef *hdma2d);
 static void LL_FillBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uint32_t ySize, uint32_t OffLine, uint32_t Color);
 static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDst, uint32_t xSize, uint32_t ColorMode);
 
@@ -186,10 +186,12 @@ void DMA2D_IRQHandler(void)
 }
 #endif
 
+#if 0
 static int32_t DSI_IO_Read(uint16_t Reg, uint8_t *pData, uint16_t Size)
 {
 	return HAL_DSI_Read(&hdsi, 0, pData, Size, DSI_DCS_SHORT_PKT_READ, Reg, pData);
 }
+#endif
 
 #if 0
 // Init DSI just to read ID
@@ -1488,6 +1490,7 @@ static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDs
   }
 }
 
+#if 0
 /*******************************************************************************
                        BSP Routines:
                                        LTDC
@@ -1514,7 +1517,9 @@ static void LTDC_MspInit(LTDC_HandleTypeDef *hltdc)
     __HAL_RCC_LTDC_RELEASE_RESET();
   }
 }
+#endif
 
+#if 0
 /**
   * @brief  Initialize the BSP DMA2D Msp.
   * @param  hdma2d  DMA2D handle
@@ -1534,7 +1539,9 @@ static void DMA2D_MspInit(DMA2D_HandleTypeDef *hdma2d)
     __HAL_RCC_DMA2D_RELEASE_RESET();
   }
 }
+#endif
 
+#if 0
 /**
   * @brief  De-Initializes the BSP DMA2D Msp
   * @param  hdma2d  DMA2D handle
@@ -1556,7 +1563,9 @@ static void DMA2D_MspDeInit(DMA2D_HandleTypeDef *hdma2d)
     __HAL_RCC_DMA2D_CLK_DISABLE();
   }
 }
+#endif
 
+#if 0
 /**
   * @brief  DCS or Generic short/long write command
   * @param  ChannelNbr Virtual channel ID
@@ -1586,3 +1595,4 @@ static int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, u
 
   return ret;
 }
+#endif

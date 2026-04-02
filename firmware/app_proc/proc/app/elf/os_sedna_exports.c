@@ -61,8 +61,9 @@ uchar SednaWaitMessage(void *pRxQueue,ulong *ulQueueBuffer)
 //*--------------------------------------------------------------------------------------
 void SednaClearTxQueue(void *pTxQueue)
 {
-	ulong ulDummy;
 #if 0
+	ulong ulDummy;
+
 	/* Clear Tx Queue before posting */
 	while( ucQueueMessagesWaiting( pTxQueue ) )
 	{
@@ -79,8 +80,9 @@ void SednaClearTxQueue(void *pTxQueue)
 //*--------------------------------------------------------------------------------------
 void SednaSendMessage(void *pTxQueue,ulong *ulQueueBuffer)
 {
-	ulong ulDummy;
 #if 0
+	ulong ulDummy;
+
 	SednaClearTxQueue( pTxQueue );
 					
 	/* Insert the function result */
@@ -103,6 +105,7 @@ void SednaSendMessage(void *pTxQueue,ulong *ulQueueBuffer)
 #endif
 }
 
+#if 0
 //*----------------------------------------------------------------------------
 //* Function Name       : ucSednaExportsSendQueuedMessageA
 //* Object              : Send message to queue
@@ -133,7 +136,9 @@ static uchar ucSednaExportsSendQueuedMessageA(xQueueHandle pvQueueHandle, ulong 
 #endif
 	return 0;				    
 }
+#endif
 
+#if 0
 //*--------------------------------------------------------------------------------------
 //* Function Name       : ucSednaExportsSednaWaitMessageA
 //* Object              : Read pending messages
@@ -155,7 +160,9 @@ static uchar ucSednaExportsSednaWaitMessageA(xQueueHandle pRxQueue,ulong *ulQueu
 #endif
 	return ucNext;
 }
+#endif
 
+#if 0
 /* For Application access copy */
 static void vSednaExportsMemCopyA(uchar *pDestBuffer, uchar *pSourceBuffer,uint nCpySize)
 {
@@ -167,7 +174,9 @@ ulong    i;
 	}
 
 }
+#endif
 
+#if 0
 /* For Application access copy */
 static void vSednaExportsMemSetA(uchar *pDestBuffer, uchar ucValue,uint nCpySize)
 {
@@ -178,6 +187,7 @@ ulong    i;
 		*pDestBuffer++ = ucValue;
 	}
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : LcdDrawA
@@ -942,19 +952,19 @@ const struct SEDNA_API_EXPORTS saeBlock[SEDNA_EXPORTS_API_COUNT + 1] =
  	//{(void *)WriteFileProxy },
  	//{(void *)CreateFileProxy},
  	//{(void *)RemoveFileProxy},
- 	{(void *)ucSednaExportsNullSub},/* Reserved */
- 	{(void *)ucSednaExportsNullSub},
- 	{(void *)ucSednaExportsNullSub},
+ 	//{(void *)ucSednaExportsNullSub},/* Reserved */
+ 	//{(void *)ucSednaExportsNullSub},
+ 	//{(void *)ucSednaExportsNullSub},
  	
  	/* Show BMP picture */
  	//{(void *)LcdShowBmp},
 
  	// Reserved for flashing
- 	{(void *)ucSednaExportsNullSub},
- 	{(void *)ucSednaExportsNullSub},
- 	{(void *)ucSednaExportsNullSub},
- 	{(void *)ucSednaExportsNullSub},
- 	{(void *)ucSednaExportsNullSub},
+ 	//{(void *)ucSednaExportsNullSub},
+ 	//{(void *)ucSednaExportsNullSub},
+ 	//{(void *)ucSednaExportsNullSub},
+ 	//{(void *)ucSednaExportsNullSub},
+ 	//{(void *)ucSednaExportsNullSub},
 
     0	
 };
