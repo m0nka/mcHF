@@ -21,6 +21,7 @@
 
 uchar ch224a_on_init = 0;
 
+#if 0
 static uchar ch224a_i2c_write_registers(uint8_t word_addr, uint8_t *data, uint8_t len)
 {
 	ulong err = shared_i2c_write_reg(CH224A_I2C_ADDR, word_addr, data, len);
@@ -32,6 +33,7 @@ static uchar ch224a_i2c_write_registers(uint8_t word_addr, uint8_t *data, uint8_
 
 	return 0;
 }
+#endif
 
 static uchar ch224a_i2c_read_registers(uint8_t word_addr, uint8_t *data, uint8_t len)
 {

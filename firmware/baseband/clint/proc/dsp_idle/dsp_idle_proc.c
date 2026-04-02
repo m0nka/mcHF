@@ -797,7 +797,7 @@ ushort ui_driver_get_buffer(uchar *buffer)
 		fft_mon_skip++;
 		if(fft_mon_skip > 120)
 		{
-			print_hex_array(buffer + 400, 8);
+			//print_hex_array(buffer + 400, 8);
 
 			// Extra data
 			printf("cdc: 0x%x, twt: %d, sf: %d, dbs: 0x%x, dof: 0x%x, agr: 0x%x\r\n", 	(ulong)ads.codec_gain_calc,

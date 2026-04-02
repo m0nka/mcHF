@@ -300,8 +300,6 @@
 									<listOptionValue builtIn="false" value="../../proc/ui/ui_lib/keypad"/>
 									<listOptionValue builtIn="false" value="../../proc/ui/ui_lib"/>
 									<listOptionValue builtIn="false" value="../../proc/ui/ui_state"/>
-									<listOptionValue builtIn="false" value="../../proc/ipc"/>
-									<listOptionValue builtIn="false" value="../../proc/ipc/hw"/>
 									<listOptionValue builtIn="false" value="../../proc/rotary"/>
 									<listOptionValue builtIn="false" value="../../proc/bms"/>
 									<listOptionValue builtIn="false" value="../../proc/bms/hw"/>

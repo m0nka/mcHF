@@ -93,6 +93,7 @@ ulong    i;
 
 }
 
+#if 0
 //*----------------------------------------------------------------------------
 //* Function Name       : os_apploader_memset
 //* Object              : Set buffer
@@ -108,8 +109,8 @@ ulong    i;
 	{
 		*pDestBuffer++ = ucValue;
 	}
-
 }
+#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : os_apploader_send_msg
@@ -229,7 +230,7 @@ static void os_apploader_cleanup_msg(xTaskHandle xCAppHandle)
 //*----------------------------------------------------------------------------
 static uchar os_apploader_unload(xTaskHandle xRunningTask,char *cAppName)
 {
-	ulong ulTask;
+	//ulong ulTask;
 	uchar i;
 
 	// ToDo: Test if user is trying to close kernel task ...
@@ -237,13 +238,13 @@ static uchar os_apploader_unload(xTaskHandle xRunningTask,char *cAppName)
 
 	/* Check app name against running tasks list */
 //!	ulTask = ucSearchTaskList(cAppName);
-	if(ulTask == 0)
-	  return SEDNA_APP_NOT_RUNNING;
+//!	if(ulTask == 0)
+//!	  return SEDNA_APP_NOT_RUNNING;
 
 	/* Check if returned handle for a found task is
 	   matching the requested one */
-	if(ulTask != (ulong)xRunningTask)
-	  return SEDNA_APP_HANDLE_MISMATCH;
+//!	if(ulTask != (ulong)xRunningTask)
+//!	  return SEDNA_APP_HANDLE_MISMATCH;
 
 	/* Enumerate all app struct entries and find the one we want to delete */
   	for(i = 0, pxAppLoaderAppParameters = pxAppLoaderAppParametersArr; i < SEDNA_MAXIMUM_APPLICATIONS; i++)
@@ -605,10 +606,10 @@ void os_apploader_task(void *pvParameters)
 	uchar						ucApplicationMessagesExpected = 0;
 
 	/* The queues being used are passed in as the parameters struct. */
-	pxAppLdrParameters = (APPLOADER_APP_PARAMETERS *)pvParameters;
+	pxAppLdrParameters = (APPLOADER_QUEUE_PARAMETERS *)pvParameters;
 
     /* Copy to public, needed by some application API's instead of the Service Task loop */
-    pxAppLdrParametersPub = pxAppLdrParameters;
+    pxAppLdrParametersPub = (APPLOADER_APP_PARAMETERS *)pxAppLdrParameters;
 
 	vTaskDelay(APP_PROC_START_DELAY);
 	printf("start\r\n");

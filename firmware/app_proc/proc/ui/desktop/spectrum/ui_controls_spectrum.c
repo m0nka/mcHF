@@ -782,6 +782,7 @@ void ui_controls_update_span(void)
 	ui_controls_create_bottom_bar();
 }
 
+#if 0
 static void ui_spectrum_create_span(void)
 {
 	GUI_SetColor(GUI_WHITE);
@@ -790,6 +791,7 @@ static void ui_spectrum_create_span(void)
 	sprintf(buf, "SPAN %dkHz", (int)(tsu.band[tsu.curr_band].span/1000));
 	GUI_DispStringAt(buf,(SPAN_X + 55),(SPAN_Y + 0));
 }
+#endif
 
 static void ui_controls_create_header_big(void)
 {

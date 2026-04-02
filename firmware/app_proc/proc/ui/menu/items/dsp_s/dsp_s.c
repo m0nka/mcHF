@@ -396,7 +396,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 				case WM_NOTIFICATION_VALUE_CHANGED:
 				{
 					hItem = WM_GetDialogItem(pMsg->hWin, ID_SPINBOX_0);
-					printf("sp0 value=%d\r\n",SPINBOX_GetValue(hItem));
+					printf("sp0 value=%d\r\n", (int)SPINBOX_GetValue(hItem));
 					break;
 				}
 				default:
@@ -418,7 +418,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 				case WM_NOTIFICATION_VALUE_CHANGED:
 				{
 					hItem = WM_GetDialogItem(pMsg->hWin, ID_SPINBOX_1);
-					printf("sp1 value=%d\r\n",SPINBOX_GetValue(hItem));
+					printf("sp1 value=%d\r\n", (int)SPINBOX_GetValue(hItem));
 					break;
 				}
 				default:
@@ -440,7 +440,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 				case WM_NOTIFICATION_VALUE_CHANGED:
 				{
 					hItem = WM_GetDialogItem(pMsg->hWin, ID_SPINBOX_2);
-					printf("sp2 value=%d\r\n",SPINBOX_GetValue(hItem));
+					printf("sp2 value=%d\r\n", (int)SPINBOX_GetValue(hItem));
 					break;
 				}
 				default:
@@ -462,7 +462,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 				case WM_NOTIFICATION_VALUE_CHANGED:
 				{
 					hItem = WM_GetDialogItem(pMsg->hWin, ID_SPINBOX_3);
-					printf("sp3 value=%d\r\n",SPINBOX_GetValue(hItem));
+					printf("sp3 value=%d\r\n", (int)SPINBOX_GetValue(hItem));
 					break;
 				}
 				default:
@@ -565,7 +565,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 {
 	WM_HWIN 			hItem;
 	int 				Id, NCode;
-	SCROLLBAR_Handle 	hScrollV;
+	//SCROLLBAR_Handle 	hScrollV;
 
 	switch (pMsg->MsgId)
 	{
@@ -674,7 +674,8 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			LISTBOX_SetFont(hItem, &GUI_Font32_1);
 			LISTBOX_SetTextColor(hItem,LISTBOX_CI_UNSEL,GUI_LIGHTBLUE);
 			settings1_list_add_items(hItem);
-			hScrollV = SCROLLBAR_CreateAttached(hItem, SCROLLBAR_CF_VERTICAL);
+			//hScrollV =
+			SCROLLBAR_CreateAttached(hItem, SCROLLBAR_CF_VERTICAL);
 			//--SCROLLBAR_SetColor(hScrollV,SCROLLBAR_CI_THUMB|SCROLLBAR_CI_SHAFT|SCROLLBAR_CI_ARROW,GUI_RED);
 			// Init Listbox
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_LIST_1);
@@ -686,7 +687,8 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			LISTBOX_SetFont(hItem, &GUI_Font32_1);
 			LISTBOX_SetTextColor(hItem,LISTBOX_CI_UNSEL,GUI_LIGHTBLUE);
 			settings1_list_add_items(hItem);
-			hScrollV = SCROLLBAR_CreateAttached(hItem, SCROLLBAR_CF_VERTICAL);
+			//hScrollV =
+			SCROLLBAR_CreateAttached(hItem, SCROLLBAR_CF_VERTICAL);
 			//--SCROLLBAR_SetColor(hScrollV,SCROLLBAR_CI_THUMB|SCROLLBAR_CI_SHAFT|SCROLLBAR_CI_ARROW,GUI_RED);
 			// Init Listbox
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_LIST_2);
@@ -700,7 +702,8 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			LISTBOX_AddString(hItem, "OFF");
 			LISTBOX_AddString(hItem, "1750Hz");
 			LISTBOX_AddString(hItem, "2135Hz");
-			hScrollV = SCROLLBAR_CreateAttached(hItem, SCROLLBAR_CF_VERTICAL);
+			//hScrollV =
+			SCROLLBAR_CreateAttached(hItem, SCROLLBAR_CF_VERTICAL);
 			//--SCROLLBAR_SetColor(hScrollV,SCROLLBAR_CI_THUMB|SCROLLBAR_CI_SHAFT|SCROLLBAR_CI_ARROW,GUI_RED);
 			// Init Listbox
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_LIST_3);
@@ -716,7 +719,8 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			LISTBOX_AddString(hItem, "-6kHz");
 			LISTBOX_AddString(hItem, "+12kHz");
 			LISTBOX_AddString(hItem, "-12kHz");
-			hScrollV = SCROLLBAR_CreateAttached(hItem, SCROLLBAR_CF_VERTICAL);
+			//hScrollV =
+			SCROLLBAR_CreateAttached(hItem, SCROLLBAR_CF_VERTICAL);
 			//--SCROLLBAR_SetColor(hScrollV,SCROLLBAR_CI_THUMB|SCROLLBAR_CI_SHAFT|SCROLLBAR_CI_ARROW,GUI_RED);
 
 			// Initialization of 'Radio'

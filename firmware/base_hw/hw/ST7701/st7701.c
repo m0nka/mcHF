@@ -134,6 +134,7 @@ int32_t ST7701_SetPixel(OTM8009A_Object_t *pObj, uint32_t Xpos, uint32_t Ypos, u
   return 0;
 }
 
+#if 0
 static int32_t ST7701_ReadRegWrap(void *Handle, uint16_t Reg, uint8_t* pData, uint16_t Length)
 {
 	//printf("ST7701_ReadRegWrap\r\n");
@@ -145,12 +146,15 @@ static int32_t ST7701_WriteRegWrap(void *Handle, uint16_t Reg, uint8_t *pData, u
 	//printf("ST7701_WriteRegWrap\r\n");
   return 0;
 }
+#endif
 
+#if 0
 static int32_t ST7701_IO_Delay(OTM8009A_Object_t *pObj, uint32_t Delay)
 {
 	//printf("ST7701_IO_Delay\r\n");
   return 0;
 }
+#endif
 
 OTM8009A_LCD_Drv_t   ST7701_LCD_Driver =
 {
@@ -262,6 +266,7 @@ void mipi_write_long(uchar cmd, const uchar * data, ushort size)
 	#endif
 }
 
+#if 0
 static void mipi_exit_sleep(void)
 {
 	mipi_write_short(MIPI_DCS_EXIT_SLEEP_MODE, 0);
@@ -269,6 +274,7 @@ static void mipi_exit_sleep(void)
 	// After sleep delay	-	 ToDo: check if kernel running, if yes, use OS delay!
 	HAL_Delay(120);
 }
+#endif
 
 ulong mipi_get_type(void)
 {

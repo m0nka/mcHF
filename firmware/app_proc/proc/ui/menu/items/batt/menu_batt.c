@@ -348,6 +348,7 @@ static void UpdateMonitorFrame(WM_HWIN hDlg)
 	#endif
 }
 
+#if 0
 static void UpdateCalibrationFrame(WM_HWIN hDlg)
 {
 #if 0
@@ -508,6 +509,7 @@ static void UpdateCalibrationFrame(WM_HWIN hDlg)
 	#endif
 #endif
 }
+#endif
 
 static void _cbMonitorControl(WM_MESSAGE * pMsg, int Id, int NCode)
 {
@@ -558,6 +560,7 @@ static void _cbMonitorControl(WM_MESSAGE * pMsg, int Id, int NCode)
 	}
 }
 
+#if 0
 static void _cbCalibrationControl(WM_MESSAGE * pMsg, int Id, int NCode)
 {
 	//WM_HWIN hItem;
@@ -583,6 +586,7 @@ static void _cbCalibrationControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			break;
 	}
 }
+#endif
 
 static void _cbSettingsControl(WM_MESSAGE * pMsg, int Id, int NCode)
 {

@@ -221,14 +221,14 @@ static void _cbBkWindow(WM_MESSAGE* pMsg)
 //*----------------------------------------------------------------------------
 static void _cbCallback(WM_MESSAGE * pMsg)
 {
-	WM_HWIN 			hDlg,hEdit,hItem;
+	WM_HWIN 			hDlg,hEdit;//,hItem;
 
-	int     Sel;
+	//int     Sel;
 	int     NCode;
 	int     Id;
-	int     i;
+	//int     i;
 
-	GUI_PID_STATE * pState;
+	//GUI_PID_STATE * pState;
 	hDlg = pMsg->hWin;
 
 	switch (pMsg->MsgId)
@@ -306,7 +306,7 @@ static void _cbCallback(WM_MESSAGE * pMsg)
 			EDIT_SetTextColor(hEdit,EDIT_CI_ENABLED,GUI_GREEN);
 			EDIT_SetTextAlign(hEdit,TEXT_CF_HCENTER|TEXT_CF_VCENTER);
 			//
-			WM_SetFocus(hItem); // doesn't work!!!
+			//WM_SetFocus(hItem); // doesn't work!!!
 
     		break;
     	}

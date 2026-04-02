@@ -283,6 +283,7 @@ static void DMA2D_CopyBufferWithAlpha(U32 LayerIndex, void * pSrc, void * pDst, 
 	}
 }
 
+#if 0
 static void DMA2D_FillBuffer(U32 LayerIndex, void * pDst, U32 xSize, U32 ySize, U32 OffLine, U32 ColorIndex)
 {
 	U32 PixelFormat;
@@ -313,7 +314,9 @@ static void DMA2D_FillBuffer(U32 LayerIndex, void * pDst, U32 xSize, U32 ySize, 
 		__asm("nop");
 	}
 }
+#endif
 
+#if 0
 static void DMA2D_CopyRGB565(const void * pSrc, void * pDst, int xSize, int ySize, int OffLineSrc, int OffLineDst)
 {
 	//osMutexWait(osDeviceMutex, SEM_WAIT);
@@ -340,6 +343,7 @@ static void DMA2D_CopyRGB565(const void * pSrc, void * pDst, int xSize, int ySiz
 	//_DMA2D_ExecOperation();
 	//osMutexRelease(osDeviceMutex);
 }
+#endif
 
 static void DMA2D_DrawAlphaBitmap(void * pDst, const void * pSrc, int xSize, int ySize, int OffLineSrc, int OffLineDst, int PixelFormat)
 {
@@ -402,6 +406,7 @@ static void DMA2D_DrawBitmapL8(void * pSrc, void * pDst,  U32 OffSrc, U32 OffDst
 	}
 }
 
+#if 0
 static void LCD_DrawMemdev16bpp(void * pDst, const void * pSrc, int xSize, int ySize, int BytesPerLineDst, int BytesPerLineSrc)
 {
 	int OffLineSrc, OffLineDst;
@@ -411,6 +416,7 @@ static void LCD_DrawMemdev16bpp(void * pDst, const void * pSrc, int xSize, int y
 
 	DMA2D_CopyRGB565(pSrc, pDst, xSize, ySize, OffLineSrc, OffLineDst);
 }
+#endif
 
 static void LCD_DrawBitmapAlpha(int LayerIndex, int x, int y, const void * p, int xSize, int ySize, int BytesPerLine)
 {
@@ -508,6 +514,7 @@ static void LCD_LL_DrawBitmap32bpp(int LayerIndex, int x, int y, U8 const * p, i
 	DMA2D_CopyBufferWithAlpha(LayerIndex, (void *)p, (void *)AddrDst, xSize, ySize, OffLineSrc, OffLineDst);
 }
 
+#if 0
 static void LCD_LL_CopyRect(int LayerIndex, int x0, int y0, int x1, int y1, int xSize, int ySize)
 {
 	#if 1
@@ -544,6 +551,7 @@ static void LCD_LL_CopyRect(int LayerIndex, int x0, int y0, int x1, int y1, int 
 					);
 	#endif
 }
+#endif
 
 #if 0
 //*----------------------------------------------------------------------------
