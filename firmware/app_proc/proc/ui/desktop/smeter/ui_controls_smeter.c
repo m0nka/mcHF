@@ -428,7 +428,7 @@ static void ui_controls_smeter_analogue_refresh(FAST_REFRESH *cb)
 	printf("repaints = %d\r\n",repaints);
 	printf("now loop...\r\n");
 	#endif
-	#endif
+
 	#if 0
 	// Repaint direct
 	ui_controls_smeter_draw_via_rotate(expanded);
@@ -450,6 +450,7 @@ static void ui_controls_smeter_analogue_refresh(FAST_REFRESH *cb)
 		// Fast UI update callback
 		if(cb) cb();
 	}
+	#endif
 
 	// Save to public
 	sm.old_value = curr;

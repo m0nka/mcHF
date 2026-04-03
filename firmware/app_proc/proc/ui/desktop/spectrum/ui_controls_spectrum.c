@@ -24,33 +24,7 @@
 #include "ui_controls_spectrum.h"
 #include "desktop\ui_controls_layout.h"
 
-// -------------------------
-//
-// Causing hard fault :(
 #define USE_MEM_DEVICE
-//
-//#define SPEC_USE_WM
-//
-// -------------------------
-
-#ifdef SPEC_USE_WM
-static const GUI_WIDGET_CREATE_INFO SpectrumDialog[] =
-{
-	// --------------------------------------------------------------------------------------------------------------------------------------------------------
-	//							name		id					x		y		xsize				ysize				?		?		?
-	// --------------------------------------------------------------------------------------------------------------------------------------------------------
-	// Self
-	{ WINDOW_CreateIndirect,	"", 		ID_WINDOW_SPEC,		0,		0,		SW_CONTROL_X_SIZE,	SW_CONTROL_Y_SIZE, 	WM_CF_MEMDEV, 0, 0 },
-	//
-	//{ TEXT_CreateIndirect, 		"----",		ID_TEXT_SPEC,	1,		1,		78, 				13,  				0, 		0x0,	0 },
-};
-
-WM_HWIN 	hSpectrumDialog;
-
-#define	SPEC_TIMER_RESOLUTION	0
-//
-WM_HTIMER 						hTimerSpec;
-#endif
 
 // ------------------------------
 //#include "touch_driver.h"
@@ -1248,102 +1222,6 @@ void ui_controls_spectrum_show_notification(char *text)
 	}
 }
 
-#ifdef SPEC_USE_WM
-// ToDo:
-// 1. activate mem device per windows : https://forum.segger.com/index.php/Thread/4859-Selectively-activate-MEMDEV-for-each-window/
-// 2. Add memory device support in LCD driver
-//
-static void WDHandler(WM_MESSAGE *pMsg)
-{
-	WM_HWIN hItem;
-	int 	Id, NCode;
-
-	switch (pMsg->MsgId)
-	{
-		case WM_INIT_DIALOG:
-		{
-			#if 0
-			// Initial clear of control
-			GUI_SetColor(GUI_BLACK);
-			GUI_FillRect(	sb.x,
-							sb.y,
-							(sb.x + sb.x_size),
-							(sb.y + sb.y_size)
-			);
-			#endif
-
-			ui_sw.ctrl_type 		= SW_CONTROL_BIG;
-			ui_sw.bandpass_start 	= SPECTRUM_MID_POINT - SPECTRUM_DEF_HALF_BW*2;
-			ui_sw.bandpass_end 		= SPECTRUM_MID_POINT;
-
-			ui_controls_create_sw_big();
-
-			hTimerSpec = WM_CreateTimer(pMsg->hWin, 0, SPEC_TIMER_RESOLUTION, 0);
-			break;
-		}
-
-		case WM_TIMER:
-		{
-			#if 0
-			if(tsu.wifi_rssi)
-			{
-				char buf[30];
-				hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_WIFI);
-				sprintf(buf, "%d dBm", tsu.wifi_rssi);
-				TEXT_SetText(hItem, buf);
-			}
-			#endif
-
-			ui_controls_spectrum_fft_process_big();
-			ui_controls_spectrum_repaint_big(NULL);
-			//ui_controls_spectrum_wf_repaint_big();
-
-			WM_InvalidateWindow(hSpectrumDialog);
-			WM_RestartTimer(pMsg->Data.v, SPEC_TIMER_RESOLUTION);
-
-			break;
-		}
-
-		case WM_PAINT:
-			//ui_controls_spectrum_fft_process_big();
-			//ui_controls_spectrum_repaint_big(NULL);
-			//ui_controls_spectrum_wf_repaint_big();
-			break;
-
-		case WM_DELETE:
-			//WM_DeleteTimer(hTimerWiFi);
-			break;
-
-		case WM_NOTIFY_PARENT:
-		{
-			Id    = WM_GetId(pMsg->hWinSrc);    // Id of widget
-			NCode = pMsg->Data.v;               // Notification code
-
-			//VDCHandler(pMsg,Id,NCode);
-			break;
-		}
-
-		// Trap keyboard messages
-		case WM_KEY:
-		{
-			switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
-			{
-		        // Return from menu
-		        case GUI_KEY_HOME:
-		        {
-		        	//printf("GUI_KEY_HOME\r\n");
-		        	break;
-		        }
-			}
-			break;
-		}
-
-		default:
-			WM_DefaultProc(pMsg);
-			break;
-	}
-}
-#else
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_spectrum_refresh
 //* Object              :
@@ -1384,7 +1262,6 @@ void ui_controls_spectrum_refresh(FAST_REFRESH *cb)
 			break;
 	}
 }
-#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_spectrum_init
@@ -1408,12 +1285,6 @@ void ui_controls_spectrum_init(WM_HWIN hParent)
 	}
 	#endif
 
-	#ifdef SPEC_USE_WM
-	hSpectrumDialog = GUI_CreateDialogBox(SpectrumDialog, GUI_COUNTOF(SpectrumDialog), WDHandler, hParent, sb.x, sb.y);
-	#ifdef USE_MEM_DEVICE
-	//--WM_EnableMemdev(hSpectrumDialog);
-	#endif
-	#else
 	loc_vfo_mode = 0x99;
 
 	// Clear waterfall
@@ -1455,7 +1326,6 @@ void ui_controls_spectrum_init(WM_HWIN hParent)
 	//	default:
 	//		break;
 	//}
-	#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -1467,13 +1337,9 @@ void ui_controls_spectrum_init(WM_HWIN hParent)
 //*----------------------------------------------------------------------------
 void ui_controls_spectrum_quit(void)
 {
-	#ifdef SPEC_USE_WM
-	GUI_EndDialog(hSpectrumDialog, 0);
-	#else
 	#ifdef USE_MEM_DEVICE
 	GUI_MEMDEV_Delete(hMemSpWf);
 	hMemSpWf = 0;
-	#endif
 	#endif
 }
 

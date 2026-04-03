@@ -95,19 +95,25 @@ void keypad_proc_init(void)
 
 	// Connect External Line to the GPIO
 	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTI, LL_SYSCFG_EXTI_LINE11);
+	#ifndef PCB_V9_REV_A
 	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE12);
+	#endif
 	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE13);
 	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE14);
 
 	// Enable interrupt
 	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_11);
+	#ifndef PCB_V9_REV_A
 	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_12);
+	#endif
 	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_13);
 	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_14);
 
 	// On falling edge
 	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_11);
+	#ifndef PCB_V9_REV_A
 	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_12);
+	#endif
 	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_13);
 	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_14);
 

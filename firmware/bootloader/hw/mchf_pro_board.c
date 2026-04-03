@@ -713,6 +713,11 @@ void critical_hw_init_and_run_fw(void)
 
 	//if(reset_reason == RESET_JUMP_TO_FW)
 	//{
+
+		LL_EXTI_DisableIT_0_31(LL_EXTI_LINE_11);
+		LL_EXTI_DisableIT_0_31(LL_EXTI_LINE_13);
+		LL_EXTI_DisableIT_0_31(LL_EXTI_LINE_14);
+
 		// Reinitialize the Stack pointer
 		__set_MSP(*(__IO uint32_t*) RADIO_FIRM_ADDR);
 

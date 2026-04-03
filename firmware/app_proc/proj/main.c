@@ -224,19 +224,6 @@ void EXTI4_IRQHandler(void)
 //*----------------------------------------------------------------------------
 void EXTI9_5_IRQHandler(void)
 {
-	#if 0
-	if(__HAL_GPIO_EXTI_GET_IT(TS_INT_PIN) != 0x00U)
-	{
-	    touch_proc_irq();
-	    __HAL_GPIO_EXTI_CLEAR_IT(TS_INT_PIN);
-	}
-
-	if(__HAL_GPIO_EXTI_GET_IT(LORA_BUSY) != 0x00U)
-	{
-		lora_proc_busy_irq();
-	    __HAL_GPIO_EXTI_CLEAR_IT(LORA_BUSY);
-	}
-	#else
 	// Line 5
 	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_5) != RESET)
 	{
@@ -246,9 +233,7 @@ void EXTI9_5_IRQHandler(void)
 		lora_proc_busy_irq();
 		#endif
 	}
-
-	// Line 6
-	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_6) != RESET)
+	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_6) != RESET)
 	{
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_6);
 
@@ -256,7 +241,14 @@ void EXTI9_5_IRQHandler(void)
 		touch_proc_irq();
 		#endif
 	}
-	#endif
+	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_8) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_8);
+
+		#ifdef CONTEXT_KEYPAD
+		keypad_proc_irq(8);
+		#endif
+	}
 }
 
 //*----------------------------------------------------------------------------
@@ -274,7 +266,7 @@ void EXTI15_10_IRQHandler(void)
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_11);
 
 		#ifdef CONTEXT_KEYPAD
-		keypad_proc_irq(4);
+		keypad_proc_irq(11);
 		#endif
 	}
 	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_12) != RESET)
@@ -282,23 +274,7 @@ void EXTI15_10_IRQHandler(void)
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_12);
 
 		#ifdef CONTEXT_KEYPAD
-//!		keypad_proc_irq(2);
-		#endif
-	}
-	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_13) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_13);
-
-		#ifdef CONTEXT_KEYPAD
-		keypad_proc_irq(1);
-		#endif
-	}
-	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
-
-		#ifdef CONTEXT_KEYPAD
-		keypad_proc_irq(3);
+		keypad_proc_irq(12);
 		#endif
 	}
 }
