@@ -1241,9 +1241,20 @@ void ui_controls_spectrum_refresh(FAST_REFRESH *cb)
 		{
 			if(ui_sw.updated)
 			{
+				static uchar a = 0;
 				ui_controls_spectrum_fft_process_big();
-				if(tsu.sc_enabled) ui_controls_spectrum_repaint_big(cb);
-				if(tsu.wf_enabled) ui_controls_spectrum_wf_repaint_big(cb); // - super laggy
+				if(!a)
+				{
+					if(tsu.sc_enabled)
+						ui_controls_spectrum_repaint_big(cb);
+				}
+				else
+				{
+					//if(tsu.wf_enabled)
+					//	ui_controls_spectrum_wf_repaint_big(cb);
+				}
+				a = !a;
+
 				ui_sw.updated = 0;
 			}
 			break;

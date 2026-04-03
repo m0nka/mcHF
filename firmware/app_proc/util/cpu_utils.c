@@ -52,24 +52,13 @@ To use this module, the following steps should be followed :
 #include "mchf_pro_board.h"
 #include "main.h"
 
-//#include "stm32h7xx_hal.h"
-//#include "stm32h7xx_hal_gpio.h"
-//#include "stm32h7xx_hal_rcc.h"
-//#include "stm32h7xx_hal_wwdg.h"
-
-/* Includes ------------------------------------------------------------------*/
 #include "cpu_utils.h"
-//#include "watchdog.h"
 
-xTaskHandle    		xIdleHandle = NULL;
-volatile uint32_t  	osCPU_Usage = 0;
+xTaskHandle    		xIdleHandle 		= NULL;
+volatile uint32_t  	osCPU_Usage 		= 0;
 uint32_t       		osCPU_IdleStartTime = 0;
 uint32_t       		osCPU_IdleSpentTime = 0;
 uint32_t       		osCPU_TotalIdleTime = 0;
-
-// watchdog help
-//ulong 				wd_skip 	= 0;
-//uchar 			tick_flag 	= 0;
 
 /* Private functions ---------------------------------------------------------*/
 /**
@@ -106,27 +95,6 @@ void vApplicationTickHook (void)
     osCPU_Usage = (100 - (osCPU_TotalIdleTime * 100) / CALCULATION_PERIOD);
     osCPU_TotalIdleTime = 0;
   }
-
-	#if 0
-	// Test call frequency
-	if(tick_flag)
-		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_SET);
-	else
-		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_7, GPIO_PIN_RESET);
-
-	tick_flag = !tick_flag;
-	#endif
-
-	#if 0
-	// Refresh watchdog to make sure reset clears lockups
-	// every 250 mS
-	wd_skip++;
-	if(wd_skip > 250)
-	{
-	  	watchdog_refresh();
-	  	wd_skip = 0;
-	}
-	#endif
 }
 
 /**

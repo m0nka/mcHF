@@ -26,7 +26,6 @@
 #define 	DESKTOP_SHOW_CPU_STAT
 
 // Disable individual controls
-#define 	SPECTRUM_WATERFALL
 #define 	VFO_BOTH
 
 #define		DESKTOP_SMETER			0

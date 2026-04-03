@@ -860,8 +860,8 @@ static void ui_proc_periodic(void)
 	#endif
 
 	// For now, no repaint while TX and CW keyer on screen
-	if((tsu.rxtx) && (tsu.band[tsu.curr_band].demod_mode == DEMOD_CW)) // && keyer shown
-		return;
+	//if((tsu.rxtx) && (tsu.band[tsu.curr_band].demod_mode == DEMOD_CW)) // && keyer shown
+	//	return;
 
 	#ifdef DESKTOP_SHOW_SPECTRUM
 	ui_controls_spectrum_refresh(ui_proc_cb);
@@ -1028,7 +1028,7 @@ ui_proc_loop:
 	if(ui_s.cur_state == MODE_MENU)
 	{
 		GUI_Exec();
-		GUI_Delay(10);
+		GUI_Delay(UI_REFRESH_100HZ);
 	}
 	else if(ui_s.cur_state == MODE_DESKTOP_FT8)
 	{
@@ -1037,12 +1037,10 @@ ui_proc_loop:
 	}
 	else
 	{
+		// Repaint Desktop
 		ui_proc_periodic();
-		//vTaskDelay(UI_PROC_SLEEP_TIME);
 
-		// test
-		//WM_InvalidateWindow(WM_HBKWIN);
-		GUI_Delay(UI_REFRESH_100HZ);
+		GUI_Delay(1);
 		GUI_Exec();
 	}
 
