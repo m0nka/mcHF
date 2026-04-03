@@ -179,6 +179,8 @@ __attribute__((__common__)) struct UI_DRIVER_STATE {
 	//
 	uchar 	show_band_guide;
 	//
+	uchar active_control_shown;
+
 } UI_DRIVER_STATE;
 //
 //

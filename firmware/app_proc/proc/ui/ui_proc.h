@@ -21,6 +21,9 @@
 #define 	DESKTOP_SHOW_SDCARD
 #define 	DESKTOP_SHOW_CLOCK
 #define 	DESKTOP_SHOW_VOLUME
+#define 	DESKTOP_SHOW_FILTER
+#define 	DESKTOP_SHOW_TX_STAT
+#define 	DESKTOP_SHOW_CPU_STAT
 
 // Disable individual controls
 #define 	SPECTRUM_WATERFALL

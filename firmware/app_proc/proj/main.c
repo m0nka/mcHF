@@ -145,6 +145,10 @@ void SysTick_Handler(void)
 	#endif
 }
 
+//
+// ToDo: There is something wrong with EXTI routing! Check before PCB rev B!
+//
+
 //*----------------------------------------------------------------------------
 //* Function Name       : EXTI0_IRQHandler
 //* Object              :
@@ -181,7 +185,6 @@ void EXTI0_IRQHandler(void)
 	#endif
 }
 
-#ifdef CONTEXT_LORA
 //*----------------------------------------------------------------------------
 //* Function Name       : EXTI4_IRQHandler
 //* Object              :
@@ -203,11 +206,13 @@ void EXTI4_IRQHandler(void)
 	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_4) != RESET)
 	{
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_4);
+
+		#ifdef CONTEXT_LORA
 		lora_proc_dio1_irq();
+		#endif
 	}
 	#endif
 }
-#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : EXTI9_5_IRQHandler
@@ -236,6 +241,7 @@ void EXTI9_5_IRQHandler(void)
 	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_5) != RESET)
 	{
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_5);
+
 		#ifdef CONTEXT_LORA
 		lora_proc_busy_irq();
 		#endif
@@ -245,9 +251,56 @@ void EXTI9_5_IRQHandler(void)
 	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_6) != RESET)
 	{
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_6);
+
+		#ifdef CONTEXT_TOUCH
 		touch_proc_irq();
+		#endif
 	}
 	#endif
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : EXTI15_10_IRQHandler
+//* Object              :
+//* Notes    			: Handle keyboard events
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void EXTI15_10_IRQHandler(void)
+{
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_11) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_11);
+
+		#ifdef CONTEXT_KEYPAD
+		keypad_proc_irq(4);
+		#endif
+	}
+	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_12) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_12);
+
+		#ifdef CONTEXT_KEYPAD
+//!		keypad_proc_irq(2);
+		#endif
+	}
+	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_13) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_13);
+
+		#ifdef CONTEXT_KEYPAD
+		keypad_proc_irq(1);
+		#endif
+	}
+	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
+
+		#ifdef CONTEXT_KEYPAD
+		keypad_proc_irq(3);
+		#endif
+	}
 }
 
 //*----------------------------------------------------------------------------
@@ -692,6 +745,5 @@ int main(void)
     osKernelStart();
 
 stall_radio:
-	// ToDo: Handle critical errors
     while(1);
 }

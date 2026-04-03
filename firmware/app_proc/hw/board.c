@@ -737,7 +737,9 @@ void bsp_power_off(void)
 	rotary_proc_power_cleanup();
 	#endif
 
+	#ifdef CONTEXT_TOUCH
 	touch_proc_power_cleanup();
+	#endif
 
 	#ifdef CONTEXT_TRX
 	trx_proc_power_clean_up();
@@ -747,7 +749,9 @@ void bsp_power_off(void)
 	fan_proc_power_clean_up();
 	#endif
 
+	#ifdef CONTEXT_VFO
 	vfo_proc_power_cleanup();
+	#endif
 
 	radio_init_save_before_off();
 

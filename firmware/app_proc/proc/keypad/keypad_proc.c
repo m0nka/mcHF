@@ -35,38 +35,6 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 // FreeRTOS process state
 extern struct PROC_STATE 				ps;
 
-//*----------------------------------------------------------------------------
-//* Function Name       : EXTI15_10_IRQHandler
-//* Object              :
-//* Notes    			: Handle keyboard events
-//* Notes   			:
-//* Notes    			:
-//* Context    			: CONTEXT_IRQ
-//*----------------------------------------------------------------------------
-void EXTI15_10_IRQHandler(void)
-{
-	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_11) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_11);
-		keypad_proc_irq(4);
-	}
-	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_12) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_12);
-		keypad_proc_irq(2);
-	}
-	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_13) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_13);
-		keypad_proc_irq(1);
-	}
-	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
-		keypad_proc_irq(3);
-	}
-}
-
 void keypad_proc_irq(uchar id)
 {
 	BaseType_t xHigherPriorityTaskWoken;
@@ -114,19 +82,19 @@ void keypad_proc_init(void)
 
 	// Connect External Line to the GPIO
 	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTI, LL_SYSCFG_EXTI_LINE11);
-	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE12);
+//!	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE12);
 	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE13);
 	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE14);
 
 	// Enable interrupt
 	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_11);
-	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_12);
+//!	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_12);
 	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_13);
 	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_14);
 
 	// On falling edge
 	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_11);
-	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_12);
+//!	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_12);
 	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_13);
 	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_14);
 
@@ -1660,6 +1628,8 @@ keypad_proc_loop:
 			// Disable wait
 			NVIC_DisableIRQ	(EXTI15_10_IRQn);
 			scan_off();
+
+			//printf("btn \r\n");
 
 			// Quick scan on a single horizontal line
 			keypad_scan_a();

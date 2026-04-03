@@ -26,30 +26,9 @@
 #include "sdram.h"
 #include "shared_tim.h"
 
-//#define PROC_USE_WM
-
 // -----------------------------------------------------------------------------------------------
 // Desktop Mode
-#include "ui_controls_layout.h"
-
-#include "spectrum\ui_controls_spectrum.h"
-#include "smeter\ui_controls_smeter.h"
-#include "freq\ui_controls_frequency.h"
-#include "volume\ui_controls_volume.h"
-#include "clock_panel\ui_controls_clock_panel.h"
-#include "filter\ui_controls_filter.h"
-#include "cpu_stat\ui_controls_cpu_stat.h"
-#include "dsp_stat\ui_controls_dsp_stat.h"
-#include "sd_icon\ui_controls_sd_icon.h"
-#include "battery\ui_controls_battery.h"
-
-#include "on_screen\on_screen_keyboard.h"
-#include "on_screen\on_screen_audio.h"
-#include "on_screen\on_screen_agc_att.h"
-#include "on_screen\on_screen_power.h"
-#include "on_screen\on_screen_quick_log.h"
-
-#include "tx_status\ui_controls_tx_stat.h"
+#include "ui_proc_dm.h"
 
 // -----------------------------------------------------------------------------------------------
 // Side Encoder Options Menu
@@ -80,12 +59,6 @@ struct	UI_DRIVER_STATE			ui_s;
 // Touch data - emWin
 GUI_PID_STATE 					TS_State;
 
-#ifdef PROC_USE_WM
-// test
-WM_HWIN hFreqDialogA = NULL;
-uchar cntr_id = 0;
-#endif
-
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
 
@@ -98,7 +71,9 @@ extern K_ModuleItem_Typedef  	menu_pa;			// Extended DSP Menu
 extern K_ModuleItem_Typedef  	user_i;				// User Interface
 extern K_ModuleItem_Typedef  	clock;				// Clock Settings
 extern K_ModuleItem_Typedef  	logbook;			// Logbook
+#ifdef CONTEXT_BMS
 extern K_ModuleItem_Typedef  	menu_batt;			// Battery
+#endif
 extern K_ModuleItem_Typedef  	info;				// System Information
 extern K_ModuleItem_Typedef  	lora;				// Lora module control
 extern K_ModuleItem_Typedef  	file_b;				// File Browser
@@ -117,7 +92,9 @@ static void ui_proc_add_menu_items(void)
 	k_ModuleAdd(&menu_pa);				// Extended DSP Menu
 	k_ModuleAdd(&user_i);				// User Interface
 	k_ModuleAdd(&clock);				// Clock Settings
+	#ifdef CONTEXT_BMS
 	k_ModuleAdd(&menu_batt);			// Battery
+	#endif
 	k_ModuleAdd(&logbook);				// Logbook
 	k_ModuleAdd(&file_b);				// File Browser
 	k_ModuleAdd(&lora);					// Lora
@@ -131,7 +108,7 @@ static void ui_proc_cb(void)
 	#endif
 
 	#ifdef DESKTOP_SHOW_VOLUME
-	//ui_controls_volume_refresh();	// blink on constant refresh , ToDo: restore orig code
+	//ui_controls_volume_refresh();	// blink on constant refresh
 	#endif
 }
 
@@ -149,74 +126,6 @@ static void ui_proc_cb_sm(void)
 //* Output Parameters   :
 //* Functions called    : CONTEXT_VIDEO
 //*----------------------------------------------------------------------------
-#ifdef PROC_USE_WM
-static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
-{
-	switch (pMsg->MsgId)
-	{
-		case WM_INIT_DIALOG:
-		{
-			//hFreqDialogA = ui_controls_frequency_init(WM_HBKWIN);
-			break;
-		}
-
-		case WM_PAINT:
-		{
-			//printf("WM_PAINT BKG\r\n");
-
-			//if(*(uchar *)(EEP_BASE + EEP_KEYER_ON))
-			//	ui_controls_keyer_refresh();
-//			ui_controls_dsp_stat_refresh();
-//			ui_controls_cpu_stat_refresh();
-			//--ui_controls_volume_refresh();
-//			ui_controls_filter_refresh();
-			//ui_controls_sd_icon_refresh();
-//			ui_controls_agc_refresh();
-
-			switch(cntr_id)
-			{
-				// spectrum
-				case 0:
-					ui_proc_fft_process_big();
-					ui_controls_spectrum_refresh(ui_proc_cb);
-					break;
-
-				// frequency
-				case 1:
-					ui_controls_frequency_refresh(0);
-					break;
-			}
-
-			break;
-		}
-
-		case WM_TOUCH:
-		{
-			//printf("touch recv\r\n");
-
-			// Enter menu - test
-			if(ui_s.cur_state == MODE_DESKTOP)
-			{
-				ui_s.req_state = MODE_MENU;
-				ui_proc_change_mode();
-			}
-
-			WM_DefaultProc(pMsg);
-			break;
-		}
-
-		default:
-			WM_DefaultProc(pMsg);
-			break;
-	}
-}
-#else
-uchar active_control_shown = 0;
-void ui_proc_clear_active(void)
-{
-	active_control_shown = 0;
-}
-
 static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 {
 	// Need always to give back focus to background
@@ -235,8 +144,6 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 			//printf("UI: x: %d, y: %d, state: %d\r\n", TS_State.x, TS_State.y, TS_State.Pressed);
 
 			#if 0
-			// Some kind of bug in the touch driver - supposed to be fixed now!
-			// ToDo: fix it!
 			if((TS_State.x == 0) && (TS_State.y == 0) && (TS_State.Pressed == 0))
 			{
 				WM_DefaultProc(pMsg);
@@ -248,7 +155,7 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 			// Is it top part of screen (above combined control ?)
 			if(TS_State.y < (SW_FRAME_Y - 5))
 			{
-#if 0
+				#if 0
 				printf("Top part of LCD touched.\r\n");
 
 				// Is it the Menu ?
@@ -257,7 +164,7 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 				{
 					printf("== Menu touch ==\r\n");
 
-					if(!active_control_shown)
+					if(!ui_s.active_control_shown)
 					{
 						#if 1
 						//if(*(uchar *)(EEP_BASE + EEP_KEYER_ON))
@@ -267,7 +174,7 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 
 						ui_s.req_state = MODE_MENU;
 						ui_proc_change_mode();
-						active_control_shown = 1;
+						ui_s.active_control_shown = 1;
 						#else
 						// Change demo mode
 						tsu.demo_mode = !tsu.demo_mode;
@@ -277,9 +184,7 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 						#endif
 					}
 				}
-#endif
-				// ToDo: Check other controls - volume, etc...
-				// ...
+				#endif
 
 				WM_DefaultProc(pMsg);
 				break;
@@ -295,10 +200,10 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 					// ----------------------------------------
 					//#ifdef CONTEXT_BMS
 					// Temp show power dialog
-					//if(!active_control_shown)
+					//if(!ui_s.active_control_shown)
 					//{
 					//	on_screen_power_init(WM_HBKWIN);
-					//	active_control_shown = 1;
+					//	ui_s.active_control_shown = 1;
 					//}
 					//#endif
 					// ---------------------------------------
@@ -309,10 +214,10 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 				// AUDIO
 				//case 2:
 				//{
-				//	if(!active_control_shown)
+				//	if(!ui_s.active_control_shown)
 				//	{
 				//		on_screen_audio_init(WM_HBKWIN);
-				//		active_control_shown = 1;
+				//		ui_s.active_control_shown = 1;
 				//	}
 				//	break;
 				//}
@@ -320,17 +225,17 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 				// VFO
 				//case 3:
 				//{
-				//	printf("ToDo: Show VFO dialog\r\n");
+				//	printf("Show VFO dialog\r\n");
 				//	break;
 				//}
 
 				// KEYBOARD
 				//case 4:
 				//{
-				//	if(!active_control_shown)
+				//	if(!ui_s.active_control_shown)
 				//	{
 				//		on_screen_keyboard_init(WM_HBKWIN);
-				//		active_control_shown = 1;
+				//		ui_s.active_control_shown = 1;
 				//	}
 				//	break;
 				//}
@@ -338,10 +243,10 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 				// AGC/ATT
 				//case 5:
 				//{
-				//	if(!active_control_shown)
+				//	if(!ui_s.active_control_shown)
 				//	{
 				//		on_screen_agc_att_init(WM_HBKWIN);
-				//		active_control_shown = 1;
+				//		ui_s.active_control_shown = 1;
 				//	}
 				//	break;
 				//}
@@ -408,10 +313,10 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        case 'K':
 		        {
 		        	//printf("K release\r\n");
-		        	if(!active_control_shown)
+		        	if(!ui_s.active_control_shown)
 		        	{
 		        		on_screen_keyboard_init(WM_HBKWIN);
-		        		active_control_shown = 1;
+		        		ui_s.active_control_shown = 1;
 		        	}
 		        	else
 		        		on_screen_keyboard_quit();
@@ -422,10 +327,10 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        case 'A':
 		        {
 		        	//printf("A release\r\n");
-					if(!active_control_shown)
+					if(!ui_s.active_control_shown)
 					{
 						on_screen_audio_init(WM_HBKWIN);
-						active_control_shown = 1;
+						ui_s.active_control_shown = 1;
 					}
 					else
 						on_screen_audio_quit();
@@ -435,10 +340,10 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        case 'G':
 		        {
 		        	//printf("G release\r\n");
-					if(!active_control_shown)
+					if(!ui_s.active_control_shown)
 					{
 						on_screen_agc_att_init(WM_HBKWIN);
-						active_control_shown = 1;
+						ui_s.active_control_shown = 1;
 					}
 					else
 						on_screen_agc_att_quit();
@@ -448,10 +353,10 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 		        case 'L':
 		        {
 		        	printf("L release\r\n");
-					if(!active_control_shown)
+					if(!ui_s.active_control_shown)
 					{
 						on_screen_quick_log_create(WM_HBKWIN);
-						active_control_shown = 1;
+						ui_s.active_control_shown = 1;
 					}
 					else
 						on_screen_quick_log_destroy();
@@ -559,8 +464,6 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 				case 'V':
 					ui_actions_change_active_vfo();
 					break;
-
-		        //ToDo: The rest....
 			}
 			break;
 		}
@@ -570,7 +473,31 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 			break;
 	}
 }
-#endif
+
+//*--------------------------------------------------------------------------------------
+//* Function Name       : bms_proc_wait_msg
+//* Object              : Read pending messages
+//* Input Parameters    : Rx Queue ptr and items buffer
+//* Output Parameters   : none.
+//*--------------------------------------------------------------------------------------
+static uchar ui_proc_wait_msg(xQueueHandle pRxQueue, ulong *ulQueueBuffer)
+{
+	uchar ucNext = 0;
+
+	if(pRxQueue == NULL)
+		return 0;
+
+	*ulQueueBuffer = 0;
+	while(uxQueueMessagesWaiting(pRxQueue))
+	{
+		if(xQueueReceive(pRxQueue, (ulQueueBuffer + ucNext), (portTickType)0) == pdPASS)
+		{
+			ucNext++;
+		}
+	}
+
+	return ucNext;
+}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_init_desktop
@@ -581,32 +508,11 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 //*----------------------------------------------------------------------------
 static void ui_proc_init_desktop(void)
 {
-	//#ifdef PROC_USE_WM
 	WM_SetCallback(WM_HBKWIN, ui_proc_bkg_wnd);
-	//#endif
-
 	//WINDOW_SetDefaultBkColor(GUI_TRANSPARENT);
 
 	GUI_SetBkColor(GUI_BLACK);
 	GUI_Clear();
-
-	#ifdef PROC_USE_WM
-	ui_controls_volume_init	  (WM_HBKWIN);
-	ui_controls_clock_panel_init(WM_HBKWIN);
-	ui_controls_spectrum_init (WM_HBKWIN);
-	hFreqDialogA = ui_controls_frequency_init(WM_HBKWIN);
-
-	ui_controls_smeter_init();
-	ui_controls_filter_init();
-	ui_controls_cpu_stat_init();
-	ui_controls_dsp_stat_init();
-	//ui_controls_sd_icon_init();
-
-	//if(*(uchar *)(EEP_BASE + EEP_KEYER_ON))
-	//	ui_controls_keyer_init();
-
-	//ui_proc_test_lcd();
-	#else
 
 	#ifdef DESKTOP_SHOW_SDCARD
 	ui_controls_sd_icon_init();
@@ -632,9 +538,13 @@ static void ui_proc_init_desktop(void)
 	ui_controls_smeter_init();
 	#endif
 
+	#ifdef DESKTOP_SHOW_FILTER
 	ui_controls_filter_init();
+	#endif
 
+	#ifdef DESKTOP_SHOW_CPU_STAT
 	ui_controls_cpu_stat_init();
+	#endif
 
 	//ui_controls_dsp_stat_init();
 
@@ -642,27 +552,13 @@ static void ui_proc_init_desktop(void)
 	ui_controls_battery_init();
 	#endif
 
+	#ifdef DESKTOP_SHOW_TX_STAT
 	ui_controls_tx_stat_init();
+	#endif
 
 	//--ui_controls_menu_button_init();
-
-	#if 0
-	// Return from Menu, when in CW mode and on screen keyer is enabled
-	if((*(uchar *)(EEP_BASE + EEP_KEYER_ON))&&(tsu.band[tsu.curr_band].demod_mode == DEMOD_CW))
-	{
-		//printf("show keyer on desktop init\r\n");
-		ui_controls_keyer_init(WM_HBKWIN);
-	}
-	#endif
-
-	#endif
-
-	#ifdef PROC_USE_WM
-	GUI_Exec();
-	#endif
 }
 
-#if 1
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_change_mode
 //* Object              : change screen mode
@@ -682,7 +578,7 @@ static void ui_proc_change_mode(void)
 		return;
 
 	// Don't enter Menu if we have virtual dialog shown
-	if((active_control_shown)&&(ui_s.req_state == MODE_MENU))
+	if((ui_s.active_control_shown)&&(ui_s.req_state == MODE_MENU))
 		return;
 
 	// Backlight off
@@ -841,11 +737,6 @@ static void ui_proc_change_mode(void)
 			ui_desktop_ft8_destroy();
 			//ui_quick_log_destroy();
 
-			#ifdef PROC_USE_WM
-			WM_SetCallback		(WM_HBKWIN, 0);
-			WM_InvalidateWindow	(WM_HBKWIN);
-			#endif
-
 			// Clear screen
 			GUI_SetBkColor(GUI_BLACK);
 			GUI_Clear();
@@ -870,7 +761,6 @@ static void ui_proc_change_mode(void)
 	//---HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
 	shared_tim_change(tsu.brightness);
 }
-#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_emwin_init
@@ -941,15 +831,23 @@ static void ui_proc_periodic(void)
 	//--ui_controls_volume_refresh();
 	#endif
 
+	#ifdef DESKTOP_SHOW_CPU_STAT
 	ui_controls_cpu_stat_refresh();
+	#endif
+
 	//ui_controls_dsp_stat_refresh();
 
 	#ifdef DESKTOP_SHOW_BATTERY
 	ui_controls_battery_refresh();
 	#endif
 
+	#ifdef DESKTOP_SHOW_FILTER
 	ui_controls_filter_refresh();
+	#endif
+
+	#ifdef DESKTOP_SHOW_TX_STAT
 	ui_controls_tx_stat_refresh();
+	#endif
 
 	#ifdef DESKTOP_SHOW_SDCARD
 	ui_controls_sd_icon_refresh();
@@ -974,50 +872,6 @@ static void ui_proc_periodic(void)
 	#ifdef CONTEXT_BMS
 	on_screen_power_refresh();
 	#endif
-}
-
-extern TaskHandle_t hUiTask;
-void ui_proc_power_cleanup(void)
-{
-	// Clear screen
-	GUI_SetBkColor(GUI_BLACK);
-	GUI_Clear();
-	GUI_Exec();
-
-	// Show text
-	GUI_SetColor(GUI_WHITE);
-	GUI_SetFont(&GUI_Font32B_1);
-	#ifndef PCB_V9_REV_A
-	GUI_DispStringAt("Good bye!", 350, 200);
-	#else
-	GUI_DispStringAt("Good bye!", 325, 215);
-	#endif
-	GUI_Exec();
-}
-
-//*--------------------------------------------------------------------------------------
-//* Function Name       : bms_proc_wait_msg
-//* Object              : Read pending messages
-//* Input Parameters    : Rx Queue ptr and items buffer
-//* Output Parameters   : none.
-//*--------------------------------------------------------------------------------------
-static uchar ui_proc_wait_msg(xQueueHandle pRxQueue, ulong *ulQueueBuffer)
-{
-	uchar ucNext = 0;
-
-	if(pRxQueue == NULL)
-		return 0;
-
-	*ulQueueBuffer = 0;
-	while(uxQueueMessagesWaiting(pRxQueue))
-	{
-		if(xQueueReceive(pRxQueue, (ulQueueBuffer + ucNext), (portTickType)0) == pdPASS)
-		{
-			ucNext++;
-		}
-	}
-
-	return ucNext;
 }
 
 //*----------------------------------------------------------------------------
@@ -1051,6 +905,7 @@ void ui_proc_task(void const *arg)
 	ui_s.show_band_guide 		= 0;
 	ui_s.lock_requests			= 0;
 	ui_s.theme_id				= THEME_0;
+	ui_s.active_control_shown	= 0;
 
 	// Read Theme ID from eeprom
 	#ifdef CONTEXT_IPC_PROC
@@ -1113,13 +968,8 @@ ui_proc_loop:
 			{
 				//printf("UI_NEW_FREQ_EVENT\r\n");
 
-				#ifdef PROC_USE_WM
-				cntr_id = 1;
-				WM_InvalidateWindow(WM_HBKWIN);
-				#else
 				#ifdef DESKTOP_SHOW_FREQUENCY
 				ui_controls_frequency_refresh(0);
-				#endif
 				#endif
 
 				break;
@@ -1134,6 +984,7 @@ ui_proc_loop:
 				break;
 			}
 
+			#ifdef DESKTOP_SHOW_SPECTRUM
 			case UI_LORA_NOTIFICATION:
 			{
 				ulong ulRxData[10];
@@ -1167,16 +1018,13 @@ ui_proc_loop:
 				}
 				break;
 			}
+			#endif
 
 			default:
 				break;
 		}
 	}
 
-	#ifdef PROC_USE_WM
-	GUI_Exec();
-	GUI_Delay(UI_PROC_SLEEP_TIME);
-	#else
 	if(ui_s.cur_state == MODE_MENU)
 	{
 		GUI_Exec();
@@ -1197,9 +1045,31 @@ ui_proc_loop:
 		GUI_Delay(UI_REFRESH_100HZ);
 		GUI_Exec();
 	}
-	#endif
 
 	goto ui_proc_loop;
+}
+
+void ui_proc_clear_active(void)
+{
+	ui_s.active_control_shown = 0;
+}
+
+void ui_proc_power_cleanup(void)
+{
+	// Clear screen
+	GUI_SetBkColor(GUI_BLACK);
+	GUI_Clear();
+	GUI_Exec();
+
+	// Show text
+	GUI_SetColor(GUI_WHITE);
+	GUI_SetFont(&GUI_Font32B_1);
+	#ifndef PCB_V9_REV_A
+	GUI_DispStringAt("Good bye!", 350, 200);
+	#else
+	GUI_DispStringAt("Good bye!", 325, 215);
+	#endif
+	GUI_Exec();
 }
 
 #endif
