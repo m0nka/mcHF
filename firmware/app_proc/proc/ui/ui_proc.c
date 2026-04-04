@@ -853,21 +853,13 @@ static void ui_proc_periodic(void)
 	ui_controls_sd_icon_refresh();
 	#endif
 
-	//--on_screen_keyboard_refresh();	// will not allow transparent dialog with moving background
-
 	#ifdef DESKTOP_SHOW_SMETER
 	ui_controls_smeter_refresh  (ui_proc_cb_sm);
 	#endif
 
-	// For now, no repaint while TX and CW keyer on screen
-	//if((tsu.rxtx) && (tsu.band[tsu.curr_band].demod_mode == DEMOD_CW)) // && keyer shown
-	//	return;
-
 	#ifdef DESKTOP_SHOW_SPECTRUM
 	ui_controls_spectrum_refresh(ui_proc_cb);
 	#endif
-
-	//--ui_controls_smeter_refresh  (ui_proc_cb_sm);
 
 	#ifdef CONTEXT_BMS
 	on_screen_power_refresh();

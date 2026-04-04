@@ -1250,8 +1250,8 @@ void ui_controls_spectrum_refresh(FAST_REFRESH *cb)
 				}
 				else
 				{
-					//if(tsu.wf_enabled)
-					//	ui_controls_spectrum_wf_repaint_big(cb);
+					if(tsu.wf_enabled)
+						ui_controls_spectrum_wf_repaint_big(cb);
 				}
 				a = !a;
 
