@@ -293,7 +293,7 @@ static void DMA2D_CopyBufferWithAlpha(U32 LayerIndex, void * pSrc, void * pDst, 
 	}
 }
 
-#if 0
+#if 1
 static void DMA2D_FillBuffer(U32 LayerIndex, void * pDst, U32 xSize, U32 ySize, U32 OffLine, U32 ColorIndex)
 {
 	U32 PixelFormat;
@@ -1119,7 +1119,7 @@ void LCD_X_Config(void)
 		//LCD_SetDevFunc(i, LCD_DEVFUNC_COPYRECT,   	(void(*)(void))LCD_LL_CopyRect);	- not working!
 
 		// Filling via DMA2D does only work with 16bpp or more
-		//LCD_SetDevFunc(i, LCD_DEVFUNC_FILLRECT, 	(void(*)(void))LCD_LL_FillRect); - DMA2D implementation doesn't work ;(
+		//LCD_SetDevFunc(i, LCD_DEVFUNC_FILLRECT, 	(void(*)(void))LCD_LL_FillRect); // DMA2D implementation doesn't work ;(
 		LCD_SetDevFunc(i, LCD_DEVFUNC_DRAWBMP_8BPP, (void(*)(void))LCD_LL_DrawBitmap8bpp);
 		LCD_SetDevFunc(i, LCD_DEVFUNC_DRAWBMP_16BPP,(void(*)(void))LCD_LL_DrawBitmap16bpp);
 		LCD_SetDevFunc(i, LCD_DEVFUNC_DRAWBMP_32BPP,(void(*)(void))LCD_LL_DrawBitmap32bpp);

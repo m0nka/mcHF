@@ -151,7 +151,7 @@ uchar 	sw_light		= 1;						// simplified scope (less resources)
 // to brightness table
 //
 //
-//#define USE_WF_BACKUP_BUFFER
+#define USE_WF_BACKUP_BUFFER
 //
 #ifdef USE_WF_BACKUP_BUFFER
 //
@@ -592,6 +592,7 @@ static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 	#ifdef USE_WF_BACKUP_BUFFER
 	if(cb == NULL)
 	{
+		GUI_MULTIBUF_Begin();  // Copy front to back buffer
 		m = 0;
 		for (j = 0; j < WATERFALL_Y_SIZE; j++)
 		{
@@ -602,6 +603,7 @@ static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 				GUI_DrawPixel(((SW_FRAME_X + SW_FRAME_WIDTH) + i), WATERFALL_Y + j);
 			}
 		}
+		GUI_MULTIBUF_End();  // Switch buffers
 		return;
 	}
 	#endif
