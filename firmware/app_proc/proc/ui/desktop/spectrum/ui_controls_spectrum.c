@@ -151,7 +151,7 @@ uchar 	sw_light		= 1;						// simplified scope (less resources)
 // to brightness table
 //
 //
-#define USE_WF_BACKUP_BUFFER
+//#define USE_WF_BACKUP_BUFFER
 //
 #ifdef USE_WF_BACKUP_BUFFER
 //
@@ -160,7 +160,7 @@ uchar 	sw_light		= 1;						// simplified scope (less resources)
 //
 #define WF_BKP_SIZE			136850
 //
-__attribute__((section(".STemWinMemPool"))) __attribute__ ((aligned (32))) uchar wf_bkp[WF_BKP_SIZE];
+__attribute__((section(".emwin"))) __attribute__ ((aligned (32))) uchar wf_bkp[WF_BKP_SIZE];
 uchar wf_init = 0;
 #endif
 //
@@ -526,7 +526,7 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 		// Draw point
 		// Causes draw outside of MEMDEV!!!
 		#if 0
-		GUI_SetColor(GUI_WHITE);
+		GUI_SetColor(GUI_GREEN);
 		GUI_DrawPixel(new_x, new_y);
 		#endif
 
@@ -548,6 +548,7 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 		old_y = new_y;
 
 		// Fast UI update callback
+		#if 0
 		if(cb)
 		{
 			#ifdef USE_MEM_DEVICE
@@ -558,6 +559,7 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 			cb();
 			#endif
 		}
+		#endif
 	}
 
 	// Show VFO centre frequency in Fixed mode, as Alpha blended text

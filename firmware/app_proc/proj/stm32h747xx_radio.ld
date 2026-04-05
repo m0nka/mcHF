@@ -32,9 +32,9 @@ ITCMRAM   (xrw)         : ORIGIN = 0x00000000, LENGTH = 64K
 DTCMRAM   (xrw)         : ORIGIN = 0x20000000, LENGTH = 128K
 AXI_RAM   (rw)          : ORIGIN = 0x24000000, LENGTH = 512K
 SRAM3     (rw)			: ORIGIN = 0x30040000, LENGTH = 32K
-VIDEO_RAM (rw)          : ORIGIN = 0xC0000000, LENGTH = 4506K
-EXT_RAM   (rw)          : ORIGIN = 0xC0466800, LENGTH = 3400K
-APP_RAM   (rw)          : ORIGIN = 0xC0800000, LENGTH = 8000K
+VIDEO_RAM (rw)          : ORIGIN = 0xC0000000, LENGTH = 9000K
+EMWIN_RAM (rw)          : ORIGIN = 0xC08CA000, LENGTH = 2000K
+APP_RAM   (rw)          : ORIGIN = 0xC0ACA000, LENGTH = 5000K
 OPEN_AMP_RSC_TAB (xrw)	: ORIGIN = 0x38000000, LENGTH = 1K
 OPEN_AMP_SHMEM (xrw)	: ORIGIN = 0x38000400, LENGTH = 63K
 BKP_SRAM  (rw)			: ORIGIN = 0x38800000, LENGTH = 4K
@@ -168,7 +168,8 @@ SECTIONS
   .ARM.attributes 0 : { *(.ARM.attributes) }
   axi_mem : { *(.axi_mem) } >AXI_RAM
   dma_mem : { *(.dma_mem) } >SRAM3
-  .STemWinMemPool : { *(.STemWinMemPool) } >EXT_RAM
+  .vram   : { *(.vram)    } >VIDEO_RAM
+  .emwin  : { *(.emwin)   } >EMWIN_RAM
 }
 
 

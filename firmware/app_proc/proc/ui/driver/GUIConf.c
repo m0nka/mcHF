@@ -56,12 +56,12 @@ Purpose     : Display controller initialization
 */
 
 /* Define the available number of bytes available for the GUI */
-#define GUI_NUMBYTES  (1024 * 1024)
+#define GUI_NUMBYTES  (1 * 1024 * 1024)
 
 // Use extra 2MB of SDRAM after video buffers
 // For detailed map, check linker script
 //
-__attribute__((section(".STemWinMemPool"))) __attribute__ ((aligned (32))) U32 aMemory[GUI_NUMBYTES / 4];
+__attribute__((section(".emwin"))) __attribute__ ((aligned (32))) U32 aMemory[GUI_NUMBYTES / 4];
 
 /*********************************************************************
 *

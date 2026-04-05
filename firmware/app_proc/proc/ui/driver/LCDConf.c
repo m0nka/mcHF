@@ -22,9 +22,6 @@ static const LCD_API_COLOR_CONV	*apColorConvAPI[] =
 	#if GUI_NUM_LAYERS > 1
 	COLOR_CONVERSION_1,
 	#endif
-	#if GUI_NUM_LAYERS > 2
-	COLOR_CONVERSION_2,
-	#endif
 };
 
 static LCD_LayerPropTypedef		layer_prop[GUI_NUM_LAYERS];
@@ -35,6 +32,17 @@ DSI_VidCfgTypeDef   			hdsivideo_handle;
 
 uint32_t 						lcd_x_size = 0;
 uint32_t 						lcd_y_size = 0;
+
+// ----------------------------------------------------------------------------
+// Video RAM
+//
+__attribute__((section(".vram"))) __attribute__ ((aligned (32))) \
+static uchar Framebuffers[GUI_NUM_LAYERS][(NUM_BUFFERS * LAYER_MEM_REQUIRED)];
+
+#define LCD_LAYER0_FRAME_BUFFER  ((ulong)&Framebuffers[0])
+#if GUI_NUM_LAYERS > 1
+#define LCD_LAYER1_FRAME_BUFFER  ((ulong)&Framebuffers[1])
+#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : LTDC_IRQHandler
@@ -171,8 +179,8 @@ static void ClearCacheHook(U32 LayerMask)
 	}
 }
 
-void HAL_LTDC_LineEvenCallback(LTDC_HandleTypeDef *hltdc) {
-
+void HAL_LTDC_LineEvenCallback(LTDC_HandleTypeDef *hltdc)
+{
   U32 Addr;
   U32 layer;
 
@@ -1050,12 +1058,8 @@ void LCD_X_Config(void)
 	// Initialize GUI Layer structure
 	layer_prop[0].address = LCD_LAYER0_FRAME_BUFFER;
 
-	#if (NUM_BUFFERS > 1)
+	#if (GUI_NUM_LAYERS > 1)
 	layer_prop[1].address = LCD_LAYER1_FRAME_BUFFER;
-	#endif
-
-	#if (NUM_BUFFERS > 2)
-	layer_prop[2].address = LCD_LAYER2_FRAME_BUFFER;
 	#endif
 
 	// After buffer addresses are known
@@ -1078,7 +1082,6 @@ void LCD_X_Config(void)
 
 	// At first initialize use of multiple buffers on demand
 	#if (NUM_BUFFERS > 1)
-	GUI_MULTIBUF_Config(NUM_BUFFERS);
 	for (i = 0; i < GUI_NUM_LAYERS; i++)
 		GUI_MULTIBUF_ConfigEx(i, NUM_BUFFERS);
 	#endif
@@ -1097,15 +1100,6 @@ void LCD_X_Config(void)
 	// Set size of 2nd layer
 	LCD_SetSizeEx (1, lcd_y_size, 					lcd_x_size);
 	LCD_SetVSizeEx(1, lcd_y_size * NUM_VSCREENS, 	lcd_x_size);
-	#endif
-
-	#if (GUI_NUM_LAYERS > 2)
-	// Set display driver and color conversion for 2nd layer
-	GUI_DEVICE_CreateAndLink(DISPLAY_DRIVER_2, COLOR_CONVERSION_2, 0, 2);
-
-	// Set size of 2nd layer
-	LCD_SetSizeEx (2, lcd_y_size, 					lcd_x_size);
-	LCD_SetVSizeEx(2, lcd_y_size * NUM_VSCREENS, 	lcd_x_size);
 	#endif
 
 	// Setting up VRam address and custom functions for CopyBuffer-, CopyRect- and FillRect operations
