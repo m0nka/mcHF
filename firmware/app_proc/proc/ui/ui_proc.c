@@ -816,51 +816,113 @@ static void ui_proc_emwin_init(void)
 //*----------------------------------------------------------------------------
 static void ui_proc_periodic(void)
 {
+	uchar sw_res;
+
+	#ifdef PROFILE_UI_REPAINT
+	ulong a1, a2;
+	ulong b1, b2;
+	static ulong disp_timer = 0;
+	#endif
+
 	if(ui_s.cur_state != MODE_DESKTOP)
 		return;
 
+	// -----------------------------------
+	// Spectrum control repaint
+	#ifdef DESKTOP_SHOW_SPECTRUM
+	//
+	#ifdef PROFILE_UI_REPAINT
+	a1 = ps.epoch;
+	#endif
+	//
+	sw_res = ui_controls_spectrum_refresh(ui_proc_cb, 0);	// spectrum
+	//
+	#ifdef PROFILE_UI_REPAINT
+	b1 = (ps.epoch - a1);
+	a2 = ps.epoch;
+	#endif
+	//
+	ui_controls_spectrum_refresh(ui_proc_cb, 1);	// waterfall
+	//
+	#ifdef PROFILE_UI_REPAINT
+	b2 = (ps.epoch - a2);
+	#endif
+	//
+	ui_controls_spectrum_refresh(ui_proc_cb, 2);	// clear update flag
+	//
+	// Statistics(random sampling for now)
+	#ifdef PROFILE_UI_REPAINT
+	if(disp_timer == 0)
+		disp_timer = ps.epoch;
+	else if(((disp_timer + 500) < ps.epoch)&&(!sw_res))
+	{
+		printf("sp: %dmS, wf: %dmS   \r\n", (int)b1, (int)b2);
+		disp_timer = ps.epoch;
+	}
+	#endif
+	#endif
+
+	// Update the rest while waiting for data
+	if(!sw_res)
+		return;
+
+	// -----------------------------------
+	// Frequency control repaint
 	#ifdef DESKTOP_SHOW_FREQUENCY
 	ui_controls_frequency_refresh(0);
 	#endif
 
+	// Clock control repaint
 	#ifdef DESKTOP_SHOW_CLOCK
 	ui_controls_clock_panel_refresh();
 	#endif
 
+	// -----------------------------------
+	// Volume control repaint
 	#ifdef DESKTOP_SHOW_VOLUME
 	//--ui_controls_volume_refresh();
 	#endif
 
+	// -----------------------------------
+	// CPU stats control repaint
 	#ifdef DESKTOP_SHOW_CPU_STAT
 	ui_controls_cpu_stat_refresh();
 	#endif
 
 	//ui_controls_dsp_stat_refresh();
 
+	// -----------------------------------
+	// Battery control repaint
 	#ifdef DESKTOP_SHOW_BATTERY
 	ui_controls_battery_refresh();
 	#endif
 
+	// -----------------------------------
+	// Filter control repaint
 	#ifdef DESKTOP_SHOW_FILTER
 	ui_controls_filter_refresh();
 	#endif
 
+	// -----------------------------------
+	// TX stats control repaint
 	#ifdef DESKTOP_SHOW_TX_STAT
 	ui_controls_tx_stat_refresh();
 	#endif
 
+	// -----------------------------------
+	// SD card control repaint
 	#ifdef DESKTOP_SHOW_SDCARD
 	ui_controls_sd_icon_refresh();
 	#endif
 
+	// -----------------------------------
+	// S-meter control repaint
 	#ifdef DESKTOP_SHOW_SMETER
 	ui_controls_smeter_refresh  (ui_proc_cb_sm);
 	#endif
 
-	#ifdef DESKTOP_SHOW_SPECTRUM
-	ui_controls_spectrum_refresh(ui_proc_cb);
-	#endif
-
+	// -----------------------------------
+	// BMS control repaint
 	#ifdef CONTEXT_BMS
 	on_screen_power_refresh();
 	#endif

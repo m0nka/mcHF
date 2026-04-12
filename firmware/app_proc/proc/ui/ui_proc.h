@@ -13,6 +13,9 @@
 #ifndef __UI_PROC_H
 #define __UI_PROC_H
 
+// Profile this driver execution timings
+#define PROFILE_UI_REPAINT
+
 // Enable individual desktop controls
 #define 	DESKTOP_SHOW_BATTERY
 #define 	DESKTOP_SHOW_SMETER

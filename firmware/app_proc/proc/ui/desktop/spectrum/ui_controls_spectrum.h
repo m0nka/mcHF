@@ -46,7 +46,7 @@ void ui_controls_spectrum_quit(void);
 void ui_controls_update_span(void);
 
 //void ui_controls_spectrum_touch(void);
-void ui_controls_spectrum_refresh(FAST_REFRESH *cb);
+uchar ui_controls_spectrum_refresh(FAST_REFRESH *cb, uchar mode);
 
 void ui_controls_spectrum_show_notification(char *text);
 

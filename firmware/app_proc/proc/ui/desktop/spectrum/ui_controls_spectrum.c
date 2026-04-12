@@ -11,6 +11,7 @@
 **  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #include "mchf_pro_board.h"
+#include "main.h"
 
 #ifdef CONTEXT_VIDEO
 
@@ -151,7 +152,7 @@ uchar 	sw_light		= 1;						// simplified scope (less resources)
 // to brightness table
 //
 //
-#define USE_WF_BACKUP_BUFFER
+//#define USE_WF_BACKUP_BUFFER
 //
 #ifdef USE_WF_BACKUP_BUFFER
 //
@@ -622,13 +623,35 @@ static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 	#else
 	// -----------------------------------------------------------------------------------------------------------
 	// Move waterfall down - rect copy
+	//printf("-----------------------------------\r\n");
+	//printf("x: %d - %d, y: %d - %d (%d,%d)\r\n", 	SW_FRAME_X + SW_FRAME_WIDTH,
+	//												SW_FRAME_X + SW_FRAME_WIDTH,
+	//												WATERFALL_Y,
+	//												WATERFALL_Y + 1,
+	//												WATERFALL_X_SIZE,
+	//												WATERFALL_Y_SIZE - 1);
+	#if 1
 	GUI_CopyRect(SW_FRAME_X + SW_FRAME_WIDTH,	// Upper left X-position of the source rectangle.
 				 WATERFALL_Y,					// Upper left Y-position of the source rectangle.
 				 SW_FRAME_X + SW_FRAME_WIDTH,	// Upper left X-position of the destination rectangle.
 				 WATERFALL_Y + 1,				// Upper left Y-position of the destination rectangle.
 				 WATERFALL_X_SIZE,				// X-size of the rectangle.
 				 WATERFALL_Y_SIZE - 1);			// Y-size of the rectangle.
+	#else
+	int x0 = SW_FRAME_X + SW_FRAME_WIDTH;
+	int y0 = WATERFALL_Y;
+	int x1 = SW_FRAME_X + SW_FRAME_WIDTH;
+	int y1 = WATERFALL_Y + 1;
+	int xs = WATERFALL_X_SIZE;
+	int ys = WATERFALL_Y_SIZE - 1;
 
+	GUI_CopyRect(x0,
+				 y0,
+				 x1,
+				 y1,
+				 xs,
+				 ys);
+	#endif
 	#endif
 
 	// Move backup memory
@@ -1234,48 +1257,32 @@ void ui_controls_spectrum_show_notification(char *text)
 //* Notes    			:
 //* Context    			: CONTEXT_VIDEO
 //*----------------------------------------------------------------------------
-void ui_controls_spectrum_refresh(FAST_REFRESH *cb)
+uchar ui_controls_spectrum_refresh(FAST_REFRESH *cb, uchar mode)
 {
-	ui_controls_update_vfo_mode(false);
-	ui_controls_update_smooth_control(0);
-
-	switch(ui_sw.ctrl_type)
+	if(!ui_sw.updated)
 	{
-		case SW_CONTROL_BIG:
-		{
-			if(ui_sw.updated)
-			{
-				static uchar a = 0;
-				ui_controls_spectrum_fft_process_big();
-				if(!a)
-				{
-					if(tsu.sc_enabled)
-						ui_controls_spectrum_repaint_big(cb);
-				}
-				else
-				{
-					if(tsu.wf_enabled)
-						ui_controls_spectrum_wf_repaint_big(cb);
-				}
-				a = !a;
-
-				ui_sw.updated = 0;
-			}
-			break;
-		}
-		#if 0
-		case SW_CONTROL_MID:
-			ui_controls_spectrum_fft_process_mid();
-			ui_controls_spectrum_repaint_mid(cb);
-			ui_controls_spectrum_wf_repaint_mid();
-			break;
-		case SW_CONTROL_SMALL:
-			//ui_controls_create_sw_big();
-			break;
-		#endif
-		default:
-			break;
+		//--printf("not ready \r\n");
+		return 1;
 	}
+
+	ui_controls_spectrum_fft_process_big();
+	if(mode == 0)
+	{
+		ui_controls_update_vfo_mode(false);
+		ui_controls_update_smooth_control(0);
+
+		if(tsu.sc_enabled)
+			ui_controls_spectrum_repaint_big(cb);
+	}
+	else if(mode == 1)
+	{
+		if(tsu.wf_enabled)
+			ui_controls_spectrum_wf_repaint_big(cb);
+	}
+	else
+		ui_sw.updated = 0;
+
+	return 0;
 }
 
 //*----------------------------------------------------------------------------

@@ -293,7 +293,7 @@ static void DMA2D_CopyBufferWithAlpha(U32 LayerIndex, void * pSrc, void * pDst, 
 	}
 }
 
-#if 1
+#if 0
 static void DMA2D_FillBuffer(U32 LayerIndex, void * pDst, U32 xSize, U32 ySize, U32 OffLine, U32 ColorIndex)
 {
 	U32 PixelFormat;
@@ -474,6 +474,8 @@ static void LCD_LL_CopyBuffer(int LayerIndex, int IndexSrc, int IndexDst)
 {
 	U32 BufferSize, AddrSrc, AddrDst;
 
+	//printf("%d %d %d \r\n", LayerIndex, IndexSrc, IndexDst);
+
 	BufferSize = GetBufferSize(LayerIndex);
 	AddrSrc    = layer_prop[LayerIndex].address + BufferSize * IndexSrc;
 	AddrDst    = layer_prop[LayerIndex].address + BufferSize * IndexDst;
@@ -524,31 +526,47 @@ static void LCD_LL_DrawBitmap32bpp(int LayerIndex, int x, int y, U8 const * p, i
 	DMA2D_CopyBufferWithAlpha(LayerIndex, (void *)p, (void *)AddrDst, xSize, ySize, OffLineSrc, OffLineDst);
 }
 
-#if 0
-static void LCD_LL_CopyRect(int LayerIndex, int x0, int y0, int x1, int y1, int xSize, int ySize)
+#if 1
+static void LCD_LL_CopyRect(int LayerIndex, int x0_, int y0_, int x1_, int y1_, int xSize, int ySize)
 {
-	#if 1
+	#if 0
 	U32 BufferSize, AddrSrc, AddrDst;
+	int x0, x1,y0, y1;
+
+	x0 = x0_;
+	x1 = x1_;
+	y0 = y0_;
+	y1 = y1_;
 
 	BufferSize = GetBufferSize(LayerIndex);
 	AddrSrc = layer_prop[LayerIndex].address + BufferSize * layer_prop[LayerIndex].pending_buffer + (y0 * layer_prop[LayerIndex].xSize + x0) * layer_prop[LayerIndex].BytesPerPixel;
 	AddrDst = layer_prop[LayerIndex].address + BufferSize * layer_prop[LayerIndex].pending_buffer + (y1 * layer_prop[LayerIndex].xSize + x1) * layer_prop[LayerIndex].BytesPerPixel;
 	DMA2D_CopyBuffer(LayerIndex, (void *)AddrSrc, (void *)AddrDst, xSize, ySize, layer_prop[LayerIndex].xSize - xSize, 0);
+	#else
+	U32 BufferSize, AddrSrc, AddrDst;
+	int x0, x1,y0, y1;
+	int OffLine;
+
+	//printf("x: %d - %d, y: %d - %d (%d,%d)\r\n", x0_, x1_, y0_, y1_, xSize, ySize);
+
+	#if 1
+	x0 = x0_;
+	x1 = x1_;
+	y0 = y0_;
+	y1 = y1_;
+	#else
+	x0 = 800 - y1_;
+	x1 = 800 - y0_;
+	y0 = x0_;
+	y1 = x1_;
 	#endif
 
-	#if 0
-	U32 AddrSrc, AddrDst;
-	int l_y0, l_y1;
+	BufferSize 	= GetBufferSize(LayerIndex);
+	AddrSrc		= layer_prop[LayerIndex].address + BufferSize *(y0 * layer_prop[LayerIndex].xSize + x0) * layer_prop[LayerIndex].BytesPerPixel;
+	AddrDst 	= layer_prop[LayerIndex].address + BufferSize *(y1 * layer_prop[LayerIndex].xSize + x1) * layer_prop[LayerIndex].BytesPerPixel;
+	OffLine 	= layer_prop[LayerIndex].ySize - ySize;
 
-	// Swapped LCD
-	l_y0 = 480 - y0;
-	l_y1 = 480 - y1;
-
-	// Calculate source
-	AddrSrc = layer_prop[LayerIndex].address + (l_y0 * layer_prop[LayerIndex].xSize + x0) * layer_prop[LayerIndex].BytesPerPixel;
-
-	// Calculate destination
-	AddrDst = layer_prop[LayerIndex].address + (l_y1 * layer_prop[LayerIndex].xSize + x1) * layer_prop[LayerIndex].BytesPerPixel;
+	//printf("%x - %x \r\n", AddrSrc, AddrDst);
 
 	// Copy via DMA
 	DMA2D_CopyBuffer(	LayerIndex,
@@ -556,8 +574,8 @@ static void LCD_LL_CopyRect(int LayerIndex, int x0, int y0, int x1, int y1, int 
 						(void *)AddrDst,
 						xSize,
 						ySize,
-						(layer_prop[LayerIndex].xSize - xSize),
-						(layer_prop[LayerIndex].xSize - xSize)
+						OffLine,
+						OffLine
 					);
 	#endif
 }
@@ -582,11 +600,16 @@ static void LCD_LL_FillRect(int LayerIndex, int x0_, int y0_, int x1_, int y1_, 
 
 	mode = GUI_GetDrawMode();
 
-	printf("-----------------------------------\r\n");
-	printf("%d: x0=%d, y0=%d, x1=%d, y1=%d\r\n",mode, x0, y0, x1, y1);
+	//printf("-----------------------------------\r\n");
+	//printf("%d: x0=%d, y0=%d, x1=%d, y1=%d\r\n", mode, x0_, y0_, x1_, y1_);
 
 	if(mode == GUI_DM_XOR)
 	{
+		x0 = x0_;
+		x1 = x1_;
+		y0 = y0_;
+		y1 = y1_;
+
 		LCD_SetDevFunc(LayerIndex, LCD_DEVFUNC_FILLRECT, NULL);
 		LCD_FillRect(x0, y0, x1, y1);
 		LCD_SetDevFunc(LayerIndex, LCD_DEVFUNC_FILLRECT, (void(*)(void))LCD_LL_FillRect);
@@ -606,7 +629,7 @@ static void LCD_LL_FillRect(int LayerIndex, int x0_, int y0_, int x1_, int y1_, 
 		//x0 = 479 - x1;
 		//x1 = 479 - k;
 
-		printf("%d: x: %d - %d, y: %d - %d (%d,%d)\r\n",mode, x0, x1, y0, y1, xSize, ySize);
+		printf("a%d: x: %d - %d, y: %d - %d (%d,%d)\r\n",mode, x0, x1, y0, y1, xSize, ySize);
 
 		BufferSize = GetBufferSize(LayerIndex);
 		AddrDst = layer_prop[LayerIndex].address + BufferSize * layer_prop[LayerIndex].buffer_index + (y0 * layer_prop[LayerIndex].xSize + x0) * layer_prop[LayerIndex].BytesPerPixel;
@@ -615,30 +638,36 @@ static void LCD_LL_FillRect(int LayerIndex, int x0_, int y0_, int x1_, int y1_, 
 	}
 	else
 	{
+		#if 1
 		x0 = y0_;
 		x1 = y1_;
 		y0 = x0_;
 		y1 = x1_;
-
 		ySize = x1 - x0 + 1;
 		xSize = y1 - y0 + 1;
+		#else
+		x0 = x0_;
+		x1 = x1_;
+		y0 = y0_;
+		y1 = y1_;
+		ySize = y1 - y0 + 1;
+		xSize = x1 - x0 + 1;
+		#endif
 
 		//k  = x0;
-		//x0 = 853 - x0;
-		//x1 = 853 - x1;
+		//x0 = 479 - x0;
+		//x1 = 479 - x1;
 
-		printf("%d: x: %d - %d, y: %d - %d (%d,%d)\r\n",mode, x0, x1, y0, y1, xSize, ySize);
-
-		#if 1
-		BufferSize = GetBufferSize(LayerIndex);
-		AddrDst = layer_prop[LayerIndex].address + BufferSize * layer_prop[LayerIndex].buffer_index + (y0 * layer_prop[LayerIndex].xSize + x0) * layer_prop[LayerIndex].BytesPerPixel;
-		DMA2D_FillBuffer(LayerIndex, (void *)AddrDst, xSize, ySize, layer_prop[LayerIndex].xSize - xSize, PixelIndex);
-		#endif
+		//printf("b%d: x: %d - %d, y: %d - %d (%d,%d)\r\n",mode, x0, x1, y0, y1, xSize, ySize);
 
 		#if 0
 		BufferSize = GetBufferSize(LayerIndex);
+		AddrDst = layer_prop[LayerIndex].address + BufferSize * layer_prop[LayerIndex].buffer_index + (y0 * layer_prop[LayerIndex].xSize + x0) * layer_prop[LayerIndex].BytesPerPixel;
+		DMA2D_FillBuffer(LayerIndex, (void *)AddrDst, xSize, ySize, layer_prop[LayerIndex].xSize - xSize, PixelIndex);
+		#else
+		BufferSize = GetBufferSize(LayerIndex);
 		AddrDst = layer_prop[LayerIndex].address + BufferSize * layer_prop[LayerIndex].buffer_index + (x0 * layer_prop[LayerIndex].ySize + y0) * layer_prop[LayerIndex].BytesPerPixel;
-		DMA2D_FillBuffer(LayerIndex, (void *)AddrDst, xSize, ySize, layer_prop[LayerIndex].ySize - ySize, PixelIndex);
+		DMA2D_FillBuffer(LayerIndex, (void *)AddrDst, ySize, xSize, layer_prop[LayerIndex].ySize - ySize, PixelIndex);
 		#endif
 	}
 }
@@ -1116,7 +1145,7 @@ void LCD_X_Config(void)
 
 		// Set custom functions for several operations
 		LCD_SetDevFunc(i, LCD_DEVFUNC_COPYBUFFER, 	(void(*)(void))LCD_LL_CopyBuffer);
-		//LCD_SetDevFunc(i, LCD_DEVFUNC_COPYRECT,   	(void(*)(void))LCD_LL_CopyRect);	- not working!
+		//LCD_SetDevFunc(i, LCD_DEVFUNC_COPYRECT,   	(void(*)(void))LCD_LL_CopyRect);	//- not working!
 
 		// Filling via DMA2D does only work with 16bpp or more
 		//LCD_SetDevFunc(i, LCD_DEVFUNC_FILLRECT, 	(void(*)(void))LCD_LL_FillRect); // DMA2D implementation doesn't work ;(
