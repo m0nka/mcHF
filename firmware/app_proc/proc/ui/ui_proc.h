@@ -14,7 +14,7 @@
 #define __UI_PROC_H
 
 // Profile this driver execution timings
-#define PROFILE_UI_REPAINT
+//#define PROFILE_UI_REPAINT
 
 // Enable individual desktop controls
 #define 	DESKTOP_SHOW_BATTERY
@@ -27,6 +27,9 @@
 #define 	DESKTOP_SHOW_FILTER
 #define 	DESKTOP_SHOW_TX_STAT
 #define 	DESKTOP_SHOW_CPU_STAT
+
+// Unit tests
+//#define		RECT_COPY_TEST
 
 // Disable individual controls
 #define 	VFO_BOTH

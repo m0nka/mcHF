@@ -557,6 +557,62 @@ static void ui_proc_init_desktop(void)
 	#endif
 
 	//--ui_controls_menu_button_init();
+
+	#ifdef RECT_COPY_TEST
+	GUI_SelectLayer(1);
+	GUI_SetFont(&GUI_Font24B_ASCII);
+	GUI_SetColor(HOT_PINK);
+	GUI_DispStringAt("rect copy", 700, 450);
+
+	int x, y;
+
+	x = 5;
+	y = 250;
+
+	GUI_SetColor(GUI_RED);
+	GUI_FillRect(	(x		  ),
+					(y		  ),
+					(x + 100 ),
+					(y + 50 )
+	);
+
+	GUI_CopyRect(x,			// Upper left X-position of the source rectangle.
+				 y,	    	// Upper left Y-position of the source rectangle.
+				 x,			// Upper left X-position of the destination rectangle.
+				 y + 100,	// Upper left Y-position of the destination rectangle.
+				 100,		// X-size of the rectangle.
+				 55);		// Y-size of the rectangle.
+
+	//GUI_CopyRect(x,			// Upper left X-position of the source rectangle.
+	//			 5,	    	// Upper left Y-position of the source rectangle.
+	//			 x,			// Upper left X-position of the destination rectangle.
+	//			 y + 200,	// Upper left Y-position of the destination rectangle.
+	//			 100,		// X-size of the rectangle.
+	//			 55);		// Y-size of the rectangle.
+
+	#if 0
+	GUI_SetColor(GUI_BLUE);
+	GUI_FillRect(	(300		  ),
+					(5		  ),
+					(300 + 100 ),
+					(5 + 50 )
+	);
+
+	GUI_CopyRect(300,	// Upper left X-position of the source rectangle.
+				 5,	    // Upper left Y-position of the source rectangle.
+				 300,	// Upper left X-position of the destination rectangle.
+				 100,	// Upper left Y-position of the destination rectangle.
+				 100,	// X-size of the rectangle.
+				 55);	// Y-size of the rectangle.
+
+	GUI_CopyRect(300,	// Upper left X-position of the source rectangle.
+				 5,	    // Upper left Y-position of the source rectangle.
+				 300,	// Upper left X-position of the destination rectangle.
+				 200,	// Upper left Y-position of the destination rectangle.
+				 100,	// X-size of the rectangle.
+				 55);	// Y-size of the rectangle.
+	#endif
+	#endif
 }
 
 //*----------------------------------------------------------------------------

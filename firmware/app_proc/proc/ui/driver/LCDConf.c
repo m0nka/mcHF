@@ -15,6 +15,7 @@
 
 #include "st7701.h"
 #include "LCDConf.h"
+#include "ui_proc.h"
 
 static const LCD_API_COLOR_CONV	*apColorConvAPI[] =
 {
@@ -43,6 +44,8 @@ static uchar Framebuffers[GUI_NUM_LAYERS][(NUM_BUFFERS * LAYER_MEM_REQUIRED)];
 #if GUI_NUM_LAYERS > 1
 #define LCD_LAYER1_FRAME_BUFFER  ((ulong)&Framebuffers[1])
 #endif
+
+//#define FB_BASE_ADDR			LCD_LAYER0_FRAME_BUFFER
 
 //*----------------------------------------------------------------------------
 //* Function Name       : LTDC_IRQHandler
@@ -474,7 +477,7 @@ static void LCD_LL_CopyBuffer(int LayerIndex, int IndexSrc, int IndexDst)
 {
 	U32 BufferSize, AddrSrc, AddrDst;
 
-	//printf("%d %d %d \r\n", LayerIndex, IndexSrc, IndexDst);
+	//printf("LCD_LL_CopyBuffer \r\n");
 
 	BufferSize = GetBufferSize(LayerIndex);
 	AddrSrc    = layer_prop[LayerIndex].address + BufferSize * IndexSrc;
@@ -491,6 +494,8 @@ static void LCD_LL_DrawBitmap8bpp(int LayerIndex, int x, int y, U8 const * p, in
 	int OffLineSrc, OffLineDst;
 	U32 PixelFormat;
 
+	//printf("LCD_LL_DrawBitmap8bpp \r\n");
+
 	BufferSize = GetBufferSize(LayerIndex);
 	AddrDst = layer_prop[LayerIndex].address + BufferSize * layer_prop[LayerIndex].buffer_index + (y * layer_prop[LayerIndex].xSize + x) * layer_prop[LayerIndex].BytesPerPixel;
 	OffLineSrc = BytesPerLine - xSize;
@@ -505,6 +510,8 @@ static void LCD_LL_DrawBitmap16bpp(int LayerIndex, int x, int y, U16 const * p, 
 	U32 BufferSize, AddrDst;
 	int OffLineSrc, OffLineDst;
 
+	//printf("LCD_LL_DrawBitmap16bpp \r\n");
+
 	BufferSize = GetBufferSize(LayerIndex);
 	AddrDst = layer_prop[LayerIndex].address + BufferSize * layer_prop[LayerIndex].buffer_index + (y * layer_prop[LayerIndex].xSize + x) * layer_prop[LayerIndex].BytesPerPixel;
 	OffLineSrc = (BytesPerLine / 2) - xSize;
@@ -518,6 +525,8 @@ static void LCD_LL_DrawBitmap32bpp(int LayerIndex, int x, int y, U8 const * p, i
 	U32 BufferSize, AddrDst;
 	int OffLineSrc, OffLineDst;
 
+	//printf("LCD_LL_DrawBitmap32bpp \r\n");
+
 	BufferSize = GetBufferSize(LayerIndex);
 	AddrDst = layer_prop[LayerIndex].address + BufferSize * layer_prop[LayerIndex].buffer_index + (y * layer_prop[LayerIndex].xSize + x) * layer_prop[LayerIndex].BytesPerPixel;
 	OffLineSrc = (BytesPerLine / 4) - xSize;
@@ -526,60 +535,68 @@ static void LCD_LL_DrawBitmap32bpp(int LayerIndex, int x, int y, U8 const * p, i
 	DMA2D_CopyBufferWithAlpha(LayerIndex, (void *)p, (void *)AddrDst, xSize, ySize, OffLineSrc, OffLineDst);
 }
 
-#if 1
-static void LCD_LL_CopyRect(int LayerIndex, int x0_, int y0_, int x1_, int y1_, int xSize, int ySize)
+void LCD_LL_CopyRect(	int LayerIndex,
+                       	int x0, int y0,
+      					int x1, int y1,
+      					int xSize, int ySize)
 {
-	#if 0
-	U32 BufferSize, AddrSrc, AddrDst;
-	int x0, x1,y0, y1;
+	// Swapped in driver init
+	int xRes = lcd_y_size;
+	int yRes = lcd_x_size;
 
-	x0 = x0_;
-	x1 = x1_;
-	y0 = y0_;
-	y1 = y1_;
+	//printf("x=%d, y=%d (0x%x)\r\n", xRes, yRes, (int)FB_BASE_ADDR);
+	//printf("x0=%d, y0=%d, x1=%d, y1=%d \r\n", x0, y0, x1, y1);
 
-	BufferSize = GetBufferSize(LayerIndex);
-	AddrSrc = layer_prop[LayerIndex].address + BufferSize * layer_prop[LayerIndex].pending_buffer + (y0 * layer_prop[LayerIndex].xSize + x0) * layer_prop[LayerIndex].BytesPerPixel;
-	AddrDst = layer_prop[LayerIndex].address + BufferSize * layer_prop[LayerIndex].pending_buffer + (y1 * layer_prop[LayerIndex].xSize + x1) * layer_prop[LayerIndex].BytesPerPixel;
-	DMA2D_CopyBuffer(LayerIndex, (void *)AddrSrc, (void *)AddrDst, xSize, ySize, layer_prop[LayerIndex].xSize - xSize, 0);
+	//  * OSY_32 coordinate transform
+    //   * ─────────────────────────────────────────────────────────────
+    //   * Display row y  ─►  framebuffer row  (yRes - 1 - y)
+    //   *
+    //   * A display rect starting at y=y0 with height ySize occupies
+    //   * framebuffer rows  [ yRes-y0-ySize  …  yRes-1-y0 ].
+    //   * The row with the *lowest* framebuffer address is:
+    //   *   fb_row_top = yRes - y0 - ySize
+	int fbSrcTop = xRes - x0 - xSize;
+	int fbDstTop = xRes - x1 - xSize;
+
+	#ifndef RECT_COPY_TEST
+	U32 BufferSize = GetBufferSize(LayerIndex);
 	#else
-	U32 BufferSize, AddrSrc, AddrDst;
-	int x0, x1,y0, y1;
-	int OffLine;
-
-	//printf("x: %d - %d, y: %d - %d (%d,%d)\r\n", x0_, x1_, y0_, y1_, xSize, ySize);
-
-	#if 1
-	x0 = x0_;
-	x1 = x1_;
-	y0 = y0_;
-	y1 = y1_;
-	#else
-	x0 = 800 - y1_;
-	x1 = 800 - y0_;
-	y0 = x0_;
-	y1 = x1_;
+	U32 BufferSize = 0;		// For unit testing
 	#endif
 
-	BufferSize 	= GetBufferSize(LayerIndex);
-	AddrSrc		= layer_prop[LayerIndex].address + BufferSize *(y0 * layer_prop[LayerIndex].xSize + x0) * layer_prop[LayerIndex].BytesPerPixel;
-	AddrDst 	= layer_prop[LayerIndex].address + BufferSize *(y1 * layer_prop[LayerIndex].xSize + x1) * layer_prop[LayerIndex].BytesPerPixel;
-	OffLine 	= layer_prop[LayerIndex].ySize - ySize;
+	U32 addrSrc = layer_prop[LayerIndex].address + BufferSize + (U32)(fbSrcTop * yRes + y0) * 4U;
+	U32 addrDst = layer_prop[LayerIndex].address + BufferSize + (U32)(fbDstTop * yRes + y1) * 4U;
+	int lineOff = yRes - ySize;    				// pixel gap at end of each line
 
-	//printf("%x - %x \r\n", AddrSrc, AddrDst);
+    //   * Overlap detection (framebuffer coordinates)
+    //   * ─────────────────────────────────────────────────────────────
+    //   * Unsafe case: X ranges overlap AND dst starts *below* src in
+    //   * the framebuffer but still within the source block.
+    //   * DMA2D copies top→bottom; if dst rows land on unread src rows
+    //   * we must copy bottom→top instead.
+	int xOverlap = (y1 < y0 + ySize) && (y0 < y1 + ySize);
+	int yDanger  = (fbDstTop > fbSrcTop)  && (fbDstTop < fbSrcTop + xSize);
 
-	// Copy via DMA
-	DMA2D_CopyBuffer(	LayerIndex,
-						(void *)AddrSrc,
-						(void *)AddrDst,
-						xSize,
-						ySize,
-						OffLine,
-						OffLine
-					);
-	#endif
+	if((!xOverlap)||(!yDanger))
+	{
+		//printf("short copy \r\n");
+
+		// Safe: single DMA2D transfer
+		DMA2D_CopyBuffer(LayerIndex, (void *)addrSrc, (void *)addrDst, ySize, xSize, lineOff, lineOff);
+	}
+	else
+	{
+		//printf("long copy \r\n");
+
+		// ── Overlapping, must go bottom-to-top ──
+		U32 stride = (U32)xRes * 4U;
+
+		for(int i = ySize - 1; i >= 0; i--)
+		{
+			DMA2D_CopyBuffer(LayerIndex, (void *)(addrSrc + (U32)i * stride), (void *)(addrDst + (U32)i * stride), 1, xSize, 0, 0);
+		}
+	}
 }
-#endif
 
 #if 0
 //*----------------------------------------------------------------------------
@@ -1145,7 +1162,7 @@ void LCD_X_Config(void)
 
 		// Set custom functions for several operations
 		LCD_SetDevFunc(i, LCD_DEVFUNC_COPYBUFFER, 	(void(*)(void))LCD_LL_CopyBuffer);
-		//LCD_SetDevFunc(i, LCD_DEVFUNC_COPYRECT,   	(void(*)(void))LCD_LL_CopyRect);	//- not working!
+		LCD_SetDevFunc(i, LCD_DEVFUNC_COPYRECT,   	(void(*)(void))LCD_LL_CopyRect);
 
 		// Filling via DMA2D does only work with 16bpp or more
 		//LCD_SetDevFunc(i, LCD_DEVFUNC_FILLRECT, 	(void(*)(void))LCD_LL_FillRect); // DMA2D implementation doesn't work ;(

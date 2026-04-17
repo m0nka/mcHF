@@ -587,7 +587,7 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 //*----------------------------------------------------------------------------
 static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 {
-	ulong 		i, j, m, val;
+	ulong 		i, j, val;
 
 	// Initial fill(from backup table)
 	#ifdef USE_WF_BACKUP_BUFFER
@@ -609,50 +609,14 @@ static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 	}
 	#endif
 
-	#if 0
-	// Move down - single line
-	for (i = WATERFALL_Y_SIZE; i > 0; i -= 1)
-	{
-		GUI_CopyRect(SW_FRAME_X + SW_FRAME_WIDTH,
-					 WATERFALL_Y - 1 + i,
-					 SW_FRAME_X + SW_FRAME_WIDTH,
-					 WATERFALL_Y + i,
-					 WATERFALL_X_SIZE,
-					 1);
-	}
-	#else
 	// -----------------------------------------------------------------------------------------------------------
 	// Move waterfall down - rect copy
-	//printf("-----------------------------------\r\n");
-	//printf("x: %d - %d, y: %d - %d (%d,%d)\r\n", 	SW_FRAME_X + SW_FRAME_WIDTH,
-	//												SW_FRAME_X + SW_FRAME_WIDTH,
-	//												WATERFALL_Y,
-	//												WATERFALL_Y + 1,
-	//												WATERFALL_X_SIZE,
-	//												WATERFALL_Y_SIZE - 1);
-	#if 1
 	GUI_CopyRect(SW_FRAME_X + SW_FRAME_WIDTH,	// Upper left X-position of the source rectangle.
 				 WATERFALL_Y,					// Upper left Y-position of the source rectangle.
 				 SW_FRAME_X + SW_FRAME_WIDTH,	// Upper left X-position of the destination rectangle.
 				 WATERFALL_Y + 1,				// Upper left Y-position of the destination rectangle.
 				 WATERFALL_X_SIZE,				// X-size of the rectangle.
 				 WATERFALL_Y_SIZE - 1);			// Y-size of the rectangle.
-	#else
-	int x0 = SW_FRAME_X + SW_FRAME_WIDTH;
-	int y0 = WATERFALL_Y;
-	int x1 = SW_FRAME_X + SW_FRAME_WIDTH;
-	int y1 = WATERFALL_Y + 1;
-	int xs = WATERFALL_X_SIZE;
-	int ys = WATERFALL_Y_SIZE - 1;
-
-	GUI_CopyRect(x0,
-				 y0,
-				 x1,
-				 y1,
-				 xs,
-				 ys);
-	#endif
-	#endif
 
 	// Move backup memory
 	#ifdef USE_WF_BACKUP_BUFFER
