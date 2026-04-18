@@ -14,7 +14,7 @@
 #define __UI_TESTS_H
 
 // Unit tests
-#define	RECT_COPY_TEST
+//#define	RECT_COPY_TEST
 
 void ui_tests_run_all(void);
 void ui_tests_init(void);

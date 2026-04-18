@@ -70,46 +70,84 @@ static void ui_tests_dma_copy_test(void)
 	#endif
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : ui_tests_show_boundary
+//* Object              :
+//* Input Parameters    : Create frame, to judge LTDC timing parameters
+//* Output Parameters   :
+//* Functions called    : CONTEXT_VIDEO
+//*----------------------------------------------------------------------------
 static void ui_tests_show_boundary(void)
-{
-
-}
-
-void ui_tests_run_all(void)
 {
 	int i;
 
-	GUI_SetColor(GUI_RED);
+	GUI_SetColor(GUI_WHITE);
 
 	// Top left
 	for(i = 0; i < 5; i++)
 	{
-		GUI_DrawHLine((i + 1), 1, 50);
-		GUI_DrawVLine((i + 1), 1, 50);
+		GUI_DrawHLine((i + 0), 0, 49);
+		GUI_DrawVLine((i + 0), 0, 49);
 	}
 
 	// Bottom left
 	for(i = 0; i < 5; i++)
 	{
-		GUI_DrawHLine((479 - i), 1, 50);
-		//GUI_DrawVLine((479 - i), 1, 50);
+		GUI_DrawHLine((479 - i),   0,  49);
+		GUI_DrawVLine((i   + 0), 429, 479);
 	}
 
+	// Give it chance to show overflow before displaying
+	// the right side of the frame
+	GUI_Delay(3000);
+
+	// Top right
+	for(i = 0; i < 5; i++)
+	{
+		GUI_DrawHLine((i   + 0), 749, 799);
+		GUI_DrawVLine((799 - i),   0,  49);
+	}
+
+	// Bottom right
+	for(i = 0; i < 5; i++)
+	{
+		GUI_DrawHLine((479 - i), 749, 799);
+		GUI_DrawVLine((799 - i), 429, 479);
+	}
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : ui_tests_run_all
+//* Object              :
+//* Input Parameters    : repetitive paint
+//* Output Parameters   :
+//* Functions called    : CONTEXT_VIDEO
+//*----------------------------------------------------------------------------
+void ui_tests_run_all(void)
+{
+	//
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : ui_tests_init
+//* Object              :
+//* Input Parameters    : single run, on start
+//* Output Parameters   :
+//* Functions called    : CONTEXT_VIDEO
+//*----------------------------------------------------------------------------
 void ui_tests_init(void)
 {
 	//GUI_SelectLayer(1);
 	GUI_SetFont(&GUI_Font24B_ASCII);
-	GUI_SetColor(GUI_WHITE);
-	GUI_DispStringAt("unit test", 700, 450);
+	GUI_SetColor(GUI_LIGHTGREEN);
+	GUI_DispStringAt("ui lcd test", 688, 445);
 
+	// Show screen frame
 	ui_tests_show_boundary();
 
 	#ifdef RECT_COPY_TEST
-	//ui_tests_dma_copy_test();
+	ui_tests_dma_copy_test();
 	#endif
 }
-
 
 #endif

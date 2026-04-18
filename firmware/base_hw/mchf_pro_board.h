@@ -86,7 +86,8 @@
 #define		UI_REFRESH_200HZ		(1000/200)
 
 //#define 	LCD_LANE_CLK			62500
-#define 	LCD_LANE_CLK			58750				// 58750
+//#define 	LCD_LANE_CLK			58750				// 58750
+#define 	LCD_LANE_CLK			55000
 #define	 	ST7701_PIXEL_CLK  		(LCD_LANE_CLK/2)
 //
 // -----------------------------------------------------------------------------

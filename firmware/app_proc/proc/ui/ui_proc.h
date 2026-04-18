@@ -17,7 +17,7 @@
 //#define PROFILE_UI_REPAINT
 
 // Unit test this driver
-#define UI_RUN_ALL_TESTS
+//#define UI_RUN_ALL_TESTS
 
 // Enable individual desktop controls
 #define 	DESKTOP_SHOW_BATTERY

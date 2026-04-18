@@ -757,7 +757,7 @@ static void LCD_LL_Init(void)
 	uint32_t 						HSYNC;
 	uint32_t 						HBP;
 	uint32_t 						HFP;
-	uchar 							id[4];
+	//uchar 							id[4];
 
 	// LCD controller needs to be initialised
 	// but before Touch process init, as INT
@@ -789,6 +789,7 @@ static void LCD_LL_Init(void)
 	__HAL_RCC_DSI_FORCE_RESET();
 	__HAL_RCC_DSI_RELEASE_RESET();
 
+	#if 0
 	// Read ID
 	if(LCDConf_ReadID(id) != 0)
 	{
@@ -804,6 +805,7 @@ static void LCD_LL_Init(void)
 			//Error_Handler(222);
 		}
 	}
+	#endif
 
 	hdsi.Instance = DSI;
 	HAL_DSI_DeInit(&(hdsi));
@@ -816,6 +818,14 @@ static void LCD_LL_Init(void)
     dsiPllInit.PLLNDIV  				= 100;
 	dsiPllInit.PLLODF 					= DSI_PLL_OUT_DIV1;
 	hdsi.Init.TXEscapeCkdiv 			= LCD_LANE_CLK/15620;					/* TXEscapeCkdiv = f(LaneByteClk)/15.62 = 4 */
+    #elif(LCD_LANE_CLK == 54000)
+	// 54/27Mhz lane clock	(PLL out = 433 Mhz, 13.54 MHz TX)
+	hdsi.Init.AutomaticClockLaneControl	= DSI_AUTO_CLK_LANE_CTRL_DISABLE;
+	hdsi.Init.NumberOfLanes 			= DSI_TWO_DATA_LANES;
+	dsiPllInit.PLLIDF   				= DSI_PLL_IN_DIV3;		// IDF 			= 3
+	dsiPllInit.PLLNDIV  				= 104;					// NDIF 		= 104
+	dsiPllInit.PLLODF 					= DSI_PLL_OUT_DIV2;		// ODF 			= 2
+	hdsi.Init.TXEscapeCkdiv 			= 4;					// TX Prescaler = 4
 	#else
 	// 58.75/29.375 Mhz lane clock	(PLL out = 470 Mhz, 14.6875 MHz TX)
     hdsi.Init.AutomaticClockLaneControl	= DSI_AUTO_CLK_LANE_CTRL_DISABLE;
@@ -828,8 +838,11 @@ static void LCD_LL_Init(void)
 
 	HAL_DSI_Init(&(hdsi), &(dsiPllInit));
 
+	int dsi_clk = (25/dsiPllInit.PLLIDF)*2*dsiPllInit.PLLNDIV/2/(dsiPllInit.PLLODF + 1)/8;
+	printf("dsi clk = %dMHz \r\n", dsi_clk);
+
     // Timing parameters for all Video modes
-    if(id[0] == 0x40)
+    /*if(id[0] == 0x40)
     {
     	VSYNC  		= OTM8009A_800X480_VSYNC;
     	VBP  		= OTM8009A_800X480_VBP;
@@ -845,7 +858,7 @@ static void LCD_LL_Init(void)
     	Clockratio 	= LCD_LANE_CLK/OTM8009A_PIXEL_CLK;
     }
     else
-    {
+    {*/
     	VSYNC  		= ST7701_VSYNC;
     	VBP  		= ST7701_VBP;
     	VFP  		= ST7701_VFP;
@@ -857,9 +870,9 @@ static void LCD_LL_Init(void)
     	lcd_x_size 	= ST7701_WIDTH;
 
     	Clockratio 	= LCD_LANE_CLK/ST7701_PIXEL_CLK;
-    }
+    //}
 
-	#if 0
+	#if 1
     // The reference value given by the manufacturer is 58.2MHz,  then fps is :
     // fps = 58200000 / (480 + 160 + 160 +24) * (1280 + 12 + 10 + 2) = 54Hz
     int refresh_rate   = (ST7701_PIXEL_CLK * 1000)/((lcd_x_size + HSYNC + HBP + HFP)*(VSYNC + lcd_y_size + VBP + VFP));
@@ -926,15 +939,18 @@ static void LCD_LL_Init(void)
     PeriphClkInitStruct.PLL3.PLL3Q      				= 2U;
     PeriphClkInitStruct.PLL3.PLL3R      				= 24U;
 	#else
-    // 29.375 Mhz (same as lane clock ??)
-    PeriphClkInitStruct.PLL3.PLL3M      				= 5U;	// DIVM3 = 5
-    PeriphClkInitStruct.PLL3.PLL3N      				= 132U;	// DIVN3 = 141
-    PeriphClkInitStruct.PLL3.PLL3R      				= 24U;	// DIVR3 = 24
+    // 27.083 Mhz (same as lane clock)
+    PeriphClkInitStruct.PLL3.PLL3M      				= 6U;	// DIVM3 = 6
+    PeriphClkInitStruct.PLL3.PLL3N      				= 130U;	// DIVN3 = 130
+    PeriphClkInitStruct.PLL3.PLL3R      				= 20U;	// DIVR3 = 20
     PeriphClkInitStruct.PLL3.PLL3P      				= 2U;	// NOT USED ?
     PeriphClkInitStruct.PLL3.PLL3Q      				= 2U;	// NOT USED ?
 	#endif
     PeriphClkInitStruct.PeriphClockSelection   			= RCC_PERIPHCLK_LTDC;
     HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
+
+    int ltdc_clk = 25 / PeriphClkInitStruct.PLL3.PLL3M  * PeriphClkInitStruct.PLL3.PLL3N / PeriphClkInitStruct.PLL3.PLL3R;
+    printf("ltdc clk = %dMHz \r\n", ltdc_clk);
 
    	hltdc.Instance 					= LTDC;
    	hltdc.Init.HSPolarity 			= LTDC_HSPOLARITY_AL;
@@ -962,13 +978,13 @@ static void LCD_LL_Init(void)
     HAL_DSI_Start(&(hdsi));
 
   	// Init LCD registers
-	if(id[0] == 0x40)
-		OTM8009A_Init(OTM8009A_FORMAT_RGB888, OTM8009A_ORIENTATION_PORTRAIT);
-	else
-	{
+	//if(id[0] == 0x40)
+	//	OTM8009A_Init(OTM8009A_FORMAT_RGB888, OTM8009A_ORIENTATION_PORTRAIT);
+	//else
+	//{
 		//HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
 		ST7701S_Init(hdsivideo_handle.ColorCoding);
-	}
+	//}
 
   	// Start buffer refresh
   	//HAL_LTDC_ProgramLineEvent(&hltdc, 0);
