@@ -558,7 +558,7 @@ void LCD_LL_CopyRect(	int LayerIndex,
 	int fbSrcTop = xRes - x0 - xSize;
 	int fbDstTop = xRes - x1 - xSize;
 
-	#ifndef RECT_COPY_TEST
+	#ifndef UI_RUN_ALL_TESTS
 	U32 BufferSize = GetBufferSize(LayerIndex);
 	#else
 	U32 BufferSize = 0;		// For unit testing
