@@ -124,6 +124,9 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 // UI driver public state
 extern struct	UI_DRIVER_STATE			ui_s;
 
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
+
 // This control bounds
 struct WidgetBounds						sb;
 
@@ -142,6 +145,8 @@ uchar 		loc_vfo_mode;
 
 uchar 	api_conv_type 	= 1;						// smooth waterfall
 uchar 	sw_light		= 1;						// simplified scope (less resources)
+
+uchar spk_type = 0;
 
 // -------------------------------
 //
@@ -512,37 +517,37 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 		new_y = chk_y(SCOPE_Y + SCOPE_Y_SIZE - val);
 
 		// Gradient vertical line
-		#if 1
-		GUI_DrawGradientV(new_x, new_y, new_x, chk_y(SCOPE_Y + SCOPE_Y_SIZE), GUI_LIGHTRED, GUI_LIGHTGREEN);
-		#endif
+		if(spk_type == 0)
+			GUI_DrawGradientV(new_x, new_y, new_x, chk_y(SCOPE_Y + SCOPE_Y_SIZE), GUI_LIGHTRED, GUI_LIGHTGREEN);
 
 		// Print vertical line for each point, transparent, to fill the spectrum
-		#if 0
-		GUI_SetColor(GUI_WHITE);
-		GUI_SetAlpha(128);
-		GUI_DrawVLine(new_x, new_y, chk_y(SCOPE_Y + SCOPE_Y_SIZE));
-		GUI_SetAlpha(255);
-		#endif
+		if(spk_type == 1)
+		{
+			GUI_SetColor(GUI_YELLOW);
+			GUI_SetAlpha(128);
+			GUI_DrawVLine(new_x, new_y, chk_y(SCOPE_Y + SCOPE_Y_SIZE));
+			GUI_SetAlpha(255);
+		}
 
 		// Draw point
-		// Causes draw outside of MEMDEV!!!
-		#if 0
-		GUI_SetColor(GUI_GREEN);
-		GUI_DrawPixel(new_x, new_y);
-		#endif
+		if(spk_type == 2)
+		{
+			GUI_SetColor(GUI_GREEN);
+			GUI_DrawPixel(new_x, new_y);
+		}
 
 		// Draw line between old and new point
-		// Causes draw outside of MEMDEV!!!
-		#if 1
-		GUI_SetColor(GUI_WHITE);
-		if(i)
+		if(spk_type == 3)
 		{
-			if((old_x < new_x)&&(old_y < new_y))
-				GUI_DrawLine(old_x, old_y, new_x, new_y);
-			else if((new_x < old_x)&&(new_y < old_y))
-				GUI_DrawLine(new_x, new_y, old_x, old_y);
+			GUI_SetColor(GUI_WHITE);
+			if(i)
+			{
+				if((old_x < new_x)&&(old_y < new_y))
+					GUI_DrawLine(old_x, old_y, new_x, new_y);
+				else if((new_x < old_x)&&(new_y < old_y))
+					GUI_DrawLine(new_x, new_y, old_x, old_y);
+			}
 		}
-		#endif
 
 		// Save old point
 		old_x = new_x;
@@ -594,7 +599,7 @@ static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 	if(cb == NULL)
 	{
 		GUI_MULTIBUF_Begin();  // Copy front to back buffer
-		m = 0;
+		ulong m = 0;
 		for (j = 0; j < WATERFALL_Y_SIZE; j++)
 		{
 			for (i = 0; i < WATERFALL_X_SIZE; i++)
@@ -806,12 +811,30 @@ int ui_controls_spectrum_is_touch(int x, int y)
 
 	//-------------------------------------------
 	// BMS position
-	//bar_x = (sb.x + 18);
-	//bar_y = (sb.y +  2);
+	bar_x = (sb.x + 18);
+	bar_y = (sb.y +  2);
 
 	// Is BMS label touched ?
-	//if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-	//	return 1;
+	if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	{
+		static ulong deb_timer = 0;
+
+		// Non-blocking debounce
+		if(deb_timer == 0)
+		{
+			spk_type++;
+			if(spk_type == 4)
+				spk_type = 0;
+
+			printf("== change spectrum type(%d) == \r\n", spk_type);
+
+			deb_timer = ps.epoch;
+		}
+		else if((deb_timer + 300) > ps.epoch)
+			return 0;
+		else
+			deb_timer = 0;
+	}
 
 	//-------------------------------------------
 	// AUDIO position

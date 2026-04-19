@@ -19,6 +19,11 @@
 
 // LCD clocks in kHz
 
+//#define 	LCD_LANE_CLK			62500
+//#define 	LCD_LANE_CLK			58750				// 58750
+#define 	LCD_LANE_CLK			55000
+#define	 	ST7701_PIXEL_CLK  		(LCD_LANE_CLK/2)
+
 #define DRIVER_32_BIT			1
 
 #define NUM_BUFFERS  			3

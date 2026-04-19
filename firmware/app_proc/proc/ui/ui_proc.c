@@ -941,85 +941,24 @@ static void ui_proc_periodic(void)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : ui_proc_task
+//* Function Name       : ui_proc_notified
 //* Object              :
 //* Input Parameters    :
 //* Output Parameters   :
 //* Functions called    : CONTEXT_VIDEO
 //*----------------------------------------------------------------------------
-void ui_proc_task(void const *arg)
+static void ui_proc_notified(void const *arg)
 {
 	ulong 			ulNotificationValue = 0, ulNotif;
 	xQueueHandle	*RxQueue;
 
-	vTaskDelay(UI_PROC_START_DELAY);
-	printf("start\r\n");
+	#ifdef UI_RUN_ALL_TESTS
+	return;
+	#endif
 
 	// Get rx queue ptr
 	RxQueue = (xQueueHandle *)arg;
 
-	// Backlight PWM
-	shared_tim_init();
-	shared_tim_change(tsu.brightness);
-
-	ui_actions_init();
-	ui_lora_state_init();
-
-	// Default driver state
-	ui_s.req_state 				= MODE_DESKTOP;
-	ui_s.cur_state 				= MODE_DESKTOP;
-	ui_s.show_band_guide 		= 0;
-	ui_s.lock_requests			= 0;
-	ui_s.theme_id				= THEME_0;
-	ui_s.active_control_shown	= 0;
-
-	// Read Theme ID from eeprom
-	#ifdef CONTEXT_IPC_PROC
-	//ui_proc_ipc_msg(1, 5);
-	//ui_proc_ipc_msg(0, 5);
-	#endif
-
-	// Init graphics lib
-	ui_proc_emwin_init();
-
-	// Set AGC, don't care what is the DSP state, just set it here
-	//tsu.agc_state 	= READ_EEPROM(EEP_AGC_STATE);
-	//tsu.rf_gain		= 50;
-	//hw_dsp_eep_set_agc_mode(tsu.agc_state);
-
-	// Add Menu items
-	ui_proc_add_menu_items();
-
-	// Prepare Desktop screen
-	if(ui_s.cur_state == MODE_DESKTOP)
-	{
-		ui_proc_init_desktop();
-
-		// Demo mode on after boot up
-		if(tsu.demo_mode)
-		{
-			// Change demo mode
-			//tsu.demo_mode = 1;
-
-			// Wake up vfo task(use any notif id)
-			if(ps.hVfoTask != NULL)
-				xTaskNotify(ps.hVfoTask, 44, eSetValueWithOverwrite);
-		}
-
-	}
-
-	// Prepare menu screen
-	if(ui_s.cur_state == MODE_MENU)
-	{
-		ui_menu_set_gui_profile();
-		ui_menu_init();
-
-		GUI_Exec();
-	}
-
-ui_proc_loop:
-
-	#ifndef UI_RUN_ALL_TESTS
 	ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, 0);	// No waiting, just read!
 	if((ulNotif)&&(ulNotificationValue))
 	{
@@ -1091,26 +1030,94 @@ ui_proc_loop:
 				break;
 		}
 	}
-	#endif
+}
 
+//*----------------------------------------------------------------------------
+//* Function Name       : ui_proc_task
+//* Object              :
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    : CONTEXT_VIDEO
+//*----------------------------------------------------------------------------
+void ui_proc_task(void const *arg)
+{
+	uchar del_ms = UI_PROC_SLEEP_TIME;
+
+	vTaskDelay(UI_PROC_START_DELAY);
+	printf("start\r\n");
+
+	// Backlight PWM
+	shared_tim_init();
+	shared_tim_change(tsu.brightness);
+
+	ui_actions_init();
+	ui_lora_state_init();
+
+	// Default driver state
+	ui_s.req_state 				= MODE_DESKTOP;
+	ui_s.cur_state 				= MODE_DESKTOP;
+	ui_s.show_band_guide 		= 0;
+	ui_s.lock_requests			= 0;
+	ui_s.theme_id				= THEME_0;
+	ui_s.active_control_shown	= 0;
+
+	// Init graphics lib
+	ui_proc_emwin_init();
+
+	// Set AGC, don't care what is the DSP state, just set it here
+	//tsu.agc_state 	= READ_EEPROM(EEP_AGC_STATE);
+	//tsu.rf_gain		= 50;
+	//hw_dsp_eep_set_agc_mode(tsu.agc_state);
+
+	// Add Menu items
+	ui_proc_add_menu_items();
+
+	// Prepare Desktop screen
+	if(ui_s.cur_state == MODE_DESKTOP)
+	{
+		ui_proc_init_desktop();
+
+		// Demo mode on after boot up
+		if(tsu.demo_mode)
+		{
+			// Change demo mode
+			//tsu.demo_mode = 1;
+
+			// Wake up vfo task(use any notif id)
+			if(ps.hVfoTask != NULL)
+				xTaskNotify(ps.hVfoTask, 44, eSetValueWithOverwrite);
+		}
+
+	}
+
+	// Prepare menu screen
 	if(ui_s.cur_state == MODE_MENU)
 	{
+		ui_menu_set_gui_profile();
+		ui_menu_init();
+
 		GUI_Exec();
-		GUI_Delay(UI_REFRESH_100HZ);
 	}
+
+ui_proc_loop:
+
+	// Process notifications
+	ui_proc_notified(arg);
+
+	// Adjust yield time
+	if(ui_s.cur_state == MODE_MENU)
+		del_ms = (UI_PROC_SLEEP_TIME*2);
 	else if(ui_s.cur_state == MODE_DESKTOP_FT8)
-	{
-		GUI_Exec();
-		GUI_Delay(UI_PROC_SLEEP_TIME);
-	}
+		del_ms = (UI_PROC_SLEEP_TIME*3);
 	else
 	{
-		// Repaint Desktop
 		ui_proc_periodic();
-
-		GUI_Delay(1);
-		GUI_Exec();
+		del_ms = UI_PROC_SLEEP_TIME;
 	}
+
+	// Give control to emWin
+	GUI_Exec();
+	GUI_Delay(del_ms);
 
 	goto ui_proc_loop;
 }

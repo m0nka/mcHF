@@ -78,18 +78,6 @@
 //#define USE_INT_RAM
 #define USE_SDRAM
 //
-#define	EMWIN_RAM_SIZE 				(1024*1024)
-//
-#define		UI_REFRESH_25HZ			(1000/25)
-#define		UI_REFRESH_60HZ			(1000/60)
-#define		UI_REFRESH_100HZ		(1000/100)
-#define		UI_REFRESH_200HZ		(1000/200)
-
-//#define 	LCD_LANE_CLK			62500
-//#define 	LCD_LANE_CLK			58750				// 58750
-#define 	LCD_LANE_CLK			55000
-#define	 	ST7701_PIXEL_CLK  		(LCD_LANE_CLK/2)
-//
 // -----------------------------------------------------------------------------
 // Oscillators configuration
 //

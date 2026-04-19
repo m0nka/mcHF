@@ -139,7 +139,7 @@
 // UI(video) process parameters
 #define UI_PROC_START_NAME				"gui"
 #define UI_PROC_START_DELAY				100
-#define UI_PROC_SLEEP_TIME				UI_REFRESH_60HZ
+#define UI_PROC_SLEEP_TIME				5
 #define UI_PROC_PRIORITY				osPriorityNormal
 #define UI_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 64)
 
