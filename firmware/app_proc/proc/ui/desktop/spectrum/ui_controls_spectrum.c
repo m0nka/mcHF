@@ -11,6 +11,7 @@
 **  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #include "mchf_pro_board.h"
+#include "main.h"
 
 #ifdef CONTEXT_VIDEO
 
@@ -24,33 +25,7 @@
 #include "ui_controls_spectrum.h"
 #include "desktop\ui_controls_layout.h"
 
-// -------------------------
-//
-// Causing hard fault :(
 #define USE_MEM_DEVICE
-//
-//#define SPEC_USE_WM
-//
-// -------------------------
-
-#ifdef SPEC_USE_WM
-static const GUI_WIDGET_CREATE_INFO SpectrumDialog[] =
-{
-	// --------------------------------------------------------------------------------------------------------------------------------------------------------
-	//							name		id					x		y		xsize				ysize				?		?		?
-	// --------------------------------------------------------------------------------------------------------------------------------------------------------
-	// Self
-	{ WINDOW_CreateIndirect,	"", 		ID_WINDOW_SPEC,		0,		0,		SW_CONTROL_X_SIZE,	SW_CONTROL_Y_SIZE, 	WM_CF_MEMDEV, 0, 0 },
-	//
-	//{ TEXT_CreateIndirect, 		"----",		ID_TEXT_SPEC,	1,		1,		78, 				13,  				0, 		0x0,	0 },
-};
-
-WM_HWIN 	hSpectrumDialog;
-
-#define	SPEC_TIMER_RESOLUTION	0
-//
-WM_HTIMER 						hTimerSpec;
-#endif
 
 // ------------------------------
 //#include "touch_driver.h"
@@ -149,6 +124,9 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 // UI driver public state
 extern struct	UI_DRIVER_STATE			ui_s;
 
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
+
 // This control bounds
 struct WidgetBounds						sb;
 
@@ -168,6 +146,8 @@ uchar 		loc_vfo_mode;
 uchar 	api_conv_type 	= 1;						// smooth waterfall
 uchar 	sw_light		= 1;						// simplified scope (less resources)
 
+uchar spk_type = 0;
+
 // -------------------------------
 //
 // Use a spare RAM region as backup
@@ -177,7 +157,7 @@ uchar 	sw_light		= 1;						// simplified scope (less resources)
 // to brightness table
 //
 //
-#define USE_WF_BACKUP_BUFFER
+//#define USE_WF_BACKUP_BUFFER
 //
 #ifdef USE_WF_BACKUP_BUFFER
 //
@@ -186,7 +166,7 @@ uchar 	sw_light		= 1;						// simplified scope (less resources)
 //
 #define WF_BKP_SIZE			136850
 //
-__attribute__((section(".STemWinMemPool"))) __attribute__ ((aligned (32))) uchar wf_bkp[WF_BKP_SIZE];
+__attribute__((section(".emwin"))) __attribute__ ((aligned (32))) uchar wf_bkp[WF_BKP_SIZE];
 uchar wf_init = 0;
 #endif
 //
@@ -537,43 +517,44 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 		new_y = chk_y(SCOPE_Y + SCOPE_Y_SIZE - val);
 
 		// Gradient vertical line
-		#if 1
-		GUI_DrawGradientV(new_x, new_y, new_x, chk_y(SCOPE_Y + SCOPE_Y_SIZE), GUI_LIGHTRED, GUI_LIGHTGREEN);
-		#endif
+		if(spk_type == 0)
+			GUI_DrawGradientV(new_x, new_y, new_x, chk_y(SCOPE_Y + SCOPE_Y_SIZE), GUI_LIGHTRED, GUI_LIGHTGREEN);
 
 		// Print vertical line for each point, transparent, to fill the spectrum
-		#if 0
-		GUI_SetColor(GUI_WHITE);
-		GUI_SetAlpha(128);
-		GUI_DrawVLine(new_x, new_y, chk_y(SCOPE_Y + SCOPE_Y_SIZE));
-		GUI_SetAlpha(255);
-		#endif
+		if(spk_type == 1)
+		{
+			GUI_SetColor(GUI_YELLOW);
+			GUI_SetAlpha(128);
+			GUI_DrawVLine(new_x, new_y, chk_y(SCOPE_Y + SCOPE_Y_SIZE));
+			GUI_SetAlpha(255);
+		}
 
 		// Draw point
-		// Causes draw outside of MEMDEV!!!
-		#if 0
-		GUI_SetColor(GUI_WHITE);
-		GUI_DrawPixel(new_x, new_y);
-		#endif
+		if(spk_type == 2)
+		{
+			GUI_SetColor(GUI_GREEN);
+			GUI_DrawPixel(new_x, new_y);
+		}
 
 		// Draw line between old and new point
-		// Causes draw outside of MEMDEV!!!
-		#if 1
-		GUI_SetColor(GUI_WHITE);
-		if(i)
+		if(spk_type == 3)
 		{
-			if((old_x < new_x)&&(old_y < new_y))
-				GUI_DrawLine(old_x, old_y, new_x, new_y);
-			else if((new_x < old_x)&&(new_y < old_y))
-				GUI_DrawLine(new_x, new_y, old_x, old_y);
+			GUI_SetColor(GUI_WHITE);
+			if(i)
+			{
+				if((old_x < new_x)&&(old_y < new_y))
+					GUI_DrawLine(old_x, old_y, new_x, new_y);
+				else if((new_x < old_x)&&(new_y < old_y))
+					GUI_DrawLine(new_x, new_y, old_x, old_y);
+			}
 		}
-		#endif
 
 		// Save old point
 		old_x = new_x;
 		old_y = new_y;
 
 		// Fast UI update callback
+		#if 0
 		if(cb)
 		{
 			#ifdef USE_MEM_DEVICE
@@ -584,6 +565,7 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 			cb();
 			#endif
 		}
+		#endif
 	}
 
 	// Show VFO centre frequency in Fixed mode, as Alpha blended text
@@ -610,13 +592,14 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 //*----------------------------------------------------------------------------
 static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 {
-	ulong 		i, j, m, val;
+	ulong 		i, j, val;
 
 	// Initial fill(from backup table)
 	#ifdef USE_WF_BACKUP_BUFFER
 	if(cb == NULL)
 	{
-		m = 0;
+		GUI_MULTIBUF_Begin();  // Copy front to back buffer
+		ulong m = 0;
 		for (j = 0; j < WATERFALL_Y_SIZE; j++)
 		{
 			for (i = 0; i < WATERFALL_X_SIZE; i++)
@@ -626,22 +609,11 @@ static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 				GUI_DrawPixel(((SW_FRAME_X + SW_FRAME_WIDTH) + i), WATERFALL_Y + j);
 			}
 		}
+		GUI_MULTIBUF_End();  // Switch buffers
 		return;
 	}
 	#endif
 
-	#if 0
-	// Move down - single line
-	for (i = WATERFALL_Y_SIZE; i > 0; i -= 1)
-	{
-		GUI_CopyRect(SW_FRAME_X + SW_FRAME_WIDTH,
-					 WATERFALL_Y - 1 + i,
-					 SW_FRAME_X + SW_FRAME_WIDTH,
-					 WATERFALL_Y + i,
-					 WATERFALL_X_SIZE,
-					 1);
-	}
-	#else
 	// -----------------------------------------------------------------------------------------------------------
 	// Move waterfall down - rect copy
 	GUI_CopyRect(SW_FRAME_X + SW_FRAME_WIDTH,	// Upper left X-position of the source rectangle.
@@ -650,8 +622,6 @@ static void ui_controls_spectrum_wf_repaint_big(FAST_REFRESH *cb)
 				 WATERFALL_Y + 1,				// Upper left Y-position of the destination rectangle.
 				 WATERFALL_X_SIZE,				// X-size of the rectangle.
 				 WATERFALL_Y_SIZE - 1);			// Y-size of the rectangle.
-
-	#endif
 
 	// Move backup memory
 	#ifdef USE_WF_BACKUP_BUFFER
@@ -841,12 +811,30 @@ int ui_controls_spectrum_is_touch(int x, int y)
 
 	//-------------------------------------------
 	// BMS position
-	//bar_x = (sb.x + 18);
-	//bar_y = (sb.y +  2);
+	bar_x = (sb.x + 18);
+	bar_y = (sb.y +  2);
 
 	// Is BMS label touched ?
-	//if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
-	//	return 1;
+	if((x > bar_x) && (x < (bar_x + 80)) && (y > (bar_y - 20)) && (y < bar_y + 30))
+	{
+		static ulong deb_timer = 0;
+
+		// Non-blocking debounce
+		if(deb_timer == 0)
+		{
+			spk_type++;
+			if(spk_type == 4)
+				spk_type = 0;
+
+			printf("== change spectrum type(%d) == \r\n", spk_type);
+
+			deb_timer = ps.epoch;
+		}
+		else if((deb_timer + 300) > ps.epoch)
+			return 0;
+		else
+			deb_timer = 0;
+	}
 
 	//-------------------------------------------
 	// AUDIO position
@@ -1248,102 +1236,6 @@ void ui_controls_spectrum_show_notification(char *text)
 	}
 }
 
-#ifdef SPEC_USE_WM
-// ToDo:
-// 1. activate mem device per windows : https://forum.segger.com/index.php/Thread/4859-Selectively-activate-MEMDEV-for-each-window/
-// 2. Add memory device support in LCD driver
-//
-static void WDHandler(WM_MESSAGE *pMsg)
-{
-	WM_HWIN hItem;
-	int 	Id, NCode;
-
-	switch (pMsg->MsgId)
-	{
-		case WM_INIT_DIALOG:
-		{
-			#if 0
-			// Initial clear of control
-			GUI_SetColor(GUI_BLACK);
-			GUI_FillRect(	sb.x,
-							sb.y,
-							(sb.x + sb.x_size),
-							(sb.y + sb.y_size)
-			);
-			#endif
-
-			ui_sw.ctrl_type 		= SW_CONTROL_BIG;
-			ui_sw.bandpass_start 	= SPECTRUM_MID_POINT - SPECTRUM_DEF_HALF_BW*2;
-			ui_sw.bandpass_end 		= SPECTRUM_MID_POINT;
-
-			ui_controls_create_sw_big();
-
-			hTimerSpec = WM_CreateTimer(pMsg->hWin, 0, SPEC_TIMER_RESOLUTION, 0);
-			break;
-		}
-
-		case WM_TIMER:
-		{
-			#if 0
-			if(tsu.wifi_rssi)
-			{
-				char buf[30];
-				hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_WIFI);
-				sprintf(buf, "%d dBm", tsu.wifi_rssi);
-				TEXT_SetText(hItem, buf);
-			}
-			#endif
-
-			ui_controls_spectrum_fft_process_big();
-			ui_controls_spectrum_repaint_big(NULL);
-			//ui_controls_spectrum_wf_repaint_big();
-
-			WM_InvalidateWindow(hSpectrumDialog);
-			WM_RestartTimer(pMsg->Data.v, SPEC_TIMER_RESOLUTION);
-
-			break;
-		}
-
-		case WM_PAINT:
-			//ui_controls_spectrum_fft_process_big();
-			//ui_controls_spectrum_repaint_big(NULL);
-			//ui_controls_spectrum_wf_repaint_big();
-			break;
-
-		case WM_DELETE:
-			//WM_DeleteTimer(hTimerWiFi);
-			break;
-
-		case WM_NOTIFY_PARENT:
-		{
-			Id    = WM_GetId(pMsg->hWinSrc);    // Id of widget
-			NCode = pMsg->Data.v;               // Notification code
-
-			//VDCHandler(pMsg,Id,NCode);
-			break;
-		}
-
-		// Trap keyboard messages
-		case WM_KEY:
-		{
-			switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
-			{
-		        // Return from menu
-		        case GUI_KEY_HOME:
-		        {
-		        	//printf("GUI_KEY_HOME\r\n");
-		        	break;
-		        }
-			}
-			break;
-		}
-
-		default:
-			WM_DefaultProc(pMsg);
-			break;
-	}
-}
-#else
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_spectrum_refresh
 //* Object              :
@@ -1352,39 +1244,33 @@ static void WDHandler(WM_MESSAGE *pMsg)
 //* Notes    			:
 //* Context    			: CONTEXT_VIDEO
 //*----------------------------------------------------------------------------
-void ui_controls_spectrum_refresh(FAST_REFRESH *cb)
+uchar ui_controls_spectrum_refresh(FAST_REFRESH *cb, uchar mode)
 {
-	ui_controls_update_vfo_mode(false);
-	ui_controls_update_smooth_control(0);
-
-	switch(ui_sw.ctrl_type)
+	if(!ui_sw.updated)
 	{
-		case SW_CONTROL_BIG:
-		{
-			if(ui_sw.updated)
-			{
-				ui_controls_spectrum_fft_process_big();
-				if(tsu.sc_enabled) ui_controls_spectrum_repaint_big(cb);
-				if(tsu.wf_enabled) ui_controls_spectrum_wf_repaint_big(cb); // - super laggy
-				ui_sw.updated = 0;
-			}
-			break;
-		}
-		#if 0
-		case SW_CONTROL_MID:
-			ui_controls_spectrum_fft_process_mid();
-			ui_controls_spectrum_repaint_mid(cb);
-			ui_controls_spectrum_wf_repaint_mid();
-			break;
-		case SW_CONTROL_SMALL:
-			//ui_controls_create_sw_big();
-			break;
-		#endif
-		default:
-			break;
+		//--printf("not ready \r\n");
+		return 1;
 	}
+
+	ui_controls_spectrum_fft_process_big();
+	if(mode == 0)
+	{
+		ui_controls_update_vfo_mode(false);
+		ui_controls_update_smooth_control(0);
+
+		if(tsu.sc_enabled)
+			ui_controls_spectrum_repaint_big(cb);
+	}
+	else if(mode == 1)
+	{
+		if(tsu.wf_enabled)
+			ui_controls_spectrum_wf_repaint_big(cb);
+	}
+	else
+		ui_sw.updated = 0;
+
+	return 0;
 }
-#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_spectrum_init
@@ -1408,12 +1294,6 @@ void ui_controls_spectrum_init(WM_HWIN hParent)
 	}
 	#endif
 
-	#ifdef SPEC_USE_WM
-	hSpectrumDialog = GUI_CreateDialogBox(SpectrumDialog, GUI_COUNTOF(SpectrumDialog), WDHandler, hParent, sb.x, sb.y);
-	#ifdef USE_MEM_DEVICE
-	//--WM_EnableMemdev(hSpectrumDialog);
-	#endif
-	#else
 	loc_vfo_mode = 0x99;
 
 	// Clear waterfall
@@ -1455,7 +1335,6 @@ void ui_controls_spectrum_init(WM_HWIN hParent)
 	//	default:
 	//		break;
 	//}
-	#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -1467,13 +1346,9 @@ void ui_controls_spectrum_init(WM_HWIN hParent)
 //*----------------------------------------------------------------------------
 void ui_controls_spectrum_quit(void)
 {
-	#ifdef SPEC_USE_WM
-	GUI_EndDialog(hSpectrumDialog, 0);
-	#else
 	#ifdef USE_MEM_DEVICE
 	GUI_MEMDEV_Delete(hMemSpWf);
 	hMemSpWf = 0;
-	#endif
 	#endif
 }
 

@@ -105,7 +105,7 @@ uchar ucSednaElfProcessElf(uchar *ucProcessImage)
 	vSednaElfParceSections(	elf_head, ucProcessImage, &uiFileOffcet3, &uiFuncSize3, &uiVirtualAddr3, "ER_ZI");
 							
 	/* Check if program section is present in ELF */
-	if(uiFuncSize1 == NULL)
+	if(uiFuncSize1 == 0)
 	  return SEDNA_APP_ELF_PRG_SECT_MISSING;
 
 	/* Check if the sum of both data section sizes is over the
@@ -122,11 +122,11 @@ uchar ucSednaElfProcessElf(uchar *ucProcessImage)
 	ucProgramSectionBuffer = (uchar *) pvPortMalloc(uiFuncSize1);
 	
 	/* If the 'ER_RW' section is present allocate buffer for it */
-	if(uiFuncSize2 != NULL)
+	if(uiFuncSize2 != 0)
    	  ucIDataSectionBuffer = (uchar *) pvPortMalloc(uiFuncSize2);
 							
     /* If the 'ER_ZI' section is present allocate buffer for it */
-	if(uiFuncSize3 != NULL)
+	if(uiFuncSize3 != 0)
    	  ucUDataSectionBuffer = (uchar *) pvPortMalloc(uiFuncSize3);
 																	
 	/* Restart the kernel */
@@ -139,7 +139,7 @@ uchar ucSednaElfProcessElf(uchar *ucProcessImage)
 		return SEDNA_APP_ELF_PRG_SECT_ALLOC_FAIL;
 	
 	/* Copy IData Section */
-	if(uiFuncSize2 != NULL)
+	if(uiFuncSize2 != 0)
 	{
 		if(ucIDataSectionBuffer == NULL)
 			return SEDNA_APP_ELF_IDA_SECT_ALLOC_FAIL;
@@ -149,7 +149,7 @@ uchar ucSednaElfProcessElf(uchar *ucProcessImage)
 		
 	/* Fill UData Section with zeros, basically we create the
 	   unitilized data section here */
-	if(uiFuncSize3 != NULL)
+	if(uiFuncSize3 != 0)
 	{	
 		if(ucUDataSectionBuffer == NULL)
 			return SEDNA_APP_ELF_UDA_SECT_ALLOC_FAIL;
@@ -169,7 +169,7 @@ uchar ucSednaElfProcessElf(uchar *ucProcessImage)
 	ucProcessImage += uiFuncSize1;
 
 	/* Initilized Data section */
-	if(uiFuncSize2 != NULL)
+	if(uiFuncSize2 != 0)
 	{
 		vElfMemCopy(ucProcessImage,ucIDataSectionBuffer,uiFuncSize2);
 		
@@ -178,7 +178,7 @@ uchar ucSednaElfProcessElf(uchar *ucProcessImage)
 	}
 		
 	/* Unitilized Data section */	
-	if(uiFuncSize3 != NULL)
+	if(uiFuncSize3 != 0)
 		vElfMemCopy(ucProcessImage,ucUDataSectionBuffer,uiFuncSize3);
 			
 	/* ---------------- Copy extracted process image end -------------*/
@@ -190,11 +190,11 @@ uchar ucSednaElfProcessElf(uchar *ucProcessImage)
 	vPortFree( ucProgramSectionBuffer );
    	
    	/* Free idata section buffer */
-   	if(uiFuncSize2 != NULL)
+   	if(uiFuncSize2 != 0)
    		vPortFree( ucIDataSectionBuffer );
 	  
 	/* Free udata section buffer */  
-	if(uiFuncSize3 != NULL)
+	if(uiFuncSize3 != 0)
 		vPortFree( ucUDataSectionBuffer );
 	  	
 	return SEDNA_APP_LOAD_SUCCESS;

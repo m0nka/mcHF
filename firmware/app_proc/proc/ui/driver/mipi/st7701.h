@@ -42,13 +42,13 @@
 #endif
 // ----------------------------------------------------------------------------------
 #ifdef STARTEK_43INCH
-#define  ST7701_VSYNC             			4
-#define  ST7701_VBP               			10
-#define  ST7701_VFP            		   		45
+#define  ST7701_VSYNC             			2
+#define  ST7701_VBP               			20
+#define  ST7701_VFP            		   		10
 #define  ST7701_HEIGHT            			800
 //
 #define  ST7701_HSYNC			            4
-#define  ST7701_HBP               			40
+#define  ST7701_HBP               			33
 #define  ST7701_HFP               			60
 #define  ST7701_WIDTH             			480
 #endif

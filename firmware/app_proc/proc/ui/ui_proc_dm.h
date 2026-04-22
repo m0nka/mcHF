@@ -10,38 +10,28 @@
 **  Last Modified:                                                                 **
 **  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
-#ifndef __UI_PROC_H
-#define __UI_PROC_H
+#ifndef __UI_PROC_DM_H
+#define __UI_PROC_DM_H
 
-// Profile this driver execution timings
-//#define PROFILE_UI_REPAINT
+#include "ui_controls_layout.h"
 
-// Unit test this driver
-//#define UI_RUN_ALL_TESTS
+#include "spectrum\ui_controls_spectrum.h"
+#include "smeter\ui_controls_smeter.h"
+#include "freq\ui_controls_frequency.h"
+#include "volume\ui_controls_volume.h"
+#include "clock_panel\ui_controls_clock_panel.h"
+#include "filter\ui_controls_filter.h"
+#include "cpu_stat\ui_controls_cpu_stat.h"
+#include "dsp_stat\ui_controls_dsp_stat.h"
+#include "sd_icon\ui_controls_sd_icon.h"
+#include "battery\ui_controls_battery.h"
 
-// Enable individual desktop controls
-#define 	DESKTOP_SHOW_BATTERY
-#define 	DESKTOP_SHOW_SMETER
-#define 	DESKTOP_SHOW_SPECTRUM
-#define 	DESKTOP_SHOW_FREQUENCY
-#define 	DESKTOP_SHOW_SDCARD
-#define 	DESKTOP_SHOW_CLOCK
-#define 	DESKTOP_SHOW_VOLUME
-#define 	DESKTOP_SHOW_FILTER
-#define 	DESKTOP_SHOW_TX_STAT
-#define 	DESKTOP_SHOW_CPU_STAT
+#include "on_screen\on_screen_keyboard.h"
+#include "on_screen\on_screen_audio.h"
+#include "on_screen\on_screen_agc_att.h"
+#include "on_screen\on_screen_power.h"
+#include "on_screen\on_screen_quick_log.h"
 
-// Disable individual controls
-#define 	VFO_BOTH
-
-#define		DESKTOP_SMETER			0
-#define		DESKTOP_SPECTRUM		1
-#define		DESKTOP_WATERFALL		2
-
-// ----------------------------------------------
-
-void ui_proc_clear_active(void);
-void ui_proc_power_cleanup(void);
-void ui_proc_task(void const *arg);
+#include "tx_status\ui_controls_tx_stat.h"
 
 #endif

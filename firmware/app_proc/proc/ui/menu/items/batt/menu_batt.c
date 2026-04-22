@@ -13,7 +13,7 @@
 #include "mchf_pro_board.h"
 #include "main.h"
 
-#ifdef CONTEXT_VIDEO
+#if defined (CONTEXT_VIDEO) && defined (CONTEXT_BMS)
 
 #include "ui_menu_layout.h"
 #include "gui.h"

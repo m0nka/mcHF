@@ -865,9 +865,11 @@
 #define USART2_TX_PORT              	GPIOD
 #define USART2_TX_AF                    GPIO_AF7_USART2
 
-// PD6
-#define KEYPAD_Y1_LL                   	LL_GPIO_PIN_6
-#define KEYPAD_Y1_PORT              	GPIOD
+// PD6 - swap M12 and M28 (Y1 and X3)
+//#define KEYPAD_Y1_LL                  LL_GPIO_PIN_6
+//#define KEYPAD_Y1_PORT              	GPIOD
+#define KEYPAD_Y1_LL                   	LL_GPIO_PIN_12
+#define KEYPAD_Y1_PORT              	GPIOG
 
 // PD7
 #define KEYPAD_X2_LL                   	LL_GPIO_PIN_7
@@ -1095,9 +1097,11 @@
 #define POWER_BUTTON					GPIO_PIN_11
 #define POWER_BUTTON_PORT            	GPIOG
 
-// PG12
-#define KEYPAD_X3_LL                   	LL_GPIO_PIN_12
-#define KEYPAD_X3_PORT              	GPIOG
+// PG12 - swap M12 and M28 (Y1 and X3)
+//#define KEYPAD_X3_LL                  LL_GPIO_PIN_12
+//#define KEYPAD_X3_PORT              	GPIOG
+#define KEYPAD_X3_LL                   	LL_GPIO_PIN_6
+#define KEYPAD_X3_PORT              	GPIOD
 
 // PG13		KEYPAD_Y1
 #define BT_COMM_STAT_PIN                LL_GPIO_PIN_13

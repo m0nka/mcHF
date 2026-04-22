@@ -14,12 +14,7 @@
 #include "main.h"
 
 #include "radio_init.h"
-
 #include "keypad_proc.h"
-
-//#include "gui.h"
-//#include "dialog.h"
-//#include "ST_GUI_Addons.h"
 
 #ifdef CONTEXT_KEYPAD
 
@@ -27,45 +22,15 @@
 struct 			KEYPAD_STATE			ks;
 
 // Public UI driver state
+#ifdef CONTEXT_VIDEO
 extern struct	UI_DRIVER_STATE			ui_s;
+#endif
 
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
 
 // FreeRTOS process state
 extern struct PROC_STATE 				ps;
-
-//*----------------------------------------------------------------------------
-//* Function Name       : EXTI15_10_IRQHandler
-//* Object              :
-//* Notes    			: Handle keyboard events
-//* Notes   			:
-//* Notes    			:
-//* Context    			: CONTEXT_IRQ
-//*----------------------------------------------------------------------------
-void EXTI15_10_IRQHandler(void)
-{
-	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_11) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_11);
-		keypad_proc_irq(4);
-	}
-	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_12) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_12);
-		keypad_proc_irq(2);
-	}
-	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_13) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_13);
-		keypad_proc_irq(1);
-	}
-	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
-		keypad_proc_irq(3);
-	}
-}
 
 void keypad_proc_irq(uchar id)
 {
@@ -90,73 +55,49 @@ void keypad_proc_init(void)
 	LL_GPIO_SetPinMode(KEYPAD_Y1_PORT, KEYPAD_Y1_LL, LL_GPIO_MODE_INPUT);
 	LL_GPIO_SetPinMode(KEYPAD_Y2_PORT, KEYPAD_Y2_LL, LL_GPIO_MODE_INPUT);
 	LL_GPIO_SetPinMode(KEYPAD_Y3_PORT, KEYPAD_Y3_LL, LL_GPIO_MODE_INPUT);
-	#ifndef PCB_V9_REV_A
-	LL_GPIO_SetPinMode(KEYPAD_Y4_PORT, KEYPAD_Y4_LL, LL_GPIO_MODE_INPUT);
-	#endif
+
 	// All with pullups
-	LL_GPIO_SetPinPull(KEYPAD_Y1_PORT, KEYPAD_Y1_LL, LL_GPIO_PULL_UP);
-	LL_GPIO_SetPinPull(KEYPAD_Y2_PORT, KEYPAD_Y2_LL, LL_GPIO_PULL_UP);
-	LL_GPIO_SetPinPull(KEYPAD_Y3_PORT, KEYPAD_Y3_LL, LL_GPIO_PULL_UP);
-	#ifndef PCB_V9_REV_A
-	LL_GPIO_SetPinPull(KEYPAD_Y4_PORT, KEYPAD_Y4_LL, LL_GPIO_PULL_UP);
-	#endif
+	LL_GPIO_SetPinPull(KEYPAD_Y1_PORT, KEYPAD_Y1_LL, LL_GPIO_PULL_UP);	// PG12 (was PD6)
+	LL_GPIO_SetPinPull(KEYPAD_Y2_PORT, KEYPAD_Y2_LL, LL_GPIO_PULL_UP);	// PI8
+	LL_GPIO_SetPinPull(KEYPAD_Y3_PORT, KEYPAD_Y3_LL, LL_GPIO_PULL_UP);	// PI11
 
 	// Slow speed
 	LL_GPIO_SetPinSpeed(KEYPAD_Y1_PORT, KEYPAD_Y1_LL, LL_GPIO_SPEED_FREQ_LOW);
 	LL_GPIO_SetPinSpeed(KEYPAD_Y2_PORT, KEYPAD_Y2_LL, LL_GPIO_SPEED_FREQ_LOW);
 	LL_GPIO_SetPinSpeed(KEYPAD_Y3_PORT, KEYPAD_Y3_LL, LL_GPIO_SPEED_FREQ_LOW);
-	#ifndef PCB_V9_REV_A
-	LL_GPIO_SetPinSpeed(KEYPAD_Y4_PORT, KEYPAD_Y4_LL, LL_GPIO_SPEED_FREQ_LOW);
-	#endif
 
 	// This clock already set ?
 	LL_APB4_GRP1_EnableClock(LL_APB4_GRP1_PERIPH_SYSCFG);
 
-	// Connect External Line to the GPIO
+	// KEYPAD_Y3
 	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTI, LL_SYSCFG_EXTI_LINE11);
-	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE12);
-	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE13);
-	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE14);
-
-	// Enable interrupt
-	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_11);
-	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_12);
-	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_13);
-	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_14);
-
-	// On falling edge
 	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_11);
+	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_11);
+
+	// KEYPAD_Y2
+	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTI, LL_SYSCFG_EXTI_LINE8);
+	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_8);
+	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_8);
+
+	// KEYPAD_Y1
+	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_12);
+	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE12);
 	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_12);
-	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_13);
-	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_14);
 
 	// All vertical lines as outputs(low)
-	LL_GPIO_SetPinMode(KEYPAD_X1_PORT, KEYPAD_X1_LL, LL_GPIO_MODE_OUTPUT);
-	LL_GPIO_SetPinMode(KEYPAD_X2_PORT, KEYPAD_X2_LL, LL_GPIO_MODE_OUTPUT);
-	LL_GPIO_SetPinMode(KEYPAD_X3_PORT, KEYPAD_X3_LL, LL_GPIO_MODE_OUTPUT);
-	#ifndef PCB_V9_REV_A
-	LL_GPIO_SetPinMode(KEYPAD_X4_PORT, KEYPAD_X4_LL, LL_GPIO_MODE_OUTPUT);
-	LL_GPIO_SetPinMode(KEYPAD_X5_PORT, KEYPAD_X5_LL, LL_GPIO_MODE_OUTPUT);
-	LL_GPIO_SetPinMode(KEYPAD_X6_PORT, KEYPAD_X6_LL, LL_GPIO_MODE_OUTPUT);
-	#endif
+	LL_GPIO_SetPinMode(KEYPAD_X1_PORT, KEYPAD_X1_LL, LL_GPIO_MODE_OUTPUT);	// PD3
+	LL_GPIO_SetPinMode(KEYPAD_X2_PORT, KEYPAD_X2_LL, LL_GPIO_MODE_OUTPUT);	// PD7
+	LL_GPIO_SetPinMode(KEYPAD_X3_PORT, KEYPAD_X3_LL, LL_GPIO_MODE_OUTPUT);	// PD6(was PG12)
+
 	//
 	LL_GPIO_SetPinSpeed(KEYPAD_X1_PORT, KEYPAD_X1_LL, LL_GPIO_SPEED_FREQ_LOW);
 	LL_GPIO_SetPinSpeed(KEYPAD_X2_PORT, KEYPAD_X2_LL, LL_GPIO_SPEED_FREQ_LOW);
 	LL_GPIO_SetPinSpeed(KEYPAD_X3_PORT, KEYPAD_X3_LL, LL_GPIO_SPEED_FREQ_LOW);
-	#ifndef PCB_V9_REV_A
-	LL_GPIO_SetPinSpeed(KEYPAD_X4_PORT, KEYPAD_X4_LL, LL_GPIO_SPEED_FREQ_LOW);
-	LL_GPIO_SetPinSpeed(KEYPAD_X5_PORT, KEYPAD_X5_LL, LL_GPIO_SPEED_FREQ_LOW);
-	LL_GPIO_SetPinSpeed(KEYPAD_X6_PORT, KEYPAD_X6_LL, LL_GPIO_SPEED_FREQ_LOW);
-	#endif
+
 	//
 	LL_GPIO_ResetOutputPin(KEYPAD_X1_PORT, KEYPAD_X1_LL);
 	LL_GPIO_ResetOutputPin(KEYPAD_X2_PORT, KEYPAD_X2_LL);
 	LL_GPIO_ResetOutputPin(KEYPAD_X3_PORT, KEYPAD_X3_LL);
-	#ifndef PCB_V9_REV_A
-	LL_GPIO_ResetOutputPin(KEYPAD_X4_PORT, KEYPAD_X4_LL);
-	LL_GPIO_ResetOutputPin(KEYPAD_X5_PORT, KEYPAD_X5_LL);
-	LL_GPIO_ResetOutputPin(KEYPAD_X6_PORT, KEYPAD_X6_LL);
-	#endif
 
 	// Multitap publics
 	ks.tap_cnt 	= 0;
@@ -632,8 +573,10 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		if(!hold)
 		{
 			printf("F1->Menu\r\n");
+#ifdef CONTEXT_VIDEO
 			ui_s.req_state = MODE_MENU;
 			xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
+#endif
 		}
 		else
 		{
@@ -1480,6 +1423,7 @@ static void keypad_cmd_processor_wm(uchar x,uchar y, uchar hold, uchar release)
 //*----------------------------------------------------------------------------
 static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 {
+#ifdef CONTEXT_VIDEO
 	// Manage different UI driver modes
 	switch(ui_s.cur_state)
 	{
@@ -1503,6 +1447,7 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 		default:
 			break;
 	}
+#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -1551,6 +1496,7 @@ static void keypad_set_out_lines_a(uchar y)
 		case 2:
 			scan_x3();
 			break;
+		#ifndef PCB_V9_REV_A
 		case 3:
 			scan_x4();
 			break;
@@ -1560,6 +1506,7 @@ static void keypad_set_out_lines_a(uchar y)
 		case 5:
 			scan_x6();
 			break;
+		#endif
 		default:
 			scan_off();
 			return;
@@ -1660,6 +1607,8 @@ keypad_proc_loop:
 			// Disable wait
 			NVIC_DisableIRQ	(EXTI15_10_IRQn);
 			scan_off();
+
+			//--printf("irq id: %d \r\n", ks.irq_id);
 
 			// Quick scan on a single horizontal line
 			keypad_scan_a();

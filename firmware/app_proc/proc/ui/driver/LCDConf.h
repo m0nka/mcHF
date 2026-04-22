@@ -19,9 +19,14 @@
 
 // LCD clocks in kHz
 
+//#define 	LCD_LANE_CLK			62500
+//#define 	LCD_LANE_CLK			58750				// 58750
+#define 	LCD_LANE_CLK			55000
+#define	 	ST7701_PIXEL_CLK  		(LCD_LANE_CLK/2)
+
 #define DRIVER_32_BIT			1
 
-#define NUM_BUFFERS  			2
+#define NUM_BUFFERS  			3
 #define NUM_VSCREENS 			1
 
 #undef  GUI_NUM_LAYERS
@@ -59,6 +64,7 @@
 #define COLOR_CONVERSION_1 		GUICC_M8888I
 //
 #endif
+
 // -----------------------------------------------------------
 #else
 // -----------------------------------------------------------
@@ -98,22 +104,7 @@
   #error Virtual screens and multiple buffers are not allowed!
 #endif
 
-//#define LCD_LAYER0_FRAME_BUFFER  	((int)SDRAM_DEVICE_ADDR)
-//#define LAYER_MEM_REQUIRED			(854 * 480 * 4)
-//#define LCD_LAYER1_FRAME_BUFFER  	(LCD_LAYER0_FRAME_BUFFER + LAYER_MEM_REQUIRED)
-
-// ---------------------------------------------------------------
-// Video RAM memory map
-//
-// Total size 4 MB
-//
-// C0 00 00 00 - C0 0D EF FF - STemWin memory,  892 kB (913 408 bytes, 2 kB guard)
-// C0 0D F0 00 - C0 26 F7 FF - Layer 0 buffer, 3203 kB (1 640 448 bytes, where 1 639 680 is requered per layer, 768 bytes guard)
-// C0 26 F8 00 - C0 3F FF FF - Layer 1 buffer, 3203 kB (1 640 448 bytes, where 1 639 680 is requered per layer, 768 bytes guard)
-//
-#define LAYER_MEM_REQUIRED			((854 * 480 * 4) + 768)
-#define LCD_LAYER0_FRAME_BUFFER  	((int)0xC00DF000)
-#define LCD_LAYER1_FRAME_BUFFER  	((int)0xC026F800)
+#define LAYER_MEM_REQUIRED			(800 * 480 * 4)
 
 typedef struct
 {
