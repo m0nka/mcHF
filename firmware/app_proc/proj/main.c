@@ -248,6 +248,8 @@ void EXTI9_5_IRQHandler(void)
 		#ifdef CONTEXT_KEYPAD
 		keypad_proc_irq(8);
 		#endif
+
+		GPS_PPS_IRQHandler();
 	}
 }
 
@@ -650,6 +652,21 @@ static int start_proc(void)
     {
     	printf("unable to create app loader process\r\n");
     	return 14;
+    }
+	#endif
+
+	#if 1
+    res = xTaskCreate(	(TaskFunction_t)GPS_Task,\
+    					"gps",\
+						512 * 4,\
+						(void *)&pxAppLoaderParameters,\
+						osPriorityNormal,\
+						NULL);
+
+    if(res != pdPASS)
+    {
+    	printf("unable to create app loader process\r\n");
+    	return 15;
     }
 	#endif
 

@@ -64,9 +64,9 @@ static bool    nmea_in_sentence;   /* saw '$', waiting for '\n'              */
 /* --------------------------------------------------------------------------
  * RTOS objects
  * -------------------------------------------------------------------------- */
-static osMessageQId  	nmea_queue;   /* NMEA_Line_t items                */
-static osSemaphoreId     pps_sem;      /* binary, released by GPS_ParseRMC */
-static osMutexId         data_mutex;   /* protects gps_data for readers    */
+static QueueHandle_t     nmea_queue;   /* NMEA_Line_t items                */
+static SemaphoreHandle_t pps_sem;      /* binary, released by GPS_ParseRMC */
+static SemaphoreHandle_t data_mutex;   /* protects gps_data for readers    */
 
 /* --------------------------------------------------------------------------
  * PPS latch (written in ISR, read in task)
@@ -97,19 +97,31 @@ static double  GPS_NMEADeg(const char *field, char hemi);
 static int     GPS_Split(const char *src, char *buf, char **fields, int max);
 static uint8_t GPS_DayOfWeek(uint16_t y, uint8_t m, uint8_t d);
 
+void USART6_IRQHandler(void)
+{
+	GPS_UART_IRQHandler();
+}
+
+//void EXTI9_5_IRQHandler(void)
+//{
+//	GPS_PPS_IRQHandler();
+//}
+
+void DMA2_Stream1_IRQHandler(void)
+{
+	GPS_DMA_IRQHandler();
+}
+
 /* ==========================================================================
  * Initialisation
  * ========================================================================== */
 
 void GPS_Init(void)
 {
-    /* RTOS primitives */
-	#if 0
-    nmea_queue = osMessageQueueNew(GPS_NMEA_QUEUE_DEPTH,
-                                   sizeof(NMEA_Line_t), NULL);
-    pps_sem    = osSemaphoreNew(1, 0, NULL);
-    data_mutex = osMutexNew(NULL);
-	#endif
+    // RTOS primitives
+    nmea_queue = xQueueCreate(GPS_NMEA_QUEUE_DEPTH, sizeof(NMEA_Line_t));
+    pps_sem    = xSemaphoreCreateBinary();
+    data_mutex = xSemaphoreCreateMutex();
 
     GPS_GPIO_Init();
     GPS_DMA_Init();
@@ -117,7 +129,7 @@ void GPS_Init(void)
     GPS_EXTI_Init();
 
     GPS_Enable(true);
-    osDelay(150);   /* M10 needs ~100 ms to boot before it starts sending NMEA */
+    vTaskDelay(pdMS_TO_TICKS(150));  /* M10 needs ~100 ms to boot before it starts sending NMEA */
 }
 
 /* -------------------------------------------------------------------------- */
@@ -161,7 +173,7 @@ static void GPS_GPIO_Init(void)
 static void GPS_DMA_Init(void)
 {
     __HAL_RCC_DMA2_CLK_ENABLE();
-    __HAL_RCC_DMAMUX1_CLK_ENABLE();
+//!    __HAL_RCC_DMAMUX1_CLK_ENABLE();
 
     hdma_rx.Instance                 = GPS_DMA_STREAM;
     hdma_rx.Init.Request             = GPS_DMA_REQUEST;
@@ -226,9 +238,9 @@ void GPS_Enable(bool enable)
 bool GPS_GetData(GPS_Data_t *out)
 {
     if (!out) return false;
-    osMutexAcquire(data_mutex, osWaitForever);
+    xSemaphoreTake(data_mutex, portMAX_DELAY);
     *out = gps_data;
-    osMutexRelease(data_mutex);
+    xSemaphoreGive(data_mutex);
     return gps_data.valid;
 }
 
@@ -263,8 +275,8 @@ static void GPS_DrainDMA(void)
             nmea_asm[nmea_asm_idx] = '\0';
             NMEA_Line_t msg;
             memcpy(msg.data, nmea_asm, GPS_NMEA_MAX_LEN);
-            /* Non-blocking put from ISR context */
-            osMessageQueuePut(nmea_queue, &msg, 0, 0);
+            // Non-blocking put from ISR context
+            xQueueSendFromISR(nmea_queue, &msg, NULL);
             nmea_asm_idx     = 0;
             nmea_in_sentence = false;
         }
@@ -315,18 +327,25 @@ void GPS_Task(void *argument)
 
     for (;;)
     {
-        /* ---- Process any waiting NMEA sentences -------------------------- */
-        while (osMessageQueueGet(nmea_queue, &line, 0, 0) == osOK)
-            GPS_ProcessLine(line.data);
-
-        /* ---- Block up to 100 ms for the next sentence ------------------- */
-        if (osMessageQueueGet(nmea_queue, &line, 0, 100) == osOK)
-            GPS_ProcessLine(line.data);
-
-        /* ---- Non-blocking PPS check ------------------------------------- */
-        if (osSemaphoreAcquire(pps_sem, 0) == osOK)
+#if 1
+        // Process any waiting NMEA sentences
+        while (xQueueReceive(nmea_queue, &line, 0) == pdTRUE)
         {
-            osMutexAcquire(data_mutex, osWaitForever);
+        	printf("%s  \r\n", line.data);
+            GPS_ProcessLine(line.data);
+        }
+
+        // Block up to 100 ms for the next sentence
+        if (xQueueReceive(nmea_queue, &line, pdMS_TO_TICKS(100)) == pdTRUE)
+        {
+        	printf("%s  \r\n", line.data);
+            GPS_ProcessLine(line.data);
+        }
+
+        // Non-blocking PPS check
+        if (xSemaphoreTake(pps_sem, 0) == pdTRUE)
+        {
+            xSemaphoreTake(data_mutex, portMAX_DELAY);
 
             if (gps_pending.valid)
             {
@@ -335,8 +354,9 @@ void GPS_Task(void *argument)
                 gps_data = gps_pending;
             }
 
-            osMutexRelease(data_mutex);
+            xSemaphoreGive(data_mutex);
         }
+#endif
     }
 }
 
@@ -450,7 +470,7 @@ static bool GPS_ParseRMC(const char *line)
     {
         pps_pending = false;
         if ((HAL_GetTick() - pps_pending_ms) < 1500u)
-            osSemaphoreRelease(pps_sem);  /* triggers RTC write in task     */
+            xSemaphoreGive(pps_sem);  // triggers RTC write in task
         /* else: PPS was stale (>1.5 s old) – discard silently             */
     }
 
@@ -489,7 +509,7 @@ static uint8_t GPS_DayOfWeek(uint16_t y, uint8_t m, uint8_t d)
     return (dow == 0) ? RTC_WEEKDAY_SUNDAY : dow;
 }
 
-extern RTC_HandleTypeDef hrtc;   /* defined in CubeMX rtc.c                 */
+extern RTC_HandleTypeDef RtcHandle;   /* defined in CubeMX rtc.c                 */
 
 static void GPS_SyncRTC(const GPS_Data_t *d)
 {
@@ -508,6 +528,6 @@ static void GPS_SyncRTC(const GPS_Data_t *d)
     rd.WeekDay = GPS_DayOfWeek(d->year, d->month, d->day);
 
     /* HAL requires time to be set before date */
-    HAL_RTC_SetTime(&hrtc, &rt, RTC_FORMAT_BIN);
-    HAL_RTC_SetDate(&hrtc, &rd, RTC_FORMAT_BIN);
+    HAL_RTC_SetTime(&RtcHandle, &rt, RTC_FORMAT_BIN);
+    HAL_RTC_SetDate(&RtcHandle, &rd, RTC_FORMAT_BIN);
 }

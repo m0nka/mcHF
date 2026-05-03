@@ -95,6 +95,7 @@
 #include "lora_proc.h"
 #include "storage_proc.h"
 #include "os_apploader.h"
+#include "gps_driver.h"
 
 #if 0
 #define	TASK_PROC_IDLE				0
