@@ -10,7 +10,6 @@
 **  Last Modified:                                                                 **
 **  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
-
 #include "mchf_pro_board.h"
 #include "main.h"
 
@@ -247,9 +246,9 @@ void EXTI9_5_IRQHandler(void)
 
 		#ifdef CONTEXT_KEYPAD
 		keypad_proc_irq(8);
-		#endif
-
+		#else
 		GPS_PPS_IRQHandler();
+		#endif
 	}
 }
 
@@ -655,17 +654,17 @@ static int start_proc(void)
     }
 	#endif
 
-	#if 1
-    res = xTaskCreate(	(TaskFunction_t)GPS_Task,\
-    					"gps",\
-						512 * 4,\
+	#ifdef CONTEXT_GPS
+    res = xTaskCreate(	(TaskFunction_t)gps_proc,\
+    					GPS_PROC_START_NAME,\
+						GPS_PROC_STACK_SIZE,\
 						(void *)&pxAppLoaderParameters,\
 						osPriorityNormal,\
-						NULL);
+						&(ps.hGpsTask));
 
     if(res != pdPASS)
     {
-    	printf("unable to create app loader process\r\n");
+    	printf("unable to create gps process\r\n");
     	return 15;
     }
 	#endif

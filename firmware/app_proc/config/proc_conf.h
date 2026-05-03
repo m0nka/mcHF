@@ -90,13 +90,13 @@
 // Physical keyboard
 //
 //
-//#define CONTEXT_KEYPAD
+#define CONTEXT_KEYPAD
 //
 // -----------------------------------------------------------------------------------------------
 // Lora transceiver
 //
 //
-//#define CONTEXT_LORA
+#define CONTEXT_LORA
 //
 
 // -----------------------------------------------------------------------------------------------
@@ -113,6 +113,11 @@
 // Application loader
 //
 #define CONTEXT_APP
+
+// -----------------------------------------------------------------------------------------------
+// GNSS driver
+//
+#define CONTEXT_GPS
 
 // -------------------------------------------------------------------------------------------
 // Process parameters template
@@ -226,5 +231,12 @@
 #define LORA_PROC_SLEEP_TIME			portMAX_DELAY
 #define LORA_PROC_PRIORITY				osPriorityNormal
 #define LORA_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 16)
+
+// GNSS driver parameters
+#define GPS_PROC_START_NAME				"gps"
+#define GPS_PROC_START_DELAY			5000
+#define GPS_PROC_SLEEP_TIME				portMAX_DELAY
+#define GPS_PROC_PRIORITY				osPriorityNormal
+#define GPS_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 8)
 
 #endif

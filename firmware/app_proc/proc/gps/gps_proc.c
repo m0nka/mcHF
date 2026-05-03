@@ -29,7 +29,11 @@
 #include "main.h"
 #include "mchf_pro_board.h"
 
-#include "gps_driver.h"
+#ifdef CONTEXT_GPS
+
+#include "gps_test.h"
+
+#include "gps_proc.h"
 #include "rtc.h"        /* CubeMX-generated hrtc extern                     */
 #include <string.h>
 #include <stdlib.h>
@@ -99,7 +103,14 @@ static uint8_t GPS_DayOfWeek(uint16_t y, uint8_t m, uint8_t d);
 
 void USART6_IRQHandler(void)
 {
+	//--printf("uart \r\n");
 	GPS_UART_IRQHandler();
+}
+
+void DMA1_Stream0_IRQHandler(void)
+{
+	//--printf("dma \r\n");
+	GPS_DMA_IRQHandler();
 }
 
 //void EXTI9_5_IRQHandler(void)
@@ -107,45 +118,45 @@ void USART6_IRQHandler(void)
 //	GPS_PPS_IRQHandler();
 //}
 
-void DMA2_Stream1_IRQHandler(void)
-{
-	GPS_DMA_IRQHandler();
-}
-
 /* ==========================================================================
  * Initialisation
  * ========================================================================== */
 
-void GPS_Init(void)
+void gps_proc_init(void)
 {
     // RTOS primitives
     nmea_queue = xQueueCreate(GPS_NMEA_QUEUE_DEPTH, sizeof(NMEA_Line_t));
     pps_sem    = xSemaphoreCreateBinary();
     data_mutex = xSemaphoreCreateMutex();
 
+	#ifndef GPS_TEST_GPIO
     GPS_GPIO_Init();
     GPS_DMA_Init();
     GPS_UART_Init();
+
+    // EXTI mapping, to be resolved...
+	#ifndef CONTEXT_KEYPAD
     GPS_EXTI_Init();
+	#endif
 
     GPS_Enable(true);
     vTaskDelay(pdMS_TO_TICKS(150));  /* M10 needs ~100 ms to boot before it starts sending NMEA */
+	#else
+    gps_test_init();
+	#endif
 }
 
 /* -------------------------------------------------------------------------- */
+#ifndef GPS_TEST_GPIO
 static void GPS_GPIO_Init(void)
 {
     GPIO_InitTypeDef cfg = {0};
-
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOG_CLK_ENABLE();
 
     /* PB1 – GPS_EN, push-pull output, start LOW (disabled) */
     cfg.Pin   = GPS_EN_PIN;
     cfg.Mode  = GPIO_MODE_OUTPUT_PP;
     cfg.Pull  = GPIO_NOPULL;
-    cfg.Speed = GPIO_SPEED_FREQ_LOW;
+    cfg.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(GPS_EN_PORT, &cfg);
     HAL_GPIO_WritePin(GPS_EN_PORT, GPS_EN_PIN, GPIO_PIN_RESET);
 
@@ -153,7 +164,7 @@ static void GPS_GPIO_Init(void)
     cfg.Pin       = GPS_RX_PIN;
     cfg.Mode      = GPIO_MODE_AF_PP;
     cfg.Pull      = GPIO_PULLUP;
-    cfg.Speed     = GPIO_SPEED_FREQ_LOW;
+    cfg.Speed     = GPIO_SPEED_FREQ_HIGH;
     cfg.Alternate = GPS_UART_AF;
     HAL_GPIO_Init(GPS_RX_PORT, &cfg);
 
@@ -172,8 +183,7 @@ static void GPS_GPIO_Init(void)
 /* -------------------------------------------------------------------------- */
 static void GPS_DMA_Init(void)
 {
-    __HAL_RCC_DMA2_CLK_ENABLE();
-//!    __HAL_RCC_DMAMUX1_CLK_ENABLE();
+    __HAL_RCC_DMA1_CLK_ENABLE();
 
     hdma_rx.Instance                 = GPS_DMA_STREAM;
     hdma_rx.Init.Request             = GPS_DMA_REQUEST;
@@ -190,7 +200,7 @@ static void GPS_DMA_Init(void)
     __HAL_LINKDMA(&huart6, hdmarx, hdma_rx);
 
     HAL_NVIC_SetPriority(GPS_DMA_IRQn, 6, 0);
-    HAL_NVIC_EnableIRQ(GPS_DMA_IRQn);
+    HAL_NVIC_EnableIRQ  (GPS_DMA_IRQn);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -216,14 +226,17 @@ static void GPS_UART_Init(void)
     HAL_UART_Receive_DMA(&huart6, dma_buf, GPS_DMA_BUF_SIZE);
     dma_rd = 0;
 }
+#endif
 
 /* -------------------------------------------------------------------------- */
+#ifndef CONTEXT_KEYPAD
 static void GPS_EXTI_Init(void)
 {
     /* GPIO already configured in GPIO_Init; just enable the NVIC line */
     HAL_NVIC_SetPriority(GPS_PPS_EXTI_IRQn, 5, 0);  /* higher than UART    */
     HAL_NVIC_EnableIRQ(GPS_PPS_EXTI_IRQn);
 }
+#endif
 
 /* ==========================================================================
  * Public API
@@ -244,20 +257,20 @@ bool GPS_GetData(GPS_Data_t *out)
     return gps_data.valid;
 }
 
-/* ==========================================================================
- * IRQ handlers  (called via trampolines in stm32h7xx_it.c)
- * ========================================================================== */
-
-/* Drain DMA ring buffer, assemble complete NMEA lines, queue them */
+// Drain DMA ring buffer, assemble complete NMEA lines, queue them
 static void GPS_DrainDMA(void)
 {
     uint16_t wr = (uint16_t)(GPS_DMA_BUF_SIZE -
                               __HAL_DMA_GET_COUNTER(&hdma_rx));
 
+    printf("cnt %d \r\n", (int)__HAL_DMA_GET_COUNTER(&hdma_rx));
+
     while (dma_rd != wr)
     {
         char c = (char)dma_buf[dma_rd];
         dma_rd = (uint16_t)((dma_rd + 1u) % GPS_DMA_BUF_SIZE);
+
+        //--printf("data %x \r\n" , c);
 
         if (c == '$')
         {
@@ -275,6 +288,9 @@ static void GPS_DrainDMA(void)
             nmea_asm[nmea_asm_idx] = '\0';
             NMEA_Line_t msg;
             memcpy(msg.data, nmea_asm, GPS_NMEA_MAX_LEN);
+
+            //--printf("data: %s \r\n", msg.data);
+
             // Non-blocking put from ISR context
             xQueueSendFromISR(nmea_queue, &msg, NULL);
             nmea_asm_idx     = 0;
@@ -285,6 +301,7 @@ static void GPS_DrainDMA(void)
 
 void GPS_UART_IRQHandler(void)
 {
+#if 0
     /* Service DMA completion / error flags first */
     HAL_UART_IRQHandler(&huart6);
 
@@ -293,6 +310,21 @@ void GPS_UART_IRQHandler(void)
         __HAL_UART_CLEAR_IDLEFLAG(&huart6);
         GPS_DrainDMA();
     }
+#else
+	// Snapshot IDLE before HAL_UART_IRQHandler clears it
+    bool idle = __HAL_UART_GET_FLAG(&huart6, UART_FLAG_IDLE)
+               && __HAL_UART_GET_IT_SOURCE(&huart6, UART_IT_IDLE);
+
+    if(idle)
+    	__HAL_UART_CLEAR_IDLEFLAG(&huart6);
+
+    HAL_UART_IRQHandler(&huart6);
+
+   if(huart6.ErrorCode)
+	   printf("error: %d \r\n", (int)huart6.ErrorCode);
+   else if(idle)
+      GPS_DrainDMA();
+#endif
 }
 
 void GPS_PPS_IRQHandler(void)
@@ -317,47 +349,52 @@ void GPS_DMA_IRQHandler(void)
  * FreeRTOS task
  * ========================================================================== */
 
-void GPS_Task(void *argument)
+void gps_proc(void *argument)
 {
     (void)argument;
-
-    GPS_Init();
-
     NMEA_Line_t line;
 
-    for (;;)
+	vTaskDelay(GPS_PROC_START_DELAY);
+	printf("start\r\n");
+
+	gps_proc_init();
+
+gps_proc_loop:
+
+	#ifndef GPS_TEST_GPIO
+    // Process any waiting NMEA sentences
+	while (xQueueReceive(nmea_queue, &line, 0) == pdTRUE)
     {
-#if 1
-        // Process any waiting NMEA sentences
-        while (xQueueReceive(nmea_queue, &line, 0) == pdTRUE)
-        {
-        	printf("%s  \r\n", line.data);
-            GPS_ProcessLine(line.data);
-        }
-
-        // Block up to 100 ms for the next sentence
-        if (xQueueReceive(nmea_queue, &line, pdMS_TO_TICKS(100)) == pdTRUE)
-        {
-        	printf("%s  \r\n", line.data);
-            GPS_ProcessLine(line.data);
-        }
-
-        // Non-blocking PPS check
-        if (xSemaphoreTake(pps_sem, 0) == pdTRUE)
-        {
-            xSemaphoreTake(data_mutex, portMAX_DELAY);
-
-            if (gps_pending.valid)
-            {
-                GPS_SyncRTC(&gps_pending);
-                gps_pending.rtc_synced = true;
-                gps_data = gps_pending;
-            }
-
-            xSemaphoreGive(data_mutex);
-        }
-#endif
+      	printf("%s  \r\n", line.data);
+        GPS_ProcessLine(line.data);
     }
+
+    // Block up to 100 ms for the next sentence
+    if (xQueueReceive(nmea_queue, &line, pdMS_TO_TICKS(100)) == pdTRUE)
+    {
+     	printf("%s  \r\n", line.data);
+        GPS_ProcessLine(line.data);
+    }
+
+    // Non-blocking PPS check
+    if (xSemaphoreTake(pps_sem, 0) == pdTRUE)
+    {
+        xSemaphoreTake(data_mutex, portMAX_DELAY);
+
+        if (gps_pending.valid)
+        {
+            GPS_SyncRTC(&gps_pending);
+            gps_pending.rtc_synced = true;
+            gps_data = gps_pending;
+        }
+
+        xSemaphoreGive(data_mutex);
+     }
+	#else
+    gps_test_run();
+	#endif
+
+    goto gps_proc_loop;
 }
 
 /* ==========================================================================
@@ -531,3 +568,5 @@ static void GPS_SyncRTC(const GPS_Data_t *d)
     HAL_RTC_SetTime(&RtcHandle, &rt, RTC_FORMAT_BIN);
     HAL_RTC_SetDate(&RtcHandle, &rd, RTC_FORMAT_BIN);
 }
+
+#endif

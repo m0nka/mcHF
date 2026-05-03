@@ -562,9 +562,14 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/fan/fan_proc.c</locationURI>
 		</link>
 		<link>
-			<name>proc/gps/gps_driver.c</name>
+			<name>proc/gps/gps_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/gps/gps_driver.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/gps/gps_proc.c</locationURI>
+		</link>
+		<link>
+			<name>proc/gps/gps_test.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/gps/gps_test.c</locationURI>
 		</link>
 		<link>
 			<name>proc/icc/icc_proc.c</name>

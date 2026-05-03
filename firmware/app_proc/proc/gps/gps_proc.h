@@ -7,39 +7,31 @@
  *
  * Tested with: u-blox M10 (MAX-M10S, SAM-M10Q)
  */
-#ifndef __GPS_DRIVER_H
-#define __GPS_DRIVER_H
+#ifndef __GPS_PROC_H
+#define __GPS_PROC_H
 
 #include "main.h"
-#include "cmsis_os.h"
+//#include "cmsis_os.h"
 #include <stdbool.h>
 #include <stdint.h>
+
+// Unit tests
+//#define GPS_TEST_GPIO
 
 /* --------------------------------------------------------------------------
  * Pin / peripheral definitions
  * -------------------------------------------------------------------------- */
 #define GPS_UART            USART6
-#define GPS_UART_BAUD       38400U   /* u-blox M10 factory default            */
+#define GPS_UART_BAUD       9600   /* u-blox M10 factory default            */
 #define GPS_UART_IRQn       USART6_IRQn
 #define GPS_UART_AF         GPIO_AF7_USART6
 
-#define GPS_RX_PIN          GPIO_PIN_9
-#define GPS_RX_PORT         GPIOG
-
-#define GPS_TX_PIN          GPIO_PIN_14
-#define GPS_TX_PORT         GPIOG
-
-#define GPS_PPS_PIN         GPIO_PIN_8
-#define GPS_PPS_PORT        GPIOA
 #define GPS_PPS_EXTI_IRQn   EXTI9_5_IRQn      /* lines 5-9 share this IRQ   */
 
-#define GPS_EN_PIN          GPIO_PIN_1
-#define GPS_EN_PORT         GPIOB
-
 /* DMA – adjust stream / channel if your CubeMX project allocates differently */
-#define GPS_DMA             DMA2
-#define GPS_DMA_STREAM      DMA2_Stream1
-#define GPS_DMA_IRQn        DMA2_Stream1_IRQn
+//#define GPS_DMA             DMA1
+#define GPS_DMA_STREAM      DMA1_Stream0
+#define GPS_DMA_IRQn        DMA1_Stream0_IRQn
 #define GPS_DMA_REQUEST     DMA_REQUEST_USART6_RX
 
 /* --------------------------------------------------------------------------
@@ -88,11 +80,11 @@ typedef struct {
 
 /** One-time hardware + RTOS object initialisation.
  *  Call before GPS_Task() starts, or let GPS_Task() call it internally.   */
-void GPS_Init(void);
+void gps_proc_init(void);
 
 /** FreeRTOS task entry – pass to osThreadNew().
  *  Stack recommendation: 512 words (2 kB).                                 */
-void GPS_Task(void *argument);
+void gps_proc(void *argument);
 
 /** Thread-safe snapshot of the latest parsed data.
  *  Returns true when the fix is valid.                                     */
@@ -101,13 +93,6 @@ bool GPS_GetData(GPS_Data_t *out);
 /** Drive the GPS_EN pin.  */
 void GPS_Enable(bool enable);
 
-/* --------------------------------------------------------------------------
- * IRQ trampolines – add these calls to stm32h7xx_it.c
- * --------------------------------------------------------------------------
- *   void USART6_IRQHandler(void)       { GPS_UART_IRQHandler(); }
- *   void EXTI9_5_IRQHandler(void)      { GPS_PPS_IRQHandler();  }
- *   void DMA2_Stream1_IRQHandler(void) { GPS_DMA_IRQHandler();  }
- * -------------------------------------------------------------------------- */
 void GPS_UART_IRQHandler(void);
 void GPS_PPS_IRQHandler(void);
 void GPS_DMA_IRQHandler(void);

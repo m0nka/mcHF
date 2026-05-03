@@ -854,6 +854,10 @@ void bsp_gpio_clocks_on(void)
 	__HAL_RCC_GPIOG_CLK_ENABLE();
 	__HAL_RCC_GPIOH_CLK_ENABLE();
 	__HAL_RCC_GPIOI_CLK_ENABLE();
+
+	// GPS early off
+	LL_GPIO_SetPinMode		(GPS_EN_PORT, GPS_EN_PIN, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_ResetOutputPin	(GPS_EN_PORT, GPS_EN_PIN);
 }
 
 uint8_t bsp_config(void)

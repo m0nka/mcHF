@@ -95,7 +95,7 @@
 #include "lora_proc.h"
 #include "storage_proc.h"
 #include "os_apploader.h"
-#include "gps_driver.h"
+#include "gps_proc.h"
 
 #if 0
 #define	TASK_PROC_IDLE				0
@@ -153,6 +153,7 @@ __attribute__((__common__)) struct PROC_STATE {
 	TaskHandle_t 	hLraTask;
 	TaskHandle_t 	hSdcTask;
 	TaskHandle_t 	hAppTask;
+	TaskHandle_t 	hGpsTask;
 
 	// Task messaging
 	xQueueHandle 	xBmsRxQueue;
