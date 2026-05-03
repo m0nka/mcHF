@@ -729,7 +729,9 @@ void bsp_power_off(void)
 	portDISABLE_INTERRUPTS();
 
 	// Tasks hw cleanup
+	#ifdef CONTEXT_AUDIO
 	audio_proc_power_cleanup();
+	#endif
 
 	band_proc_power_cleanup();
 

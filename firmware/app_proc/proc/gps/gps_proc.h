@@ -11,9 +11,9 @@
 #define __GPS_PROC_H
 
 #include "main.h"
-//#include "cmsis_os.h"
-#include <stdbool.h>
-#include <stdint.h>
+
+//#include <stdbool.h>
+//#include <stdint.h>
 
 // Unit tests
 //#define GPS_TEST_GPIO
@@ -22,7 +22,7 @@
  * Pin / peripheral definitions
  * -------------------------------------------------------------------------- */
 #define GPS_UART            USART6
-#define GPS_UART_BAUD       9600   /* u-blox M10 factory default            */
+#define GPS_UART_BAUD       9600
 #define GPS_UART_IRQn       USART6_IRQn
 #define GPS_UART_AF         GPIO_AF7_USART6
 
@@ -30,8 +30,8 @@
 
 /* DMA – adjust stream / channel if your CubeMX project allocates differently */
 //#define GPS_DMA             DMA1
-#define GPS_DMA_STREAM      DMA1_Stream0
-#define GPS_DMA_IRQn        DMA1_Stream0_IRQn
+#define GPS_DMA_STREAM      DMA1_Stream2
+#define GPS_DMA_IRQn        DMA1_Stream2_IRQn
 #define GPS_DMA_REQUEST     DMA_REQUEST_USART6_RX
 
 /* --------------------------------------------------------------------------

@@ -55,7 +55,7 @@ static DMA_HandleTypeDef   hdma_rx;
 /* --------------------------------------------------------------------------
  * DMA receive buffer (circular, filled by hardware)
  * -------------------------------------------------------------------------- */
-static uint8_t  dma_buf[GPS_DMA_BUF_SIZE];
+__attribute__((section(".axi_mem"))) __attribute__ ((aligned (32))) uint8_t dma_buf[GPS_DMA_BUF_SIZE];
 static uint16_t dma_rd;           /* read pointer (software side)            */
 
 /* --------------------------------------------------------------------------
@@ -84,6 +84,8 @@ static volatile uint32_t pps_pending_ms; /* HAL_GetTick() at PPS edge        */
 static GPS_Data_t gps_data;      /* published, mutex-protected              */
 static GPS_Data_t gps_pending;   /* staging, written only by GPS_Task()     */
 
+extern RTC_HandleTypeDef RtcHandle;
+
 /* --------------------------------------------------------------------------
  * Forward declarations
  * -------------------------------------------------------------------------- */
@@ -107,7 +109,7 @@ void USART6_IRQHandler(void)
 	GPS_UART_IRQHandler();
 }
 
-void DMA1_Stream0_IRQHandler(void)
+void DMA1_Stream2_IRQHandler(void)
 {
 	//--printf("dma \r\n");
 	GPS_DMA_IRQHandler();
@@ -140,10 +142,49 @@ void gps_proc_init(void)
 	#endif
 
     GPS_Enable(true);
+
+    // Flush
+    HAL_UART_Receive(&huart6, dma_buf, 1, 100);
+
     vTaskDelay(pdMS_TO_TICKS(150));  /* M10 needs ~100 ms to boot before it starts sending NMEA */
 	#else
     gps_test_init();
 	#endif
+
+    // Test, config command
+	#if 0
+    uint8_t ubx_cfg_prt_nmea[] = {
+        0xB5, 0x62, // UBX header
+        0x06, 0x00, // Class 0x06 = CFG, ID 0x00 = PRT
+        0x14, 0x00, // Length = 20 bytes
+        0x01, 0x00, // PortID = UART1
+        0x00, 0x00, // reserved
+        0x00, 0x00, // TX Ready
+        0x08, 0x00, 0x00, 0x00, // 9600 baud (unchanged)
+        0x07, 0x00, // 8N1
+        0x00, 0x00, // inFlags: no in
+        0x00, 0x00, // outFlags: NMEA
+        0x00, 0x00, // reserved
+        0x00, 0x00, // reserved
+        0x00, 0x00, // reserved
+        0x00, 0x00, // reserved
+        0x96, 0x90 // CK_A, CK_B checksum
+    };
+    HAL_UART_Transmit(&huart6, ubx_cfg_prt_nmea, sizeof(ubx_cfg_prt_nmea), 100);
+
+    //__HAL_UART_DISABLE(&huart6);
+    //huart6.Init.BaudRate     = 115200;
+    //HAL_UART_Init(&huart6);
+    //__HAL_UART_ENABLE(&huart6);
+	#endif
+
+    // Clear buffer
+    SCB_InvalidateDCache_by_Addr((uint32_t*)dma_buf, GPS_DMA_BUF_SIZE);
+    memset(dma_buf, 0, GPS_DMA_BUF_SIZE);
+
+    // Start RX
+    HAL_UART_Receive_DMA(&huart6, dma_buf, GPS_DMA_BUF_SIZE);
+    dma_rd = 0;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -156,7 +197,7 @@ static void GPS_GPIO_Init(void)
     cfg.Pin   = GPS_EN_PIN;
     cfg.Mode  = GPIO_MODE_OUTPUT_PP;
     cfg.Pull  = GPIO_NOPULL;
-    cfg.Speed = GPIO_SPEED_FREQ_HIGH;
+    cfg.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPS_EN_PORT, &cfg);
     HAL_GPIO_WritePin(GPS_EN_PORT, GPS_EN_PIN, GPIO_PIN_RESET);
 
@@ -164,7 +205,7 @@ static void GPS_GPIO_Init(void)
     cfg.Pin       = GPS_RX_PIN;
     cfg.Mode      = GPIO_MODE_AF_PP;
     cfg.Pull      = GPIO_PULLUP;
-    cfg.Speed     = GPIO_SPEED_FREQ_HIGH;
+    cfg.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
     cfg.Alternate = GPS_UART_AF;
     HAL_GPIO_Init(GPS_RX_PORT, &cfg);
 
@@ -193,19 +234,26 @@ static void GPS_DMA_Init(void)
     hdma_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     hdma_rx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
     hdma_rx.Init.Mode                = DMA_CIRCULAR;
-    hdma_rx.Init.Priority            = DMA_PRIORITY_LOW;
+    hdma_rx.Init.Priority            = DMA_PRIORITY_HIGH;
     hdma_rx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
     HAL_DMA_Init(&hdma_rx);
 
     __HAL_LINKDMA(&huart6, hdmarx, hdma_rx);
 
-    HAL_NVIC_SetPriority(GPS_DMA_IRQn, 6, 0);
+    HAL_NVIC_SetPriority(GPS_DMA_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ  (GPS_DMA_IRQn);
 }
 
 /* -------------------------------------------------------------------------- */
 static void GPS_UART_Init(void)
 {
+    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+
+    // USART6 clock config - H7 has separate kernel clock
+    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART6;
+    PeriphClkInitStruct.Usart16ClockSelection = RCC_USART16CLKSOURCE_D2PCLK2;
+    HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
+
     __HAL_RCC_USART6_CLK_ENABLE();
 
     huart6.Instance          = GPS_UART;
@@ -216,15 +264,16 @@ static void GPS_UART_Init(void)
     huart6.Init.Mode         = UART_MODE_TX_RX;
     huart6.Init.HwFlowCtl    = UART_HWCONTROL_NONE;
     huart6.Init.OverSampling = UART_OVERSAMPLING_16;
+    huart6.Init.ClockPrescaler = UART_PRESCALER_DIV1;
     HAL_UART_Init(&huart6);
 
     __HAL_UART_ENABLE_IT(&huart6, UART_IT_IDLE);
 
-    HAL_NVIC_SetPriority(GPS_UART_IRQn, 6, 0);
+    HAL_NVIC_SetPriority(GPS_UART_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(GPS_UART_IRQn);
 
-    HAL_UART_Receive_DMA(&huart6, dma_buf, GPS_DMA_BUF_SIZE);
-    dma_rd = 0;
+    //HAL_UART_Receive_DMA(&huart6, dma_buf, GPS_DMA_BUF_SIZE);
+    //dma_rd = 0;
 }
 #endif
 
@@ -260,17 +309,20 @@ bool GPS_GetData(GPS_Data_t *out)
 // Drain DMA ring buffer, assemble complete NMEA lines, queue them
 static void GPS_DrainDMA(void)
 {
-    uint16_t wr = (uint16_t)(GPS_DMA_BUF_SIZE -
-                              __HAL_DMA_GET_COUNTER(&hdma_rx));
+	uint16_t cnt = __HAL_DMA_GET_COUNTER(&hdma_rx);
+    uint16_t wr = (uint16_t)(GPS_DMA_BUF_SIZE - cnt);
 
-    printf("cnt %d \r\n", (int)__HAL_DMA_GET_COUNTER(&hdma_rx));
+    //printf("cnt %d, %d \r\n", (int)cnt, (int)wr);
+
+    //SCB_InvalidateDCache_by_Addr((uint32_t*)(dma_buf + dma_rd), cnt);
+    SCB_InvalidateDCache_by_Addr((uint32_t*)dma_buf, GPS_DMA_BUF_SIZE);
 
     while (dma_rd != wr)
     {
         char c = (char)dma_buf[dma_rd];
         dma_rd = (uint16_t)((dma_rd + 1u) % GPS_DMA_BUF_SIZE);
 
-        //--printf("data %x \r\n" , c);
+        //--printf("byte %x \r\n" , c);
 
         if (c == '$')
         {
@@ -289,7 +341,7 @@ static void GPS_DrainDMA(void)
             NMEA_Line_t msg;
             memcpy(msg.data, nmea_asm, GPS_NMEA_MAX_LEN);
 
-            //--printf("data: %s \r\n", msg.data);
+            printf("data: %s \r\n", msg.data);
 
             // Non-blocking put from ISR context
             xQueueSendFromISR(nmea_queue, &msg, NULL);
@@ -545,8 +597,6 @@ static uint8_t GPS_DayOfWeek(uint16_t y, uint8_t m, uint8_t d)
     /* Convert: 0=Sun→7, 1=Mon→1 … 6=Sat→6                                 */
     return (dow == 0) ? RTC_WEEKDAY_SUNDAY : dow;
 }
-
-extern RTC_HandleTypeDef RtcHandle;   /* defined in CubeMX rtc.c                 */
 
 static void GPS_SyncRTC(const GPS_Data_t *d)
 {
