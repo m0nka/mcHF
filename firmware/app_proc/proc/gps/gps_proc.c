@@ -119,10 +119,6 @@ static void GPS_EXTI_Init(void)
 }
 #endif
 
-/* ==========================================================================
- * Public API
- * ========================================================================== */
-
 void GPS_Enable(bool enable)
 {
     HAL_GPIO_WritePin(GPS_EN_PORT, GPS_EN_PIN,
@@ -215,7 +211,7 @@ static bool GPS_ParseRMC(const char *line)
     if (GPS_Split(line, buf, f, 20) < 10)
     	return false;
 
-    printf("%s", line);
+    //printf("%s", line);
 
     if (f[2][0] != 'A')
     {
@@ -232,6 +228,8 @@ static bool GPS_ParseRMC(const char *line)
     gps_pending.msec = (strlen(t) > 7)
                      ? (uint16_t)(atof(t + 6) * 1000.0)
                      : 0u;
+
+    printf("%d:%d:%d \r\n", gps_pending.hour, gps_pending.min, gps_pending.sec);
 
     /* Date: ddmmyy */
     const char *d = f[9];
@@ -269,12 +267,20 @@ static bool GPS_ParseGGA(const char *line)
 {
     char  buf[GPS_NMEA_MAX_LEN];
     char *f[20];
-    if (GPS_Split(line, buf, f, 20) < 10) return false;
+
+    if (GPS_Split(line, buf, f, 20) < 10)
+    	return false;
+
+    //printf("%s", line);
 
     gps_pending.fix_quality = (uint8_t)atoi(f[6]);
     gps_pending.satellites  = (uint8_t)atoi(f[7]);
     gps_pending.hdop        = (float)  atof(f[8]);
     gps_pending.altitude_m  = (float)  atof(f[9]);
+
+    if(gps_pending.satellites)
+    	printf("sats: %d \r\n", gps_pending.satellites);
+
     return true;
 }
 
@@ -365,7 +371,7 @@ gps_proc_loop:
     // Process any waiting NMEA sentences
 	while (xQueueReceive(nmea_queue, &line, 0) == pdTRUE)
     {
-      	//--printf("%s  \r\n", line.data);
+      	//--printf("%s", line.data);
         GPS_ProcessLine(line.data);
     }
 
