@@ -832,6 +832,16 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/bms/hw/ch224a.c</locationURI>
 		</link>
 		<link>
+			<name>proc/gps/hw/gps_uart.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/gps/hw/gps_uart.c</locationURI>
+		</link>
+		<link>
+			<name>proc/gps/hw/lwrb.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/gps/hw/lwrb.c</locationURI>
+		</link>
+		<link>
 			<name>proc/icc/hw/mbox_hsem.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/icc/hw/mbox_hsem.c</locationURI>

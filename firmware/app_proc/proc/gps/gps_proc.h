@@ -1,12 +1,4 @@
-/* gps_driver.h – GPS task for STM32H747 M7 / FreeRTOS
- *
- * Hardware
- *   USART6  PG9  (RX, AF7)   PG14 (TX, AF7)  38400 baud, DMA circular
- *   PPS     PA8  (EXTI rising edge)            syncs internal RTC
- *   GPS_EN  PB1  (output, active-high)
- *
- * Tested with: u-blox M10 (MAX-M10S, SAM-M10Q)
- */
+
 #ifndef __GPS_PROC_H
 #define __GPS_PROC_H
 
@@ -21,18 +13,7 @@
 /* --------------------------------------------------------------------------
  * Pin / peripheral definitions
  * -------------------------------------------------------------------------- */
-#define GPS_UART            USART6
-#define GPS_UART_BAUD       9600
-#define GPS_UART_IRQn       USART6_IRQn
-#define GPS_UART_AF         GPIO_AF7_USART6
-
 #define GPS_PPS_EXTI_IRQn   EXTI9_5_IRQn      /* lines 5-9 share this IRQ   */
-
-/* DMA – adjust stream / channel if your CubeMX project allocates differently */
-//#define GPS_DMA             DMA1
-#define GPS_DMA_STREAM      DMA1_Stream2
-#define GPS_DMA_IRQn        DMA1_Stream2_IRQn
-#define GPS_DMA_REQUEST     DMA_REQUEST_USART6_RX
 
 /* --------------------------------------------------------------------------
  * Sizing
@@ -81,6 +62,7 @@ typedef struct {
 /** One-time hardware + RTOS object initialisation.
  *  Call before GPS_Task() starts, or let GPS_Task() call it internally.   */
 void gps_proc_init(void);
+void gps_proc_message(char *msg, ushort size);
 
 /** FreeRTOS task entry – pass to osThreadNew().
  *  Stack recommendation: 512 words (2 kB).                                 */
@@ -97,4 +79,4 @@ void GPS_UART_IRQHandler(void);
 void GPS_PPS_IRQHandler(void);
 void GPS_DMA_IRQHandler(void);
 
-#endif /* GPS_DRIVER_H */
+#endif
