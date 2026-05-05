@@ -21,9 +21,6 @@
 #include "stm32h7xx_ll_usart.h"
 #include "stm32h7xx_ll_gpio.h"
 
-// Only RX ?
-//#define GPS_USE_TX
-
 #define GPS_UART						USART6
 #define GPS_UART_DMA					DMA1
 

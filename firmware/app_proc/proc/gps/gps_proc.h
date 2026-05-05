@@ -10,6 +10,9 @@
 // Unit tests
 //#define GPS_TEST_GPIO
 
+// Only RX ?
+#define GPS_USE_TX
+
 /* --------------------------------------------------------------------------
  * Pin / peripheral definitions
  * -------------------------------------------------------------------------- */
@@ -78,5 +81,7 @@ void GPS_Enable(bool enable);
 void GPS_UART_IRQHandler(void);
 void GPS_PPS_IRQHandler(void);
 void GPS_DMA_IRQHandler(void);
+
+uchar gps_proc_sats_cnt(void);
 
 #endif

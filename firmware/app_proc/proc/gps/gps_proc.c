@@ -125,6 +125,51 @@ void GPS_Enable(bool enable)
                       enable ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
+// ============================================================================
+// ENABLE ALL GNSS SYSTEMS (GPS, GLONASS, Galileo, BeiDou)
+// ============================================================================
+#ifdef GPS_USE_TX
+void GPS_EnableGNSS_Systems(void)
+{
+	// UBX-CFG-GNSS command structure
+	// This enables: GPS, GLONASS, Galileo, BeiDou
+	uint8_t ubx_cfg_gnss[] = {
+			0xB5, 0x62, // UBX header
+			0x06, 0x3E, // Class 0x06 (CFG), ID 0x3E (GNSS)
+			0x2C, 0x00, // Payload length (44 bytes)
+			// Payload
+			0x00, // Message version 0
+			0x00, // Reserved
+			0x20, // numTrkChHw (32 tracking channels)
+			0x07, // numTrkChUse (7 concurrent constellations)
+			// GPS (GNSS ID 0)
+			0x00, 0x08, 0x10, 0x00, 0x01, 0x00, 0x01, 0x01,
+			// SBAS (GNSS ID 1) - disable0x01, 0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x03,
+			// Galileo (GNSS ID 2)
+			0x02, 0x04, 0x08, 0x00, 0x01, 0x00, 0x01, 0x01,
+			// BeiDou (GNSS ID 3)
+			0x03, 0x08, 0x10, 0x00, 0x01, 0x00, 0x01, 0x01,
+			// GLONASS (GNSS ID 6)
+			0x06, 0x08, 0x0E, 0x00, 0x01, 0x00, 0x01, 0x01,
+			// Checksum (to be calculated)
+			0x00, 0x00
+	};
+
+	// Calculate checksum
+	uint8_t ck_a = 0, ck_b = 0;
+
+	for (int i = 2; i < 46; i++) {
+		ck_a += ubx_cfg_gnss[i];
+		ck_b += ck_a;
+	}
+
+	ubx_cfg_gnss[46] = ck_a;
+	ubx_cfg_gnss[47] = ck_b;
+
+	gps_uart_send(ubx_cfg_gnss, sizeof(ubx_cfg_gnss));
+}
+#endif
+
 bool GPS_GetData(GPS_Data_t *out)
 {
     if (!out) return false;
@@ -430,6 +475,22 @@ void gps_proc_init(void)
 
     // M10 needs ~100 ms to boot before it starts sending NMEA
     vTaskDelay(150);
+
+	#ifdef GPS_USE_TX
+    GPS_EnableGNSS_Systems();
+	#endif
+}
+
+uchar gps_proc_sats_cnt(void)
+{
+	#if 0
+	static uchar cnt = 0;
+	cnt++;
+	if(cnt == 10) cnt = 0;
+	return cnt;
+	#else
+	return gps_pending.satellites;
+	#endif
 }
 
 #endif

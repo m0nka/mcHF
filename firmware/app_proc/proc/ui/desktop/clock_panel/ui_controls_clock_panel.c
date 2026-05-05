@@ -24,6 +24,10 @@
 #include "rtc.h"
 #include "ui_actions.h"
 
+#ifdef CONTEXT_GPS
+#include "gps_proc.h"
+#endif
+
 RTC_DateTypeDef sdatestructureget;
 RTC_TimeTypeDef stimestructureget;
 
@@ -111,6 +115,20 @@ static void ui_controls_clock_refresh(void)
 	GUI_DispStringAt(buf,(CLOCK_X + CLOCK_HOURS_SHIFT), (CLOCK_Y + 2));
 
 	// ToDo: Check if date changed, then update...
+	//..
+
+	// Clear sats area
+	GUI_SetColor(CLOCK_PANEL_COL);
+	GUI_FillRect(	10,
+					(CLOCK_Y + 12),
+					20,
+					(CLOCK_Y + 25));
+
+	// Temp, show sats count
+	sprintf(buf,"%d", gps_proc_sats_cnt());
+	GUI_SetColor(GUI_DARKRED);
+	GUI_SetFont(&GUI_Font16B_ASCII);
+	GUI_DispStringAt(buf, 10, (CLOCK_Y + 12));
 }
 
 //*----------------------------------------------------------------------------
