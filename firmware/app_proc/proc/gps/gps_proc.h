@@ -11,7 +11,7 @@
 //#define GPS_TEST_GPIO
 
 // Only RX ?
-#define GPS_USE_TX
+//#define GPS_USE_TX
 
 /* --------------------------------------------------------------------------
  * Pin / peripheral definitions

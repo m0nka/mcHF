@@ -124,11 +124,17 @@ static void ui_controls_clock_refresh(void)
 					20,
 					(CLOCK_Y + 25));
 
+	uchar s_cnt = gps_proc_sats_cnt();
+
 	// Temp, show sats count
-	sprintf(buf,"%d", gps_proc_sats_cnt());
+	sprintf(buf,"%d", s_cnt);
 	GUI_SetColor(GUI_DARKRED);
 	GUI_SetFont(&GUI_Font16B_ASCII);
 	GUI_DispStringAt(buf, 10, (CLOCK_Y + 12));
+
+	// Temp, refresh data(ToDo: need a better way)
+	//if(s_cnt > 5)
+	//	ui_controls_clock_init();
 }
 
 //*----------------------------------------------------------------------------

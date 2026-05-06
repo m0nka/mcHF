@@ -64,7 +64,7 @@ static SemaphoreHandle_t data_mutex;   /* protects gps_data for readers    */
 /* --------------------------------------------------------------------------
  * PPS latch (written in ISR, read in task)
  * -------------------------------------------------------------------------- */
-static volatile bool     pps_pending;    /* PPS fired, waiting for next RMC  */
+static volatile bool     pps_pending = true;    /* PPS fired, waiting for next RMC  */
 static volatile uint32_t pps_pending_ms; /* HAL_GetTick() at PPS edge        */
 
 /* --------------------------------------------------------------------------
@@ -274,8 +274,6 @@ static bool GPS_ParseRMC(const char *line)
                      ? (uint16_t)(atof(t + 6) * 1000.0)
                      : 0u;
 
-    printf("%d:%d:%d \r\n", gps_pending.hour, gps_pending.min, gps_pending.sec);
-
     /* Date: ddmmyy */
     const char *d = f[9];
     if (strlen(d) >= 6)
@@ -284,6 +282,8 @@ static bool GPS_ParseRMC(const char *line)
         gps_pending.month = (uint8_t) ((d[2]-'0') * 10 + (d[3]-'0'));
         gps_pending.year  = (uint16_t)(2000 + (d[4]-'0') * 10 + (d[5]-'0'));
     }
+
+    //printf("%d:%d:%d \r\n", gps_pending.hour, gps_pending.min, gps_pending.sec);
 
     gps_pending.latitude    = GPS_NMEADeg(f[3], f[4][0]);
     gps_pending.longitude   = GPS_NMEADeg(f[5], f[6][0]);
@@ -296,7 +296,7 @@ static bool GPS_ParseRMC(const char *line)
     if (pps_pending)
     {
         pps_pending = false;
-        if ((HAL_GetTick() - pps_pending_ms) < 1500u)
+        //if ((HAL_GetTick() - pps_pending_ms) < 1500u)
             xSemaphoreGive(pps_sem);  // triggers RTC write in task
         /* else: PPS was stale (>1.5 s old) – discard silently             */
     }
@@ -323,8 +323,8 @@ static bool GPS_ParseGGA(const char *line)
     gps_pending.hdop        = (float)  atof(f[8]);
     gps_pending.altitude_m  = (float)  atof(f[9]);
 
-    if(gps_pending.satellites)
-    	printf("sats: %d \r\n", gps_pending.satellites);
+    //if(gps_pending.satellites)
+    //	printf("sats: %d \r\n", gps_pending.satellites);
 
     return true;
 }
