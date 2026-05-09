@@ -128,7 +128,12 @@ static void ui_controls_clock_refresh(void)
 
 	// Temp, show sats count
 	sprintf(buf,"%d", s_cnt);
-	GUI_SetColor(GUI_DARKRED);
+
+	if(gps_proc_time_set())
+		GUI_SetColor(GUI_DARKGREEN);
+	else
+		GUI_SetColor(GUI_DARKRED);
+
 	GUI_SetFont(&GUI_Font16B_ASCII);
 	GUI_DispStringAt(buf, 10, (CLOCK_Y + 12));
 

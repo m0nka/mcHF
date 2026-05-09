@@ -79,6 +79,9 @@ static GPS_Data_t gps_pending;   /* staging, written only by GPS_Task()     */
 
 extern RTC_HandleTypeDef RtcHandle;
 
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
+
 /* --------------------------------------------------------------------------
  * Forward declarations
  * -------------------------------------------------------------------------- */
@@ -314,13 +317,14 @@ static bool GPS_ParseRMC(const char *line)
  */
 static bool GPS_ParseGGA(const char *line)
 {
+	static ulong upd_timer = 0;
     char  buf[GPS_NMEA_MAX_LEN];
     char *f[20];
 
     if (GPS_Split(line, buf, f, 20) < 10)
     	return false;
 
-    //printf("%s", line);
+    printf("%s", line);
 
     /* Time: hhmmss[.ss] */
     const char *t = f[1];
@@ -333,11 +337,28 @@ static bool GPS_ParseGGA(const char *line)
                     		 ? (uint16_t)(atof(t + 6) * 1000.0)
                     				 : 0u;
 
-    	printf("%d:%d:%d \r\n", gps_pending.hour, gps_pending.min, gps_pending.sec);
+    	//printf("%d:%d:%d \r\n", gps_pending.hour, gps_pending.min, gps_pending.sec);
     	gps_pending.time_valid = true;
+
+    	// Every 30s
+    	if(upd_timer == 0)
+    		upd_timer = ps.epoch;
+    	else if((upd_timer + 30000) < ps.epoch)
+    	{
+    		printf("%d:%d:%d \r\n", gps_pending.hour, gps_pending.min, gps_pending.sec);
+
+    		// Schedule clock sync
+    		xSemaphoreGive(pps_sem);
+
+    		// Restart
+    		upd_timer = ps.epoch;
+    	}
     }
     else
+    {
     	gps_pending.time_valid = false;
+    	upd_timer = 0;
+    }
 
     gps_pending.fix_quality = (uint8_t)atoi(f[6]);
     gps_pending.satellites  = (uint8_t)atoi(f[7]);
@@ -370,18 +391,28 @@ static void GPS_SyncRTC(const GPS_Data_t *d)
     RTC_TimeTypeDef rt = {0};
     RTC_DateTypeDef rd = {0};
 
-    printf("sync clock \r\n");
-
     rt.Hours          = d->hour;
     rt.Minutes        = d->min;
     rt.Seconds        = d->sec;
-    rt.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-    rt.StoreOperation = RTC_STOREOPERATION_RESET;
 
-    rd.Date    = d->day;
-    rd.Month   = d->month;              /* HAL binary format: 1-12           */
-    rd.Year    = (uint8_t)(d->year - 2000u);
-    rd.WeekDay = GPS_DayOfWeek(d->year, d->month, d->day);
+    if(d->valid)
+    {
+    	printf("full sync clock \r\n");
+
+    	rt.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+    	rt.StoreOperation = RTC_STOREOPERATION_RESET;
+    	rd.Date    = d->day;
+    	rd.Month   = d->month;              /* HAL binary format: 1-12           */
+    	rd.Year    = (uint8_t)(d->year - 2000u);
+    	rd.WeekDay = GPS_DayOfWeek(d->year, d->month, d->day);
+    }
+    else
+    {
+    	printf("time sync only \r\n");
+
+    	// Reload existing
+    	HAL_RTC_GetDate(&RtcHandle, &rd, RTC_FORMAT_BIN);
+    }
 
     /* HAL requires time to be set before date */
     HAL_RTC_SetTime(&RtcHandle, &rt, RTC_FORMAT_BIN);
@@ -467,6 +498,10 @@ gps_proc_loop:
             gps_pending.rtc_synced = true;
             gps_data = gps_pending;
         }
+        else if (gps_pending.time_valid)
+        {
+            GPS_SyncRTC(&gps_pending);
+        }
 
         xSemaphoreGive(data_mutex);
      }
@@ -520,6 +555,14 @@ uchar gps_proc_sats_cnt(void)
 	#else
 	return gps_pending.satellites;
 	#endif
+}
+
+uchar gps_proc_time_set(void)
+{
+	if(gps_pending.time_valid)
+		return 1;
+	else
+		return 0;
 }
 
 #endif

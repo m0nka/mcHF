@@ -19,7 +19,7 @@
 // 4. [--Disable BMS--]
 // 5. [--Disable LORA--]
 // 6. Disable SD
-#define GPS_INT_NOISE_TEST
+//#define GPS_INT_NOISE_TEST
 
 // Only RX ?
 //#define GPS_USE_TX
@@ -94,6 +94,8 @@ void GPS_UART_IRQHandler(void);
 void GPS_PPS_IRQHandler(void);
 void GPS_DMA_IRQHandler(void);
 
+// API access
 uchar gps_proc_sats_cnt(void);
+uchar gps_proc_time_set(void);
 
 #endif

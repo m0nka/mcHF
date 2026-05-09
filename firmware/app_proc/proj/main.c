@@ -356,6 +356,8 @@ static void tasks_pre_os_init(void)
 
 	#ifdef CONTEXT_SD
 	storage_proc_init();
+	#else
+	radio_init_on_reset();
 	#endif
 
 	#ifdef CONTEXT_BMS
