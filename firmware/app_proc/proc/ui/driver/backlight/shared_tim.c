@@ -203,7 +203,7 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
 
 void shared_tim_change(uchar val)
 {
-#ifndef REV_0_8_4_PATCH
+#ifndef REV_0_8_4_PATCH__
 	if(val > 100)
 		val = 100;
 	else if(val < 5)
@@ -328,7 +328,7 @@ static void shared_tim_init_a(void)
 
 void shared_tim_init(void)
 {
-	#ifndef REV_0_8_4_PATCH
+	#ifndef REV_0_8_4_PATCH__
 	shared_tim_init_a();
 	#else
 	GPIO_InitTypeDef   GPIO_InitStruct;

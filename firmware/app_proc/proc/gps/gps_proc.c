@@ -40,6 +40,10 @@
 #include <stdlib.h>
 #include <math.h>
 
+#ifdef GPS_INT_NOISE_TEST
+#include "shared_tim.h"
+#endif
+
 /* --------------------------------------------------------------------------
  * Internal types
  * -------------------------------------------------------------------------- */
@@ -318,6 +322,23 @@ static bool GPS_ParseGGA(const char *line)
 
     //printf("%s", line);
 
+    /* Time: hhmmss[.ss] */
+    const char *t = f[1];
+    if (strlen(t) >= 6)
+    {
+    	gps_pending.hour = (uint8_t)((t[0]-'0') * 10 + (t[1]-'0'));
+    	gps_pending.min  = (uint8_t)((t[2]-'0') * 10 + (t[3]-'0'));
+    	gps_pending.sec  = (uint8_t)((t[4]-'0') * 10 + (t[5]-'0'));
+    	gps_pending.msec = (strlen(t) > 7)
+                    		 ? (uint16_t)(atof(t + 6) * 1000.0)
+                    				 : 0u;
+
+    	printf("%d:%d:%d \r\n", gps_pending.hour, gps_pending.min, gps_pending.sec);
+    	gps_pending.time_valid = true;
+    }
+    else
+    	gps_pending.time_valid = false;
+
     gps_pending.fix_quality = (uint8_t)atoi(f[6]);
     gps_pending.satellites  = (uint8_t)atoi(f[7]);
     gps_pending.hdop        = (float)  atof(f[8]);
@@ -408,7 +429,15 @@ void gps_proc(void *argument)
 	vTaskDelay(GPS_PROC_START_DELAY);
 	printf("start\r\n");
 
+	// Init
 	gps_proc_init();
+
+	#ifdef GPS_INT_NOISE_TEST
+	// Kill backlight
+	shared_tim_change(0);
+	// 58V off
+	//--HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, GPIO_PIN_RESET);
+	#endif
 
 gps_proc_loop:
 

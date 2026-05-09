@@ -7,8 +7,19 @@
 //#include <stdbool.h>
 //#include <stdint.h>
 
+// --------------------------------------------------------------------------
 // Unit tests
 //#define GPS_TEST_GPIO
+// ----------------------
+// Noise reduction steps:
+//
+// 1. Backlight timer disabled, use GPIO mode
+// 2. [--Turn off 58V--]
+// 3. Remove mixer board
+// 4. [--Disable BMS--]
+// 5. [--Disable LORA--]
+// 6. Disable SD
+#define GPS_INT_NOISE_TEST
 
 // Only RX ?
 //#define GPS_USE_TX
@@ -54,6 +65,7 @@ typedef struct {
 
     /* Status */
     bool     valid;          /* RMC status field = 'A'             */
+    bool	 time_valid;	// Seems the time is the first thing showing up, even with bad lock
     bool     rtc_synced;     /* RTC was set at least once via PPS  */
     uint32_t last_pps_ms;    /* HAL_GetTick() at last PPS edge     */
 } GPS_Data_t;
