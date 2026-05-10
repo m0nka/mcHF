@@ -564,5 +564,13 @@ uchar gps_proc_time_set(void)
 	else
 		return 0;
 }
-
+#else
+uchar gps_proc_sats_cnt(void)
+{
+	return 0;
+}
+uchar gps_proc_time_set(void)
+{
+	return 0;
+}
 #endif
