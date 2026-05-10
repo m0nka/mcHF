@@ -25,94 +25,102 @@
 // clocks and start the OS (IRQ stack usage as well)
 #define CONTEXT_RESET_VECTOR
 
-//
 // -----------------------------------------------------------------------------------------------
 // High level video driver
 //
-#define CONTEXT_VIDEO
 //
+#define CONTEXT_VIDEO
+
 // -----------------------------------------------------------------------------------------------
 // Touch screen process
 //
-#define CONTEXT_TOUCH
 //
+#define CONTEXT_TOUCH
+
 // -----------------------------------------------------------------------------------------------
 // Core to core communication: 	M7 <-> M4
 //
-#define CONTEXT_ICC
 //
+#define CONTEXT_ICC
+
 // -----------------------------------------------------------------------------------------------
 // Encoders input processing
 //
-#define CONTEXT_ROTARY
 //
+#define CONTEXT_ROTARY
+
 // -----------------------------------------------------------------------------------------------
 // VFO control
 //
-#define CONTEXT_VFO
 //
+#define CONTEXT_VFO
+
 // -----------------------------------------------------------------------------------------------
 // Codec I2C control(M7, while SAI streaming in DSP core)
+//
 //
 #define CONTEXT_AUDIO
 //
 // Codec output to control final audio PA mute line(or CPU)
 //#define USE_HARD_MUTE
-//
+
 // -----------------------------------------------------------------------------------------------
 // Battery Management System
 //
+//
 #define CONTEXT_BMS
-//
-// -----------------------------------------------------------------------------------------------
-// Backlight control process
-//
-//#define CONTEXT_PWM
-//
+
 // -----------------------------------------------------------------------------------------------
 // Band switching process
 //
-#define CONTEXT_BAND
 //
+#define CONTEXT_BAND
+
 // -----------------------------------------------------------------------------------------------
 // Transmitter HW control/monitor
 //
 //
 #define CONTEXT_TRX
-//
+
 // -----------------------------------------------------------------------------------------------
 // Fan HW control
 //
 //
 #define CONTEXT_FAN
-//
+
 // -----------------------------------------------------------------------------------------------
 // Physical keyboard
 //
 //
 #define CONTEXT_KEYPAD
-//
+
 // -----------------------------------------------------------------------------------------------
 // Lora transceiver
 //
 //
 #define CONTEXT_LORA
-//
 
 // -----------------------------------------------------------------------------------------------
-// test
+// GNSS driver
 //
-//#define CONTEXT_DSP
+//
+//#define CONTEXT_GPS
 
 // -----------------------------------------------------------------------------------------------
 // Storage process
 //
+//
+#ifndef CONTEXT_GPS
 #define CONTEXT_SD
+#endif
 
 // -----------------------------------------------------------------------------------------------
 // Application loader
 //
+//
+#ifdef CONTEXT_SD
 #define CONTEXT_APP
+#endif
 
 // -------------------------------------------------------------------------------------------
 // Process parameters template
@@ -226,5 +234,12 @@
 #define LORA_PROC_SLEEP_TIME			portMAX_DELAY
 #define LORA_PROC_PRIORITY				osPriorityNormal
 #define LORA_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 16)
+
+// GNSS driver parameters
+#define GPS_PROC_START_NAME				"gps"
+#define GPS_PROC_START_DELAY			5000
+#define GPS_PROC_SLEEP_TIME				portMAX_DELAY
+#define GPS_PROC_PRIORITY				osPriorityNormal
+#define GPS_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 8)
 
 #endif

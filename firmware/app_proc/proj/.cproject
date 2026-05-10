@@ -331,6 +331,8 @@
 									<listOptionValue builtIn="false" value="../../proc/sdcard/misc"/>
 									<listOptionValue builtIn="false" value="../../proc/app"/>
 									<listOptionValue builtIn="false" value="../../proc/app/elf"/>
+									<listOptionValue builtIn="false" value="../../proc/gps"/>
+									<listOptionValue builtIn="false" value="../../proc/gps/hw"/>
 									<listOptionValue builtIn="false" value="../../../"/>
 									<listOptionValue builtIn="false" value="../../middleware/ft8_lib/"/>
 									<listOptionValue builtIn="false" value="../../middleware/ff16/source"/>

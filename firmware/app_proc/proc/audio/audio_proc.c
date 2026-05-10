@@ -257,7 +257,8 @@ void audio_proc_task(void const * argument)
 	#ifdef CONTEXT_ICC
 	audio_proc_wait_dsp();
 	#else
-	goto audio_proc_exit;
+	//goto audio_proc_exit;
+	vTaskDelete(NULL);
 	#endif
 
 	// BT Monitor task

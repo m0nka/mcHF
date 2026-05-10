@@ -720,7 +720,7 @@
 #define SD_DET_PORT              		GPIOB
 
 // PB1			BST_EN -> ToDo: BMS step-up converter enable
-#define GPS_EN		               		GPIO_PIN_1
+#define GPS_EN_PIN	               		GPIO_PIN_1
 #define GPS_EN_PORT         			GPIOB
 
 // PB2			ATT_CLK, Attenuator
