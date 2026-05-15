@@ -368,9 +368,6 @@
 									<listOptionValue builtIn="false" value="RPMSG_BUFFER_SIZE=1100"/>
 									<listOptionValue builtIn="false" value="USE_HAL_SAI_REGISTER_CALLBACKS=1"/>
 									<listOptionValue builtIn="false" value="__METAL_GENERIC_ALLOC__H__"/>
-									<listOptionValue builtIn="false" value="__METAL_ALLOC__H__"/>
-									<listOptionValue builtIn="false" value="metal_allocate_memory=pvPortMalloc"/>
-									<listOptionValue builtIn="false" value="metal_free_memory=vPortFree"/>
 									<listOptionValue builtIn="false" value="LCD_LANDSCAPE"/>
 									<listOptionValue builtIn="false" value="BOARD_EVAL_747__"/>
 									<listOptionValue builtIn="false" value="BOARD_MCHF_PRO"/>
@@ -388,7 +385,7 @@
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="true" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.otherflags.211633042" name="Other flags" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.otherflags" useByScannerDiscovery="true" valueType="stringList"/>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.languagestandard.2074062857" name="Language standard" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.languagestandard" useByScannerDiscovery="true" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.languagestandard.value.gnu11" valueType="enumerated"/>
-								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.warnings.all.629734076" name="Enable all warnings about questionable constructions (-Wall)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.warnings.all" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.warnings.all.629734076" name="Enable all warnings about questionable constructions (-Wall)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.warnings.all" useByScannerDiscovery="false" value="false" valueType="boolean"/>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1937172750" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
 							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.1184233659" name="MCU G++ Compiler" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler">

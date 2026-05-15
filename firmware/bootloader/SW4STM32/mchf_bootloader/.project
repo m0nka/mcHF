@@ -567,21 +567,6 @@
 			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/FatFs/src/option/unicode.c</locationURI>
 		</link>
 		<link>
-			<name>base_hw/hw/ESP32/esp32_flash.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/base_hw/hw/ESP32/esp32_flash.c</locationURI>
-		</link>
-		<link>
-			<name>base_hw/hw/ESP32/esp32_ipc_uart.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/base_hw/hw/ESP32/esp32_ipc_uart.c</locationURI>
-		</link>
-		<link>
-			<name>base_hw/hw/ESP32/esp32_prog_uart.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/base_hw/hw/ESP32/esp32_prog_uart.c</locationURI>
-		</link>
-		<link>
 			<name>base_hw/hw/MT48LC4M32B2/MT48LC4M32B2.c</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/base_hw/hw/MT48LC4M32B2/MT48LC4M32B2.c</locationURI>

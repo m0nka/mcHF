@@ -1678,7 +1678,7 @@ void Si5351_update_sys_status(struct Si5351Status *status)
 {
   uint8_t reg_val = 0;
 
-  reg_val = si5351_read(SI5351_DEVICE_STATUS);
+  reg_val = Si5351_si5351_read(SI5351_DEVICE_STATUS);
 
   // Parse the register
   status->SYS_INIT = (reg_val >> 7) & 0x01;
@@ -1692,7 +1692,7 @@ void Si5351_update_int_status(struct Si5351IntStatus *int_status)
 {
   uint8_t reg_val = 0;
 
-  reg_val = si5351_read(SI5351_INTERRUPT_STATUS);
+  reg_val = Si5351_si5351_read(SI5351_INTERRUPT_STATUS);
 
   // Parse the register
   int_status->SYS_INIT_STKY = (reg_val >> 7) & 0x01;

@@ -24,6 +24,17 @@
 
 ushort bq40z80_regs[0x1C];
 
+void bq40z80_delay(ulong delay)
+{
+	#if defined (RADIO)
+	osDelay(delay);
+	#endif
+
+	#if defined (BOOTLOADER)
+	HAL_Delay(delay);
+	#endif
+}
+
 uchar bq40z80_mac_read_block(ushort cmd, uchar *buf, uchar len)
 {
 	ulong err;
@@ -44,7 +55,7 @@ uchar bq40z80_mac_read_block(ushort cmd, uchar *buf, uchar len)
 		return 2;
 	}
 
-	osDelay(100);
+	bq40z80_delay(100);
 
 	err = shared_i2c_read_reg(0x16, 0x00, t_buf, 36);
 	if(err != 0)
@@ -111,7 +122,7 @@ uchar bq40z80_read_fw_ver(void)
 	if(bq40z80_write_16bit_reg(0x44, 0x0006) != 0)
 		return 1;
 
-	osDelay(2);
+	bq40z80_delay(2);
 
 	if(bq40z80_mac_read_block(0x0044, buf, 11) != 0)
 		return 2;
@@ -135,7 +146,7 @@ void bq40z80_read_all_regs(void)
 			val = 0;
 		}
 
-		osDelay(50);
+		bq40z80_delay(50);
 	}
 
 	printf("dump bms registers done\r\n");

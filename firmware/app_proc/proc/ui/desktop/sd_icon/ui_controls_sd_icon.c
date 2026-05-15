@@ -15,6 +15,7 @@
 
 #ifdef CONTEXT_VIDEO
 
+#include "storage_api.h"
 #include "gui.h"
 #include "dialog.h"
 
