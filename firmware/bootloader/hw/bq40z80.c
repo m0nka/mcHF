@@ -203,7 +203,7 @@ ushort bq40z80_read_status(void)
 
 short bq40z80_read_current(void)
 {
-	short curr;
+	ushort curr;
 
 	if(!bms_loc_init)
 		return 0;
@@ -239,7 +239,7 @@ ushort bq40z80_read_pack_voltage(void)
 void bq40z80_init(void)
 {
 	//ulong err;
-	ushort val = 0;
+	//ushort val = 0;
 
 	// Do we need init ?
 	#ifndef CONTEXT_AUDIO

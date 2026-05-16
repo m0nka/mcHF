@@ -85,6 +85,8 @@ uchar bq40z80_mac_read_block(ushort cmd, uchar *buf, uchar len)
 	//uchar t_len;
 	//uchar i;
 
+	UNUSED(len);
+
 	if(buf ==  NULL)
 		return 1;
 

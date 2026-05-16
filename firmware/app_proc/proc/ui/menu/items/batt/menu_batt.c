@@ -590,7 +590,7 @@ static void _cbCalibrationControl(WM_MESSAGE * pMsg, int Id, int NCode)
 
 static void _cbSettingsControl(WM_MESSAGE * pMsg, int Id, int NCode)
 {
-	WM_HWIN hItem;
+	//WM_HWIN hItem;
 
 	switch(Id)
 	{
@@ -668,11 +668,11 @@ static void _cbSettingsControl(WM_MESSAGE * pMsg, int Id, int NCode)
 
 static void _cbDialog0(WM_MESSAGE * pMsg)
 {
-	int 	Id, NCode;
-	WM_HWIN hDlg;
+	//int 	Id,NCode;
+	//WM_HWIN hDlg;
 	WM_HWIN 	hItem;
 
-	hDlg = pMsg->hWin;
+	//hDlg = pMsg->hWin;
 
 	switch (pMsg->MsgId)
 	{
@@ -693,8 +693,8 @@ static void _cbDialog0(WM_MESSAGE * pMsg)
 
 		case WM_NOTIFY_PARENT:
 		{
-			Id    = WM_GetId(pMsg->hWinSrc);    /* Id of widget */
-			NCode = pMsg->Data.v;               /* Notification code */
+			//Id    = WM_GetId(pMsg->hWinSrc);    /* Id of widget */
+			//NCode = pMsg->Data.v;               /* Notification code */
 
 			//_cbSettingsControl(pMsg,Id,NCode);
 			break;
@@ -727,7 +727,7 @@ static void _cbDialog0(WM_MESSAGE * pMsg)
 //
 static void _cbDialog1(WM_MESSAGE * pMsg)
 {
-	WM_HWIN 	hItem, hEdit;
+	WM_HWIN 	hItem;//, hEdit;
 	int 		Id, NCode;
 	//GUI_RECT	Rect;
 	WM_HWIN hDlg;
@@ -988,9 +988,9 @@ static void _cbDialog2(WM_MESSAGE * pMsg)
 static void _cbDialog3(WM_MESSAGE * pMsg)
 {
 	int 	Id, NCode;
-	WM_HWIN hDlg;
+	//WM_HWIN hDlg;
 
-	hDlg = pMsg->hWin;
+	//hDlg = pMsg->hWin;
 
 	switch (pMsg->MsgId)
 	{

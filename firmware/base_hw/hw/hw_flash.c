@@ -532,7 +532,7 @@ __RAM_CODE_SECTION int hw_flash_program_file(FIL * pResFile, uint32_t Address)
   FLASH_EraseInitTypeDef EraseInitStruct;
 
   int Ret = 0;
-  uint8_t dual_core = 0;
+  //uint8_t dual_core = 0;
   uint32_t EraseError = 0;
   uint32_t numOfReadBytes = 0, nbTotalBytes = 0;
   uint32_t offset = 0;
