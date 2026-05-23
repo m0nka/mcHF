@@ -720,6 +720,9 @@ void bsp_power_off(void)
 {
 	//printf("power off in\r\n");
 
+	// 5V off
+	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, GPIO_PIN_RESET);
+
 	// Stop all repaints
 	#ifdef CONTEXT_VIDEO
 	ui_proc_power_cleanup();
@@ -767,16 +770,16 @@ void bsp_power_off(void)
 
 	HAL_Delay(3000);
 
-	#if 0
-	// Enter reason for reset, so the bootloader doesn't power back on the radio
-	WRITE_REG(BKP_REG_RESET_REASON, RESET_POWER_OFF);
-	HAL_PWR_DisableBkUpAccess();
-	// Restart to bootloader
-	NVIC_SystemReset();
-	#else
+	// LCD off
 	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+
+	// Release PRES line
 	LL_GPIO_ResetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
-	#endif
+
+	// Never here
+	HAL_Delay(1000);
+	printf("stall \r\n");
+	while(1);
 }
 
 static void ptt_init(void)
@@ -811,26 +814,37 @@ static void power_led_init(void)
 	HAL_GPIO_WritePin(ON_LED_PORT, ON_LED, GPIO_PIN_SET);
 }
 
+void board_check_button(void)
+{
+	GPIO_InitTypeDef  			gpio_init_structure;
+
+	__HAL_RCC_GPIOG_CLK_ENABLE();
+
+	//gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+	gpio_init_structure.Pull  = GPIO_PULLUP;
+	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
+
+	// Power button (encoder switch line)
+	gpio_init_structure.Pin   = POWER_BUTTON;
+	gpio_init_structure.Mode  = GPIO_MODE_INPUT;
+	HAL_GPIO_Init(POWER_BUTTON_PORT, &gpio_init_structure);
+
+	if(HAL_GPIO_ReadPin(POWER_BUTTON_PORT, POWER_BUTTON))
+	{
+		//while(1);
+		NVIC_SystemReset();
+	}
+}
+
 void bsp_hold_power(void)
 {
-#if 0
-	GPIO_InitTypeDef  GPIO_InitStruct;
-
-	__HAL_RCC_GPIOC_CLK_ENABLE();
-
-	HAL_GPIO_WritePin(POWER_HOLD_PORT,POWER_HOLD, 1);	// hold power
-
-	GPIO_InitStruct.Pin   = POWER_HOLD;
-	GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull  = GPIO_PULLDOWN;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-
-	HAL_GPIO_Init(POWER_HOLD_PORT, &GPIO_InitStruct);
-#else
 	LL_GPIO_InitTypeDef 		GPIO_InitStruct = {0};
 
 	// This is first ever call, so enable gpio clock
 	LL_AHB4_GRP1_EnableClock(LL_AHB4_GRP1_PERIPH_GPIOC);
+
+	// Is button pressed
+//	board_check_button();
 
 	// Hold the regulator line
 	LL_GPIO_SetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
@@ -839,9 +853,6 @@ void bsp_hold_power(void)
 	GPIO_InitStruct.Mode 	= LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Pull 	= LL_GPIO_PULL_DOWN;
 	LL_GPIO_Init(POWER_HOLD_PORT, &GPIO_InitStruct);
-
-
-#endif
 }
 
 void bsp_gpio_clocks_on(void)
