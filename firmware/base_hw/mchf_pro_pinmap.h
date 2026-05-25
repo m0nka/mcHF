@@ -663,8 +663,8 @@
 //#define LORA_POWER_INV
 
 // PA3			(ex RFM_DIO2), Lora driver
-#define LORA_RESET						GPIO_PIN_3
-#define LORA_RESET_PORT					GPIOA
+#define LORA_NRST						GPIO_PIN_3
+#define LORA_NRST_PORT					GPIOA
 
 // PA4			DAC1_OUT1
 #define DAC1_OUT1						GPIO_PIN_4
@@ -801,8 +801,8 @@
 #define ADC3_INP1_PORT           		GPIOC
 
 // PC4			LORA_DIO1, Lora driver
-#define LORA_DIO1						LL_GPIO_PIN_4
-#define LORA_DIO1_PORT           		GPIOC
+#define LORA_IRQ						LL_GPIO_PIN_4
+#define LORA_IRQ_PORT           		GPIOC
 
 // PC5			BUSY (ex DIO0), Lora driver
 #define LORA_BUSY						LL_GPIO_PIN_5

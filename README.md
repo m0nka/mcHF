@@ -36,7 +36,8 @@ For older HW versions, firmware repository  [here](https://github.com/df8oe/UHSD
 Crash course into the project and features  [here](https://github.com/df8oe/UHSDR/wiki)
 # Altium PCB Project Files
 
- * [`latest`, `mcHF`, `0.8.5` *(pcb/mchf)*](./pcb/mchf)
+ * [`latest`, `mcHF`, `0.9 revB` *(pcb/v9)*](./pcb/v9)
+ * [`develp`, `mcHF`, `0.8.5` *(pcb/v8/mchf)*](./pcb/v8/mchf)
  * [`legacy`, `mcHF`, `0.6.3` *(pcb/__legacy/v6)*](./pcb/__legacy/v6)
  
  # PCB Gerbers
