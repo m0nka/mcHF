@@ -1,51 +1,91 @@
-# mcHF
+# mcHF — Open Source HF SDR Transceiver
 
-The mcHF is a fully open source SDR transceiver intended to be used on the HF bands. 
-Main goal is to provide planet-wide, off-grid communications(ionosphere allowing),
-without the need of cellular or satellite infrastructure.
-Ideally, during peace time, you should have amateur radio licence to transmit with it!
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Discussion](https://img.shields.io/badge/groups.io-mcHF-green.svg)](https://groups.io/g/mcHF/)
 
-It could be easily built, it's firmware compiled and updated.
-The hardware is designed to be modular with mostly off the shelf components that could be soldered by hand and if something goes wrong, easy to repair.
+The mcHF is a fully open source software defined radio transceiver for the HF amateur bands (3–30 MHz). Its goal is planet-wide, off-grid communication — ionosphere permitting — with no dependence on cellular or satellite infrastructure.
 
-Both, hardware and firmware is designed by combining the great work of many hams. Please feel free to make one yourself and contribute.
+Both hardware and firmware build on the work of many radio amateurs. The design is modular, uses mostly off-the-shelf components that can be soldered by hand, and is straightforward to repair when something goes wrong. An amateur radio licence is required to transmit.
 
-[![mcHF](https://img.youtube.com/vi/7Q5eKNbZNY8/0.jpg)](https://www.youtube.com/watch?v=7Q5eKNbZNY8)
+[![mcHF demonstration video](https://img.youtube.com/vi/7Q5eKNbZNY8/0.jpg)](https://www.youtube.com/watch?v=7Q5eKNbZNY8)
 
-# Features
+## Features
 
-<ul>
-  <li>3-30 Mhz amateur bands transmit and receive</li>
-  <li>Large, 4.3inch IPS LCD with capacitive touch</li>
-  <li>Supported SSB, AM, FM and CW</li>
-  <li>Realtime waterfall and spectrum scope</li>
-  <li>25W output power</li>
-  <li>Built in 80Wh LiOn battery</li>
-  <li>Dual USB-C ports for power, charging and PC connection</li>
-  <li>Support for Bluetooth stereo headphones</li>
-  <li>Lora Sub-GHz radio</li>
-</ul>
+- Transmit and receive on the 3–30 MHz amateur bands
+- SSB, AM, FM and CW modes
+- FT8 and WSPR digital mode decoding (in development)
+- Real-time spectrum scope and waterfall
+- Large 4.3" IPS LCD with capacitive touch
+- 25 W output power
+- Built-in 80 Wh lithium battery
+- Dual USB-C ports for power, charging and PC connection
+- Bluetooth stereo headphone support
+- LoRa sub-GHz auxiliary radio
 
-# Discussion Thread
+## Hardware
 
-[Disucussion mcHF group](https://groups.io/g/mcHF/)
+The radio is built around an STM32H747XI dual-core MCU: the Cortex-M7 (480 MHz) runs the user interface and system control, while the Cortex-M4 handles the real-time DSP (demodulation, AGC, filtering, spectrum FFT).
 
-# Downloads
+### Altium PCB project files
 
-For older HW versions, firmware repository  [here](https://github.com/df8oe/UHSDR) \
-Crash course into the project and features  [here](https://github.com/df8oe/UHSDR/wiki)
-# Altium PCB Project Files
+| Status  | Version    | Location |
+|---------|------------|----------|
+| Latest  | 0.9 rev B  | [pcb/v9](./pcb/v9) |
+| Develop | 0.8.5      | [pcb/v8/mchf](./pcb/v8/mchf) |
+| Legacy  | 0.6.3      | [pcb/__legacy/v6](./pcb/__legacy/v6) |
 
- * [`latest`, `mcHF`, `0.9 revB` *(pcb/v9)*](./pcb/v9)
- * [`develp`, `mcHF`, `0.8.5` *(pcb/v8/mchf)*](./pcb/v8/mchf)
- * [`legacy`, `mcHF`, `0.6.3` *(pcb/__legacy/v6)*](./pcb/__legacy/v6)
- 
- # PCB Gerbers
+### PCB gerbers
 
- * [`rev6`, `mcHF`, `0.6.3` *(pcb/__legacy/bin/v6)*](./pcb/__legacy/bin/v6)
- * [`rev7`, `mcHF`, `0.7.0` *(pcb/__legacy/bin/v7)*](./pcb/__legacy/bin/v7)
- * [`rev8`, `mcHF`, `0.8.5` *(testing/gerbers/0_8_5)*](./testing/gerbers/0_8_5)
+| Revision | Version | Location |
+|----------|---------|----------|
+| rev 8    | 0.8.5   | [testing/gerbers/0_8_5](./testing/gerbers/0_8_5) |
+| rev 7    | 0.7.0   | [pcb/__legacy/bin/v7](./pcb/__legacy/bin/v7) |
+| rev 6    | 0.6.3   | [pcb/__legacy/bin/v6](./pcb/__legacy/bin/v6) |
 
-# License
+## Repository layout
 
-mcHF is licensed under GPLv3.
+| Directory | Contents |
+|-----------|----------|
+| [firmware](./firmware) | All firmware projects (see below) |
+| [pcb](./pcb) | Altium PCB projects and gerbers |
+| [mechanical](./mechanical) | Enclosure and mechanical design files |
+| [testing](./testing) | Test data and manufacturing files |
+
+## Building the firmware
+
+The firmware is developed with [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html) (Eclipse CDT managed build — no separate Makefiles).
+
+Clone with submodules (the ST HAL and the FT8 library are pulled in as git submodules):
+
+```
+git clone --recurse-submodules https://github.com/m0nka/mcHF.git
+```
+
+There are three independent firmware projects, each opened separately in STM32CubeIDE:
+
+| Project | Core | Location |
+|---------|------|----------|
+| Application processor (UI, control) | CM7 | [firmware/app_proc/proj](./firmware/app_proc/proj) |
+| Baseband DSP | CM4 | [firmware/baseband](./firmware/baseband) |
+| Bootloader | CM7 | [firmware/bootloader](./firmware/bootloader) |
+
+Open the project's `.project` file in STM32CubeIDE and use *Build → Build Project*. The application processor build produces `firmware/app_proc/proj/Release/mchf_app_proc.bin`, which can be flashed over SWD with `program_radio.bat` (requires STM32CubeProgrammer).
+
+## Previous hardware generations
+
+Older mcHF hardware versions are supported by the community-maintained UHSDR firmware:
+
+- Firmware repository: [df8oe/UHSDR](https://github.com/df8oe/UHSDR)
+- Project crash course and documentation: [UHSDR wiki](https://github.com/df8oe/UHSDR/wiki)
+
+## Community and contributing
+
+Questions, build reports and development discussion are welcome in the [mcHF discussion group](https://groups.io/g/mcHF/).
+
+Feel free to build one yourself and contribute — bug reports, fixes and improvements to hardware, firmware or documentation are all appreciated.
+
+## License
+
+mcHF is licensed under the [GNU General Public License v3.0](LICENSE).
+
+Copyright © 2013–2026 Krassi Atanassov, M0NKA
