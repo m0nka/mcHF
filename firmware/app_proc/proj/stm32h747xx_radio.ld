@@ -34,7 +34,8 @@ AXI_RAM   (rw)          : ORIGIN = 0x24000000, LENGTH = 512K
 SRAM3     (rw)			: ORIGIN = 0x30040000, LENGTH = 32K
 EMWIN_RAM (rw)          : ORIGIN = 0xC0000000, LENGTH = 2048K
 VIDEO_RAM (rw)          : ORIGIN = 0xC0200000, LENGTH = 9000K
-APP_RAM   (rw)          : ORIGIN = 0xC0ACA000, LENGTH = 5000K
+APP_RAM   (rw)          : ORIGIN = 0xC0ACA000, LENGTH = 3464K
+WSPR_RAM  (rw)          : ORIGIN = 0xC0E2C000, LENGTH = 1536K
 OPEN_AMP_RSC_TAB (xrw)	: ORIGIN = 0x38000000, LENGTH = 1K
 OPEN_AMP_SHMEM (xrw)	: ORIGIN = 0x38000400, LENGTH = 63K
 BKP_SRAM  (rw)			: ORIGIN = 0x38800000, LENGTH = 4K
@@ -170,6 +171,7 @@ SECTIONS
   dma_mem : { *(.dma_mem) } >SRAM3
   .vram   : { *(.vram)    } >VIDEO_RAM
   .emwin  : { *(.emwin)   } >EMWIN_RAM
+  .wspr_mem (NOLOAD) : { *(.wspr_mem) } >WSPR_RAM
 }
 
 
