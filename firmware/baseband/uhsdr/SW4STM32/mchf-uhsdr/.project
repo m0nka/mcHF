@@ -26,7 +26,7 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>mchf-eclipse/base_hw/print_f.c</name>
+			<name>mchf-eclipse/common/print_f.c</name>
 			<type>1</type>
 			<locationURI>PARENT-4-PROJECT_LOC/common/print_f.c</locationURI>
 		</link>

@@ -41,5 +41,23 @@
   * @}
 */ 
 
+#ifndef uchar
+typedef	unsigned char	uchar;
+#endif
+
+#ifndef ushort
+typedef	unsigned short	ushort;
+#endif
+
+#ifndef uint
+typedef	unsigned int	uint;
+#endif
+
+#ifndef ulong
+typedef	unsigned long	ulong;
+#endif
+
+void printf_init(uchar is_shared);
+
 #endif /* __MAIN_H */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
