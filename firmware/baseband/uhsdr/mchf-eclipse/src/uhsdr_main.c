@@ -551,7 +551,7 @@ int mchfMain(void)
 	// Select a default filter and set up the processing chain, the wire
 	// state upload will re-do this with the real settings
 	printf("filter init...\r\n");
-	icc_radio_change_filter(3);						// 2.3 kHz
+	icc_radio_change_filter(4);						// 2.3 kHz
 
 	printf("m4 baseband ready\r\n");
 

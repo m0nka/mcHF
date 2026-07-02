@@ -560,7 +560,7 @@ void icc_radio_idle_thread(void)
 		if(HAL_GetTick() > next_beat)
 		{
 			next_beat = HAL_GetTick() + 5000;
-			printf("hb: audio %d, sai blocks %u\r\n", audio_started, (unsigned)sai_block_count);
+			//printf("hb: audio %d, sai blocks %u\r\n", audio_started, (unsigned)sai_block_count);
 		}
 	}
 }
