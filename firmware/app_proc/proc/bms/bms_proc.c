@@ -75,14 +75,14 @@ static void bms_proc_power_off(void)
 	}
 
 	// Check for power off
-   	if(HAL_GPIO_ReadPin(POWER_BUTTON_PORT, POWER_BUTTON))
+   	if(!HAL_GPIO_ReadPin(POWER_BUTTON_PORT, POWER_BUTTON))
    	{
    		// ToDo: Use power button hold as power off
    		//       click as Mute...
    		//
    		vTaskDelay(200);
 
-   		if(HAL_GPIO_ReadPin(POWER_BUTTON_PORT, POWER_BUTTON))
+   		if(!HAL_GPIO_ReadPin(POWER_BUTTON_PORT, POWER_BUTTON))
    		{
    			printf("user held button, will power off, bye!\r\n");
    			vTaskDelay(200);
@@ -129,7 +129,7 @@ static void bms_proc_pins_init(void)
 	GPIO_InitTypeDef  gpio_init_structure;
 
 	//gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
-	gpio_init_structure.Pull  = GPIO_PULLDOWN;
+	gpio_init_structure.Pull  = GPIO_PULLUP;
 	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
 
 	// Power button (encoder switch line)

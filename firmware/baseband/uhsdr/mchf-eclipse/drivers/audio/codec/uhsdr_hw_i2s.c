@@ -20,12 +20,20 @@
 
 #include "audio_driver.h"
 
+#ifdef H7_M4_CORE
+// H747 CM4 core: SAI1 streaming, CLINT project compatible hw setup
+#include "uhsdr_hw_sai_m4.h"
+#include "icc_spectrum.h"
+#else
+
 #ifdef UI_BRD_MCHF
 #include "i2s.h"
 #endif
 
 #ifdef UI_BRD_OVI40
 #include "sai.h"
+#endif
+
 #endif
 
 
@@ -124,6 +132,44 @@ static void MchfHw_Codec_HandleBlock(uint16_t which)
 #endif
 }
 
+#ifdef H7_M4_CORE
+
+// M4 bring-up: counts processed SAI DMA blocks, reported by the ICC heartbeat
+volatile uint32_t sai_block_count = 0;
+
+// Collect raw IQ samples for the ICC spectrum processor before the block
+// gets processed - which == 0 means transfer complete (2nd half of buffer)
+static void MchfHw_Sai_HandleBlock(uint16_t which)
+{
+    sai_block_count++;
+
+    if (ts.txrx_mode != TRX_MODE_TX)
+    {
+        const uint16_t offset = which == 0 ? IQ_BLOCK_SIZE : 0;
+        icc_spectrum_collect((volatile int16_t *)&dma.iq_buf.in[offset], IQ_BLOCK_SIZE);
+    }
+
+    MchfHw_Codec_HandleBlock(which);
+}
+
+void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hsai)
+{
+    if (hsai == &haudio_in_sai)
+    {
+        MchfHw_Sai_HandleBlock(0);
+    }
+}
+
+void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hsai)
+{
+    if (hsai == &haudio_in_sai)
+    {
+        MchfHw_Sai_HandleBlock(1);
+    }
+}
+
+#else
+
 #ifdef UI_BRD_MCHF
 /**
  * @brief HAL Handler for Codec DMA Interrupt
@@ -141,6 +187,8 @@ void HAL_I2S_RxHalfCpltCallback(I2S_HandleTypeDef *hi2s)
     MchfHw_Codec_HandleBlock(1);
 }
 #endif
+
+#endif // H7_M4_CORE
 
 #ifdef UI_BRD_OVI40
 void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hi2s)
@@ -202,7 +250,15 @@ static void UhsdrHwI2s_SetBitWidth()
 
 void UhsdrHwI2s_Codec_StartDMA()
 {
-#ifndef H7_M4_CORE
+#ifdef H7_M4_CORE
+    // we clean the buffers since we don't know if we are in a "cleaned" memory segment
+    memset((void*)&dma, 0, sizeof(dma));
+
+    // single codec: IQ in via SAI1 Block A, audio out via SAI1 Block B
+    uhsdr_sai_m4_start((int16_t*)dma.iq_buf.in,
+                       (int16_t*)dma.iq_buf.out,
+                       sizeof(dma.iq_buf.in)/sizeof(int16_t));
+#else
     UhsdrHwI2s_SetBitWidth();
 
 #ifdef UI_BRD_MCHF
@@ -226,7 +282,9 @@ void UhsdrHwI2s_Codec_StartDMA()
 
 void UhsdrHwI2s_Codec_StopDMA(void)
 {
-#ifndef H7_M4_CORE
+#ifdef H7_M4_CORE
+    uhsdr_sai_m4_stop();
+#else
 #ifdef UI_BRD_MCHF
     HAL_I2S_DMAStop(&hi2s3);
 #endif

@@ -309,6 +309,8 @@ ulong mipi_get_type(void)
 	}
 	else
 		return 0x44444444;
+
+	return 0;
 }
 
 #ifdef STARTEK_5INCH

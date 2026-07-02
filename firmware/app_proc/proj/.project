@@ -642,6 +642,21 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/vfo/vfo_proc.c</locationURI>
 		</link>
 		<link>
+			<name>proc/wspr/wspr_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/wspr/wspr_proc.c</locationURI>
+		</link>
+		<link>
+			<name>proc/wspr/wspr_decoder.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/wspr/wspr_decoder.c</locationURI>
+		</link>
+		<link>
+			<name>proc/wspr/wspr_fano.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/wspr/wspr_fano.c</locationURI>
+		</link>
+		<link>
 			<name>Middlewares/FreeRTOS/CMSIS-RTOS/cmsis_os.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT12345/STM32CubeH7/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c</locationURI>

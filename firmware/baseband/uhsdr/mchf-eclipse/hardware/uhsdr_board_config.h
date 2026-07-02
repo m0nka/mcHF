@@ -184,16 +184,26 @@
 // In general this should be defined but in case of issues one may want to execute High Prio tasks not concurrently
 // to normal tasks, comment this in this case and see if the issue goes away. But this may cause other problems
 // of course.
+// H747 CM4 baseband: no UI high prio tasks and no PendSV handler - the
+// trigger at the end of the audio ISR would land in the Default_Handler trap
+#ifndef H7_M4_CORE
 #define USE_PENDSV_FOR_HIGHPRIO_TASKS
+#endif
 
 // OPTION: Enable handling of TX/RX switching in an interrupt. Provides very low latency switching
 // EXPERIMENTAL !!!
+// H747 CM4 baseband: TX/RX switching is handled by the ICC superloop
+#ifndef H7_M4_CORE
 #define USE_HIGH_PRIO_PTT
+#endif
 
 // OPTION: IQ signal path now use 24bit samples from/to the codecs instead of the default 16bit. Slightly increases RAM usage (+0.5 - 1k).
 // will finally work both on single and dual codec configurations.
+// H747 CM4 baseband: SAI streaming runs the CLINT compatible 16 bit protocol
+#ifndef H7_M4_CORE
 #define USE_32_IQ_BITS
 #define USE_32_AUDIO_BITS
+#endif
 
 // OPTION: Instead of band names for memories and enabling only band memories which are supported
 // by the current RF board, use all available memories

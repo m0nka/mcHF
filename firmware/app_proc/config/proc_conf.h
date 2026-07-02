@@ -122,6 +122,14 @@
 #define CONTEXT_APP
 #endif
 
+// -----------------------------------------------------------------------------------------------
+// WSPR decoder (works on captures from the SD card)
+//
+//
+#ifdef CONTEXT_SD
+#define CONTEXT_WSPR
+#endif
+
 // -------------------------------------------------------------------------------------------
 // Process parameters template
 //xx_PROC_START_DELAY					We can delay the startup of the process, to prevent
@@ -234,6 +242,15 @@
 #define LORA_PROC_SLEEP_TIME			portMAX_DELAY
 #define LORA_PROC_PRIORITY				osPriorityNormal
 #define LORA_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 16)
+
+// WSPR decoder process parameters
+// Priority below normal - decode takes seconds of pure number crunching
+// and must not disturb the UI or the real time tasks
+#define WSPR_PROC_START_NAME			"wpr"
+#define WSPR_PROC_START_DELAY			3500
+#define WSPR_PROC_SLEEP_TIME			portMAX_DELAY
+#define WSPR_PROC_PRIORITY				osPriorityLow
+#define WSPR_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 16)
 
 // GNSS driver parameters
 #define GPS_PROC_START_NAME				"gps"

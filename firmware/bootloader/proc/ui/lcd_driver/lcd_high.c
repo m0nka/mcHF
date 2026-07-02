@@ -446,14 +446,14 @@ void lcd_low_DisplayStringAt(uint32_t Xpos, uint32_t Ypos, uint8_t *Text, Text_A
 void lcd_low_DisplayStringAt(uint32_t Xpos, uint32_t Ypos, uint8_t *Text, Text_AlignModeTypdef Mode)
 {
   uint32_t refcolumn = 1, i = 0;
-  uint32_t size = 0, xsize = 0;
+  uint32_t size = 0;//, xsize = 0;
   uint8_t  *ptr = Text;
 
   /* Get the text size */
   while (*ptr++) size ++ ;
 
   /* Characters number per line */
-  xsize = (DrawProp->GuiYsize/DrawProp[DrawProp->GuiLayer].pFont->Width);
+ // xsize = (DrawProp->GuiYsize/DrawProp[DrawProp->GuiLayer].pFont->Width);
 
   switch (Mode)
   {

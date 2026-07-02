@@ -242,6 +242,8 @@ static void adc_switch_channel(uchar id)
 
 static void adc_proc_task(void *arg)
 {
+	UNUSED(arg);
+
 	vTaskDelay(4000);
 	//printf("adc sampling start \r\n");
 
@@ -524,7 +526,7 @@ static void MX_ADC3_Init(void)
 
 uchar adc_init(void)
 {
-	int i;
+	ulong i;
 
 	// Clear DMA buffer
 	#ifdef LL_ADC_USE_DMA

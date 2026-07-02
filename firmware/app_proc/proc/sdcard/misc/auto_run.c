@@ -87,6 +87,8 @@ static uchar auto_run_load_app(char *chAppName, uchar ucIsScript)
 	ulong			ulTimeout = 600;
 	char			chCertPath[32];
 
+	UNUSED(ucIsScript);
+
 	if(chAppName == NULL)
 		return 100;
 

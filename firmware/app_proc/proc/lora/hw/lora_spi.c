@@ -33,11 +33,11 @@ int32_t lora_spi_set_exti_irq(void)
 	HAL_GPIO_Init(LORA_BUSY_PORT, &gpio_init_structure);
 
 	// DIO1 IRQ
-	gpio_init_structure.Pin 	= LORA_DIO1;
+	gpio_init_structure.Pin 	= LORA_IRQ;
 	gpio_init_structure.Pull 	= GPIO_PULLDOWN;
 	gpio_init_structure.Speed 	= GPIO_SPEED_FREQ_LOW;
 	gpio_init_structure.Mode 	= GPIO_MODE_IT_RISING;
-	HAL_GPIO_Init(LORA_DIO1_PORT, &gpio_init_structure);
+	HAL_GPIO_Init(LORA_IRQ_PORT, &gpio_init_structure);
 
 	return BSP_ERROR_NONE;
 }
@@ -66,7 +66,7 @@ static void lora_spi_misc_gpio_config(void)
 
 	// Initial state
 	LL_GPIO_SetOutputPin(LORA_NSS_PORT,   LORA_NSS);	// de-selected
-	LL_GPIO_SetOutputPin(LORA_RESET_PORT, LORA_RESET);	// in reset
+	LL_GPIO_SetOutputPin(LORA_NRST_PORT,  LORA_NRST);	// in reset
 
 	// Common
 	GPIO_InitStruct.Pull      = LL_GPIO_PULL_NO;
@@ -85,8 +85,8 @@ static void lora_spi_misc_gpio_config(void)
 	LL_GPIO_Init(LORA_NSS_PORT, &GPIO_InitStruct);
 
 	// GPIO0, PA3 (NRST)
-	GPIO_InitStruct.Pin       = LORA_RESET;
-	LL_GPIO_Init(LORA_RESET_PORT, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin       = LORA_NRST;
+	LL_GPIO_Init(LORA_NRST_PORT, &GPIO_InitStruct);
 
 	#if 0
 	// ----------------------------------------------

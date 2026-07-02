@@ -5,7 +5,13 @@ MEMORY
 	rom  (rx)  : ORIGIN = 0x08100000, LENGTH = 1024k - 64k
 	ram  (rwx) : ORIGIN = 0x10000000, LENGTH = 256k
 	ram1 (rwx) : ORIGIN = 0x10000000, LENGTH = 64k
+	OPEN_AMP_RSC_TAB (xrw) : ORIGIN = 0x38000000, LENGTH = 1K
+	OPEN_AMP_SHMEM   (xrw) : ORIGIN = 0x38000400, LENGTH = 63K
 }
+
+/* OpenAMP shared memory region (SRAM4, shared with the CM7 core) */
+__OPENAMP_region_start__ = ORIGIN(OPEN_AMP_SHMEM);
+__OPENAMP_region_end__   = ORIGIN(OPEN_AMP_SHMEM) + LENGTH(OPEN_AMP_SHMEM);
 
 _estack = ORIGIN(ram) + LENGTH(ram) -8;  /* -8 keeps older DF8OE bootloaders (before 2.0.2-HAL) happy */
 
@@ -128,9 +134,16 @@ SECTIONS
   		. = ALIGN(4);
   		_sccmram = .;
   		*(.ccm)
-  		. = ALIGN(4);      
+  		. = ALIGN(4);
   		_eccmram = .;
 	}>ram1
+
+	/* OpenAMP resource table, read by the CM7 core at 0x38000000 */
+	.openamp_section (NOLOAD) :
+	{
+		. = ABSOLUTE(0x38000000);
+		KEEP(*(.resource_table))
+	} > OPEN_AMP_RSC_TAB
 	
 	/* Set stack top to end of ram , and stack limit move down by
 	* size of stack_dummy section */

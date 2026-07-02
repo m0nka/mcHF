@@ -17,17 +17,18 @@
 
 #include "mchf_types.h"
 
-#ifndef BOOTLOADER
+#ifdef RADIO
 //#include "mchf_radio_decl.h"
 #include "mchf_icc_def.h"
 #include "cmsis_os.h"
 #include "task.h"
 #include "cpu_utils.h"
 //--#include "virt_eeprom.h"
+#include "proc_conf.h"
 #endif
 
 #include "mchf_pro_pinmap.h"
-#include "proc_conf.h"
+
 //#include "dma_conf.h"
 #include "mchf_icc_def.h"
 //

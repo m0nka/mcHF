@@ -26,7 +26,7 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>mchf-eclipse/base_hw/print_f.c</name>
+			<name>mchf-eclipse/common/print_f.c</name>
 			<type>1</type>
 			<locationURI>PARENT-4-PROJECT_LOC/common/print_f.c</locationURI>
 		</link>
@@ -3004,6 +3004,131 @@
 			<name>mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc_scsi.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc_scsi.c</locationURI>
+		</link>
+		<link>
+			<name>mchf-eclipse/drivers/icc/icc_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/drivers/icc/icc_proc.c</locationURI>
+		</link>
+		<link>
+			<name>mchf-eclipse/drivers/icc/icc_radio_if.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/drivers/icc/icc_radio_if.c</locationURI>
+		</link>
+		<link>
+			<name>mchf-eclipse/drivers/icc/icc_spectrum.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/drivers/icc/icc_spectrum.c</locationURI>
+		</link>
+		<link>
+			<name>mchf-eclipse/drivers/icc/hw/openamp.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/drivers/icc/hw/openamp.c</locationURI>
+		</link>
+		<link>
+			<name>mchf-eclipse/drivers/icc/hw/mbox_hsem.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/drivers/icc/hw/mbox_hsem.c</locationURI>
+		</link>
+		<link>
+			<name>mchf-eclipse/drivers/icc/hw/rsc_table.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/drivers/icc/hw/rsc_table.c</locationURI>
+		</link>
+		<link>
+			<name>mchf-eclipse/drivers/audio/codec/uhsdr_hw_sai_m4.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/drivers/audio/codec/uhsdr_hw_sai_m4.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/libmetal/condition.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/system/generic/condition.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/libmetal/device.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/device.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/libmetal/init.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/init.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/libmetal/io.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/io.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/libmetal/irq.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/system/generic/irq.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/libmetal/log.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/log.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/libmetal/shmem.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/shmem.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/libmetal/sys.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/system/generic/cortexm/sys.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/libmetal/time.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/system/generic/time.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/libmetal/generic/generic_device.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/system/generic/generic_device.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/libmetal/generic/generic_init.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/system/generic/generic_init.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/libmetal/generic/generic_io.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/system/generic/generic_io.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/open-amp/remoteproc_virtio.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/open-amp/lib/remoteproc/remoteproc_virtio.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/open-amp/rpmsg.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/open-amp/lib/rpmsg/rpmsg.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/open-amp/rpmsg_virtio.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/open-amp/lib/rpmsg/rpmsg_virtio.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/open-amp/virtio.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/open-amp/lib/virtio/virtio.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/OpenAMP/open-amp/virtqueue.c</name>
+			<type>1</type>
+			<locationURI>PARENT-4-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/OpenAMP/open-amp/lib/virtio/virtqueue.c</locationURI>
+		</link>
+		<link>
+			<name>mchf-eclipse/drivers/icc/icc_uhsdr_stubs.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/drivers/icc/icc_uhsdr_stubs.c</locationURI>
 		</link>
 	</linkedResources>
 	<variableList>

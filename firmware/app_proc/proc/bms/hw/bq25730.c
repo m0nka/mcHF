@@ -99,6 +99,8 @@ void bq25730_lowpwr_on(bq25730_config_t *cfg)
 {
     uint8_t databuf[2];
 
+    UNUSED(cfg);
+
     // Read current value of ChargeOption0
     bq25730_i2c_read_registers(ADDR_CHRGOPT0, databuf, 2);
 
@@ -112,6 +114,8 @@ void bq25730_lowpwr_on(bq25730_config_t *cfg)
 uchar bq25730_lowpwr_off(bq25730_config_t *cfg)
 {
     uint8_t databuf[2];
+
+    UNUSED(cfg);
 
     // Read current value of ChargeOption0
     if(bq25730_i2c_read_registers(ADDR_CHRGOPT0, databuf, 2))
@@ -157,6 +161,8 @@ uchar bq25730_adc_enable_all(bq25730_config_t *cfg)
 {
     uint8_t databuf;
 
+    UNUSED(cfg);
+
     // Enable ADC for all inputs
     databuf = databuf | 0xFF; 
 
@@ -192,6 +198,8 @@ void bq25730_adc_start_conversion(bq25730_config_t *cfg)
 {
     uint8_t databuf;
 
+    UNUSED(cfg);
+
     // Read current ADCOPT (2nd byte)
     bq25730_i2c_read_registers(ADDR_ADCOPT+1, &databuf, 1);
 
@@ -205,6 +213,8 @@ ulong bq25730_read_vbus(bq25730_config_t *cfg)
 {
     uint8_t databuf;
 
+    UNUSED(cfg);
+
     // Read current ADCVBUS
     if(bq25730_i2c_read_registers(ADDR_ADCVBUS, &databuf, 1))
     	return 0;
@@ -216,6 +226,8 @@ ulong bq25730_read_vbus(bq25730_config_t *cfg)
 ulong bq25730_read_vsys(bq25730_config_t *cfg)
 {
     uint8_t databuf;
+
+    UNUSED(cfg);
 
     // Read current ADCVBUS
     if(bq25730_i2c_read_registers(ADDR_ADCVSYS, &databuf, 1))
@@ -231,6 +243,8 @@ ulong bq25730_read_vbat(bq25730_config_t *cfg)
 {
     uint8_t databuf;
 
+    UNUSED(cfg);
+
     // Read current ADCVBUS
     if(bq25730_i2c_read_registers(ADDR_ADCVBAT, &databuf, 1))
     	return 0;
@@ -245,6 +259,8 @@ float bq25730_read_vsysmin(bq25730_config_t *cfg)
 {
     uint8_t databuf;
 
+    UNUSED(cfg);
+
     // Read current ADCVBUS
     bq25730_i2c_read_registers(ADDR_VSYSMIN, &databuf, 1);
 
@@ -254,6 +270,8 @@ float bq25730_read_vsysmin(bq25730_config_t *cfg)
 bool bq25730_set_vsysmin(bq25730_config_t *cfg, ulong vsys_min_mV)
 {
     uint8_t databuf;
+
+    UNUSED(cfg);
 
 	#if 0
     if(bq25730_i2c_read_registers(ADDR_VSYSMIN, &databuf, 1))
@@ -311,6 +329,8 @@ uchar bq25730_ibat_on(bq25730_config_t *cfg)
 {
     uint8_t databuf;
 
+    UNUSED(cfg);
+
     // Read current value of ChargeOption1 (2nd byte)
     if(bq25730_i2c_read_registers(ADDR_CHRGOPT1+1, &databuf, 1))
     	return 1;
@@ -336,6 +356,8 @@ uchar bq25730_ibat_on(bq25730_config_t *cfg)
 uchar bq25730_toggle_ptm(bq25730_config_t *cfg, uchar ptm_on)
 {
     uint8_t databuf[2];
+
+    UNUSED(cfg);
 
     // Read current value of ChargeOption1 (1st byte)
     if(bq25730_i2c_read_registers(ADDR_CHRGOPT1, databuf, 2))
@@ -366,6 +388,8 @@ void bq25730_ibat_off(bq25730_config_t *cfg)
 {
     uint8_t databuf;
 
+    UNUSED(cfg);
+
     // Read current value of ChargeOption1 (2nd byte)
     bq25730_i2c_read_registers(ADDR_CHRGOPT1+1, &databuf, 1);
 
@@ -378,6 +402,8 @@ void bq25730_ibat_off(bq25730_config_t *cfg)
 ushort bq25730_read_chg_stat(bq25730_config_t *cfg)
 {
     uint8_t databuf[2];
+
+    UNUSED(cfg);
 
     // Read status bits
     if(bq25730_i2c_read_registers(ADDR_CHRG_STAT, databuf, 2))
@@ -510,6 +536,8 @@ bool bq25730_set_vcharge(bq25730_config_t *cfg, ulong ch_v_mV)
 {
     uint8_t databuf[2];
 
+    UNUSED(cfg);
+
     // Check range
     if((ch_v_mV > WORD_VCHRG_MAX) || (ch_v_mV < WORD_VCHRG_MIN))
         return false;
@@ -535,6 +563,8 @@ bool bq25730_set_vcharge(bq25730_config_t *cfg, ulong ch_v_mV)
 uchar bq25730_read_chip_id(bq25730_config_t *cfg)
 {
     uint8_t databuf[2];
+
+    UNUSED(cfg);
 
     // Read manuf id
     if(bq25730_i2c_read_registers(ADDR_MANUF_ID, databuf, 1))

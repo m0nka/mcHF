@@ -30,7 +30,10 @@ int meshcore_ack_serialize(const meshcore_ack_t* ack, uint8_t* out_payload, uint
     return 0;
 }
 
-int meshcore_ack_deserialize(uint8_t* data, uint8_t size, meshcore_ack_t* out_ack) {
+int meshcore_ack_deserialize(uint8_t* data, uint8_t size, meshcore_ack_t* out_ack)
+{
+	UNUSED(size);
+
     if (out_ack == NULL || data == NULL) {
         return -1;
     }

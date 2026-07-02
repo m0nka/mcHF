@@ -173,6 +173,8 @@ static void btm_proc_task(void *arg)
 	uchar new_bt_state;
 	uchar loc_bt_enabled = 0xFF;
 
+	UNUSED(arg);
+
 	vTaskDelay(AUDIO_PROC_START_DELAY + 50);
 	printf("start  \r\n");
 
@@ -249,6 +251,8 @@ static void btm_proc_task(void *arg)
 void audio_proc_task(void const * argument)
 {
 	ulong 	ulNotificationValue = 0, ulNotif;
+
+	UNUSED(argument);
 
 	vTaskDelay(AUDIO_PROC_START_DELAY);
 	printf("start  \r\n");

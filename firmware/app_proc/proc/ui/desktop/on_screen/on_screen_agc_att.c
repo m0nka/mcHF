@@ -15,6 +15,7 @@
 
 #ifdef CONTEXT_VIDEO
 
+#include "spectrum\ui_controls_spectrum.h"
 #include "on_screen_agc_att.h"
 #include "ui_actions.h"
 

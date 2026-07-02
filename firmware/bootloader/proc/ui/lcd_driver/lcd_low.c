@@ -250,7 +250,7 @@ int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation)
 int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height)
 {
   int32_t ret = BSP_ERROR_NONE;
-  uint32_t ctrl_pixel_format, ltdc_pixel_format, dsi_pixel_format;
+  uint32_t /*ctrl_pixel_format,*/ ltdc_pixel_format, dsi_pixel_format;
   MX_LTDC_LayerConfig_t config;
 
   Lcd_Drv = (LCD_Drv_t *)(void *) &ST7701_LCD_Driver;
@@ -267,14 +267,14 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
     {
       ltdc_pixel_format = LTDC_PIXEL_FORMAT_RGB565;
       dsi_pixel_format = DSI_RGB565;
-      ctrl_pixel_format = OTM8009A_FORMAT_RBG565;
+      //ctrl_pixel_format = OTM8009A_FORMAT_RBG565;
       Lcd_Ctx[Instance].BppFactor = 2U;
     }
     else /* LCD_PIXEL_FORMAT_RGB888 */
     {
       ltdc_pixel_format = LTDC_PIXEL_FORMAT_ARGB8888;
       dsi_pixel_format = DSI_RGB888;
-      ctrl_pixel_format = OTM8009A_FORMAT_RGB888;
+      //ctrl_pixel_format = OTM8009A_FORMAT_RGB888;
       Lcd_Ctx[Instance].BppFactor = 4U;
     }
 
@@ -327,7 +327,7 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
     ret = MX_DSIHOST_DSI_Init(&hdsi, Width, Height, dsi_pixel_format);
     if(ret != HAL_OK)
     {
-    	printf("== error 2(%d) ==\r\n", ret);
+    	printf("== error 2(%d) ==\r\n", (int)ret);
       ret = BSP_ERROR_PERIPH_FAILURE;
     }
     else if(MX_LTDC_ClockConfig(&hltdc) != HAL_OK)
@@ -380,7 +380,7 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
         (void)HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
 
         ulong type = mipi_get_type();
-        printf("LCD type: 0x%08x  \r\n", type);
+        printf("LCD type: 0x%08x  \r\n", (int)type);
 
         ST7701S_Init(DSI_RGB565);
       }

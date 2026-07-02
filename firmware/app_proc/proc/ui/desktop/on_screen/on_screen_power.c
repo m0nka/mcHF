@@ -17,6 +17,7 @@
 
 #if defined(CONTEXT_VIDEO) && defined(CONTEXT_BMS)
 
+#include "spectrum\ui_controls_spectrum.h"
 #include "on_screen_power.h"
 #include "ui_actions.h"
 

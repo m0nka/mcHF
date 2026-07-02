@@ -419,6 +419,8 @@ void band_proc_task(void const * argument)
 {
 	ulong 	ulNotificationValue = 0, ulNotif;
 
+	UNUSED(argument);
+
 	vTaskDelay(BAND_PROC_START_DELAY);
 	printf("start\r\n");
 

@@ -103,13 +103,16 @@ void DSI_IO_WriteCmd(uint32_t NbrParams, uint8_t *pParams)
 		HAL_DSI_LongWrite(&hdsi,  0, DSI_DCS_LONG_PKT_WRITE, NbrParams, pParams[NbrParams], pParams);
 }
 
+#if 0
 static int32_t DSI_IO_Read(uint16_t Reg, uint8_t *pData, uint16_t Size)
 {
 	return HAL_DSI_Read(&hdsi, 0, pData, Size, DSI_DCS_SHORT_PKT_READ, Reg, pData);
 }
+#endif
 
 // Init DSI just to read ID
 //
+#if 0
 static int LCDConf_ReadID(uchar *id)
 {
 	DSI_PLLInitTypeDef 	dsiPllInit;
@@ -142,6 +145,7 @@ static int LCDConf_ReadID(uchar *id)
 
 	return 0;
 }
+#endif
 
 static U32 GetPixelformat(U32 LayerIndex)
 {

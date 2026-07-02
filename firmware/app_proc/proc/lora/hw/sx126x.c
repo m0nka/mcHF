@@ -707,9 +707,9 @@ esp_err_t sx1262_reset(sx126x_handle_t* handle)
    // if (handle == NULL)
    //     return ESP_ERR_INVALID_ARG;
 
-    LL_GPIO_ResetOutputPin(LORA_RESET_PORT, LORA_RESET);
+    LL_GPIO_ResetOutputPin(LORA_NRST_PORT, LORA_NRST);
     vTaskDelay(10);
-    LL_GPIO_SetOutputPin(LORA_RESET_PORT, LORA_RESET);
+    LL_GPIO_SetOutputPin(LORA_NRST_PORT, LORA_NRST);
     vTaskDelay(10);
 
     return ESP_OK;
@@ -828,7 +828,7 @@ bool sx126x_get_irq_state(sx126x_handle_t* handle)
     	return false;
 
     //int level = gpio_get_level(handle->dio1);
-    int level = LL_GPIO_IsInputPinSet(LORA_DIO1_PORT, LORA_DIO1);
+    int level = LL_GPIO_IsInputPinSet(LORA_IRQ_PORT, LORA_IRQ);
 
     return level == 1;
 }
