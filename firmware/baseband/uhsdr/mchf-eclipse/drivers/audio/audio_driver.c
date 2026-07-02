@@ -684,6 +684,9 @@ void AudioDriver_Init()
 
     // DSP related init
     AudioDriver_Dsp_Init(&ts.dsp); // RX/TX
+#ifdef H7_M4_CORE
+    printf("  dsp init ok\r\n");	// M4 bring-up breadcrumbs
+#endif
 
     // AUDIO KEY BEEPS (injected into audio output stream)
     AudioManagement_KeyBeepPrepare();  // load/set beep frequency
@@ -691,9 +694,18 @@ void AudioDriver_Init()
     // Codecs/Demod init
     Rtty_Modem_Init(ts.samp_rate); // RX/TX
     Psk_Modem_Init(ts.samp_rate);  // RX/TX
+#ifdef H7_M4_CORE
+    printf("  modems ok\r\n");
+#endif
 
     RxProcessor_Init();
+#ifdef H7_M4_CORE
+    printf("  rx proc ok\r\n");
+#endif
     TxProcessor_Init();
+#ifdef H7_M4_CORE
+    printf("  tx proc ok\r\n");
+#endif
 
     // Audio filter enabled
     ads.af_disabled--;

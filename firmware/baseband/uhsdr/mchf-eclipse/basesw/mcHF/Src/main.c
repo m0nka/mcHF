@@ -39,6 +39,20 @@ void SysTick_Handler(void)
 	HAL_IncTick();
 }
 
+// Fault handlers - without these a fault ends up in the silent
+// Default_Handler endless loop and looks like a plain hang
+static void critical_error(unsigned long err)
+{
+	printf("critical err %d\r\n", (int)err);
+	while(1);
+}
+
+void NMI_Handler(void)			{ critical_error(1); }
+void HardFault_Handler(void)	{ critical_error(2); }
+void MemManage_Handler(void)	{ critical_error(3); }
+void BusFault_Handler(void)		{ critical_error(4); }
+void UsageFault_Handler(void)	{ critical_error(5); }
+
 static void stall_core_and_wait(void)
 {
 	// HW semaphore Clock enable
@@ -90,7 +104,7 @@ static void debug_enable(void)
 //		 [3]. adjust linker script
 //		 [4]. add core notifications
 //		 [5]. add debug print
-//		 6. remove isolation
+//		 [6]. remove isolation - ICC/SAI/superloop wired via drivers/icc
 //
 int main(void)
 {
@@ -155,10 +169,11 @@ int main(void)
 	#endif
 
 	#ifndef BOOTLOADER_BUILD
-//!    mchfMain();
+    mchfMain();
+
+    // Never here
     while(1)
     {
-    	HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_6);
     	HAL_Delay(1000);
     }
 	#else

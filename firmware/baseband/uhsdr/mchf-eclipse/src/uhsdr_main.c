@@ -450,4 +450,125 @@ int mchfMain(void)
     }
     return 0;
 }
+
+#else	// H7_M4_CORE
+
+// ------------------------------------------------------------------
+// STM32H747 CM4 core baseband main - no UI, no config storage. The
+// radio state is uploaded by the M7 core over the ICC link, control
+// flow is a CLINT project style superloop
+// ------------------------------------------------------------------
+
+#include <stdio.h>
+
+#include "uhsdr_board.h"
+#include "audio_driver.h"
+#include "audio_filter.h"
+#include "audio_agc.h"
+
+#include "drivers/icc/icc_proc.h"
+#include "drivers/icc/icc_radio_if.h"
+#include "drivers/icc/icc_spectrum.h"
+
+// Transceiver state public structure
+__IO TransceiverState ts;
+
+//*----------------------------------------------------------------------------
+//* Function Name       : TransceiverStateInit
+//* Object              : defaults for the DSP relevant state - normally these
+//* Object              : come from the config storage, but the M4 core has
+//* Object              : none. The M7 core overrides most of them via the
+//* Object              : ICC_SET_TRX_STATE upload anyway
+//*----------------------------------------------------------------------------
+static void TransceiverStateInit(void)
+{
+	ts.txrx_mode		= TRX_MODE_RX;				// start in RX
+	ts.samp_rate		= IQ_SAMPLE_RATE;			// set sampling rate
+
+	ts.dmod_mode 		= DEMOD_USB;				// demodulator mode
+	ts.digital_mode		= 0;
+	ts.iq_freq_mode		= FREQ_IQ_CONV_MODE_DEFAULT;
+
+	ts.rx_gain[RX_AUDIO_SPKR].value			= 16;
+	ts.rx_gain[RX_AUDIO_SPKR].max			= 30;
+	ts.rx_gain[RX_AUDIO_SPKR].active_value	= 1;
+	ts.rx_gain[RX_AUDIO_DIG].value			= 16;
+	ts.rx_gain[RX_AUDIO_DIG].max			= 31;
+	ts.rx_gain[RX_AUDIO_DIG].active_value	= 1;
+
+	ts.tx_power_factor	= 0.10;						// TX power factor until the M7 sends the real one
+
+	// CW defaults
+	ts.cw_sidetone_freq	= 750;
+	ts.cw_keyer_speed	= 20;
+	ts.cw_keyer_mode	= CW_KEYER_MODE_IAM_B;
+	ts.cw_rx_delay		= 8;
+	ts.cw_keyer_weight	= 100;						// keyer weight 1.00 (dit == pause == dah/3)
+
+	ts.tune				= false;
+	ts.paddles_active	= false;					// enabled after audio start
+	ts.tx_disable		= 0;
+
+	// IQ auto correction on, no manual balance values available
+	ts.iq_auto_correction = 1;
+
+	// AGC (WDSP) defaults, same as the UHSDR config storage defaults
+	agc_wdsp_conf.mode			= 2;				// slow
+	agc_wdsp_conf.hang_enable	= 0;
+	agc_wdsp_conf.thresh		= 20;
+	agc_wdsp_conf.slope			= 70;
+	agc_wdsp_conf.tau_decay[0]	= 4000;
+	agc_wdsp_conf.tau_decay[1]	= 2000;
+	agc_wdsp_conf.tau_decay[2]	= 500;
+	agc_wdsp_conf.tau_decay[3]	= 250;
+	agc_wdsp_conf.tau_decay[4]	= 50;
+	agc_wdsp_conf.tau_decay[5]	= 500;
+	agc_wdsp_conf.tau_hang_decay = 500;
+}
+
+// Power on
+int mchfMain(void)
+{
+	// Set default transceiver state
+	TransceiverStateInit();
+
+	// PTT output + CW paddle interrupts
+	icc_radio_hw_init();
+
+	// ICC driver init (OpenAMP remote + HSEM mailbox) - must run early:
+	// the M7 core waits only a limited time for the rpmsg endpoint
+	// announcement after releasing this core. Commands queue up in the
+	// vring until the superloop starts processing them
+	icc_proc_hw_init();
+
+	// Default filter memories
+	AudioFilter_SetDefaultMemories();
+
+	// Audio Software Init (SAI streaming starts later, on ICC_START_I2S_PROC)
+	printf("audio init...\r\n");
+	AudioDriver_Init();
+
+	// Select a default filter and set up the processing chain, the wire
+	// state upload will re-do this with the real settings
+	printf("filter init...\r\n");
+	icc_radio_change_filter(3);						// 2.3 kHz
+
+	printf("m4 baseband ready\r\n");
+
+	// Transceiver main loop
+	for(;;)
+	{
+		// M7 core commands
+		icc_proc_task(NULL);
+
+		// Spectrum FFT processing + M7 notification
+		icc_spectrum_thread();
+
+		// S-meter/PTT/TX-RX housekeeping
+		icc_radio_idle_thread();
+	}
+
+	return 0;
+}
+
 #endif

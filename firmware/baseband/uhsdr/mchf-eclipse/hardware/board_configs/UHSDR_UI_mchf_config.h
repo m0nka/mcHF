@@ -23,7 +23,13 @@
 #endif
 
 // place tagged elements in CCM 64k extra RAM (no DMA)
+// H747 CM4 baseband: there is no separate CCM, the .ccm output region (ram1)
+// would overlap the normal data/bss RAM and corrupt it - use plain bss instead
+#ifdef H7_M4_CORE
+#define __MCHF_SPECIALMEM
+#else
 #define __MCHF_SPECIALMEM __attribute__ ((section (".ccm")))
+#endif
 
 // NOT USED ON F4 based mcHF boards (defined as "no-op")
 // if used place tagged elements in an memory to peripheral DMA-able memory region
