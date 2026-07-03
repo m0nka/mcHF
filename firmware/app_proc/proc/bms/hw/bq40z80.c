@@ -238,6 +238,199 @@ uchar bq40z80_seal(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_full_access
+//* Object              :
+//* Notes    			: promote from unsealed to full access, needed for
+//* Notes   			: data flash writes via ManufacturerBlockAccess()
+//* Notes    			: call bq40z80_unseal() first!
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_full_access(void)
+{
+	if(bq40z80_write_16bit_reg(0x00, BQ40Z80_FA_KEY_W0) != 0)
+		return 1;
+
+	osDelay(20);
+
+	if(bq40z80_write_16bit_reg(0x00, BQ40Z80_FA_KEY_W1) != 0)
+		return 2;
+
+	osDelay(20);
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_device_reset
+//* Object              :
+//* Notes    			: MAC DeviceReset(0x0041), gauge reboots and re-reads
+//* Notes   			: data flash, comes back up in sealed mode
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_device_reset(void)
+{
+	if(bq40z80_write_16bit_reg(0x00, 0x0041) != 0)
+		return 1;
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_mac_write
+//* Object              :
+//* Notes    			: SMBus block write to ManufacturerBlockAccess(0x44)
+//* Notes   			: cmd is a MAC command or a data flash address,
+//* Notes    			: data can be NULL when len is 0
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_mac_write(ushort cmd, uchar *data, uchar len)
+{
+	uchar t_buf[40];
+	uchar i;
+
+	if(len > BQ40Z80_DF_ROW)
+		return 1;
+
+	t_buf[0] = len + 2;				// SMBus block byte count
+	t_buf[1] = (uchar)(cmd);		// MAC command word, little endian
+	t_buf[2] = (uchar)(cmd >> 8);
+
+	for(i = 0; i < len; i++)
+		t_buf[3 + i] = data[i];
+
+	if(shared_i2c_write_reg(0x16, 0x44, t_buf, (len + 3)) != 0)
+		return 2;
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_mac_read
+//* Object              :
+//* Notes    			: request MAC command, then SMBus block read of the
+//* Notes   			: response from ManufacturerBlockAccess(0x44)
+//* Notes    			: response is [count][cmd echo lo][cmd echo hi][data]
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_mac_read(ushort cmd, uchar *buf, uchar len)
+{
+	uchar t_buf[40];
+
+	if((buf == NULL)||(len > BQ40Z80_DF_ROW))
+		return 1;
+
+	if(bq40z80_mac_write(cmd, NULL, 0) != 0)
+		return 2;
+
+	osDelay(10);
+
+	if(shared_i2c_read_reg(0x16, 0x44, t_buf, (len + 3)) != 0)
+		return 3;
+
+	// Check the command word echo
+	if((t_buf[1] != (uchar)(cmd))||(t_buf[2] != (uchar)(cmd >> 8)))
+		return 4;
+
+	memcpy(buf, (t_buf + 3), len);
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_read_mfg_status
+//* Object              :
+//* Notes    			: read ManufacturingStatus() via MAC 0x0057
+//* Notes   			: bit 3 GAUGE_EN, bit 4 FET_EN
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_read_mfg_status(ushort *val)
+{
+	uchar buf[2];
+
+	if(val == NULL)
+		return 1;
+
+	if(bq40z80_mac_read(0x0057, buf, 2) != 0)
+		return 2;
+
+	*val = (buf[1] << 8)|buf[0];
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_gauging_toggle
+//* Object              :
+//* Notes    			: MAC Gauging(0x0021) TOGGLES the GAUGE_EN bit, so
+//* Notes   			: read ManufacturingStatus() first and only send
+//* Notes    			: when the bit is in the wrong state!
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_gauging_toggle(void)
+{
+	if(bq40z80_write_16bit_reg(0x00, 0x0021) != 0)
+		return 1;
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_fet_en_toggle
+//* Object              :
+//* Notes    			: MAC FET enable(0x0022) TOGGLES the FET_EN bit, so
+//* Notes   			: read ManufacturingStatus() first and only send
+//* Notes    			: when the bit is in the wrong state!
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_fet_en_toggle(void)
+{
+	if(bq40z80_write_16bit_reg(0x00, 0x0022) != 0)
+		return 1;
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_df_read_row
+//* Object              :
+//* Notes    			: read a data flash row, needs unsealed mode
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_df_read_row(ushort addr, uchar *buf, uchar len)
+{
+	if((addr < BQ40Z80_DF_START)||(addr > BQ40Z80_DF_END))
+		return 1;
+
+	return bq40z80_mac_read(addr, buf, len);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_df_write_row
+//* Object              :
+//* Notes    			: write a data flash row, needs full access mode,
+//* Notes   			: must not cross a 32 byte page boundary
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_df_write_row(ushort addr, uchar *data, uchar len)
+{
+	if((addr < BQ40Z80_DF_START)||(addr > BQ40Z80_DF_END))
+		return 1;
+
+	if(bq40z80_mac_write(addr, data, len) != 0)
+		return 2;
+
+	// Give the gauge time to program the row
+	osDelay(BQ40Z80_DF_WRITE_MS);
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : bq40z80_read_fw_ver
 //* Object              :
 //* Notes    			:

@@ -185,7 +185,7 @@
 #define BMS_PROC_START_DELAY			500
 #define BMS_PROC_SLEEP_TIME				500
 #define BMS_PROC_PRIORITY				osPriorityNormal
-#define BMS_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 4)
+#define BMS_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 16)	// FatFS access from gold file backup/flash
 
 // Rotary encoders process parameters
 #define ROTARY_PROC_START_NAME			"rot"
