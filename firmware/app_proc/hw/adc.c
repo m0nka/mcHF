@@ -32,6 +32,9 @@ __attribute__((section("dma_mem"))) __attribute__ ((aligned (32))) ushort dma_rx
 ushort 	ADC_Val[NUMBER_OF_ADC3_CHANNELS + 1];
 uchar	adc_init_done = 0;
 
+// FreeRTOS process state
+extern struct PROC_STATE 	ps;
+
 #ifndef LL_ADC_USE_BDMA
 static void adc_configure(void)
 {
@@ -294,16 +297,44 @@ static void adc_proc_task(void *arg)
 
 		#ifdef LL_ADC_USE_POLLING
 
+		uchar seq_ok = 1;
+
 		LL_ADC_REG_StartConversion(ADC3);
 
 		for (uint8_t i = 0; i < NUMBER_OF_ADC3_CHANNELS; i++)
 		{
-			while(LL_ADC_IsActiveFlag_EOC(ADC3) == 0);
+			ulong wait_start = ps.epoch;
+
+			// EOC wait with timeout. If this task gets preempted inside
+			// this loop, the remaining ranks convert behind our back and
+			// overwrite DR(overrun mode), the single EOC flag is consumed
+			// on the next pass and no further conversion exists to set it
+			// again - the old endless while() here then spun forever,
+			// pegging the CPU at 100% and starving the UI(same priority)
+			while(LL_ADC_IsActiveFlag_EOC(ADC3) == 0)
+			{
+				if((ps.epoch - wait_start) >= ADC_CONVERSION_TIMEOUT_MS)
+				{
+					seq_ok = 0;
+					break;
+				}
+			}
+
+			if(!seq_ok)
+				break;
+
 			LL_ADC_ClearFlag_EOC(ADC3);
 
 			ADC_Val[i] = LL_ADC_REG_ReadConversionData16(ADC3);
 		}
-		//LL_ADC_REG_StopConversion(ADC3);
+
+		// Resync for the next cycle - kill any straggler conversion and
+		// clear leftover flags, so a broken sequence can't wedge the next one
+		if(LL_ADC_REG_IsConversionOngoing(ADC3))
+			LL_ADC_REG_StopConversion(ADC3);
+
+		LL_ADC_ClearFlag_EOS(ADC3);
+		LL_ADC_ClearFlag_OVR(ADC3);
 
 		#if 0
 		for (uint8_t i = 0; i < NUMBER_OF_ADC3_CHANNELS; i++)
