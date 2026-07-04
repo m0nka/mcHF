@@ -24,6 +24,8 @@
 #include "touch_i2c.h"
 #endif
 
+#include "cpu_trace.h"
+
 // FreeRTOS process state
 extern struct PROC_STATE 				ps;
 
@@ -35,6 +37,9 @@ EXTI_HandleTypeDef hts_exti_[2] = {0};
 void touch_proc_irq(void)
 {
 	BaseType_t xHigherPriorityTaskWoken;
+
+	// Touch EXTI rate monitor(GT911 interrupt storm detector)
+	cpu_trace_touch_irq_hit();
 
 	if(!tp_init_done)
 		return;

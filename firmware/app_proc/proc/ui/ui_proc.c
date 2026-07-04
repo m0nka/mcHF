@@ -26,6 +26,8 @@
 #include "sdram.h"
 #include "shared_tim.h"
 
+#include "cpu_trace.h"
+
 #include "ui_tests.h"
 
 // -----------------------------------------------------------------------------------------------
@@ -1118,6 +1120,9 @@ ui_proc_loop:
 	// Give control to emWin
 	GUI_Exec();
 	GUI_Delay(del_ms);
+
+	// Periodic per task CPU load dump(100% CPU bug hunt)
+	cpu_trace_poll();
 
 	goto ui_proc_loop;
 }

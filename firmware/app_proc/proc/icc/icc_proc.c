@@ -25,6 +25,8 @@
 //#include "hw_dsp_eep.h"
 #include "radio_init.h"
 
+#include "cpu_trace.h"
+
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
 extern struct 	TransceiverState 		ts;
@@ -94,6 +96,9 @@ void HAL_HSEM_FreeCallback(uint32_t SemMask)
 		case __HAL_HSEM_SEMID_TO_MASK(HSEM_ID_4):
 		{
 			//printf("fft ready\r\n");
+
+			// FFT broadcast rate monitor(M4 flood detector)
+			cpu_trace_fft_irq_hit();
 
 			if(ps.hIccTask != NULL)
 			{

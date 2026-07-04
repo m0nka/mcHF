@@ -152,6 +152,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/startup/system_stm32h7xx_dualcore_bootcm7_cm4gated.c</locationURI>
 		</link>
 		<link>
+			<name>util/cpu_trace.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/util/cpu_trace.c</locationURI>
+		</link>
+		<link>
 			<name>util/cpu_utils.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/util/cpu_utils.c</locationURI>
@@ -545,6 +550,11 @@
 			<name>proc/band/band_proc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/band/band_proc.c</locationURI>
+		</link>
+		<link>
+			<name>proc/bms/bms_gold.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/bms/bms_gold.c</locationURI>
 		</link>
 		<link>
 			<name>proc/bms/bms_proc.c</name>
