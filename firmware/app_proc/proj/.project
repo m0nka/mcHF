@@ -652,11 +652,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/vfo/vfo_proc.c</locationURI>
 		</link>
 		<link>
-			<name>proc/wspr/wspr_proc.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/wspr/wspr_proc.c</locationURI>
-		</link>
-		<link>
 			<name>proc/wspr/wspr_decoder.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/wspr/wspr_decoder.c</locationURI>
@@ -665,6 +660,11 @@
 			<name>proc/wspr/wspr_fano.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/wspr/wspr_fano.c</locationURI>
+		</link>
+		<link>
+			<name>proc/wspr/wspr_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/wspr/wspr_proc.c</locationURI>
 		</link>
 		<link>
 			<name>Middlewares/FreeRTOS/CMSIS-RTOS/cmsis_os.c</name>
@@ -1152,14 +1152,9 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/driver/backlight/shared_tim.c</locationURI>
 		</link>
 		<link>
-			<name>proc/ui/driver/mipi/otm8009a.c</name>
+			<name>proc/ui/driver/mipi/ili9806e.c</name>
 			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/driver/mipi/otm8009a.c</locationURI>
-		</link>
-		<link>
-			<name>proc/ui/driver/mipi/st7701.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/driver/mipi/st7701.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/driver/mipi/ili9806e.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/ui_lib/keypad/c_keypad.c</name>

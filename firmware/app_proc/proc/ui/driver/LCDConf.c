@@ -13,7 +13,7 @@
 #include "mchf_pro_board.h"
 #include "GUI_Private.h"
 
-#include "st7701.h"
+#include "ili9806e.h"
 #include "LCDConf.h"
 #include "ui_proc.h"
 
@@ -102,50 +102,6 @@ void DSI_IO_WriteCmd(uint32_t NbrParams, uint8_t *pParams)
 	else
 		HAL_DSI_LongWrite(&hdsi,  0, DSI_DCS_LONG_PKT_WRITE, NbrParams, pParams[NbrParams], pParams);
 }
-
-#if 0
-static int32_t DSI_IO_Read(uint16_t Reg, uint8_t *pData, uint16_t Size)
-{
-	return HAL_DSI_Read(&hdsi, 0, pData, Size, DSI_DCS_SHORT_PKT_READ, Reg, pData);
-}
-#endif
-
-// Init DSI just to read ID
-//
-#if 0
-static int LCDConf_ReadID(uchar *id)
-{
-	DSI_PLLInitTypeDef 	dsiPllInit;
-
-	hdsi.Instance = DSI;
-	HAL_DSI_DeInit(&(hdsi));
-
-	dsiPllInit.PLLNDIV  				= 100;
-	dsiPllInit.PLLIDF   				= DSI_PLL_IN_DIV5;
-	dsiPllInit.PLLODF 					= DSI_PLL_OUT_DIV1;
-	hdsi.Init.NumberOfLanes 			= DSI_TWO_DATA_LANES;
-	hdsi.Init.TXEscapeCkdiv 			= LCD_LANE_CLK/15620;
-    hdsi.Init.AutomaticClockLaneControl	= DSI_AUTO_CLK_LANE_CTRL_DISABLE;
-
-    if(HAL_DSI_Init(&(hdsi), &(dsiPllInit)) != 0)
-    	return 1;
-
-    HAL_DSI_Start(&(hdsi));
-
-  	// Set reading mode
-  	HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
-
-  	// Read Controller ID
-  	if(DSI_IO_Read(0xDA, id, 1) != 0)
-  		return 2;
-
-  	//printf("LCD ID: %02x\r\n",id[0]);
-
-  	HAL_DSI_Stop(&hdsi);
-
-	return 0;
-}
-#endif
 
 static U32 GetPixelformat(U32 LayerIndex)
 {
@@ -793,24 +749,6 @@ static void LCD_LL_Init(void)
 	__HAL_RCC_DSI_FORCE_RESET();
 	__HAL_RCC_DSI_RELEASE_RESET();
 
-	#if 0
-	// Read ID
-	if(LCDConf_ReadID(id) != 0)
-	{
-		//printf("== unable to read LCD ID! ==\r\n");
-		//Error_Handler(222);
-	}
-	else
-	{
-		// Check if supported
-		if((id[0] != 0x40)&&(id[0] != 0xFF))
-		{
-			//printf("== not supported lcd! ==\r\n");
-			//Error_Handler(222);
-		}
-	}
-	#endif
-
 	hdsi.Instance = DSI;
 	HAL_DSI_DeInit(&(hdsi));
 
@@ -846,48 +784,30 @@ static void LCD_LL_Init(void)
 	printf("dsi clk = %dMHz \r\n", dsi_clk);
 
     // Timing parameters for all Video modes
-    /*if(id[0] == 0x40)
-    {
-    	VSYNC  		= OTM8009A_800X480_VSYNC;
-    	VBP  		= OTM8009A_800X480_VBP;
-    	VFP  		= OTM8009A_800X480_VFP;
-    	HSYNC  		= OTM8009A_800X480_HSYNC;
-    	HBP  		= OTM8009A_800X480_HBP;
-    	HFP  		= OTM8009A_800X480_HFP;
-    	//
-    	// Portrait mode (we rotate in emWin driver)
-    	lcd_x_size	= OTM8009A_480X800_WIDTH;
-    	lcd_y_size 	= OTM8009A_480X800_HEIGHT;
-    	//
-    	Clockratio 	= LCD_LANE_CLK/OTM8009A_PIXEL_CLK;
-    }
-    else
-    {*/
-    	VSYNC  		= ST7701_VSYNC;
-    	VBP  		= ST7701_VBP;
-    	VFP  		= ST7701_VFP;
-    	lcd_y_size 	= ST7701_HEIGHT;
+    VSYNC  		= ILI9806E_VSYNC;
+    VBP  		= ILI9806E_VBP;
+    VFP  		= ILI9806E_VFP;
+    lcd_y_size 	= ILI9806E_HEIGHT;
 
-    	HSYNC  		= ST7701_HSYNC;
-    	HBP  		= ST7701_HBP;
-    	HFP  		= ST7701_HFP;
-    	lcd_x_size 	= ST7701_WIDTH;
+    HSYNC  		= ILI9806E_HSYNC;
+    HBP  		= ILI9806E_HBP;
+    HFP  		= ILI9806E_HFP;
+    lcd_x_size 	= ILI9806E_WIDTH;
 
-    	Clockratio 	= LCD_LANE_CLK/ST7701_PIXEL_CLK;
-    //}
+    Clockratio 	= LCD_LANE_CLK/ILI9806E_PIXEL_CLK;
 
 	#if 1
     // The reference value given by the manufacturer is 58.2MHz,  then fps is :
     // fps = 58200000 / (480 + 160 + 160 +24) * (1280 + 12 + 10 + 2) = 54Hz
-    int refresh_rate   = (ST7701_PIXEL_CLK * 1000)/((lcd_x_size + HSYNC + HBP + HFP)*(VSYNC + lcd_y_size + VBP + VFP));
-    int refresh_rate_m = (ST7701_PIXEL_CLK * 1000)%((lcd_x_size + HSYNC + HBP + HFP)*(VSYNC + lcd_y_size + VBP + VFP));
+    int refresh_rate   = (ILI9806E_PIXEL_CLK * 1000)/((lcd_x_size + HSYNC + HBP + HFP)*(VSYNC + lcd_y_size + VBP + VFP));
+    int refresh_rate_m = (ILI9806E_PIXEL_CLK * 1000)%((lcd_x_size + HSYNC + HBP + HFP)*(VSYNC + lcd_y_size + VBP + VFP));
 
     // That is, the transmission rate of each MIPI data lane.
     // dsi_hs_clk = ((h_active + hfp + hbp + h_sync) * (v_active + vfp + vbp + v_sync) * fps * bpp) / lane_number
     // dsi_hs_clk = ((480 + 160 + 160 +24) * (1280 + 12 + 10 + 2) * 54 * 24) / 4 = 348136704 bps = 348 Mbps
     int dsi_bandwidth = (((lcd_x_size + HSYNC + HBP + HFP)*(VSYNC + lcd_y_size + VBP + VFP)) * refresh_rate * 24)/2;
 
-    printf("== LCD CLK: %dkHz, FPS: %d.%dHz, bandwidth 2x%dMbps ==\r\n", ST7701_PIXEL_CLK, refresh_rate, refresh_rate_m/10000, dsi_bandwidth/(1000*1000));
+    printf("== LCD CLK: %dkHz, FPS: %d.%dHz, bandwidth 2x%dMbps ==\r\n", ILI9806E_PIXEL_CLK, refresh_rate, refresh_rate_m/10000, dsi_bandwidth/(1000*1000));
 	#endif
 
     hdsivideo_handle.VirtualChannelID 					= 0;
@@ -982,21 +902,11 @@ static void LCD_LL_Init(void)
     HAL_DSI_Start(&(hdsi));
 
   	// Init LCD registers
-	//if(id[0] == 0x40)
-	//	OTM8009A_Init(OTM8009A_FORMAT_RGB888, OTM8009A_ORIENTATION_PORTRAIT);
-	//else
-	//{
-		//HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
-		ST7701S_Init(hdsivideo_handle.ColorCoding);
-	//}
+	//HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
+	ILI9806ES_Init(hdsivideo_handle.ColorCoding);
 
   	// Start buffer refresh
   	//HAL_LTDC_ProgramLineEvent(&hltdc, 0);
-
-//#ifdef BOARD_EVAL_747
-	// Backlight on
-	//HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
-//#endif
 }
 
 
@@ -1195,9 +1105,6 @@ void LCD_X_Config(void)
 	//GUI_MEMDEV_SetDrawMemdev16bppFunc(LCD_DrawMemdev16bpp);
 	GUI_SetFuncDrawAlpha			 (LCD_DrawMemdevAlpha, LCD_DrawBitmapAlpha);
 	#endif
-
-	// Basic hw init
-	//LCD_LL_Init();
 
 	// Start buffer refresh
   	HAL_LTDC_ProgramLineEvent(&hltdc, 0);
