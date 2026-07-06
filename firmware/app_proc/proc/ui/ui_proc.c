@@ -1103,6 +1103,31 @@ void ui_proc_task(void const *arg)
 
 ui_proc_loop:
 
+	// Loop rate vs consumed FFT frame rate monitor(waterfall sluggishness
+	// hunt) - repaint fps = min(fft feed rate, loop rate), so if the
+	// waterfall is slow while fft irq shows 13/s, the loop is the brake
+	#ifdef PROFILE_UI_REPAINT
+	{
+		extern struct UI_SW ui_sw;
+		static ulong loop_cnt = 0, paint_cnt = 0, rate_t0 = 0;
+		ulong now = xTaskGetTickCount();
+
+		loop_cnt++;
+		if(ui_sw.updated)
+			paint_cnt++;		// this iteration will consume a frame
+
+		if(rate_t0 == 0)
+			rate_t0 = now;
+		else if((now - rate_t0) >= 1000)
+		{
+			printf("ui loop %d/s, painted %d/s\r\n", (int)loop_cnt, (int)paint_cnt);
+			loop_cnt = 0;
+			paint_cnt = 0;
+			rate_t0 = now;
+		}
+	}
+	#endif
+
 	// Process notifications
 	ui_proc_notified(arg);
 

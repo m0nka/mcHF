@@ -901,8 +901,10 @@ static void LCD_LL_Init(void)
     // Enable the DSI host and wrapper : but LTDC is not started yet at this stage
     HAL_DSI_Start(&(hdsi));
 
-	// Allow bus turn around, so panel registers can be read back
-	HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
+	// No BTA flow control and no DCS reads here: a read in video mode always
+	// times out and poisons the link - the next packet after it corrupts the
+	// panel setup (washed out image on every boot, bench-confirmed)
+	//HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
 
   	// Init LCD registers
 	ILI9806ES_Init(hdsivideo_handle.ColorCoding);

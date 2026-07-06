@@ -87,20 +87,13 @@ static void mipi_write_cmd(uint8_t cmd)
 	printf("ili9806e: write cmd %02x failed!\r\n", cmd);
 }
 
-// Read single byte register, needs BTA flow control enabled on the host
-static int mipi_read_short(uint8_t reg, uint8_t *val)
-{
-	if(HAL_DSI_Read(&hdsi, 0, val, 1, DSI_DCS_SHORT_PKT_READ, reg, NULL) != HAL_OK)
-		return 1;
-
-	return 0;
-}
+// NOTE: do NOT attempt DCS reads (HAL_DSI_Read/BTA) on this panel while the
+// video stream is running - the read always times out AND leaves the link in
+// a state where the next transmitted packet corrupts the panel setup, which
+// shows as a washed out image on every boot (bench-confirmed 2026-07-06)
 
 int ILI9806ES_Init(unsigned long ColorCoding)
 {
-	uint8_t madctl;
-	int i;
-
 	//printf("ILI9806E_Init...\r\n");
 
 	// Change to Page 1 CMD
@@ -125,9 +118,10 @@ int ILI9806ES_Init(unsigned long ColorCoding)
 	// Resolution setting 480 X 800
 	mipi_write_short(0x30, 0x02);
 
-	// Inversion setting
-	// 02-2dot
-	mipi_write_short(0x31, 0x02);
+	// Inversion setting - 0x00 column inversion per manufacturer init, the
+	// VCOM/flicker values (0x53/0x55) are tuned for it; 0x02 (2-dot) causes
+	// a ~28Hz whole-image flicker
+	mipi_write_short(0x31, 0x00);
 
 	// BT DDVDH DDVDL
 	// 10,14,18 00	2XVCI
@@ -216,6 +210,25 @@ int ILI9806ES_Init(unsigned long ColorCoding)
 	mipi_write_short(0xCE, 0x08);
 	mipi_write_short(0xCF, 0x00);
 
+	// Washout insurance - a packet arriving at the panel with a bad CRC is
+	// silently discarded and the host never knows (readback is not possible
+	// on this link). A lost write in the power/VREG/VCOM group shows as a
+	// washed out image, so send that group a second time - a packet
+	// corrupted twice in a row is very unlikely
+	mipi_write_short(0x40, 0x14);
+	mipi_write_short(0x41, 0x33);
+	mipi_write_short(0x42, 0x01);
+	mipi_write_short(0x43, 0x09);
+	mipi_write_short(0x44, 0x06);
+	mipi_write_short(0x45, 0x0A);
+	mipi_write_short(0x50, 0x78);
+	mipi_write_short(0x51, 0x78);
+	mipi_write_short(0x52, 0x00);
+	mipi_write_short(0x53, 0x3A);
+	mipi_write_short(0x54, 0x00);
+	mipi_write_short(0x55, 0x3A);
+	mipi_write_short(0x57, 0x50);
+
 	// Change to Page 6 CMD for GIP timing
 	mipi_change_page(0xFF980604, 0x06);
 
@@ -291,7 +304,10 @@ int ILI9806ES_Init(unsigned long ColorCoding)
 	// Change to Page 0 CMD for Normal command
 	mipi_change_page(0xFF980604, 0x00);
 
-	// Display rotation
+	// Display rotation - written twice as insurance, readback verification
+	// is not possible on this link (see note above) and a packet corrupted
+	// twice in a row is very unlikely
+	mipi_write_short(0x36, ILI9806E_MADCTL);
 	mipi_write_short(0x36, ILI9806E_MADCTL);
 
 	// 24bit colour
@@ -307,25 +323,6 @@ int ILI9806ES_Init(unsigned long ColorCoding)
 	// Display on
 	mipi_write_cmd(0x29);
 	HAL_Delay(25);
-
-	// The rotation write occasionally gets lost on the wire and the panel
-	// then comes up with the default orientation - image looks fine, but is
-	// 180 deg flipped. Read back the address mode register(0x0B) and rewrite
-	// until it matches
-	for(i = 0; i < MIPI_WRITE_RETRY; i++)
-	{
-		if(mipi_read_short(0x0B, &madctl))
-		{
-			printf("ili9806e: madctl readback err\r\n");
-			break;
-		}
-
-		if(madctl == ILI9806E_MADCTL)
-			break;
-
-		printf("ili9806e: madctl is %02x, rewriting\r\n", madctl);
-		mipi_write_short(0x36, ILI9806E_MADCTL);
-	}
 
 	if(mipi_err_cnt)
 		printf("ili9806e: %d packet retries during init\r\n", mipi_err_cnt);

@@ -1246,28 +1246,52 @@ void ui_controls_spectrum_show_notification(char *text)
 //*----------------------------------------------------------------------------
 uchar ui_controls_spectrum_refresh(FAST_REFRESH *cb, uchar mode)
 {
-	if(!ui_sw.updated)
-	{
-		//--printf("not ready \r\n");
-		return 1;
-	}
+	// Set while the current frame is being painted(mode 0 then mode 1/2)
+	static uchar have_frame = 0;
 
-	ui_controls_spectrum_fft_process_big();
 	if(mode == 0)
 	{
+		static uchar sp_interleave = 0;
+
+		if(!ui_sw.updated)
+		{
+			have_frame = 0;
+			return 1;
+		}
+
+		// Consume the frame up front: process the FFT data into the local
+		// buffers and clear the flag BEFORE the slow repaints, so a frame
+		// arriving mid-paint is not wiped unpainted by a post-paint clear
+		ui_controls_spectrum_fft_process_big();
+		ui_sw.updated = 0;
+		have_frame = 1;
+
 		ui_controls_update_vfo_mode(false);
 		ui_controls_update_smooth_control(0);
 
-		if(tsu.sc_enabled)
+		// The scope repaint(~62mS) barely misses the ~77mS FFT frame budget,
+		// so painting it on every frame drops every other waterfall frame
+		// (13/s feed, only ~7/s painted). Repaint the scope on alternate
+		// frames only - the waterfall gets every frame and stays smooth, the
+		// scope still updates at the ~7/s it effectively managed before
+		sp_interleave ^= 1;
+		if(tsu.sc_enabled && sp_interleave)
 			ui_controls_spectrum_repaint_big(cb);
+
+		return 0;
 	}
-	else if(mode == 1)
+
+	// Waterfall/flag-clear passes ride on the frame consumed in mode 0
+	if(!have_frame)
+		return 1;
+
+	if(mode == 1)
 	{
 		if(tsu.wf_enabled)
 			ui_controls_spectrum_wf_repaint_big(cb);
 	}
 	else
-		ui_sw.updated = 0;
+		have_frame = 0;
 
 	return 0;
 }

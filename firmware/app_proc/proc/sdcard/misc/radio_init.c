@@ -800,7 +800,7 @@ void radio_init_on_reset(void)
 	tsu.demo_mode						= 1;
 	tsu.bt_enabled 						= 0;
 	tsu.brightness						= 30;
-	tsu.smet_type 						= 1;
+	tsu.smet_type 						= 0;
 
 	// Enforce 20m on eeprom on error
 	tsu.curr_band 						= BAND_MODE_20;
