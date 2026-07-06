@@ -15,13 +15,24 @@
 
 #include <stddef.h>
 
-const uint8_t sleep_out[] = {0x11, 0x00};
-
 extern DSI_HandleTypeDef   hdsi;
+
+// Retries for each DCS packet before giving up
+#define MIPI_WRITE_RETRY		3
+
+// Panel orientation, page 0 register 0x36 (0x00, 0x01, 0x02, 0x03)
+// 0x00 = manufacturer default - the old 0x03 here only ever reached the
+// panel on the rare boots where the write survived the LP corruption bug,
+// which is what made the image randomly come up 180 deg rotated
+#define ILI9806E_MADCTL			0x00
+
+// Dropped/corrupted packet counter, shown on the debug terminal
+static int mipi_err_cnt = 0;
 
 static void mipi_change_page(unsigned long controller_id, unsigned char page)
 {
 	uint8_t lcd_reg_data[10];
+	int i;
 
 	lcd_reg_data[0] = (controller_id >> 24) & 0xFF;
 	lcd_reg_data[1] = (controller_id >> 16) & 0xFF;
@@ -30,27 +41,67 @@ static void mipi_change_page(unsigned long controller_id, unsigned char page)
 
 	lcd_reg_data[4] = page;
 
-	HAL_DSI_LongWrite(&hdsi, 0, DSI_DCS_LONG_PKT_WRITE, 6, 0xFF, lcd_reg_data);
+	for(i = 0; i < MIPI_WRITE_RETRY; i++)
+	{
+		if(HAL_DSI_LongWrite(&hdsi, 0, DSI_DCS_LONG_PKT_WRITE, 6, 0xFF, lcd_reg_data) == HAL_OK)
+			return;
+
+		mipi_err_cnt++;
+		HAL_Delay(1);
+	}
+
+	printf("ili9806e: page %d select failed!\r\n", page);
 }
 
 // Write cmd + single byte data
 static void mipi_write_short(uint8_t reg, uint8_t data)
 {
-	HAL_DSI_ShortWrite(&hdsi, 0, DSI_DCS_SHORT_PKT_WRITE_P1, reg, data);
+	int i;
+
+	for(i = 0; i < MIPI_WRITE_RETRY; i++)
+	{
+		if(HAL_DSI_ShortWrite(&hdsi, 0, DSI_DCS_SHORT_PKT_WRITE_P1, reg, data) == HAL_OK)
+			return;
+
+		mipi_err_cnt++;
+		HAL_Delay(1);
+	}
+
+	printf("ili9806e: write reg %02x failed!\r\n", reg);
 }
 
-static void mipi_write_long(uchar cmd, const uchar * data, ushort size)
+// Write parameterless cmd (sleep out, display on etc)
+static void mipi_write_cmd(uint8_t cmd)
 {
-	HAL_DSI_LongWrite(&hdsi, 0, DSI_DCS_LONG_PKT_WRITE, size, cmd, (unsigned char *)data);
+	int i;
+
+	for(i = 0; i < MIPI_WRITE_RETRY; i++)
+	{
+		if(HAL_DSI_ShortWrite(&hdsi, 0, DSI_DCS_SHORT_PKT_WRITE_P0, cmd, 0) == HAL_OK)
+			return;
+
+		mipi_err_cnt++;
+		HAL_Delay(1);
+	}
+
+	printf("ili9806e: write cmd %02x failed!\r\n", cmd);
+}
+
+// Read single byte register, needs BTA flow control enabled on the host
+static int mipi_read_short(uint8_t reg, uint8_t *val)
+{
+	if(HAL_DSI_Read(&hdsi, 0, val, 1, DSI_DCS_SHORT_PKT_READ, reg, NULL) != HAL_OK)
+		return 1;
+
+	return 0;
 }
 
 int ILI9806ES_Init(unsigned long ColorCoding)
 {
-	//unsigned char buff[40];
+	uint8_t madctl;
+	int i;
 
 	//printf("ILI9806E_Init...\r\n");
-
-	//mipi_exit_sleep();
 
 	// Change to Page 1 CMD
 	mipi_change_page(0xFF980604, 0x01);
@@ -76,7 +127,7 @@ int ILI9806ES_Init(unsigned long ColorCoding)
 
 	// Inversion setting
 	// 02-2dot
-	mipi_write_short(0x31, 0x02);;
+	mipi_write_short(0x31, 0x02);
 
 	// BT DDVDH DDVDL
 	// 10,14,18 00	2XVCI
@@ -240,8 +291,8 @@ int ILI9806ES_Init(unsigned long ColorCoding)
 	// Change to Page 0 CMD for Normal command
 	mipi_change_page(0xFF980604, 0x00);
 
-	// Display rotation(0x00, 0x01, 0x02, 0x03)
-	mipi_write_short(0x36, 0x03);
+	// Display rotation
+	mipi_write_short(0x36, ILI9806E_MADCTL);
 
 	// 24bit colour
 	mipi_write_short(0x3A, 0x70);
@@ -249,10 +300,35 @@ int ILI9806ES_Init(unsigned long ColorCoding)
 	// Backlight control off
 	//mipi_write_short(0x53, 0x00);
 
-	mipi_write_short(0x11, 0);
+	// Sleep out
+	mipi_write_cmd(0x11);
 	HAL_Delay(120);
-	mipi_write_short(0x29, 0);
+
+	// Display on
+	mipi_write_cmd(0x29);
 	HAL_Delay(25);
+
+	// The rotation write occasionally gets lost on the wire and the panel
+	// then comes up with the default orientation - image looks fine, but is
+	// 180 deg flipped. Read back the address mode register(0x0B) and rewrite
+	// until it matches
+	for(i = 0; i < MIPI_WRITE_RETRY; i++)
+	{
+		if(mipi_read_short(0x0B, &madctl))
+		{
+			printf("ili9806e: madctl readback err\r\n");
+			break;
+		}
+
+		if(madctl == ILI9806E_MADCTL)
+			break;
+
+		printf("ili9806e: madctl is %02x, rewriting\r\n", madctl);
+		mipi_write_short(0x36, ILI9806E_MADCTL);
+	}
+
+	if(mipi_err_cnt)
+		printf("ili9806e: %d packet retries during init\r\n", mipi_err_cnt);
 
 	//printf("ILI9806E_Init done.\r\n");
 	return 0;

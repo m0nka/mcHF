@@ -780,8 +780,9 @@ static void LCD_LL_Init(void)
 
 	HAL_DSI_Init(&(hdsi), &(dsiPllInit));
 
-	int dsi_clk = (25/dsiPllInit.PLLIDF)*2*dsiPllInit.PLLNDIV/2/(dsiPllInit.PLLODF + 1)/8;
-	printf("dsi clk = %dMHz \r\n", dsi_clk);
+	// kHz math, so the integer divisions don't understate the result
+	int dsi_clk = (25000/dsiPllInit.PLLIDF)*2*dsiPllInit.PLLNDIV/2/(1 << dsiPllInit.PLLODF)/8;
+	printf("dsi byte clk = %dkHz \r\n", dsi_clk);
 
     // Timing parameters for all Video modes
     VSYNC  		= ILI9806E_VSYNC;
@@ -831,16 +832,12 @@ static void LCD_LL_Init(void)
     // Enable or disable sending LP command while streaming is active in video mode
     hdsivideo_handle.LPCommandEnable 					= DSI_LP_COMMAND_ENABLE;
 
-    //if(id[0] == 0x40)
-    //{
-    	hdsivideo_handle.LPLargestPacketSize 				= 64;
-    	hdsivideo_handle.LPVACTLargestPacketSize 			= 64;
-    //}
-    //else
-    //{
-    //	hdsivideo_handle.LPLargestPacketSize 				= 4;
-    //	hdsivideo_handle.LPVACTLargestPacketSize 			= 4;
-    //}
+    // Largest LP payload the host may push into a blanking window - the old
+    // 64/64 setting allowed LP packets during active lines, where the blanking
+    // time is far too short for them, and commands got randomly corrupted.
+    // 16 bytes during vertical blanking, none during active video
+    hdsivideo_handle.LPLargestPacketSize 				= 16;
+    hdsivideo_handle.LPVACTLargestPacketSize 			= 0;
 
     /* Specify for each region of the video frame, if the transmission of command in LP mode is allowed in this region */
     /* while streaming is active in video mode                                                                         */
@@ -873,8 +870,8 @@ static void LCD_LL_Init(void)
     PeriphClkInitStruct.PeriphClockSelection   			= RCC_PERIPHCLK_LTDC;
     HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
 
-    int ltdc_clk = 25 / PeriphClkInitStruct.PLL3.PLL3M  * PeriphClkInitStruct.PLL3.PLL3N / PeriphClkInitStruct.PLL3.PLL3R;
-    printf("ltdc clk = %dMHz \r\n", ltdc_clk);
+    int ltdc_clk = 25000 / PeriphClkInitStruct.PLL3.PLL3M  * PeriphClkInitStruct.PLL3.PLL3N / PeriphClkInitStruct.PLL3.PLL3R;
+    printf("ltdc pix clk = %dkHz \r\n", ltdc_clk);
 
    	hltdc.Instance 					= LTDC;
    	hltdc.Init.HSPolarity 			= LTDC_HSPOLARITY_AL;
@@ -895,14 +892,19 @@ static void LCD_LL_Init(void)
    	hltdc.Init.Backcolor.Green 		= 0x00;
    	hltdc.Init.Backcolor.Red   		= 0x00;
 
-  	// Initialise the LTDC
+  	// Initialise the LTDC - it comes out of HAL_LTDC_Init() running, and it
+  	// must stay running: with the wrapper enabled the DSI host transmits LP
+  	// commands only inside the blanking windows of the video stream, so with
+  	// the LTDC stopped the command FIFO never drains
   	HAL_LTDC_Init(&hltdc);
 
     // Enable the DSI host and wrapper : but LTDC is not started yet at this stage
     HAL_DSI_Start(&(hdsi));
 
+	// Allow bus turn around, so panel registers can be read back
+	HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
+
   	// Init LCD registers
-	//HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA);
 	ILI9806ES_Init(hdsivideo_handle.ColorCoding);
 
   	// Start buffer refresh
