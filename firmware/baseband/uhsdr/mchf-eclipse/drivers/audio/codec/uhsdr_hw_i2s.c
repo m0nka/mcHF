@@ -24,6 +24,7 @@
 // H747 CM4 core: SAI1 streaming, CLINT project compatible hw setup
 #include "uhsdr_hw_sai_m4.h"
 #include "icc_spectrum.h"
+#include "icc_wspr.h"
 #else
 
 #ifdef UI_BRD_MCHF
@@ -143,13 +144,19 @@ static void MchfHw_Sai_HandleBlock(uint16_t which)
 {
     sai_block_count++;
 
+    const uint16_t offset = which == 0 ? IQ_BLOCK_SIZE : 0;
+
     if (ts.txrx_mode != TRX_MODE_TX)
     {
-        const uint16_t offset = which == 0 ? IQ_BLOCK_SIZE : 0;
         icc_spectrum_collect((volatile int16_t *)&dma.iq_buf.in[offset], IQ_BLOCK_SIZE);
     }
 
     MchfHw_Codec_HandleBlock(which);
+
+    // WSPR capture tap - the block above filled this audio out half with
+    // line level rx audio (fixed scaling, independent of the volume knob)
+    icc_wspr_collect((volatile int16_t *)&dma.audio_buf.out[offset], IQ_BLOCK_SIZE,
+                     ts.txrx_mode == TRX_MODE_TX);
 }
 
 void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hsai)

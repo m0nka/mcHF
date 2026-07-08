@@ -228,6 +228,9 @@
 #define ICC_PROC_SLEEP_TIME				portMAX_DELAY
 #define ICC_PROC_PRIORITY				osPriorityAboveNormal
 #define ICC_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 8)
+// Sleep time while a WSPR capture is streaming from the M4 core - the
+// icc task polls the M4 chunk ring instead of sleeping forever
+#define ICC_WSPR_POLL_TIME				20
 
 // App loader service parameters
 #define APP_PROC_START_NAME				"app"
@@ -246,11 +249,20 @@
 // WSPR decoder process parameters
 // Priority below normal - decode takes seconds of pure number crunching
 // and must not disturb the UI or the real time tasks
+//
+// Note: priorities here go to raw xTaskCreate, not osThreadCreate. The
+// CMSIS osPriorityLow enum is -3, which wraps unsigned and clamps to the
+// HIGHEST FreeRTOS priority - the exact opposite of the intent. Use the
+// raw FreeRTOS idle priority so the decode round-robins with the other
+// normal tasks instead of starving the whole system
 #define WSPR_PROC_START_NAME			"wpr"
 #define WSPR_PROC_START_DELAY			3500
 #define WSPR_PROC_SLEEP_TIME			portMAX_DELAY
-#define WSPR_PROC_PRIORITY				osPriorityLow
+#define WSPR_PROC_PRIORITY				tskIDLE_PRIORITY
 #define WSPR_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 16)
+// Uncomment to arm the WSPR monitor automatically at boot (bench testing,
+// no UI hook needed) - captures every even minute and decodes to SD
+//#define WSPR_MONITOR_AUTO_START
 
 // GNSS driver parameters
 #define GPS_PROC_START_NAME				"gps"

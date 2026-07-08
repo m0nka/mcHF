@@ -41,6 +41,7 @@
 #include "icc_proc.h"
 #include "icc_radio_if.h"
 #include "icc_spectrum.h"
+#include "icc_wspr.h"
 
 #define RPMSG_SERVICE_NAME              "stm32_icc_service"
 
@@ -406,6 +407,22 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 			icc_radio_set_tune_mode(icc_in_buffer[0]);
 			break;
 		}
+
+		// WSPR capture control
+		case ICC_WSPR_START:
+			icc_wspr_start();
+			icc_out_buffer[0x00] = 0;
+			break;
+
+		case ICC_WSPR_STOP:
+			icc_wspr_stop();
+			icc_out_buffer[0x00] = 0;
+			break;
+
+		// One buffered capture chunk to the M7 core
+		case ICC_WSPR_READ:
+			ret_size = icc_wspr_get_buffer(icc_out_buffer);
+			break;
 
 		default:
 			printf("unknown msg %d\r\n",cmd);

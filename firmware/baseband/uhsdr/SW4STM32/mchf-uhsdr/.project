@@ -3021,6 +3021,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/drivers/icc/icc_spectrum.c</locationURI>
 		</link>
 		<link>
+			<name>mchf-eclipse/drivers/icc/icc_wspr.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/drivers/icc/icc_wspr.c</locationURI>
+		</link>
+		<link>
 			<name>mchf-eclipse/drivers/icc/hw/openamp.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/drivers/icc/hw/openamp.c</locationURI>
