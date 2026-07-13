@@ -113,9 +113,13 @@ void icc_wspr_collect(volatile int16_t *src, uint32_t num_frames, uint32_t tx_mo
 
 	for(i = 0; i < num_frames; i++)
 	{
-		// Left channel carries the line level rx audio, silence on tx
+		// RIGHT channel carries the fixed LINE OUT scaling - the left one
+		// is the speaker/headphone channel and follows the volume knob
+		// (audio_driver.c RxProcessor: dst.l = a_buffer[1] speaker,
+		// dst.r = a_buffer[0] = line out. Found the hard way: captures
+		// tapped at whisper level with the volume down). Silence on tx
 		// keeps the two minute time base of the capture intact
-		iw.acc += tx_mode ? 0 : (int32_t)(*src);
+		iw.acc += tx_mode ? 0 : (int32_t)(src[1]);
 		src    += 2;
 
 		if(++iw.phase < WSPR_DECIM_FACTOR)

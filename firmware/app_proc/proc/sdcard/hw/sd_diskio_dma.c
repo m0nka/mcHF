@@ -37,11 +37,23 @@ static uint8_t buffer[BLOCKSIZE];
 
 static DSTATUS SD_CheckStatus(BYTE lun)
 {
+	uint32_t timer = osKernelSysTick() + SD_TIMEOUT;
+
 	Stat = STA_NOINIT;
 
-	if(sd_card_get_card_state() == SD_TRANSFER_OK)
+	// After any write the card sits in its internal programming state for
+	// a short while - that is 'busy', not 'not initialized'. FatFS polls
+	// disk_status() inside validate() on every file operation, so treating
+	// a momentary busy as NOINIT invalidates open files mid-stream: the
+	// first sustained streaming writer (wspr capture) saw f_write fail
+	// with FR_INVALID_OBJECT. Wait the busy out, like SD_write does
+	while(osKernelSysTick() < timer)
 	{
-		Stat &= ~STA_NOINIT;
+		if(sd_card_get_card_state() == SD_TRANSFER_OK)
+		{
+			Stat &= ~STA_NOINIT;
+			break;
+		}
 	}
 
 	return Stat;
@@ -131,37 +143,57 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     	else
     		res = RES_OK;
 		#else
-    	// Fast path: the provided destination buffer is correctly aligned
-    	uint8_t ret = sd_card_read_blocks_dma((uint32_t*)buff, (uint32_t)(sector), count);
-    	if (ret == BSP_ERROR_NONE)
-        {
-        	// wait for a message from the queue or a timeout
-            event = osMessageGet(SDQueueID, SD_TIMEOUT);
-            if (event.status == osEventMessage)
-            {
-            	//printf("event %d \r\n", event.value.v);
-                if (event.value.v == READ_CPLT_MSG)
-                {
-                    res = RES_OK;
-                    //printf("read complete  \r\n");
-					#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
-                    // Invalidate the chache before reading into the buffer,  to get actual data
-                    alignedAddr = (uint32_t)buff & ~0x1F;
-                    SCB_InvalidateDCache_by_Addr((uint32_t*)alignedAddr, count*BLOCKSIZE + ((uint32_t)buff - alignedAddr));
-					#endif
-                }
-                else if (event.value.v == RW_ERROR_MSG)
-                {
-                	printf("readA dma err  \r\n");
-                	res = RES_ERROR;
-                }
-            }
-            else
-            {
-            	printf("readA dma timeout  \r\n");
-            	res = RES_ERROR;
-            }
-        }
+    	// Fast path: the provided destination buffer is correctly aligned.
+    	// One retry - a single transient error would otherwise abort a
+    	// multi-megabyte streaming read (wspr capture decode)
+    	int attempt;
+
+    	for(attempt = 0; (attempt < 2) && (res != RES_OK); attempt++)
+    	{
+    		if(attempt)
+    		{
+    			// Let the card settle and become ready again
+    			osDelay(10);
+    			timer = osKernelSysTick() + SD_TIMEOUT;
+    			while(sd_card_get_card_state() == SD_TRANSFER_BUSY)
+    			{
+    				if(timer < osKernelSysTick())
+    					break;
+    			}
+    			printf("readA retry  \r\n");
+    		}
+
+    		uint8_t ret = sd_card_read_blocks_dma((uint32_t*)buff, (uint32_t)(sector), count);
+    		if (ret == BSP_ERROR_NONE)
+    		{
+    			// wait for a message from the queue or a timeout
+    			event = osMessageGet(SDQueueID, SD_TIMEOUT);
+    			if (event.status == osEventMessage)
+    			{
+    				if (event.value.v == READ_CPLT_MSG)
+    				{
+    					res = RES_OK;
+						#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
+    					// Invalidate the cache after the DMA read, to see actual data
+    					alignedAddr = (uint32_t)buff & ~0x1F;
+    					SCB_InvalidateDCache_by_Addr((uint32_t*)alignedAddr, count*BLOCKSIZE + ((uint32_t)buff - alignedAddr));
+						#endif
+    				}
+    				else if (event.value.v == RW_ERROR_MSG)
+    				{
+    					printf("readA dma err  \r\n");
+    					res = RES_ERROR;
+    				}
+    			}
+    			else
+    			{
+    				printf("readA dma timeout  \r\n");
+    				res = RES_ERROR;
+    			}
+    		}
+    		else
+    			printf("readA start err  \r\n");
+    	}
 		#endif
     }
     else
@@ -241,7 +273,7 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 	osEvent event;
 	DRESULT res = RES_ERROR;
 
-	printf("SD_write  \r\n");
+	//printf("SD_write  \r\n");
 
 	uint32_t timer = osKernelSysTick() + SD_TIMEOUT;
 
@@ -249,7 +281,10 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 	while((sd_card_get_card_state() == SD_TRANSFER_BUSY))
 	{
 		if(timer < osKernelSysTick())
+		{
+			printf("write busy err  \r\n");
 			return RES_NOTRDY;
+		}
 	}
 
 	#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
@@ -280,8 +315,14 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 				{
 					res = RES_OK;
 				}
+				else
+					printf("writeA dma err  \r\n");
 			}
+			else
+				printf("writeA dma timeout  \r\n");
 		}
+		else
+			printf("writeA start err  \r\n");
 	}
 	else
 	{
@@ -330,7 +371,7 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 
 	BSP_SD_CardInfo CardInfo;
 
-	printf("SD_ioctl  \r\n");
+	//printf("SD_ioctl  \r\n");
 
 	if(Stat & STA_NOINIT) return RES_NOTRDY;
 

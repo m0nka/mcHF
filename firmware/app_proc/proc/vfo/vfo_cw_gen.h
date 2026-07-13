@@ -50,10 +50,14 @@ __attribute__((__common__)) struct VFO_CW_STATE {
 
 	uchar 	on;
 
+	// One-shot mode - send the string once and key off (MarsChat CW ID)
+	uchar	oneshot;
+
 } VFO_CW_STATE;
 
 void vfo_cw_gen_proc(void);
 void vfo_cw_gen_start(uchar vfo_id, ulong freq, char *text);
+void vfo_cw_gen_start_once(uchar vfo_id, ulong freq, char *text);
 void vfo_cw_gen_init(void);
 
 #endif

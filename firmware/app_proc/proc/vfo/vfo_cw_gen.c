@@ -174,6 +174,19 @@ void vfo_cw_gen_string(uchar vfo_id)
 	if(cw_s[vfo_id].curr == cw_s[vfo_id].t_size)
 	{
 		//printf("string %d sent\r\n", vfo_id);
+
+		// One-shot mode - done, carrier off
+		if(cw_s[vfo_id].oneshot)
+		{
+			if(vfo_id == 0)
+				Si5351_output_enable(SI5351_CLK1, 0);
+			else
+				Si5351_output_enable(SI5351_CLK2, 0);
+
+			cw_s[vfo_id].on = 0;
+			return;
+		}
+
 		cw_s[vfo_id].t_gap	= 100;
 		cw_s[vfo_id].curr	= 0;				// start from first
 		cw_s[vfo_id].e_size	= 0;				// prevent TX
@@ -249,7 +262,22 @@ void vfo_cw_gen_start(uchar vfo_id, ulong freq, char *text)
 	cw_s[vfo_id].t_gap	= 0;				// no gaps on start
 	cw_s[vfo_id].curr	= 0;				// start from first
 	cw_s[vfo_id].e_size = 0;				// prevent TX
+	cw_s[vfo_id].oneshot = 0;				// continuous (demo mode)
 	cw_s[vfo_id].on 	= 1;				// enable instance
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : vfo_cw_gen_start_once
+//* Object              : send the string once, then carrier off
+//* Notes    			: used for the MarsChat CW ID rehearsal
+//* Context    			: CONTEXT_VFO
+//*----------------------------------------------------------------------------
+void vfo_cw_gen_start_once(uchar vfo_id, ulong freq, char *text)
+{
+	vfo_cw_gen_start(vfo_id, freq, text);
+
+	if(vfo_id < 2)
+		cw_s[vfo_id].oneshot = 1;
 }
 
 //*----------------------------------------------------------------------------
@@ -270,6 +298,7 @@ void vfo_cw_gen_init(void)
 		cw_s[i].e_size 	= 0;
 		cw_s[i].symbol 	= 0;
 		cw_s[i].e_gap 	= 0;
+		cw_s[i].oneshot	= 0;
 		cw_s[i].on 		= 0;
 	}
 }

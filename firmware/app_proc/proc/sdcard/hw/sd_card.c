@@ -74,10 +74,12 @@ void HAL_SD_RxCpltCallback(SD_HandleTypeDef *hsd)
 //*----------------------------------------------------------------------------
 void HAL_SD_ErrorCallback(SD_HandleTypeDef *hsd)
 {
+	// HAL error bits (stm32h7xx_hal_sd.h): 0x02 data crc fail, 0x04 data
+	// timeout, 0x40 tx underrun, 0x80 rx overrun, etc - name the culprit
+	printf("sd err(%x) \r\n", (uint)hsd->ErrorCode);
+
 	#ifdef SD_USE_DMA
 	BSP_SD_ErrorCallback();
-	#else
-	printf("== sd error == \r\n");
 	#endif
 }
 
@@ -474,7 +476,11 @@ static HAL_StatusTypeDef sdmmc1_init(SD_HandleTypeDef *hsd)
 	hsd->Init.ClockEdge           = SDMMC_CLOCK_EDGE_RISING;
 	hsd->Init.ClockPowerSave      = SDMMC_CLOCK_POWER_SAVE_DISABLE;
 	hsd->Init.BusWide             = SDMMC_BUS_WIDE_4B;
-	hsd->Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
+	// Flow control gates SDMMC_CK whenever the FIFO cannot keep up with
+	// the bus - without it, IDMA stalls on the loaded AXI/FMC matrix show
+	// up as TX underrun on writes (err 0x10) and CRC-failed multi-block
+	// reads (err 0x02), first seen on the wspr capture streaming
+	hsd->Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_ENABLE;
 	hsd->Init.ClockDiv            = SDMMC_NSpeed_CLK_DIV;
 
 	// HAL SD initialization

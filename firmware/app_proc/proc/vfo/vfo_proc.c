@@ -19,6 +19,7 @@
 #include "si5351.h"
 #include "vfo_i2c.h"
 #include "vfo_cw_gen.h"
+#include "vfo_mc_gen.h"
 
 #include "vfo_proc.h"
 
@@ -192,12 +193,17 @@ void vfo_proc_task(void const *arg)
 	// Init CW gen
 	vfo_cw_gen_init();
 
+	// Init MarsChat 4-FSK gen
+	vfo_mc_gen_init();
+
 	// Delayed init
 	vfo_proc_set_freq();
 
 vfo_proc_loop:
 
-	if(tsu.demo_mode)
+	if(vfo_mc_gen_active())
+		vfo_task_sleep_time = vfo_mc_gen_next_delay();	// pace the 4-FSK stream
+	else if(tsu.demo_mode)
 		vfo_task_sleep_time = CW_DIT_RESOLUTION;
 	else
 		vfo_task_sleep_time = VFO_PROC_SLEEP_TIME;	// deep sleep
@@ -208,6 +214,7 @@ vfo_proc_loop:
 		vfo_proc_worker(ulNotificationValue);
 	}
 
+	vfo_mc_gen_proc();
 	vfo_proc_demo_mode_handler();
 	goto vfo_proc_loop;
 }

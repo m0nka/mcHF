@@ -38,11 +38,26 @@ extern struct TRANSCEIVER_STATE_UI	tsu;
 __attribute__((section(".axi_mem"))) __attribute__ ((aligned (32))) \
 static int16_t	wspr_pcm_buf[4096];
 
-static WSPR_DECODE	wspr_results[WSPR_MAX_DECODES];
+// SD card write bounce, also AXI ram - writing straight from the SDRAM
+// staging ring proved unreliable on hardware (SDMMC DMA source on the
+// FMC bus contends with the LTDC framebuffer scan, and the disk driver
+// invalidates the cache before a DMA write, discarding dirty ring data)
+__attribute__((section(".axi_mem"))) __attribute__ ((aligned (32))) \
+static uchar	wspr_sd_bounce[4096];
+
+static WSPR_DECODE		wspr_results[WSPR_MAX_DECODES];
+static WSPR_RAW_DECODE	wspr_raw_results[WSPR_MAX_DECODES];
+
+// Optional raw decode consumer (another personality, e.g. MarsChat)
+static uchar (*wspr_raw_hook)(const WSPR_RAW_DECODE *raw) = NULL;
 
 // Pending decode request
 static char		wspr_capture_path[64] = WSPR_CAPTURE_FILE;
 static ulong	wspr_dial_hz = 0;
+
+// Monitor captures rotate over eight files (cap0.raw..cap7.raw) so a
+// cycle's recording survives the next cycle for offline analysis
+static uchar	wspr_cap_idx = 0;
 
 // ------------------------------------------------------------------------
 // Capture streaming from the M4 core
@@ -85,6 +100,7 @@ static uchar			wspr_mon_state = WSPR_MON_IDLE;
 static FIL				wspr_capture_file;
 static uchar			wspr_capture_file_open = 0;
 static ulong			wspr_capture_written = 0;
+static ulong			wspr_capture_synced = 0;
 static ulong			wspr_start_req_tick = 0;
 
 //*----------------------------------------------------------------------------
@@ -153,6 +169,16 @@ void wspr_capture_push(const uchar *data, ushort len, uchar flags)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : wspr_proc_set_raw_hook
+//* Object              : register a raw decode consumer (see wspr_proc.h)
+//* Context    			: any task (set once at init)
+//*----------------------------------------------------------------------------
+void wspr_proc_set_raw_hook(uchar (*hook)(const WSPR_RAW_DECODE *raw))
+{
+	wspr_raw_hook = hook;
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : wspr_proc_monitor_set
 //* Object              : arm/disarm the background WSPR monitor
 //* Context    			: any task
@@ -189,6 +215,7 @@ static ulong wspr_proc_current_dial_hz(void)
 static void wspr_proc_capture_drain(void)
 {
 	UINT	bw;
+	FRESULT	res;
 
 	// No sink - discard, keeps the ring from sticking full
 	if(!wspr_capture_file_open)
@@ -207,6 +234,9 @@ static void wspr_proc_capture_drain(void)
 		if(run > avail)
 			run = avail;
 
+		if(run > sizeof(wspr_sd_bounce))
+			run = sizeof(wspr_sd_bounce);
+
 		// Never write past the wanted capture length
 		if(wspr_capture_written >= WSPR_CAPTURE_BYTES)
 		{
@@ -217,9 +247,16 @@ static void wspr_proc_capture_drain(void)
 		if(run > (WSPR_CAPTURE_BYTES - wspr_capture_written))
 			run = WSPR_CAPTURE_BYTES - wspr_capture_written;
 
-		if(f_write(&wspr_capture_file, wspr_stage + off, run, &bw) != FR_OK)
+		// Stage through AXI ram and push the copy out of the D-cache -
+		// the disk layer DMAs straight from this buffer
+		memcpy(wspr_sd_bounce, wspr_stage + off, run);
+		SCB_CleanDCache_by_Addr((uint32_t *)wspr_sd_bounce, (int32_t)((run + 31UL) & ~31UL));
+
+		res = f_write(&wspr_capture_file, wspr_sd_bounce, run, &bw);
+		if(res != FR_OK)
 		{
-			printf("wspr: capture write err \r\n");
+			printf("wspr: capture write err(%d) at %u bytes \r\n",
+					res, (uint)wspr_capture_written);
 			f_close(&wspr_capture_file);
 			wspr_capture_file_open = 0;
 			return;
@@ -227,6 +264,19 @@ static void wspr_proc_capture_drain(void)
 
 		wspr_capture_written += bw;
 		wspr_stage_rd = rd + run;
+
+		// Commit data + directory entry every 128 KB - keeps the capture
+		// valid on a failure and makes a broken commit name itself here
+		// instead of failing silently at f_close
+		if((wspr_capture_written - wspr_capture_synced) >= (128UL * 1024UL))
+		{
+			res = f_sync(&wspr_capture_file);
+			wspr_capture_synced = wspr_capture_written;
+
+			if(res != FR_OK)
+				printf("wspr: capture sync err(%d) at %u bytes \r\n",
+						res, (uint)wspr_capture_written);
+		}
 	}
 }
 
@@ -249,8 +299,12 @@ static void wspr_proc_capture_finish(uchar decode)
 
 	if(wspr_capture_file_open)
 	{
-		f_close(&wspr_capture_file);
+		FRESULT cres = f_close(&wspr_capture_file);
+
 		wspr_capture_file_open = 0;
+
+		if(cres != FR_OK)
+			printf("wspr: capture close err(%d) \r\n", cres);
 	}
 
 	printf("wspr: capture done, %u bytes, overrun(%d) \r\n",
@@ -259,12 +313,10 @@ static void wspr_proc_capture_finish(uchar decode)
 	wspr_mon_state = wspr_monitor_on ? WSPR_MON_WAIT : WSPR_MON_IDLE;
 
 	// Decode takes seconds at low priority - a cycle that starts
-	// meanwhile is skipped, the state machine only arms on second zero
+	// meanwhile is skipped, the state machine only arms on second zero.
+	// wspr_capture_path still names the file this cycle recorded
 	if((decode) && (wspr_capture_written != 0))
-	{
-		strcpy(wspr_capture_path, WSPR_CAPTURE_FILE);
 		wspr_proc_decode_cycle();
-	}
 }
 
 //*----------------------------------------------------------------------------
@@ -308,7 +360,12 @@ static void wspr_proc_monitor_sm(void)
 
 			f_mkdir(WSPR_DIR);								// ok if it exists
 
-			if(f_open(&wspr_capture_file, WSPR_CAPTURE_FILE, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK)
+			// Rotating capture name, so the previous recordings survive
+			snprintf(wspr_capture_path, sizeof(wspr_capture_path),
+					"0://wspr/cap%d.raw", wspr_cap_idx);
+			wspr_cap_idx = (uchar)((wspr_cap_idx + 1) & 0x07);
+
+			if(f_open(&wspr_capture_file, wspr_capture_path, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK)
 			{
 				printf("wspr: capture create err \r\n");
 				break;
@@ -316,6 +373,7 @@ static void wspr_proc_monitor_sm(void)
 
 			wspr_capture_file_open	= 1;
 			wspr_capture_written	= 0;
+			wspr_capture_synced		= 0;
 			wspr_capture_overrun	= 0;
 			wspr_stage_wr			= 0;
 			wspr_stage_rd			= 0;
@@ -330,7 +388,8 @@ static void wspr_proc_monitor_sm(void)
 			if(ps.hIccTask != NULL)
 				xTaskNotify(ps.hIccTask, UI_ICC_WSPR_START, eSetValueWithOverwrite);
 
-			printf("wspr: capture start (dial %u Hz) \r\n", (uint)wspr_dial_hz);
+			printf("wspr: capture start %s (dial %u Hz) \r\n",
+					wspr_capture_path, (uint)wspr_dial_hz);
 			break;
 		}
 
@@ -459,8 +518,6 @@ static void wspr_proc_decode_cycle(void)
 	ulong		t0;
 	char		line[96];
 
-	printf("wspr: decoding %s \r\n", wspr_capture_path);
-
 	// Stream the capture file into the decoder front end
 	res = f_open(&file, wspr_capture_path, FA_READ);
 	if(res != FR_OK)
@@ -468,6 +525,9 @@ static void wspr_proc_decode_cycle(void)
 		printf("wspr: capture open err(%d) \r\n", res);
 		return;
 	}
+
+	printf("wspr: decoding %s (%u bytes) \r\n",
+			wspr_capture_path, (uint)f_size(&file));
 
 	wspr_decoder_reset();
 
@@ -485,10 +545,25 @@ static void wspr_proc_decode_cycle(void)
 
 	f_close(&file);
 
-	// Heavy lifting - several seconds at osPriorityLow
+	// Heavy lifting - several seconds at low priority. Raw pass first so
+	// other personalities (MarsChat) can consume their frames via the hook
 	t0 = xTaskGetTickCount();
-	ndec = wspr_decoder_run(wspr_results, WSPR_MAX_DECODES);
-	printf("wspr: %d decode(s) in %u ms \r\n", ndec, (uint)(xTaskGetTickCount() - t0));
+	{
+		int nraw = wspr_decoder_run_raw(wspr_raw_results, WSPR_MAX_DECODES);
+
+		ndec = 0;
+		for(i = 0; i < nraw; i++)
+		{
+			if((wspr_raw_hook != NULL) && (wspr_raw_hook(&wspr_raw_results[i])))
+				continue;
+
+			if(wspr_raw_to_type1(&wspr_raw_results[i], &wspr_results[ndec]) == 0)
+				ndec++;
+		}
+
+		printf("wspr: %d raw, %d spot(s) in %u ms \r\n",
+				nraw, ndec, (uint)(xTaskGetTickCount() - t0));
+	}
 
 	if(ndec == 0)
 		return;

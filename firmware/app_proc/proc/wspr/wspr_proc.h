@@ -13,6 +13,8 @@
 #ifndef __WSPR_PROC_H
 #define __WSPR_PROC_H
 
+#include "wspr_decoder.h"
+
 // Task notification bits
 #define WSPR_NOTIFY_DECODE			0x01
 #define WSPR_NOTIFY_DATA			0x02
@@ -39,6 +41,12 @@ uchar	wspr_proc_request_decode(const char *path, ulong dial_freq_hz);
 // the rx audio streamed from the M4 core every even minute, saves it to
 // the SD card and decodes it. Callable from any task (UI hook)
 void	wspr_proc_monitor_set(uchar on);
+
+// Register a raw decode consumer - called for every raw 50 bit decode
+// before the type 1 unpack; return 1 to consume the decode (it will not
+// be logged as a WSPR spot). Lets another personality (MarsChat) share
+// the decoder without this subsystem knowing about it
+void	wspr_proc_set_raw_hook(uchar (*hook)(const WSPR_RAW_DECODE *raw));
 
 // Capture stream interface, called by the icc task only
 uchar	wspr_capture_active(void);

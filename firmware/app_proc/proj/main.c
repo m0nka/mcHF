@@ -354,6 +354,7 @@ static void tasks_pre_os_init(void)
 	ps.hSdcTask		= NULL;
 	ps.hAppTask		= NULL;
 	ps.hWsprTask	= NULL;
+	ps.hMarschatTask = NULL;
 
 	#ifdef CONTEXT_SD
 	storage_proc_init();
@@ -684,6 +685,21 @@ static int start_proc(void)
     {
     	printf("unable to create wspr process\r\n");
     	return 16;
+    }
+	#endif
+
+	#ifdef CONTEXT_MARSCHAT
+    res = xTaskCreate(	(TaskFunction_t)marschat_proc_task,\
+    					MARSCHAT_PROC_START_NAME,\
+						MARSCHAT_PROC_STACK_SIZE,\
+						NULL,\
+						MARSCHAT_PROC_PRIORITY,\
+						&(ps.hMarschatTask));
+
+    if(res != pdPASS)
+    {
+    	printf("unable to create marschat process\r\n");
+    	return 17;
     }
 	#endif
 

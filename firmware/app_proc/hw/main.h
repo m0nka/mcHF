@@ -96,6 +96,7 @@
 #include "os_apploader.h"
 #include "gps_proc.h"
 #include "wspr_proc.h"
+#include "marschat_proc.h"
 
 #if 0
 #define	TASK_PROC_IDLE				0
@@ -155,6 +156,7 @@ __attribute__((__common__)) struct PROC_STATE {
 	TaskHandle_t 	hAppTask;
 	TaskHandle_t 	hGpsTask;
 	TaskHandle_t 	hWsprTask;
+	TaskHandle_t 	hMarschatTask;
 
 	// Task messaging
 	xQueueHandle 	xBmsRxQueue;
