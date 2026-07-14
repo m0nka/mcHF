@@ -291,15 +291,20 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 	uint32_t alignedAddr;
 	#endif
 
-	if(!((uint32_t)buff & 0x3))
+	// Fast path only for aligned buffers the SDMMC IDMA can actually
+	// reach (AXI ram, like SD_read). A FatFS FIL lives wherever the
+	// caller put it - .bss and task stacks are in DTCM, which the IDMA
+	// cannot read: the internal sector buffer flush at f_close starved
+	// the FIFO into a TX underrun (err 0x10) and truncated every wspr
+	// capture at the last f_sync boundary
+	if((!((uint32_t)buff & 0x3))&&(((ulong)buff >> 24) == (D1_AXISRAM_BASE >> 24)))
 	{
 		#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
-		/*
-		 * Invalidate the chache before writting into the buffer.
-		 * This is not needed if the memory region is configured as W/T.
-		 */
+		// Push the caller's data out of the D-cache so the DMA reads
+		// what was written, not stale ram (was an invalidate here,
+		// which instead DISCARDED any dirty lines)
 		alignedAddr = (uint32_t)buff & ~0x1F;
-		SCB_InvalidateDCache_by_Addr((uint32_t*)alignedAddr, count*BLOCKSIZE + ((uint32_t)buff - alignedAddr));
+		SCB_CleanDCache_by_Addr((uint32_t*)alignedAddr, count*BLOCKSIZE + ((uint32_t)buff - alignedAddr));
 		#endif
 
 		if(sd_card_write_blocks_dma	((uint32_t*)buff,
@@ -326,31 +331,56 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 	}
 	else
 	{
-		// Slow path, fetch each sector a part and memcpy to destination buffer
+		// Slow path: bounce each sector through the aligned AXI scratch
+		// buffer. The old code here was never right - it DMA'd the stale
+		// scratch content to the card first and then memcpy'd the card
+		// buffer over the caller's data
 		int i;
-
-		#if(ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
-		// invalidate the scratch buffer before the next write to get the actual data instead of the cached one
-		SCB_InvalidateDCache_by_Addr((uint32_t*)buffer, BLOCKSIZE);
-		#endif
 
 		for (i = 0; i < count; i++)
 		{
-			uint8_t ret = sd_card_write_blocks_dma((uint32_t*)buffer, (uint32_t)sector++, 1);
-			if (ret == BSP_ERROR_NONE) {
-				// wait for a message from the queue or a timeout
-				event = osMessageGet(SDQueueID, SD_TIMEOUT);
-
-				if (event.status == osEventMessage) {
-					if (event.value.v == WRITE_CPLT_MSG) {
-						res = RES_OK;
-						memcpy((void *)buff, (void *)buffer, BLOCKSIZE);
-						buff += BLOCKSIZE;
-					}
+			// The card programs internally after every block - wait the
+			// busy phase out before the next one, like the entry check
+			timer = osKernelSysTick() + SD_TIMEOUT;
+			while(sd_card_get_card_state() == SD_TRANSFER_BUSY)
+			{
+				if(timer < osKernelSysTick())
+				{
+					printf("writeB busy err  \r\n");
+					return RES_ERROR;
 				}
-			} else
+			}
+
+			memcpy((void *)buffer, (const void *)buff, BLOCKSIZE);
+			buff += BLOCKSIZE;
+
+			#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
+			SCB_CleanDCache_by_Addr((uint32_t*)buffer, BLOCKSIZE);
+			#endif
+
+			if(sd_card_write_blocks_dma((uint32_t*)buffer, (uint32_t)sector++, 1) != BSP_ERROR_NONE)
+			{
+				printf("writeB start err  \r\n");
 				break;
+			}
+
+			// wait for a message from the queue or a timeout
+			event = osMessageGet(SDQueueID, SD_TIMEOUT);
+			if(event.status != osEventMessage)
+			{
+				printf("writeB dma timeout  \r\n");
+				break;
+			}
+
+			if(event.value.v != WRITE_CPLT_MSG)
+			{
+				printf("writeB dma err(%d)  \r\n", i);
+				break;
+			}
 		}
+
+		if(i == count)
+			res = RES_OK;
 	}
 
 	return res;

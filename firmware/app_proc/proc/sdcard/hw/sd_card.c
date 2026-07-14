@@ -481,7 +481,13 @@ static HAL_StatusTypeDef sdmmc1_init(SD_HandleTypeDef *hsd)
 	// up as TX underrun on writes (err 0x10) and CRC-failed multi-block
 	// reads (err 0x02), first seen on the wspr capture streaming
 	hsd->Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_ENABLE;
-	hsd->Init.ClockDiv            = SDMMC_NSpeed_CLK_DIV;
+	// Kernel clock is pll1_q (240 MHz at the 480 MHz sysclock config) and
+	// the card is left in default speed mode (no CMD6 high speed switch),
+	// which caps the legal bus clock at 25 MHz. The stock NSpeed divider
+	// of 4 gave 240/(2*4) = 30 MHz - 20% out of spec, showing up as
+	// intermittent read data CRC fails (err 0x02) under bus load. Divider
+	// 6 = 20 MHz, in spec with margin (16.7 MHz on the 400 MHz config)
+	hsd->Init.ClockDiv            = 6;
 
 	// HAL SD initialization
 	if(HAL_SD_InitA(hsd) != HAL_OK)
