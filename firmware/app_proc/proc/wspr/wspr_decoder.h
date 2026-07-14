@@ -93,6 +93,12 @@ int		wspr_decoder_feed	(const int16_t *pcm, int num_samples);
 // returns number of unique raw decodes
 int		wspr_decoder_run_raw(WSPR_RAW_DECODE *out, int max_out);
 
+// Optional decode time budget: the hook is polled between candidates
+// (strongest first) and a nonzero return stops the pass, dropping only
+// the weakest ones. NULL (default) = no limit. The decoder itself has
+// no clock - the caller owns the deadline (host builds pass NULL)
+void	wspr_decoder_set_deadline_hook(int (*hook)(void));
+
 // Interpret one raw decode as a WSPR type 1 message, returns 0 ok,
 // 1 not a valid type 1 payload (may belong to another personality)
 int		wspr_raw_to_type1	(const WSPR_RAW_DECODE *raw, WSPR_DECODE *dec);

@@ -27,6 +27,7 @@
 #include "wspr_proc.h"
 
 static void wspr_proc_decode_cycle(void);
+static void wspr_proc_decode_run(void);
 
 // FreeRTOS process state
 extern struct PROC_STATE	ps;
@@ -102,6 +103,38 @@ static uchar			wspr_capture_file_open = 0;
 static ulong			wspr_capture_written = 0;
 static ulong			wspr_capture_synced = 0;
 static ulong			wspr_start_req_tick = 0;
+
+// Live decoder feed - the decoder front end (mix + decimate to 375 Hz)
+// is fed as the chunks drain from the staging ring, so only the heavy
+// decode remains at capture end. Reading the 2.7 MB capture back from
+// the SD card first cost ~3.5 s and pushed the decode past the next
+// even minute arm point - every other rx cycle was lost to it. The SD
+// copy is now archival only, a write failure no longer kills the cycle
+static uchar			wspr_live_feed = 0;
+static ulong			wspr_fed_bytes = 0;
+
+// The decode must be done before the next even minute so the monitor
+// can arm the next capture - a noise candidate can burn the whole Fano
+// budget and push the pass to 7+ s against the ~5.8 s slot gap. The
+// deadline leaves margin for one in-flight candidate plus the arm poll
+#define WSPR_DECODE_MARGIN_MS	1500
+static ulong			wspr_slot_deadline = 0;
+static volatile uchar	wspr_deadline_hit = 0;
+
+//*----------------------------------------------------------------------------
+//* Function Name       : wspr_proc_deadline_hook
+//* Object              : decode time budget for the live cycle - polled by
+//*						: the decoder between candidates
+//* Context    			: CONTEXT_WSPR
+//*----------------------------------------------------------------------------
+static int wspr_proc_deadline_hook(void)
+{
+	if((long)(xTaskGetTickCount() - wspr_slot_deadline) < 0)
+		return 0;
+
+	wspr_deadline_hit = 1;
+	return 1;
+}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : wspr_capture_active
@@ -217,8 +250,9 @@ static void wspr_proc_capture_drain(void)
 	UINT	bw;
 	FRESULT	res;
 
-	// No sink - discard, keeps the ring from sticking full
-	if(!wspr_capture_file_open)
+	// Not in a capture cycle - discard stray chunks, keeps the ring
+	// from sticking full
+	if((!wspr_live_feed) && (!wspr_capture_file_open))
 	{
 		wspr_stage_rd = wspr_stage_wr;
 		return;
@@ -237,45 +271,55 @@ static void wspr_proc_capture_drain(void)
 		if(run > sizeof(wspr_sd_bounce))
 			run = sizeof(wspr_sd_bounce);
 
-		// Never write past the wanted capture length
-		if(wspr_capture_written >= WSPR_CAPTURE_BYTES)
-		{
-			wspr_stage_rd = wspr_stage_wr;
-			break;
-		}
-
-		if(run > (WSPR_CAPTURE_BYTES - wspr_capture_written))
-			run = WSPR_CAPTURE_BYTES - wspr_capture_written;
-
-		// Stage through AXI ram and push the copy out of the D-cache -
-		// the disk layer DMAs straight from this buffer
+		// Stage through AXI ram - both the decoder front end and the
+		// disk layer read from this buffer
 		memcpy(wspr_sd_bounce, wspr_stage + off, run);
-		SCB_CleanDCache_by_Addr((uint32_t *)wspr_sd_bounce, (int32_t)((run + 31UL) & ~31UL));
-
-		res = f_write(&wspr_capture_file, wspr_sd_bounce, run, &bw);
-		if(res != FR_OK)
-		{
-			printf("wspr: capture write err(%d) at %u bytes \r\n",
-					res, (uint)wspr_capture_written);
-			f_close(&wspr_capture_file);
-			wspr_capture_file_open = 0;
-			return;
-		}
-
-		wspr_capture_written += bw;
 		wspr_stage_rd = rd + run;
 
-		// Commit data + directory entry every 128 KB - keeps the capture
-		// valid on a failure and makes a broken commit name itself here
-		// instead of failing silently at f_close
-		if((wspr_capture_written - wspr_capture_synced) >= (128UL * 1024UL))
+		// Live decoder feed - cheap enough to run per chunk, and the
+		// decode then starts right at capture end with no file read
+		if(wspr_live_feed)
 		{
-			res = f_sync(&wspr_capture_file);
-			wspr_capture_synced = wspr_capture_written;
+			wspr_decoder_feed((int16_t *)wspr_sd_bounce, (int)(run / 2));
+			wspr_fed_bytes += run;
+		}
 
+		// Archival SD copy, up to the wanted capture length
+		if((wspr_capture_file_open) && (wspr_capture_written < WSPR_CAPTURE_BYTES))
+		{
+			ulong wr_run = run;
+
+			if(wr_run > (WSPR_CAPTURE_BYTES - wspr_capture_written))
+				wr_run = WSPR_CAPTURE_BYTES - wspr_capture_written;
+
+			// Push the copy out of the D-cache - the disk layer DMAs
+			// straight from this buffer
+			SCB_CleanDCache_by_Addr((uint32_t *)wspr_sd_bounce, (int32_t)((wr_run + 31UL) & ~31UL));
+
+			res = f_write(&wspr_capture_file, wspr_sd_bounce, wr_run, &bw);
 			if(res != FR_OK)
-				printf("wspr: capture sync err(%d) at %u bytes \r\n",
+			{
+				printf("wspr: capture write err(%d) at %u bytes \r\n",
 						res, (uint)wspr_capture_written);
+				f_close(&wspr_capture_file);
+				wspr_capture_file_open = 0;
+				continue;
+			}
+
+			wspr_capture_written += bw;
+
+			// Commit data + directory entry every 128 KB - keeps the capture
+			// valid on a failure and makes a broken commit name itself here
+			// instead of failing silently at f_close
+			if((wspr_capture_written - wspr_capture_synced) >= (128UL * 1024UL))
+			{
+				res = f_sync(&wspr_capture_file);
+				wspr_capture_synced = wspr_capture_written;
+
+				if(res != FR_OK)
+					printf("wspr: capture sync err(%d) at %u bytes \r\n",
+							res, (uint)wspr_capture_written);
+			}
 		}
 	}
 }
@@ -312,11 +356,23 @@ static void wspr_proc_capture_finish(uchar decode)
 
 	wspr_mon_state = wspr_monitor_on ? WSPR_MON_WAIT : WSPR_MON_IDLE;
 
-	// Decode takes seconds at low priority - a cycle that starts
-	// meanwhile is skipped, the state machine only arms on second zero.
-	// wspr_capture_path still names the file this cycle recorded
-	if((decode) && (wspr_capture_written != 0))
-		wspr_proc_decode_cycle();
+	// Decode straight off the live-fed front end - no SD read back, the
+	// result lands inside the post-tx slot gap, before the next arm point.
+	// The deadline hook cuts the candidate list short if it would not
+	if((decode) && (wspr_fed_bytes != 0))
+	{
+		wspr_deadline_hit = 0;
+		wspr_decoder_set_deadline_hook(wspr_proc_deadline_hook);
+
+		wspr_proc_decode_run();
+
+		wspr_decoder_set_deadline_hook(NULL);
+
+		if(wspr_deadline_hit)
+			printf("wspr: decode cut at slot deadline \r\n");
+	}
+
+	wspr_live_feed = 0;
 }
 
 //*----------------------------------------------------------------------------
@@ -378,6 +434,15 @@ static void wspr_proc_monitor_sm(void)
 			wspr_stage_wr			= 0;
 			wspr_stage_rd			= 0;
 
+			// Arm the live decoder feed alongside the SD copy
+			wspr_decoder_reset();
+			wspr_fed_bytes			= 0;
+			wspr_live_feed			= 1;
+
+			// This cycle's decode must finish before the next slot arms
+			wspr_slot_deadline		= xTaskGetTickCount() +
+									  (120UL * 1000UL) - WSPR_DECODE_MARGIN_MS;
+
 			// Remember the dial for the spot log before anything moves
 			wspr_dial_hz = wspr_proc_current_dial_hz();
 
@@ -419,17 +484,17 @@ static void wspr_proc_monitor_sm(void)
 
 		case WSPR_MON_CAPTURE:
 		{
-			// Cycle complete, monitor disarmed, M4 stream died or the
-			// SD card write path failed - all end the capture. Decode
-			// whatever was recorded unless the user disarmed us
-			if(wspr_capture_written >= WSPR_CAPTURE_BYTES)
+			// Cycle complete, monitor disarmed or the M4 stream died -
+			// all end the capture. Decode whatever was fed unless the
+			// user disarmed us. An SD write failure no longer ends the
+			// cycle - the live feed carries the decode on its own
+			if((wspr_capture_written >= WSPR_CAPTURE_BYTES) ||
+			   (wspr_fed_bytes       >= WSPR_CAPTURE_BYTES))
 				wspr_proc_capture_finish(1);
 			else if(!wspr_monitor_on)
 				wspr_proc_capture_finish(0);
 			else if(!wspr_capture_run)
 				wspr_proc_capture_finish(1);
-			else if(!wspr_capture_file_open)
-				wspr_proc_capture_finish(0);
 
 			break;
 		}
@@ -505,45 +570,19 @@ static void wspr_proc_format_decode(char *buf, int buflen, WSPR_DECODE *d)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : wspr_proc_decode_cycle
-//* Object              : read capture from SD, decode, append decodes.txt
+//* Function Name       : wspr_proc_decode_run
+//* Object              : decode whatever the front end was fed, append
+//*						: decodes.txt - shared by the live capture path
+//*						: and the file based decode requests
 //* Context    			: CONTEXT_WSPR
 //*----------------------------------------------------------------------------
-static void wspr_proc_decode_cycle(void)
+static void wspr_proc_decode_run(void)
 {
 	FIL			file;
-	UINT		br;
 	FRESULT		res;
 	int			i, ndec;
 	ulong		t0;
 	char		line[96];
-
-	// Stream the capture file into the decoder front end
-	res = f_open(&file, wspr_capture_path, FA_READ);
-	if(res != FR_OK)
-	{
-		printf("wspr: capture open err(%d) \r\n", res);
-		return;
-	}
-
-	printf("wspr: decoding %s (%u bytes) \r\n",
-			wspr_capture_path, (uint)f_size(&file));
-
-	wspr_decoder_reset();
-
-	for(;;)
-	{
-		res = f_read(&file, wspr_pcm_buf, sizeof(wspr_pcm_buf), &br);
-		if((res != FR_OK) || (br == 0))
-			break;
-
-		wspr_decoder_feed(wspr_pcm_buf, (int)(br / 2));
-
-		if(br < sizeof(wspr_pcm_buf))
-			break;
-	}
-
-	f_close(&file);
 
 	// Heavy lifting - several seconds at low priority. Raw pass first so
 	// other personalities (MarsChat) can consume their frames via the hook
@@ -589,6 +628,55 @@ static void wspr_proc_decode_cycle(void)
 	}
 
 	f_close(&file);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : wspr_proc_decode_cycle
+//* Object              : read a capture file from SD into the decoder
+//*						: front end and decode (UI or debug requests)
+//* Context    			: CONTEXT_WSPR
+//*----------------------------------------------------------------------------
+static void wspr_proc_decode_cycle(void)
+{
+	FIL			file;
+	UINT		br;
+	FRESULT		res;
+
+	// The decoder state belongs to the running capture
+	if(wspr_live_feed)
+	{
+		printf("wspr: decoder busy \r\n");
+		return;
+	}
+
+	// Stream the capture file into the decoder front end
+	res = f_open(&file, wspr_capture_path, FA_READ);
+	if(res != FR_OK)
+	{
+		printf("wspr: capture open err(%d) \r\n", res);
+		return;
+	}
+
+	printf("wspr: decoding %s (%u bytes) \r\n",
+			wspr_capture_path, (uint)f_size(&file));
+
+	wspr_decoder_reset();
+
+	for(;;)
+	{
+		res = f_read(&file, wspr_pcm_buf, sizeof(wspr_pcm_buf), &br);
+		if((res != FR_OK) || (br == 0))
+			break;
+
+		wspr_decoder_feed(wspr_pcm_buf, (int)(br / 2));
+
+		if(br < sizeof(wspr_pcm_buf))
+			break;
+	}
+
+	f_close(&file);
+
+	wspr_proc_decode_run();
 }
 
 //*----------------------------------------------------------------------------

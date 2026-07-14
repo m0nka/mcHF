@@ -101,6 +101,9 @@ typedef struct
 static wspr_cand	cand[WSPR_MAX_CAND];
 static int			ncand;
 
+// Decode time budget hook, polled between candidates (see header)
+static int			(*deadline_hook)(void) = NULL;
+
 // Fano metric table
 static int		mettab[2][256];
 
@@ -287,6 +290,16 @@ int wspr_decoder_feed(const int16_t *pcm, int num_samples)
 	}
 
 	return accepted;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : wspr_decoder_set_deadline_hook
+//* Object              : install/remove the decode time budget hook
+//* Context    			: CONTEXT_WSPR
+//*----------------------------------------------------------------------------
+void wspr_decoder_set_deadline_hook(int (*hook)(void))
+{
+	deadline_hook = hook;
 }
 
 //*----------------------------------------------------------------------------
@@ -811,6 +824,12 @@ int wspr_decoder_run_raw(WSPR_RAW_DECODE *out, int max_out)
 	for(ic = 0; (ic < ncand) && (ndecodes < max_out); ic++)
 	{
 		wspr_cand		*c = &cand[ic];
+
+		// Out of time - candidates are sorted strongest first, so only
+		// the weakest ones are lost. A noise candidate can burn the
+		// whole Fano cycle budget, making the pass length unpredictable
+		if((deadline_hook != NULL) && (deadline_hook() != 0))
+			break;
 		WSPR_RAW_DECODE	raw;
 		float			rms, scale;
 		int				dup;
