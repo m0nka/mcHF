@@ -26,4 +26,8 @@
 
 void	marschat_proc_task(void const *arg);
 
+// Staged ICC_MC_TX_START payload for the icc task (UI_ICC_MC_TX_START
+// handler) - NULL when nothing is staged
+uchar	*marschat_icc_tx_payload(ushort *len);
+
 #endif

@@ -29,6 +29,7 @@
 
 #ifdef CONTEXT_WSPR
 #include "wspr_proc.h"
+#include "marschat_proc.h"
 #endif
 
 // Public radio state
@@ -764,6 +765,28 @@ static void icc_proc_dsp_command(ulong cmd)
 			icc_proc_cmd_xchange(ICC_WSPR_STOP, NULL, 0);
 			icc_proc_wspr_drain(64);
 			wspr_capture_mark_stopped();
+			break;
+		}
+	#endif
+
+	#ifdef CONTEXT_MARSCHAT
+		// Hand a MarsChat symbol transmission to the M4 streamer - the
+		// payload is staged by the marschat task before the notify
+		case UI_ICC_MC_TX_START:
+		{
+			ushort	len;
+			uchar	*payload = marschat_icc_tx_payload(&len);
+
+			if(payload != NULL)
+				icc_proc_cmd_xchange(ICC_MC_TX_START, payload, len);
+
+			break;
+		}
+
+		// Abort a running symbol transmission
+		case UI_ICC_MC_TX_STOP:
+		{
+			icc_proc_cmd_xchange(ICC_MC_TX_STOP, NULL, 0);
 			break;
 		}
 	#endif

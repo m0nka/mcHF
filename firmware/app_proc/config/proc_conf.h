@@ -283,6 +283,16 @@
 // Arm WSPR_MONITOR_AUTO_START too - the radio then captures and decodes
 // its own signal (no emissions, PA never keyed)
 //#define MARSCHAT_LOOPBACK_BEACON
+// Uncomment for the radiated tx bench test: sends the same "HELLO"
+// beacon through the REAL tx chain (M4 symbol streamer keys the tx
+// exciter) every even minute +1s. Tx mixer bench only until the PA
+// exists. Set the dial and USB mode from the UI first. Mutually
+// exclusive with MARSCHAT_LOOPBACK_BEACON
+//#define MARSCHAT_RADIATED_BEACON
+// CW id appended to every radiated MarsChat tx (ham legality - our
+// payload is not standard WSPR). Empty string = no CW id segment
+#define MARSCHAT_CW_ID					""
+#define MARSCHAT_CW_WPM					25
 
 // GNSS driver parameters
 #define GPS_PROC_START_NAME				"gps"

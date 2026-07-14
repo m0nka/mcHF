@@ -27,6 +27,7 @@
 
 #include "icc_radio_if.h"
 #include "icc_spectrum.h"
+#include "icc_mc_tx.h"
 
 // ------------------------------------------------------------------
 // mcHF Pro board pins handled by the DSP core (V9 rev A, see
@@ -485,6 +486,12 @@ static void icc_radio_ptt_handler(void)
 	if(ts.tune)
 		return;
 
+	// Not while the MarsChat streamer transmits - its keying is driven
+	// by icc_mc_tx_key_request(), the voice mode PTT release logic
+	// below would unkey it ten superloop iterations in
+	if(icc_mc_tx_active())
+		return;
+
 	// PTT on request - set by the paddle/PTT interrupts, the M7 virtual
 	// keyer or by cw_gen via RadioManagement_Request_TxOn()
 	if(ts.ptt_req)
@@ -550,6 +557,15 @@ void icc_radio_idle_thread(void)
 
 	// PTT/TX-stop handling (voice modes and cw_gen requests)
 	icc_radio_ptt_handler();
+
+	// MarsChat symbol streamer exciter keying - the streamer keys the
+	// TX itself on ICC_MC_TX_START and unkeys when the stream is done
+	switch(icc_mc_tx_key_request())
+	{
+		case 1:	icc_radio_switch_txrx(1);	break;
+		case 2:	icc_radio_switch_txrx(0);	break;
+		default:							break;
+	}
 
 	// Bring-up heartbeat - shows the superloop is alive and whether
 	// the SAI DMA stream is running

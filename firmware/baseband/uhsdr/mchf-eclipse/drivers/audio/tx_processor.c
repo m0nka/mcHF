@@ -31,6 +31,11 @@
 #include "tx_processor.h"
 #include "fm_subaudible_tone_table.h"
 
+// MarsChat/WSPR 4-FSK symbol streamer (M4 baseband build only)
+#ifdef H7_M4_CORE
+#include "drivers/icc/icc_mc_tx.h"
+#endif
+
 
 #define IIR_TX_STATE_ARRAY_SIZE    (IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES_MAX)
 
@@ -946,6 +951,15 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
     {
         // do nothing
     }
+#ifdef H7_M4_CORE
+    else if (icc_mc_tx_active())
+    {
+        // MarsChat/WSPR symbol streamer - direct constant envelope IQ
+        // like the tune generator, USB sideband (same i/q buffer swap
+        // as TxProcessor_CW uses for non-LSB)
+        signal_active = icc_mc_tx_gen(adb.iq_buf.q_buffer, adb.iq_buf.i_buffer, blockSize);
+    }
+#endif
     else if (tx_audio_source == TX_AUDIO_DIGIQ && dmod_mode != DEMOD_CW && !tune && !is_demod_psk())
     {
 

@@ -42,6 +42,7 @@
 #include "icc_radio_if.h"
 #include "icc_spectrum.h"
 #include "icc_wspr.h"
+#include "icc_mc_tx.h"
 
 #define RPMSG_SERVICE_NAME              "stm32_icc_service"
 
@@ -422,6 +423,16 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 		// One buffered capture chunk to the M7 core
 		case ICC_WSPR_READ:
 			ret_size = icc_wspr_get_buffer(icc_out_buffer);
+			break;
+
+		// MarsChat/WSPR symbol transmitter (keys the exciter itself)
+		case ICC_MC_TX_START:
+			icc_out_buffer[0x00] = icc_mc_tx_start(icc_in_buffer);
+			break;
+
+		case ICC_MC_TX_STOP:
+			icc_mc_tx_stop();
+			icc_out_buffer[0x00] = 0;
 			break;
 
 		default:

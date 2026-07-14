@@ -657,6 +657,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/mc_frame.c</locationURI>
 		</link>
 		<link>
+			<name>proc/marschat/mc_tx_build.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/mc_tx_build.c</locationURI>
+		</link>
+		<link>
 			<name>proc/marschat/marschat_proc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/marschat_proc.c</locationURI>

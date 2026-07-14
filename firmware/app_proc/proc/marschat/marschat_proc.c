@@ -25,7 +25,12 @@
 #include "vfo_mc_gen.h"
 
 #include "mc_frame.h"
+#include "mc_tx_build.h"
 #include "marschat_proc.h"
+
+#if defined(MARSCHAT_LOOPBACK_BEACON) && defined(MARSCHAT_RADIATED_BEACON)
+#error "enable only one of MARSCHAT_LOOPBACK_BEACON / MARSCHAT_RADIATED_BEACON"
+#endif
 
 // FreeRTOS process state
 extern struct PROC_STATE	ps;
@@ -33,9 +38,12 @@ extern struct PROC_STATE	ps;
 // Public radio state - dial frequency
 extern struct TRANSCEIVER_STATE_UI	tsu;
 
-#ifdef MARSCHAT_LOOPBACK_BEACON
-// Loopback beacon state
+#if defined(MARSCHAT_LOOPBACK_BEACON) || defined(MARSCHAT_RADIATED_BEACON)
+// Beacon state, shared by the loopback and the radiated variants
 static uchar	mc_beacon_seq = 0;
+#endif
+
+#ifdef MARSCHAT_LOOPBACK_BEACON
 static uchar	mc_beacon_syms[162];
 
 //*----------------------------------------------------------------------------
@@ -53,6 +61,27 @@ static ulong marschat_current_dial_hz(void)
 	return b->vfo_b;
 }
 #endif
+
+// ------------------------------------------------------------------------
+// ICC_MC_TX_START payload staging - built here, sent by the icc task
+// (which owns all M4 traffic) when it processes UI_ICC_MC_TX_START
+
+static uchar	mc_icc_payload[MC_TX_PAYLOAD_MAX];
+static ushort	mc_icc_payload_len = 0;
+
+//*----------------------------------------------------------------------------
+//* Function Name       : marschat_icc_tx_payload
+//* Object              : staged payload accessor for the icc task
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+uchar *marschat_icc_tx_payload(ushort *len)
+{
+	if(mc_icc_payload_len == 0)
+		return NULL;
+
+	*len = mc_icc_payload_len;
+	return mc_icc_payload;
+}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : marschat_rx_raw
@@ -128,6 +157,64 @@ static void marschat_beacon_sm(void)
 }
 #endif
 
+#ifdef MARSCHAT_RADIATED_BEACON
+//*----------------------------------------------------------------------------
+//* Function Name       : marschat_radiated_sm
+//* Object              : radiated test beacon over the M4 symbol streamer
+//* Notes    			: same "HELLO" frame and even minute :01 schedule as
+//*						: the loopback beacon, but the tx goes through the
+//*						: real tx chain - the M4 keys the exciter itself on
+//*						: ICC_MC_TX_START and unkeys when done. TX MIXER
+//*						: BENCH ONLY until the PA exists; set the dial and
+//*						: USB mode from the UI first
+//* Context    			: CONTEXT_MARSCHAT
+//*----------------------------------------------------------------------------
+static void marschat_radiated_sm(void)
+{
+	RTC_TimeTypeDef	tm = {0};
+	RTC_DateTypeDef	dt = {0};
+	MC_FRAME		f;
+	uint8_t			bits[7];
+	static ulong	mc_tx_start_tick = 0;
+
+	// Even minute, second :01 ? (date read unlocks the shadow regs)
+	k_GetTime(&tm);
+	k_GetDate(&dt);
+
+	if((tm.Minutes & 1) || (tm.Seconds != 1))
+		return;
+
+	// One trigger per slot - symbols alone run 110.6 s, plus gap + CW id.
+	// The M4 streamer also refuses a start while one is running
+	if((mc_tx_start_tick != 0) &&
+	   ((xTaskGetTickCount() - mc_tx_start_tick) < 118000))
+		return;
+
+	memset(&f, 0, sizeof(f));
+	f.ftype = MC_FTYPE_BEACON;
+	f.seq	= mc_beacon_seq;
+
+	mc_text_to_codes("HELLO", f.codes, MC_PAYLOAD_CHARS);
+	mc_frame_pack(&f, bits);
+
+	if(mc_tx_build_payload(bits, 1500, MARSCHAT_CW_ID, MARSCHAT_CW_WPM,
+							mc_icc_payload, &mc_icc_payload_len) != 0)
+	{
+		printf("mc: tx payload build failed \r\n");
+		return;
+	}
+
+	if(ps.hIccTask != NULL)
+	{
+		xTaskNotify(ps.hIccTask, UI_ICC_MC_TX_START, eSetValueWithOverwrite);
+
+		printf("mc: radiated tx seq(%d) \r\n", mc_beacon_seq);
+		mc_beacon_seq    = (mc_beacon_seq + 1) & 7;
+		mc_tx_start_tick = xTaskGetTickCount();
+	}
+}
+#endif
+
 //*----------------------------------------------------------------------------
 //* Function Name       : marschat_proc_task
 //* Object              : MarsChat prototype process
@@ -147,7 +234,7 @@ void marschat_proc_task(void const *arg)
 
 marschat_proc_loop:
 
-	#ifdef MARSCHAT_LOOPBACK_BEACON
+	#if defined(MARSCHAT_LOOPBACK_BEACON) || defined(MARSCHAT_RADIATED_BEACON)
 	sleep = 100;									// poll the RTC
 	#else
 	sleep = MARSCHAT_PROC_SLEEP_TIME;				// nothing scheduled
@@ -157,6 +244,10 @@ marschat_proc_loop:
 
 	#ifdef MARSCHAT_LOOPBACK_BEACON
 	marschat_beacon_sm();
+	#endif
+
+	#ifdef MARSCHAT_RADIATED_BEACON
+	marschat_radiated_sm();
 	#endif
 
 	goto marschat_proc_loop;
