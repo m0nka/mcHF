@@ -270,7 +270,7 @@
 #define WSPR_PROC_STACK_SIZE			(configMINIMAL_STACK_SIZE * 16)
 // Uncomment to arm the WSPR monitor automatically at boot (bench testing,
 // no UI hook needed) - captures every even minute and decodes to SD
-#define WSPR_MONITOR_AUTO_START
+//#define WSPR_MONITOR_AUTO_START
 
 // MarsChat prototype process parameters (same priority reasoning as WSPR)
 #define MARSCHAT_PROC_START_NAME		"mch"
@@ -282,7 +282,7 @@
 // beacon over the CLK1 loopback injector at every even minute +1s.
 // Arm WSPR_MONITOR_AUTO_START too - the radio then captures and decodes
 // its own signal (no emissions, PA never keyed)
-#define MARSCHAT_LOOPBACK_BEACON
+//#define MARSCHAT_LOOPBACK_BEACON
 
 // GNSS driver parameters
 #define GPS_PROC_START_NAME				"gps"
