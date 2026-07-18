@@ -288,7 +288,7 @@
 // exciter) every even minute +1s. Tx mixer bench only until the PA
 // exists. Set the dial and USB mode from the UI first. Mutually
 // exclusive with MARSCHAT_LOOPBACK_BEACON
-//#define MARSCHAT_RADIATED_BEACON
+#define MARSCHAT_RADIATED_BEACON
 // CW id appended to every radiated MarsChat tx (ham legality - our
 // payload is not standard WSPR). Empty string = no CW id segment
 #define MARSCHAT_CW_ID					""
