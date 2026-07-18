@@ -1,0 +1,12 @@
+/.settings/
+/Debug/
+/Release/
+/Middlewares/
+/basesw/
+/common/
+/drivers/
+/hardware/
+/misc/
+/src/
+
+*.launch

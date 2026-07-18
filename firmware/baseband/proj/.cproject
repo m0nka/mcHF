@@ -14,7 +14,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="elf" artifactName="mchf-uhsdr" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.414384577" name="Debug" parent="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug">
+				<configuration artifactExtension="elf" artifactName="mchf_baseband" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.414384577" name="Debug" parent="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug">
 					<folderInfo id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.414384577." name="/" resourcePath="">
 						<toolChain id="com.st.stm32cube.ide.mcu.gnu.managedbuild.toolchain.exe.debug.1685778304" name="MCU ARM GCC" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.toolchain.exe.debug">
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.convertverilog.2099854039" name="Convert to Verilog file (-O verilog)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.convertverilog" useByScannerDiscovery="false" value="false" valueType="boolean"/>
@@ -32,7 +32,7 @@
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_coreid.716807103" name="Core" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_coreid" useByScannerDiscovery="false" value="0" valueType="string"/>
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.runtimelibrary_c.1192434440" name="Runtime library" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.runtimelibrary_c" useByScannerDiscovery="true" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.runtimelibrary_c.value.nano_c" valueType="enumerated"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.targetplatform.1397693463" isAbstract="false" osList="all" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.targetplatform"/>
-							<builder buildPath="${workspace_loc:/mchf-uhsdr}/Debug" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.builder.2079806471" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.builder"/>
+							<builder buildPath="${workspace_loc:/mchf_baseband}/Debug" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.builder.2079806471" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.builder"/>
 							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.115762259" name="MCU GCC Assembler" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler">
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.option.debuglevel.420293284" name="Debug level" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.option.debuglevel" useByScannerDiscovery="false" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.option.debuglevel.value.g3" valueType="enumerated"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.option.includepaths.672366892" name="Include paths (-I)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.option.includepaths" useByScannerDiscovery="false" valueType="includePath">
@@ -46,43 +46,43 @@
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.ffunction.1745871485" name="Place functions in their own sections (-ffunction-sections)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.ffunction" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.fdata.1877365193" name="Place data in their own sections (-fdata-sections)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.fdata" useByScannerDiscovery="false" value="false" valueType="boolean"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths.1997877819" name="Include paths (-I)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Include"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Include"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Middlewares/Third_Party/FatFs/src"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Middlewares/Third_Party/FatFs/src/drivers"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/hardware"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/hardware/board_configs"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/freedv"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/audio"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui/oscillator"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/misc/v_eprom"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui/lcd"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui/lcd/emWin"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui/lcd/emWin/inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui/encoder"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/audio/codec"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/audio/softdds"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/misc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/audio/cw"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui/menu"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/cat"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/audio/filters"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/src"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/src/bootloader"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/diag"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/usb/device/class/composite"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/usb/device/class/AUDIO/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/usb/device/class/CDC/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/usb/host/class/HID/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/usb/app"/>
+									<listOptionValue builtIn="false" value="../.."/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Inc"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Include"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Inc"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Drivers/CMSIS/Include"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Inc"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Inc"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Inc"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Middlewares/Third_Party/FatFs/src"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Middlewares/Third_Party/FatFs/src/drivers"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc"/>
+									<listOptionValue builtIn="false" value="../../hardware"/>
+									<listOptionValue builtIn="false" value="../../hardware/board_configs"/>
+									<listOptionValue builtIn="false" value="../../drivers/freedv"/>
+									<listOptionValue builtIn="false" value="../../drivers/audio"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui/oscillator"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui"/>
+									<listOptionValue builtIn="false" value="../../misc/v_eprom"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui/lcd"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui/lcd/emWin"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui/lcd/emWin/inc"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui/encoder"/>
+									<listOptionValue builtIn="false" value="../../drivers/audio/codec"/>
+									<listOptionValue builtIn="false" value="../../drivers/audio/softdds"/>
+									<listOptionValue builtIn="false" value="../../misc"/>
+									<listOptionValue builtIn="false" value="../../drivers/audio/cw"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui/menu"/>
+									<listOptionValue builtIn="false" value="../../drivers/cat"/>
+									<listOptionValue builtIn="false" value="../../drivers/audio/filters"/>
+									<listOptionValue builtIn="false" value="../../src"/>
+									<listOptionValue builtIn="false" value="../../src/bootloader"/>
+									<listOptionValue builtIn="false" value="../../drivers/diag"/>
+									<listOptionValue builtIn="false" value="../../drivers/usb/device/class/composite"/>
+									<listOptionValue builtIn="false" value="../../drivers/usb/device/class/AUDIO/Inc"/>
+									<listOptionValue builtIn="false" value="../../drivers/usb/device/class/CDC/Inc"/>
+									<listOptionValue builtIn="false" value="../../drivers/usb/host/class/HID/Inc"/>
+									<listOptionValue builtIn="false" value="../../drivers/usb/app"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.definedsymbols.1514335911" name="Define symbols (-D)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.definedsymbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
@@ -113,11 +113,11 @@
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.nortti.1327566820" name="Disable generation of information about every class with virtual functions (-fno-rtti)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.nortti" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 							</tool>
 							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.820652297" name="MCU GCC Linker" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker">
-								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.script.546923487" name="Linker Script (-T)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.script" useByScannerDiscovery="false" value="../../../mchf-eclipse/linker/arm-gcc-link_f4_flash1024k.ld" valueType="string"/>
+								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.script.546923487" name="Linker Script (-T)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.script" useByScannerDiscovery="false" value="../../linker/arm-gcc-link_f4_flash1024k.ld" valueType="string"/>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.gcsections.1975491246" name="Discard unused sections (-Wl,--gc-sections)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.gcsections" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.directories.1104359566" name="Library search path (-L)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.directories" useByScannerDiscovery="false" valueType="libPaths">
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/linker"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui/lcd/emWin"/>
+									<listOptionValue builtIn="false" value="../../linker"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui/lcd/emWin"/>
 								</option>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.systemcalls.425042585" name="System calls" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.systemcalls" useByScannerDiscovery="false" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.systemcalls.value.minimalimplementation" valueType="enumerated"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.otherflags.137532678" name="Other flags" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.otherflags" useByScannerDiscovery="false" valueType="stringList">
@@ -183,7 +183,7 @@
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_coreid.1638935589" name="Core" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_coreid" useByScannerDiscovery="false" value="0" valueType="string"/>
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.runtimelibrary_c.2134120332" name="Runtime library" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.runtimelibrary_c" useByScannerDiscovery="true" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.runtimelibrary_c.value.nano_c" valueType="enumerated"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.targetplatform.861760055" isAbstract="false" osList="all" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.targetplatform"/>
-							<builder buildPath="${workspace_loc:/mchf-uhsdr}/Debug" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.builder.341037909" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.builder"/>
+							<builder buildPath="${workspace_loc:/mchf_baseband}/Debug" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.builder.341037909" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.builder"/>
 							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.201377996" name="MCU GCC Assembler" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler">
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.option.debuglevel.588622114" name="Debug level" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.option.debuglevel" useByScannerDiscovery="false" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.option.debuglevel.value.g0" valueType="enumerated"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.option.includepaths.714056614" name="Include paths (-I)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.option.includepaths" useByScannerDiscovery="false" valueType="includePath">
@@ -197,50 +197,50 @@
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.ffunction.315266082" name="Place functions in their own sections (-ffunction-sections)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.ffunction" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.fdata.244184434" name="Place data in their own sections (-fdata-sections)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.fdata" useByScannerDiscovery="false" value="false" valueType="boolean"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths.2093673347" name="Include paths (-I)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="../../../../../base_hw/common"/>
-										<listOptionValue builtIn="false" value="../../../../../common"/>
-										<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/icc"/>
-										<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/icc/hw"/>
-										<listOptionValue builtIn="false" value="../../../../../STM32CubeH7/Middlewares/Third_Party/OpenAMP/open-amp/lib/include"/>
-										<listOptionValue builtIn="false" value="../../../../../STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/include"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Include"/>
-									<listOptionValue builtIn="false" value="../../../../../STM32CubeH7/Drivers/CMSIS/Device/ST/STM32H7xx/Include"/>
-									<listOptionValue builtIn="false" value="../../../../../STM32CubeH7/Drivers/STM32H7xx_HAL_Driver/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Drivers/CMSIS/Include"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Middlewares/Third_Party/FatFs/src"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Middlewares/Third_Party/FatFs/src/drivers"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/hardware"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/hardware/board_configs"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/freedv"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/audio"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui/oscillator"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/misc/v_eprom"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui/lcd"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui/lcd/emWin"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui/lcd/emWin/inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui/encoder"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/audio/codec"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/audio/softdds"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/misc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/audio/cw"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui/menu"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/cat"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/audio/filters"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/src"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/src/bootloader"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/diag"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/usb/device/class/composite"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/usb/device/class/AUDIO/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/usb/device/class/CDC/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/usb/host/class/HID/Inc"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/usb/app"/>
+									<listOptionValue builtIn="false" value="../../../base_hw/common"/>
+										<listOptionValue builtIn="false" value="../../../common"/>
+										<listOptionValue builtIn="false" value="../../drivers/icc"/>
+										<listOptionValue builtIn="false" value="../../drivers/icc/hw"/>
+										<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/Third_Party/OpenAMP/open-amp/lib/include"/>
+										<listOptionValue builtIn="false" value="../../../STM32CubeH7/Middlewares/Third_Party/OpenAMP/libmetal/lib/include"/>
+									<listOptionValue builtIn="false" value="../.."/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Inc"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Include"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/CMSIS/Device/ST/STM32H7xx/Include"/>
+									<listOptionValue builtIn="false" value="../../../STM32CubeH7/Drivers/STM32H7xx_HAL_Driver/Inc"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Drivers/CMSIS/Include"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Inc"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Inc"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Inc"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Middlewares/Third_Party/FatFs/src"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Middlewares/Third_Party/FatFs/src/drivers"/>
+									<listOptionValue builtIn="false" value="../../basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc"/>
+									<listOptionValue builtIn="false" value="../../hardware"/>
+									<listOptionValue builtIn="false" value="../../hardware/board_configs"/>
+									<listOptionValue builtIn="false" value="../../drivers/freedv"/>
+									<listOptionValue builtIn="false" value="../../drivers/audio"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui/oscillator"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui"/>
+									<listOptionValue builtIn="false" value="../../misc/v_eprom"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui/lcd"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui/lcd/emWin"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui/lcd/emWin/inc"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui/encoder"/>
+									<listOptionValue builtIn="false" value="../../drivers/audio/codec"/>
+									<listOptionValue builtIn="false" value="../../drivers/audio/softdds"/>
+									<listOptionValue builtIn="false" value="../../misc"/>
+									<listOptionValue builtIn="false" value="../../drivers/audio/cw"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui/menu"/>
+									<listOptionValue builtIn="false" value="../../drivers/cat"/>
+									<listOptionValue builtIn="false" value="../../drivers/audio/filters"/>
+									<listOptionValue builtIn="false" value="../../src"/>
+									<listOptionValue builtIn="false" value="../../src/bootloader"/>
+									<listOptionValue builtIn="false" value="../../drivers/diag"/>
+									<listOptionValue builtIn="false" value="../../drivers/usb/device/class/composite"/>
+									<listOptionValue builtIn="false" value="../../drivers/usb/device/class/AUDIO/Inc"/>
+									<listOptionValue builtIn="false" value="../../drivers/usb/device/class/CDC/Inc"/>
+									<listOptionValue builtIn="false" value="../../drivers/usb/host/class/HID/Inc"/>
+									<listOptionValue builtIn="false" value="../../drivers/usb/app"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.definedsymbols.630593413" name="Define symbols (-D)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.definedsymbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
@@ -284,8 +284,8 @@
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.script.1390460366" name="Linker Script (-T)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.script" useByScannerDiscovery="false" value="../arm-gcc-link_m4_flash1024k.ld" valueType="string"/>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.gcsections.1734699470" name="Discard unused sections (-Wl,--gc-sections)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.gcsections" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.directories.317640557" name="Library search path (-L)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.directories" useByScannerDiscovery="false" valueType="libPaths">
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/linker"/>
-									<listOptionValue builtIn="false" value="../../../mchf-eclipse/drivers/ui/lcd/emWin"/>
+									<listOptionValue builtIn="false" value="../../linker"/>
+									<listOptionValue builtIn="false" value="../../drivers/ui/lcd/emWin"/>
 								</option>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.systemcalls.828139515" name="System calls" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.systemcalls" useByScannerDiscovery="false" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.systemcalls.value.minimalimplementation" valueType="enumerated"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.otherflags.88437868" name="Other flags" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.otherflags" useByScannerDiscovery="false" valueType="stringList">
@@ -336,10 +336,10 @@
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Debug">
-			<resource resourceType="PROJECT" workspacePath="/mchf-uhsdr"/>
+			<resource resourceType="PROJECT" workspacePath="/mchf_baseband"/>
 		</configuration>
 		<configuration configurationName="Release">
-			<resource resourceType="PROJECT" workspacePath="/mchf-uhsdr"/>
+			<resource resourceType="PROJECT" workspacePath="/mchf_baseband"/>
 		</configuration>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>

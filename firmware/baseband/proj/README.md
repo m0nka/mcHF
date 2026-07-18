@@ -1,12 +1,12 @@
 Introduction 
 
-This directory contains SW4STM32 and CubeIDE compatible project that allows easy import to any
-of those tools
+This directory contains the STM32CubeIDE project (mchf_baseband) for the CM4 baseband core,
+based on the UHSDR firmware (sources in firmware/baseband)
 
 Import into STM32CubeIDE
 
 - In the File menu, select 'Open Projects from File System...'
-- Select root directory: "root\SW4STM32\mchf-uhsdr", 'Detect and configure project natures' selected
+- Select root directory: "firmware\baseband\proj", 'Detect and configure project natures' selected
 - Click Finish
 
 Note: SystemWorks no longer supported!

@@ -1,0 +1,7 @@
+docs/
+.metadata
+build/
+*.o
+*.d
+*~
+*.pyc
