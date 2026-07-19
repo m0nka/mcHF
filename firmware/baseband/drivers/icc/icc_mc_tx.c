@@ -94,6 +94,15 @@ typedef struct
 
 static icc_mc_tx_state_t	mc;
 
+// Bench debug - trace of the first tone changes (sym value and the dds
+// step that resulted) plus generator call stats, dumped after unkey
+#define MC_DBG_TRACE			12
+static volatile uint16_t	dbg_sym[MC_DBG_TRACE];
+static volatile uint32_t	dbg_step[MC_DBG_TRACE];
+static volatile uint8_t		dbg_n = 0;
+static volatile uint32_t	dbg_gen_calls = 0;
+static volatile uint32_t	dbg_gen_samples = 0;
+
 // ------------------------------------------------------------------
 // Packed field access (layouts in common/mchf_icc_def.h)
 
@@ -112,6 +121,14 @@ static void mc_set_tone(uint16_t sym, uint8_t smooth)
 	softdds_setFreqDDS(&mc.dds,
 			(float32_t)mc.tone_base + (float32_t)sym * MC_TONE_STEP_HZ,
 			MC_TX_FS, smooth);
+
+	// Bench debug - record what the dds was actually told
+	if(dbg_n < MC_DBG_TRACE)
+	{
+		dbg_sym [dbg_n] = sym;
+		dbg_step[dbg_n] = mc.dds.step;
+		dbg_n++;
+	}
 }
 
 //*----------------------------------------------------------------------------
@@ -179,6 +196,12 @@ uint8_t icc_mc_tx_start(const uint8_t *payload)
 	printf("mc tx start: tone %u Hz, %u syms, %u cw elem\r\n",
 			tone, nsym, cw_nelem);
 
+	// Bench debug - first received symbol bytes, diff against the CM7
+	// "mc: payload" line and the host dump_payload ground truth
+	printf("mc tx syms: %02x %02x %02x %02x %02x %02x %02x %02x\r\n",
+			mc.syms[0], mc.syms[1], mc.syms[2], mc.syms[3],
+			mc.syms[4], mc.syms[5], mc.syms[6], mc.syms[7]);
+
 	return 0;
 }
 
@@ -228,7 +251,27 @@ uint8_t icc_mc_tx_key_request(void)
 
 	if((mc.done_flag) && (!mc.unkey_sent))
 	{
+		uint8_t	i;
+
 		mc.unkey_sent = 1;
+
+		// Bench debug - dump the tone trace, generator stats and the
+		// tx_processor signal snapshots
+		{
+			extern void tx_processor_mc_dbg_dump(void);
+			tx_processor_mc_dbg_dump();
+		}
+
+		printf("mc dbg: gen calls %u samples %u\r\n",
+				dbg_gen_calls, dbg_gen_samples);
+		for(i = 0; i < dbg_n; i++)
+			printf("mc dbg: seg %u sym %u step %u\r\n",
+					i, dbg_sym[i], dbg_step[i]);
+
+		dbg_n           = 0;
+		dbg_gen_calls   = 0;
+		dbg_gen_samples = 0;
+
 		return 2;
 	}
 
@@ -334,6 +377,10 @@ uint8_t icc_mc_tx_gen(float *i_buff, float *q_buff, uint16_t block_size)
 
 	if(!mc.active)
 		return 0;
+
+	// Bench debug - prove this generator actually feeds the tx path
+	dbg_gen_calls++;
+	dbg_gen_samples += block_size;
 
 	while(n < block_size)
 	{

@@ -41,8 +41,12 @@
 #define WSPR_DF					(375.0f / 256.0f)			// tone spacing, Hz
 
 // Audio passband
+// WSPR_SEARCH_HZ is overridable from the build line (host rig widens it
+// to hunt uncalibrated/drifting bench signals; target keeps the default)
 #define WSPR_CENTER_HZ			1500.0f						// nominal signal center
+#ifndef WSPR_SEARCH_HZ
 #define WSPR_SEARCH_HZ			110.0f						// search +/- around center
+#endif
 
 // Decoder dimensioning
 #define WSPR_MAX_BB_SAMPLES		(WSPR_CAPTURE_SEC * WSPR_FS_BB)

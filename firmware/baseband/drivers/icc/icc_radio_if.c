@@ -233,7 +233,12 @@ void icc_radio_apply_trx_state(const icc_radio_settings_t *st)
 	CwGen_SetSpeed();
 
 	// TX
-	ts.tx_power_factor	= st->tx_power_factor;
+	// A zero power factor from the M7 means "not calibrated/not set" (no
+	// PA or power table on this radio yet) - keep the local bring-up
+	// default instead of silently muting the whole tx chain. Bench found
+	// 2026-07-19: this zero killed the MarsChat WP5 radiated test
+	if(st->tx_power_factor > 0.0f)
+		ts.tx_power_factor = st->tx_power_factor;
 
 	// AGC
 	agc_wdsp_conf.mode	= icc_radio_map_agc(st->agc_mode);

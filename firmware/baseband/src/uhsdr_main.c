@@ -466,6 +466,8 @@ int mchfMain(void)
 #include "audio_filter.h"
 #include "audio_agc.h"
 
+#include "drivers/audio/audio_management.h"
+
 #include "drivers/icc/icc_proc.h"
 #include "drivers/icc/icc_radio_if.h"
 #include "drivers/icc/icc_spectrum.h"
@@ -497,6 +499,13 @@ static void TransceiverStateInit(void)
 	ts.rx_gain[RX_AUDIO_DIG].active_value	= 1;
 
 	ts.tx_power_factor	= 0.10;						// TX power factor until the M7 sends the real one
+
+	// Neutral IQ gain/phase adjustment vars (all 1.0 / 0.0). In UHSDR these
+	// are computed on every frequency change, but the M7 owns tuning on this
+	// radio so that path never runs here - without this call the static-zero
+	// tx_adj_gain_var multiplies the whole TX output to zero (bench found
+	// 2026-07-19, MarsChat WP5: perfect IQ in, all-zero DMA out)
+	AudioManagement_CalcIqPhaseGainAdjust(14000000.0f);
 
 	// CW defaults
 	ts.cw_sidetone_freq	= 750;

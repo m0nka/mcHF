@@ -204,6 +204,23 @@ static void marschat_radiated_sm(void)
 		return;
 	}
 
+	// Bench debug - wire payload checksum and first symbol bytes, diff
+	// against the host ground truth (claude/wspr_test/dump_payload.exe)
+	{
+		ushort	i;
+		uchar	csum = 0;
+
+		for(i = 0; i < mc_icc_payload_len; i++)
+			csum ^= mc_icc_payload[i];
+
+		printf("mc: payload len %d csum %02x syms %02x %02x %02x %02x %02x %02x %02x %02x \r\n",
+				mc_icc_payload_len, csum,
+				mc_icc_payload[6],  mc_icc_payload[7],
+				mc_icc_payload[8],  mc_icc_payload[9],
+				mc_icc_payload[10], mc_icc_payload[11],
+				mc_icc_payload[12], mc_icc_payload[13]);
+	}
+
 	if(ps.hIccTask != NULL)
 	{
 		xTaskNotify(ps.hIccTask, UI_ICC_MC_TX_START, eSetValueWithOverwrite);

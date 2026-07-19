@@ -892,6 +892,43 @@ static bool TxProcessor_CW(audio_block_t a_block, iq_buffer_t* iq_buf_p, uint16_
 }
 
 
+#ifdef H7_M4_CORE
+// Bench debug - one-block snapshots of the MarsChat tx signal, taken
+// mid-burst (block 5000), dumped over UART after unkey (icc_mc_tx.c)
+static float32_t	tx_dbg_pre_i[32], tx_dbg_pre_q[32];
+static int32_t		tx_dbg_post_l[32], tx_dbg_post_r[32];
+static uint32_t		tx_dbg_mc_block = 0;
+static uint8_t		tx_dbg_want_post = 0;
+static uint8_t		tx_dbg_have = 0;
+
+void tx_processor_mc_dbg_dump(void)
+{
+    int i;
+
+    printf("tx dbg: have %d blocks %u\r\n", tx_dbg_have, tx_dbg_mc_block);
+
+    if(tx_dbg_have)
+    {
+        for(i = 0; i < 32; i += 4)
+            printf("tx dbg pre : %d %d %d %d | %d %d %d %d\r\n",
+                (int)tx_dbg_pre_i[i],   (int)tx_dbg_pre_i[i+1],
+                (int)tx_dbg_pre_i[i+2], (int)tx_dbg_pre_i[i+3],
+                (int)tx_dbg_pre_q[i],   (int)tx_dbg_pre_q[i+1],
+                (int)tx_dbg_pre_q[i+2], (int)tx_dbg_pre_q[i+3]);
+
+        for(i = 0; i < 32; i += 4)
+            printf("tx dbg post: %d %d %d %d | %d %d %d %d\r\n",
+                (int)tx_dbg_post_l[i],   (int)tx_dbg_post_l[i+1],
+                (int)tx_dbg_post_l[i+2], (int)tx_dbg_post_l[i+3],
+                (int)tx_dbg_post_r[i],   (int)tx_dbg_post_r[i+1],
+                (int)tx_dbg_post_r[i+2], (int)tx_dbg_post_r[i+3]);
+    }
+
+    tx_dbg_mc_block = 0;
+    tx_dbg_have     = 0;
+}
+#endif
+
 void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, AudioSample_t * const audioDst, uint16_t blockSize, bool external_mute)
 {
 
@@ -958,6 +995,18 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
         // like the tune generator, USB sideband (same i/q buffer swap
         // as TxProcessor_CW uses for non-LSB)
         signal_active = icc_mc_tx_gen(adb.iq_buf.q_buffer, adb.iq_buf.i_buffer, blockSize);
+
+        // Bench debug - snapshot generator output for the post-unkey dump
+        tx_dbg_mc_block++;
+        if((tx_dbg_mc_block == 5000) && (blockSize >= 32))
+        {
+            for(int i = 0; i < 32; i++)
+            {
+                tx_dbg_pre_i[i] = adb.iq_buf.i_buffer[i];
+                tx_dbg_pre_q[i] = adb.iq_buf.q_buffer[i];
+            }
+            tx_dbg_want_post = 1;
+        }
     }
 #endif
     else if (tx_audio_source == TX_AUDIO_DIGIQ && dmod_mode != DEMOD_CW && !tune && !is_demod_psk())
@@ -1076,7 +1125,24 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
     }
 
     // now do the final processing including adjusting the IQ according to the calibration data
+    // swap stays false: the v9 tx chain sideband sense matches the legacy
+    // UHSDR convention - bench verified 2026-07-19 (MarsChat WP5 tx test; an
+    // earlier "inverted" measurement was an artifact of a stale CM4 image)
     TxProcessor_IqFinalProcessing(iq_gain_comp, false, &adb.iq_buf, dst, blockSize);
+
+#ifdef H7_M4_CORE
+    // Bench debug - matching snapshot of what actually goes to the DMA
+    if(tx_dbg_want_post)
+    {
+        for(int i = 0; i < 32; i++)
+        {
+            tx_dbg_post_l[i] = dst[i].l;
+            tx_dbg_post_r[i] = dst[i].r;
+        }
+        tx_dbg_want_post = 0;
+        tx_dbg_have      = 1;
+    }
+#endif
 
     if (ts.stream_tx_audio == STREAM_TX_AUDIO_DIGIQ)
     {

@@ -626,7 +626,7 @@ static void ui_controls_smeter_digital_refresh(void)
 		else
 		{
 			//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
-			printf("%4dmV(fwd) \r\n", f_volts);
+			//printf("%4dmV(fwd) \r\n", f_volts);
 
 			// Temp!
 			t_val_p = f_volts/10;
@@ -639,7 +639,7 @@ static void ui_controls_smeter_digital_refresh(void)
 		else
 		{
 			//sprintf(buf, "FWD %d.%dV", f_volts/1000, (f_volts%1000)/10);
-			printf("%4dmV(ref) \r\n", r_volts);
+			//printf("%4dmV(ref) \r\n", r_volts);
 
 			// Temp!
 			t_val_r = r_volts/10;
