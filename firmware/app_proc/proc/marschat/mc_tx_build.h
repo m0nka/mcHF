@@ -40,4 +40,11 @@ int mc_tx_build_payload(const uint8_t bits50[7], uint16_t tone_hz,
 // Returns the element count, or -1 on a non-morse character / overflow
 int mc_tx_cw_elements(const char *text, uint8_t *bits, int max_elem);
 
+// On-air duration of a built payload (mc_tx_build_payload output), in
+// milliseconds - symbols + gap + CW id elements + tail ramp, matching
+// the M4 streamer's timing exactly (baseband icc_mc_tx.c). Lets a
+// caller know how long the exciter will stay keyed without needing a
+// completion message back from the M4
+uint32_t mc_tx_build_duration_ms(const uint8_t *payload);
+
 #endif

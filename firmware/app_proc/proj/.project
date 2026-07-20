@@ -1267,6 +1267,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/lora/lora.c</locationURI>
 		</link>
 		<link>
+			<name>proc/ui/menu/items/marschat/marschat_ui.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/marschat/marschat_ui.c</locationURI>
+		</link>
+		<link>
 			<name>proc/ui/menu/items/lora/lora_res.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/lora/lora_res.c</locationURI>

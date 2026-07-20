@@ -297,6 +297,15 @@
 #define MARSCHAT_CW_ID					""
 #define MARSCHAT_CW_WPM					25
 
+// Depth of the decoded-frame queue drained by the chat UI dialog
+#define MARSCHAT_RX_QUEUE_LEN			8
+
+// Depth of the pending outgoing chunk queue, in MC_PAYLOAD_CHARS-sized
+// chunks (5 chars each) - a slot-mode tx burst runs ~110 s+ per chunk,
+// so a whole free-text message is split and queued here rather than
+// sent (or dropped) all at once. 20 chunks = up to 100 buffered chars
+#define MARSCHAT_TX_QUEUE_LEN			20
+
 // GNSS driver parameters
 #define GPS_PROC_START_NAME				"gps"
 #define GPS_PROC_START_DELAY			5000

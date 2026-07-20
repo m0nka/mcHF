@@ -81,6 +81,9 @@ extern K_ModuleItem_Typedef  	menu_batt;			// Battery
 extern K_ModuleItem_Typedef  	info;				// System Information
 extern K_ModuleItem_Typedef  	lora;				// Lora module control
 extern K_ModuleItem_Typedef  	file_b;				// File Browser
+#ifdef CONTEXT_MARSCHAT
+extern K_ModuleItem_Typedef  	marschat;			// MarsChat
+#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_add_menu_items
@@ -102,6 +105,9 @@ static void ui_proc_add_menu_items(void)
 	k_ModuleAdd(&logbook);				// Logbook
 	k_ModuleAdd(&file_b);				// File Browser
 	k_ModuleAdd(&lora);					// Lora
+	#ifdef CONTEXT_MARSCHAT
+	k_ModuleAdd(&marschat);				// MarsChat
+	#endif
 	k_ModuleAdd(&info);					// About
 }
 

@@ -177,3 +177,35 @@ int mc_tx_build_payload(const uint8_t bits50[7], uint16_t tone_hz,
 
 	return 0;
 }
+
+// Wire-format timing constants, matching baseband/drivers/icc/icc_mc_tx.c
+#define MC_TX_FS			48000UL
+#define MC_TX_SYM_SAMPLES	32768UL				// one WSPR symbol
+#define MC_TX_GAP_SAMPLES	24000UL				// silence before CW id / tail
+#define MC_TX_RAMP_SAMPLES	240UL				// envelope in + out
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_tx_build_duration_ms
+//* Object              : see header
+//* Context    			: any (pure function)
+//*----------------------------------------------------------------------------
+uint32_t mc_tx_build_duration_ms(const uint8_t *payload)
+{
+	uint8_t		nsym, nelem;
+	uint16_t	unit_samples;
+	uint64_t	samples;
+
+	if(payload == 0)
+		return 0;
+
+	nsym         = payload[2];
+	nelem        = payload[3];
+	unit_samples = (uint16_t)(payload[4] | (payload[5] << 8));
+
+	samples = (uint64_t)nsym * MC_TX_SYM_SAMPLES + MC_TX_GAP_SAMPLES + 2 * MC_TX_RAMP_SAMPLES;
+
+	if(nelem != 0)
+		samples += (uint64_t)nelem * unit_samples;
+
+	return (uint32_t)((samples * 1000) / MC_TX_FS);
+}
