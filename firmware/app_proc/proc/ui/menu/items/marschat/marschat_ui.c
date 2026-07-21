@@ -334,7 +334,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 		case WM_INIT_DIALOG:
 		{
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_LISTBOX_HISTORY);
-			LISTBOX_SetFont(hItem, &GUI_Font13B_1);
+			LISTBOX_SetFont(hItem, &GUI_Font20B_1);
 
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_STATUS);
 			TEXT_SetFont(hItem, &GUI_Font13B_1);
