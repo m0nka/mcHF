@@ -42,6 +42,11 @@ uchar	wspr_proc_request_decode(const char *path, ulong dial_freq_hz);
 // the SD card and decodes it. Callable from any task (UI hook)
 void	wspr_proc_monitor_set(uchar on);
 
+// Arm the monitor for exactly one capture cycle, then disarm. Used by
+// the MarsChat slot scheduler to listen in the peer's slot only - a
+// monitor already armed continuously is left running
+void	wspr_proc_monitor_once(void);
+
 // Register a raw decode consumer - called for every raw 50 bit decode
 // before the type 1 unpack; return 1 to consume the decode (it will not
 // be logged as a WSPR spot). Lets another personality (MarsChat) share

@@ -16,6 +16,16 @@
 
 static k_AlarmCallback AlarmCallback;
   
+// The board has a 32.768 kHz crystal and SystemClock_Config already
+// selects it (board.c, and it hangs in Error_Handler(9) if the LSE fails
+// to start - so a booting radio proves the crystal runs). Without this
+// define the MspInit below quietly switched the RTC back to the LSI
+// while keeping the prescalers below, which divide by 32768: the LSI
+// runs near 28 kHz, so the wall clock lost about one second in six
+// (measured 110 RTC seconds against 128.9 real ones, 2026-07-21). That
+// is what made the RTC look like a badly drifting crystal
+#define USE_LSE
+
 #define RTC_ASYNCH_PREDIV  0x7F   /* LSE as RTC clock */
 #define RTC_SYNCH_PREDIV   0x00FF /* LSE as RTC clock */
 

@@ -98,6 +98,10 @@ enum {
 static volatile uchar	wspr_monitor_on = 0;
 static uchar			wspr_mon_state = WSPR_MON_IDLE;
 
+// Armed for a single cycle (MarsChat listening slot) - cleared when that
+// capture finishes, so the monitor stays out of the station's own tx slot
+static volatile uchar	wspr_monitor_once = 0;
+
 static FIL				wspr_capture_file;
 static uchar			wspr_capture_file_open = 0;
 static ulong			wspr_capture_written = 0;
@@ -220,9 +224,31 @@ void wspr_proc_monitor_set(uchar on)
 {
 	wspr_monitor_on = on;
 
+	if(!on)
+		wspr_monitor_once = 0;
+
 	// Kick the task out of the forever sleep
 	if(ps.hWsprTask != NULL)
 		xTaskNotify(ps.hWsprTask, WSPR_NOTIFY_WAKE, eSetBits);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : wspr_proc_monitor_once
+//* Object              : arm the monitor for a single capture cycle
+//* Notes    			: call it before the even minute the cycle should
+//*						: start on - MarsChat arms the peer's slot and
+//*						: leaves its own tx slot alone. A continuously
+//*						: armed monitor is left as it is
+//* Context    			: any task
+//*----------------------------------------------------------------------------
+void wspr_proc_monitor_once(void)
+{
+	if(wspr_monitor_on)
+		return;
+
+	wspr_monitor_once = 1;
+
+	wspr_proc_monitor_set(1);
 }
 
 //*----------------------------------------------------------------------------
@@ -353,6 +379,14 @@ static void wspr_proc_capture_finish(uchar decode)
 
 	printf("wspr: capture done, %u bytes, overrun(%d) \r\n",
 			(uint)wspr_capture_written, wspr_capture_overrun);
+
+	// One shot arm (MarsChat listening slot) - disarm before the next
+	// even minute so the station's own tx slot stays free of a capture
+	if(wspr_monitor_once)
+	{
+		wspr_monitor_once	= 0;
+		wspr_monitor_on		= 0;
+	}
 
 	wspr_mon_state = wspr_monitor_on ? WSPR_MON_WAIT : WSPR_MON_IDLE;
 

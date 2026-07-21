@@ -297,6 +297,17 @@
 #define MARSCHAT_CW_ID					""
 #define MARSCHAT_CW_WPM					25
 
+// Uncomment to keep the pre-session bench behaviour available: with no
+// session running, a message sent from the chat UI is transmitted as
+// soon as the exciter is free instead of waiting for a slot. Normally
+// off - SEND starts a session, and every burst is slot timed
+//#define MARSCHAT_IMMEDIATE_SEND
+
+// Second of the odd minute at which the slot scheduler arms the receiver
+// for an upcoming peer slot - the WSPR monitor starts its capture on the
+// even minute itself, so the request has to be in before that
+#define MARSCHAT_ARM_SEC				50
+
 // Depth of the decoded-frame queue drained by the chat UI dialog
 #define MARSCHAT_RX_QUEUE_LEN			8
 

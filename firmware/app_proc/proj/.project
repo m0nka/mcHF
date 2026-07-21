@@ -662,6 +662,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/mc_tx_build.c</locationURI>
 		</link>
 		<link>
+			<name>proc/marschat/mc_session.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/mc_session.c</locationURI>
+		</link>
+		<link>
 			<name>proc/marschat/marschat_proc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/marschat_proc.c</locationURI>
@@ -1265,6 +1270,11 @@
 			<name>proc/ui/menu/items/lora/lora.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/lora/lora.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ui/theme/atlas_draw.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/theme/atlas_draw.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/marschat/marschat_ui.c</name>
