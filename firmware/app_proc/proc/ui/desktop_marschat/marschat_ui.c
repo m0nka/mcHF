@@ -954,12 +954,24 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 					BUTTON_SetSkin(WM_GetDialogItem(pMsg->hWin, ids[i]), mc_ui_button_skin);
 			}
 
-			mc_ui_compose_len	= 0;
-			mc_ui_compose[0]	= 0;
-			mc_ui_sending		= 0;
-			mc_ui_line_count	= 0;
-
+			// The widgets are rebuilt on every entry, the conversation is
+			// not: F5 toggles this screen away and back in the middle of
+			// a session that runs for as long as the chat does, so the
+			// history, the draft and the last rx telemetry all live in
+			// statics that deliberately survive it. Only the snapshot is
+			// reset, to force the first repaint
 			memset(&mc_ui_model, 0xFF, sizeof(mc_ui_model));
+
+			// Re-derive rather than assume: a message queued before the
+			// screen was toggled away is still draining, and the input
+			// has to come back locked
+			{
+				MC_UI_STATUS	st;
+
+				marschat_get_status(&st);
+
+				mc_ui_sending = ((st.tx_busy) || (st.pending) || (st.queued_chunks > 0)) ? 1 : 0;
+			}
 
 			// The two regions that tick get their own windows so the rest
 			// of the screen is not repainted twice a second
@@ -969,6 +981,8 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 								pMsg->hWin, WM_CF_SHOW, _cbSlot, 0);
 
 			hMcTimer = WM_CreateTimer(pMsg->hWin, 0, 500, 0);
+
+			mc_ui_set_input_enabled(pMsg->hWin, !mc_ui_sending);
 			break;
 		}
 
