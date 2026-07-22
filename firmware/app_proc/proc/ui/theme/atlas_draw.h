@@ -17,9 +17,16 @@
 
 #include "GUI.h"
 
-// emWin colours are 0x00BBGGRR, so the channels are given in the order
-// they are read off a design (r, g, b) and swapped here once
-#define ATLAS_RGB(r, g, b)	((GUI_COLOR)(((uint32_t)(b) << 16) | ((uint32_t)(g) << 8) | (uint32_t)(r)))
+// Channels are given in the order they are read off a design (r, g, b),
+// packed into the 0x00BBGGRR literal form emWin documents, and handed to
+// GUI_MAKE_COLOR.
+//
+// That last step is not optional: this build has GUI_USE_ARGB = 1
+// (GUI_ConfDefaults.h), where the native colour is ARGB and 0xFF alpha
+// means opaque, so GUI_MAKE_COLOR both swaps R with B and inverts the
+// alpha byte. A raw value leaves the top byte at 0x00 = fully
+// transparent, and every fill drawn with it silently paints nothing
+#define ATLAS_RGB(r, g, b)	((GUI_COLOR)GUI_MAKE_COLOR(((uint32_t)(b) << 16) | ((uint32_t)(g) << 8) | (uint32_t)(r)))
 
 #define ATLAS_GROUND		ATLAS_RGB(0x04, 0x10, 0x1F)		// screen background
 #define ATLAS_BAND			ATLAS_RGB(0x06, 0x17, 0x28)		// ground hairlines (pre-blended)

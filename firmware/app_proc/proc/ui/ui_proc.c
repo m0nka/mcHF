@@ -43,6 +43,10 @@
 // -----------------------------------------------------------------------------------------------
 // FT8 Desktop
 #include "desktop_ft8\ui_desktop_ft8.h"
+
+#ifdef CONTEXT_MARSCHAT
+#include "desktop_marschat\marschat_ui.h"
+#endif
 // -----------------------------------------------------------------------------------------------
 // Menu Mode
 #include "menu\ui_menu_module.h"
@@ -81,9 +85,6 @@ extern K_ModuleItem_Typedef  	menu_batt;			// Battery
 extern K_ModuleItem_Typedef  	info;				// System Information
 extern K_ModuleItem_Typedef  	lora;				// Lora module control
 extern K_ModuleItem_Typedef  	file_b;				// File Browser
-#ifdef CONTEXT_MARSCHAT
-extern K_ModuleItem_Typedef  	marschat;			// MarsChat
-#endif
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_add_menu_items
@@ -105,9 +106,6 @@ static void ui_proc_add_menu_items(void)
 	k_ModuleAdd(&logbook);				// Logbook
 	k_ModuleAdd(&file_b);				// File Browser
 	k_ModuleAdd(&lora);					// Lora
-	#ifdef CONTEXT_MARSCHAT
-	k_ModuleAdd(&marschat);				// MarsChat
-	#endif
 	k_ModuleAdd(&info);					// About
 }
 
@@ -719,6 +717,49 @@ static void ui_proc_change_mode(void)
 			break;
 		}
 #endif
+#ifdef CONTEXT_MARSCHAT
+		// Switch to MarsChat mode
+		case MODE_DESKTOP_MARSCHAT:
+		{
+			printf("Entering MarsChat mode...\r\n");
+
+			// Destroy desktop controls
+			#ifdef DESKTOP_SHOW_VOLUME
+			ui_controls_volume_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_CLOCK
+			ui_controls_clock_panel_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_SPECTRUM
+			ui_controls_spectrum_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_FREQUENCY
+			ui_controls_frequency_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_SMETER
+			ui_controls_smeter_quit();
+			#endif
+
+			WM_SetCallback		(WM_HBKWIN, 0);
+			WM_InvalidateWindow	(WM_HBKWIN);
+
+			// Clear screen
+			GUI_SetBkColor(GUI_BLACK);
+			GUI_Clear();
+
+			// Show the chat screen
+			marschat_ui_create();
+
+			// Initial paint
+			GUI_Exec();
+
+			break;
+		}
+#endif
 #if 0
 		case MODE_QUICK_LOG:
 		{
@@ -751,6 +792,9 @@ static void ui_proc_change_mode(void)
 			//ui_side_enc_menu_destroy();
 			ui_desktop_ft8_destroy();
 			//ui_quick_log_destroy();
+			#ifdef CONTEXT_MARSCHAT
+			marschat_ui_destroy();
+			#endif
 
 			// Clear screen
 			GUI_SetBkColor(GUI_BLACK);
@@ -1142,6 +1186,10 @@ ui_proc_loop:
 		del_ms = (UI_PROC_SLEEP_TIME*2);
 	else if(ui_s.cur_state == MODE_DESKTOP_FT8)
 		del_ms = (UI_PROC_SLEEP_TIME*3);
+	#ifdef CONTEXT_MARSCHAT
+	else if(ui_s.cur_state == MODE_DESKTOP_MARSCHAT)
+		del_ms = (UI_PROC_SLEEP_TIME*2);
+	#endif
 	else
 	{
 		ui_proc_periodic();

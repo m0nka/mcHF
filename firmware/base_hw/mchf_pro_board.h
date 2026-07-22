@@ -151,6 +151,7 @@
 #define MODE_SIDE_ENC_MENU		2
 #define MODE_DESKTOP_FT8		3
 #define MODE_QUICK_LOG			4
+#define MODE_DESKTOP_MARSCHAT	5
 //
 #define THEME_0					0
 #define THEME_1					1

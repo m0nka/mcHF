@@ -24,12 +24,10 @@
 #define ID_BUTTON_PEER			(GUI_ID_USER + 0x25)
 
 // ---------------------------------------------------------------------
-// Screen geometry (atlas theme). Unlike the other menu items this screen
-// takes the whole display: the menu's own window paints the background
-// behind its items (ui_menu.c WM_PAINT clears to the theme colour), and
-// a half covered screen shows that colour around our ground. Leaving the
-// menu deletes the dialog, which resets the menu's repaint latch, so it
-// draws itself back
+// Screen geometry (atlas theme). This is a top level screen, not a menu
+// item: it owns the whole display for as long as MODE_DESKTOP_MARSCHAT
+// is the current UI state, with nothing of the menu or the desktop left
+// underneath it to repaint over our pixels
 
 #define MC_UI_W					800
 #define MC_UI_H					480
@@ -70,5 +68,9 @@
 
 #define MC_ACT_Y				422					// action row
 #define MC_ACT_H				38
+
+// Screen create / destroy, called from the UI mode switch
+void	marschat_ui_create(void);
+void	marschat_ui_destroy(void);
 
 #endif

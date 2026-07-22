@@ -18,7 +18,11 @@
 //
 // Repaints are scoped: the clock and the slot countdown tick twice a
 // second and live in their own child windows, so the panels below them
-// are only redrawn when the data behind them actually changes
+// are only redrawn when the data behind them actually changes.
+//
+// This is a top level screen (MODE_DESKTOP_MARSCHAT), built the same way
+// as the FT8 desktop: the dialog is a child of the desktop window with
+// nothing else on screen, so no other shell repaints over it
 //
 #include "mchf_pro_board.h"
 #include "main.h"
@@ -27,8 +31,6 @@
 #include "gui.h"
 #include "dialog.h"
 #include "desktop\ui_controls_layout.h"
-#include "ui_menu_layout.h"
-#include "ui_menu_module.h"
 
 #include "rtc.h"
 
@@ -39,28 +41,11 @@
 
 #include "marschat_ui.h"
 
-extern GUI_CONST_STORAGE GUI_BITMAP bmicon_gps;
-
-// Menu layout definitions from Flash
-extern const struct UIMenuLayout menu_layout[];
-
 // UI driver public state
 extern struct	UI_DRIVER_STATE			ui_s;
+extern struct	PROC_STATE				ps;
 
-static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos);
-static void KillMarschat(void);
-
-K_ModuleItem_Typedef  marschat =
-{
-  11,
-  "MarsChat",
-  &bmicon_gps,
-  Startup,
-  NULL,
-  KillMarschat
-};
-
-WM_HWIN			hMcDialog;
+static WM_HWIN	hMcDialog;
 
 // Free-text compose buffer - typed via the A-P/space/backspace keys,
 // split into MC_PAYLOAD_CHARS chunks and queued on SEND (marschat_proc.c
@@ -752,14 +737,9 @@ static void mc_ui_set_input_enabled(WM_HWIN hWin, int enabled)
 //* Function Name       : mc_ui_invalidate_all
 //* Object              : repaint the whole screen - dialog, the two child
 //*						: windows and every button
-//* Notes    			: the menu shell owns the background behind its
-//*						: items and clears it to the theme colour
-//*						: (ui_menu.c WM_PAINT), and its footer and exit
-//*						: button are children of the desktop, not of the
-//*						: menu window. Anything it repaints lands on top
-//*						: of a screen that is not asking to be redrawn, so
-//*						: this is called on a slow heartbeat to take the
-//*						: pixels back
+//* Notes    			: the buttons are skinned, so their faces carry
+//*						: enabled state that a plain dialog invalidate
+//*						: would not reach
 //* Context    			: CONTEXT_VIDEO (gui task)
 //*----------------------------------------------------------------------------
 static void mc_ui_invalidate_all(WM_HWIN hWin)
@@ -994,13 +974,6 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 		case WM_PAINT:
 		{
-			static uint8_t	paints = 0;
-
-			// Proof of life for the first repaints - the shell's own
-			// painting has been overwriting this screen
-			if(paints < 5)
-				printf("mc ui: paint %d \r\n", ++paints);
-
 			atlas_background(0, MC_TITLE_H, MC_UI_W, MC_UI_H - MC_TITLE_H);
 
 			mc_ui_paint_history();
@@ -1012,7 +985,6 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 		case WM_TIMER:
 		{
 			MC_UI_STATUS	st;
-			static uint8_t	tick = 0;
 			int				dirty;
 
 			dirty = mc_ui_drain_rx();
@@ -1035,12 +1007,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			if(mc_ui_model_changed())
 				dirty = 1;
 
-			// Take the whole screen back every two seconds, and for the
-			// first few ticks after the dialog opens - the shell paints
-			// its background and widgets on its own schedule
-			tick++;
-
-			if((dirty) || ((tick & 3) == 0) || (tick < 8))
+			if(dirty)
 			{
 				mc_ui_invalidate_all(pMsg->hWin);
 			}
@@ -1058,6 +1025,11 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 		case WM_DELETE:
 		{
 			WM_DeleteTimer(hMcTimer);
+
+			// Children go with the dialog - drop the handles so a
+			// later repaint cannot reach a dead window
+			hMcTitle = 0;
+			hMcSlot  = 0;
 			break;
 		}
 
@@ -1074,8 +1046,11 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 		{
 			switch (((WM_KEY_INFO*)(pMsg->Data.p))->Key)
 			{
+				// Back to the radio. Scheduled, not a direct call - the
+				// mode switch is what deletes this dialog
 				case GUI_KEY_HOME:
-					GUI_EndDialog(pMsg->hWin, 0);
+					ui_s.req_state = MODE_DESKTOP;
+					xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
 					break;
 			}
 			break;
@@ -1087,24 +1062,74 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 	}
 }
 
-static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos)
+//*----------------------------------------------------------------------------
+//* Function Name       : _cbBkWindow
+//* Object              : desktop window behind the dialog - the ground
+//*						: colour shows for the one frame before the dialog
+//*						: paints, and wherever the dialog does not reach
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void _cbBkWindow(WM_MESSAGE *pMsg)
 {
-	// This screen covers the whole display, so it is not shifted down by
-	// the theme's iconview_y like the other menu items. Black the screen
-	// out first: the menu window paints the background behind its items
-	// and would otherwise show its own colour until our dialog is up
-	GUI_SetBkColor(ATLAS_GROUND);
-	GUI_Clear();
+	switch(pMsg->MsgId)
+	{
+		case WM_PAINT:
+			// Not GUI_Clear() - the driver runs in LCD_DRAWMODE_TRANS
+			// (ui_proc.c, GUI_SetDrawMode) where a clear does nothing
+			atlas_background(0, 0, MC_UI_W, MC_UI_H);
+			break;
 
-	hMcDialog = GUI_CreateDialogBox(_aDialog, GUI_COUNTOF(_aDialog), _cbDialog, hWin, xpos, ypos);
-
-	// The shell's footer and exit button belong to the desktop, so being
-	// a child of the menu window is not enough to be on top of them
-	WM_BringToTop(hMcDialog);
-	WM_SetStayOnTop(hMcDialog, 1);
+		default:
+			WM_DefaultProc(pMsg);
+			break;
+	}
 }
 
-static void KillMarschat(void)
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_ui_set_profile
+//* Object              : emWin defaults this screen needs
+//* Notes    			: the menu profile leaves WINDOW_SetDefaultBkColor
+//*						: at GUI_WHITE (ui_menu.c) and it is a sticky
+//*						: global, so a dialog created after the menu has
+//*						: ever been entered paints a white face under our
+//*						: own drawing. FT8 overrides it the same way
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void mc_ui_set_profile(void)
 {
-	GUI_EndDialog(hMcDialog, 0);
+	WINDOW_SetDefaultBkColor(ATLAS_GROUND);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : marschat_ui_create
+//* Object              : bring the screen up - called by the UI mode
+//*						: switch on entry to MODE_DESKTOP_MARSCHAT
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+void marschat_ui_create(void)
+{
+	mc_ui_set_profile();
+
+	WM_SetCallback(WM_HBKWIN, &_cbBkWindow);
+
+	hMcDialog = GUI_CreateDialogBox(_aDialog, GUI_COUNTOF(_aDialog), _cbDialog, 0, 0, 0);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : marschat_ui_destroy
+//* Object              : tear the screen down on the way back to the
+//*						: desktop. Safe to call when it was never up
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+void marschat_ui_destroy(void)
+{
+	if(hMcDialog)
+	{
+		WM_SetCallback		(WM_HBKWIN, 0);
+		WM_InvalidateWindow	(WM_HBKWIN);
+
+		WM_DeleteWindow(hMcDialog);
+
+		hMcDialog = 0;
+	}
 }
