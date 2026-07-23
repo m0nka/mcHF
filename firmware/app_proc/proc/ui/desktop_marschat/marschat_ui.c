@@ -109,30 +109,29 @@ typedef struct
 
 static MC_UI_MODEL	mc_ui_model;
 
+// The two keyboard pages, each MC_KEY_CHARS long. The shift key flips
+// between them; a char key's face and the character a press appends both
+// come from the active page at the key's index (id offset from CHAR_0).
+// Every glyph here must exist in mc_charset_latin so it can be encoded
+static const char	mc_ui_page_letters[MC_KEY_CHARS + 1] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+static const char	mc_ui_page_symbols[MC_KEY_CHARS + 1] = "0123456789.,?!-/@:'()\"+=&;";
+
+static uint8_t		mc_ui_shift = 0;			// 0 letters page, 1 symbols page
+
+static const char *mc_ui_page(void)
+{
+	return mc_ui_shift ? mc_ui_page_symbols : mc_ui_page_letters;
+}
+
+// The 40 character keys are created in a grid at WM_INIT_DIALOG (see
+// mc_ui_create_keys), so only the window and the fixed action row live in
+// the static template
 static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 {
 	// -----------------------------------------------------------------------------------------------------------------------------
 	//							name						id						x		y		xsize	ysize
 	// -----------------------------------------------------------------------------------------------------------------------------
 	{ WINDOW_CreateIndirect,	"", 						ID_WINDOW_0,			0,		0,		MC_UI_W,	MC_UI_H,	0,	0x64,	0 },
-
-	// Character keys, two rows of eight (A-H, I-P)
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 0,	MC_KEY_X + 0 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y1,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 1,	MC_KEY_X + 1 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y1,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 2,	MC_KEY_X + 2 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y1,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 3,	MC_KEY_X + 3 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y1,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 4,	MC_KEY_X + 4 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y1,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 5,	MC_KEY_X + 5 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y1,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 6,	MC_KEY_X + 6 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y1,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 7,	MC_KEY_X + 7 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y1,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 8,	MC_KEY_X + 0 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y2,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 9,	MC_KEY_X + 1 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y2,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 10,	MC_KEY_X + 2 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y2,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 11,	MC_KEY_X + 3 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y2,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 12,	MC_KEY_X + 4 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y2,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 13,	MC_KEY_X + 5 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y2,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 14,	MC_KEY_X + 6 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y2,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
-	{ BUTTON_CreateIndirect,	"",							ID_BUTTON_CHAR_0 + 15,	MC_KEY_X + 7 * (MC_KEY_W + MC_KEY_GAP),	MC_KEY_Y2,	MC_KEY_W,	MC_KEY_H,	0,	0x0,	0 },
 
 	// Action row - SPACE, DEL, CLEAR, SEND, and the two role buttons
 	{ BUTTON_CreateIndirect,	"SPACE",					ID_BUTTON_SPACE,		10,		MC_ACT_Y,	170,	MC_ACT_H,	0,	0x0,	0 },
@@ -645,7 +644,7 @@ static int mc_ui_button_skin(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo)
 		edge = ATLAS_AMBER;
 		ink  = ATLAS_INK;
 	}
-	else if((id == ID_BUTTON_CALLER) || (id == ID_BUTTON_PEER))
+	else if((id == ID_BUTTON_CALLER) || (id == ID_BUTTON_PEER) || (id == ID_BUTTON_SHIFT))
 	{
 		face = ATLAS_PANEL;
 		edge = ATLAS_AMBER;
@@ -687,7 +686,7 @@ static int mc_ui_button_skin(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo)
 	// Label - keys get the big font, the action row the tracked one
 	GUI_SetTextMode(GUI_TM_TRANS);
 
-	if((id >= ID_BUTTON_CHAR_0) && (id < (ID_BUTTON_CHAR_0 + 16)))
+	if((id >= ID_BUTTON_CHAR_0) && (id < (ID_BUTTON_CHAR_0 + MC_KEY_CHARS)))
 	{
 		GUI_SetFont(&GUI_Font24B_1);
 		tw = atlas_text_width(text, 0);
@@ -706,25 +705,100 @@ static int mc_ui_button_skin(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : mc_ui_apply_page
+//* Object              : relabel the character keys for the active page and
+//*						: set the shift key to what it switches to, then
+//*						: repaint just the keyboard
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void mc_ui_apply_page(WM_HWIN hWin)
+{
+	const char	*page = mc_ui_page();
+	int			i;
+
+	for(i = 0; i < MC_KEY_CHARS; i++)
+	{
+		char	label[2];
+
+		label[0] = page[i];
+		label[1] = 0;
+
+		BUTTON_SetText(WM_GetDialogItem(hWin, ID_BUTTON_CHAR_0 + i), label);
+		WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_CHAR_0 + i));
+	}
+
+	// The shift face names the page it takes you TO, phone-keyboard style
+	BUTTON_SetText(WM_GetDialogItem(hWin, ID_BUTTON_SHIFT), mc_ui_shift ? "ABC" : "123");
+	WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_SHIFT));
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_ui_create_keys
+//* Object              : build the 26 character keys plus the shift key as a
+//*						: grid of skinned buttons, children of the dialog.
+//*						: Shift takes the last slot (bottom right)
+//* Context    			: CONTEXT_VIDEO (gui task, WM_INIT_DIALOG)
+//*----------------------------------------------------------------------------
+static void mc_ui_create_keys(WM_HWIN hWin)
+{
+	int	i;
+
+	for(i = 0; i < MC_KEY_CHARS; i++)
+	{
+		int		col = i % MC_KEY_COLS;
+		int		row = i / MC_KEY_COLS;
+		WM_HWIN	hKey;
+
+		hKey = BUTTON_CreateEx(MC_KEY_COL_X(col), MC_KEY_ROW_Y(row),
+								MC_KEY_W, MC_KEY_H,
+								hWin, WM_CF_SHOW, 0, ID_BUTTON_CHAR_0 + i);
+
+		BUTTON_SetSkin(hKey, mc_ui_button_skin);
+	}
+
+	// Shift in the last slot
+	{
+		int		col = MC_KEY_CHARS % MC_KEY_COLS;
+		int		row = MC_KEY_CHARS / MC_KEY_COLS;
+		WM_HWIN	hKey;
+
+		hKey = BUTTON_CreateEx(MC_KEY_COL_X(col), MC_KEY_ROW_Y(row),
+								MC_KEY_W, MC_KEY_H,
+								hWin, WM_CF_SHOW, 0, ID_BUTTON_SHIFT);
+
+		BUTTON_SetSkin(hKey, mc_ui_button_skin);
+	}
+
+	// Labels come from the active page
+	mc_ui_apply_page(hWin);
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : mc_ui_set_input_enabled
 //* Object              : lock/unlock the keys while a message drains out
 //* Context    			: CONTEXT_VIDEO (gui task)
 //*----------------------------------------------------------------------------
 static void mc_ui_set_input_enabled(WM_HWIN hWin, int enabled)
 {
-	static const int ids[] =
+	static const int action_ids[] =
 	{
-		ID_BUTTON_CHAR_0 + 0,  ID_BUTTON_CHAR_0 + 1,  ID_BUTTON_CHAR_0 + 2,  ID_BUTTON_CHAR_0 + 3,
-		ID_BUTTON_CHAR_0 + 4,  ID_BUTTON_CHAR_0 + 5,  ID_BUTTON_CHAR_0 + 6,  ID_BUTTON_CHAR_0 + 7,
-		ID_BUTTON_CHAR_0 + 8,  ID_BUTTON_CHAR_0 + 9,  ID_BUTTON_CHAR_0 + 10, ID_BUTTON_CHAR_0 + 11,
-		ID_BUTTON_CHAR_0 + 12, ID_BUTTON_CHAR_0 + 13, ID_BUTTON_CHAR_0 + 14, ID_BUTTON_CHAR_0 + 15,
-		ID_BUTTON_SPACE, ID_BUTTON_BACKSPACE, ID_BUTTON_CLEAR, ID_BUTTON_SEND
+		ID_BUTTON_SHIFT, ID_BUTTON_SPACE, ID_BUTTON_BACKSPACE, ID_BUTTON_CLEAR, ID_BUTTON_SEND
 	};
 	int	i;
 
-	for(i = 0; i < (int)GUI_COUNTOF(ids); i++)
+	for(i = 0; i < MC_KEY_CHARS; i++)
 	{
-		WM_HWIN	hItem = WM_GetDialogItem(hWin, ids[i]);
+		WM_HWIN	hItem = WM_GetDialogItem(hWin, ID_BUTTON_CHAR_0 + i);
+
+		if(enabled)
+			WM_EnableWindow(hItem);
+		else
+			WM_DisableWindow(hItem);
+	}
+
+	for(i = 0; i < (int)GUI_COUNTOF(action_ids); i++)
+	{
+		WM_HWIN	hItem = WM_GetDialogItem(hWin, action_ids[i]);
 
 		if(enabled)
 			WM_EnableWindow(hItem);
@@ -754,9 +828,10 @@ static void mc_ui_invalidate_all(WM_HWIN hWin)
 	if(hMcSlot)
 		WM_InvalidateWindow(hMcSlot);
 
-	for(i = 0; i < 16; i++)
+	for(i = 0; i < MC_KEY_CHARS; i++)
 		WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_CHAR_0 + i));
 
+	WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_SHIFT));
 	WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_SPACE));
 	WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_BACKSPACE));
 	WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_CLEAR));
@@ -825,13 +900,23 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 	if(NCode != WM_NOTIFICATION_RELEASED)
 		return;
 
-	if((Id >= ID_BUTTON_CHAR_0) && (Id < ID_BUTTON_CHAR_0 + 16))
+	if((Id >= ID_BUTTON_CHAR_0) && (Id < ID_BUTTON_CHAR_0 + MC_KEY_CHARS))
 	{
 		if((!mc_ui_sending) && (mc_ui_compose_len < MC_UI_COMPOSE_MAX))
 		{
-			mc_ui_compose[mc_ui_compose_len++] = (char)('A' + (Id - ID_BUTTON_CHAR_0));
+			mc_ui_compose[mc_ui_compose_len++] = mc_ui_page()[Id - ID_BUTTON_CHAR_0];
 			mc_ui_compose[mc_ui_compose_len]   = 0;
 		}
+		return;
+	}
+
+	// Shift pages the character keys between letters and symbols. It locks
+	// with the rest of the keyboard while a message drains, so no guard is
+	// needed here; it never touches the draft
+	if(Id == ID_BUTTON_SHIFT)
+	{
+		mc_ui_shift ^= 1;
+		mc_ui_apply_page(pMsg->hWin);
 		return;
 	}
 
@@ -923,7 +1008,6 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 
 static void _cbDialog(WM_MESSAGE * pMsg)
 {
-	WM_HWIN	hItem;
 	int		Id, NCode;
 	int		i;
 
@@ -931,17 +1015,10 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 	{
 		case WM_INIT_DIALOG:
 		{
-			for(i = 0; i < 16; i++)
-			{
-				char	label[2];
-
-				label[0] = (char)('A' + i);
-				label[1] = 0;
-
-				hItem = WM_GetDialogItem(pMsg->hWin, ID_BUTTON_CHAR_0 + i);
-				BUTTON_SetText(hItem, label);
-				BUTTON_SetSkin(hItem, mc_ui_button_skin);
-			}
+			// Character keys are built here as a grid of children; the
+			// action row comes from the static template and only needs
+			// its skin
+			mc_ui_create_keys(pMsg->hWin);
 
 			{
 				static const int ids[] =

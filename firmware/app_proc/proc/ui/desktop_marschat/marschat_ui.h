@@ -14,14 +14,17 @@
 
 #define ID_WINDOW_0				(GUI_ID_USER + 0x00)
 
-// 16 character buttons, A-P (row major), then the action row
+// Character keys (row major, ids CHAR_0 .. CHAR_0 + MC_KEY_CHARS-1), the
+// shift key that pages them, then the action row. The char id block is
+// 0x10..0x29 for 26 keys, so shift and the action ids start clear of it
 #define ID_BUTTON_CHAR_0		(GUI_ID_USER + 0x10)
-#define ID_BUTTON_SPACE			(GUI_ID_USER + 0x20)
-#define ID_BUTTON_BACKSPACE		(GUI_ID_USER + 0x21)
-#define ID_BUTTON_CLEAR			(GUI_ID_USER + 0x22)
-#define ID_BUTTON_SEND			(GUI_ID_USER + 0x23)
-#define ID_BUTTON_CALLER		(GUI_ID_USER + 0x24)
-#define ID_BUTTON_PEER			(GUI_ID_USER + 0x25)
+#define ID_BUTTON_SHIFT			(GUI_ID_USER + 0x3F)
+#define ID_BUTTON_SPACE			(GUI_ID_USER + 0x40)
+#define ID_BUTTON_BACKSPACE		(GUI_ID_USER + 0x41)
+#define ID_BUTTON_CLEAR			(GUI_ID_USER + 0x42)
+#define ID_BUTTON_SEND			(GUI_ID_USER + 0x43)
+#define ID_BUTTON_CALLER		(GUI_ID_USER + 0x44)
+#define ID_BUTTON_PEER			(GUI_ID_USER + 0x45)
 
 // ---------------------------------------------------------------------
 // Screen geometry (atlas theme). This is a top level screen, not a menu
@@ -59,15 +62,28 @@
 #define MC_COMP_W				780
 #define MC_COMP_H				30
 
-#define MC_KEY_X				10					// two rows of eight keys
-#define MC_KEY_Y1				336
-#define MC_KEY_Y2				378
-#define MC_KEY_W				94
-#define MC_KEY_H				38
-#define MC_KEY_GAP				4
+// On-screen keyboard - big keys for a 4" touch panel, so only half the
+// charset shows at once and a shift key pages between them: page 0 is the
+// 26 letters, page 1 is 0-9 plus the everyday punctuation. Nine columns by
+// three rows = 27 slots; the last slot (bottom right) is the shift key, the
+// other 26 are the character keys of the current page
+#define MC_KEY_COLS				9
+#define MC_KEY_ROWS				3
+#define MC_KEY_SLOTS			(MC_KEY_COLS * MC_KEY_ROWS)		// 27
+#define MC_KEY_CHARS			(MC_KEY_SLOTS - 1)				// 26, shift takes the last
 
-#define MC_ACT_Y				422					// action row
-#define MC_ACT_H				38
+#define MC_KEY_X				10
+#define MC_KEY_Y1				322
+#define MC_KEY_W				83
+#define MC_KEY_H				36
+#define MC_KEY_GAP				4					// between columns
+#define MC_KEY_VGAP				3					// between rows
+
+#define MC_KEY_COL_X(c)			(MC_KEY_X  + (c) * (MC_KEY_W + MC_KEY_GAP))
+#define MC_KEY_ROW_Y(r)			(MC_KEY_Y1 + (r) * (MC_KEY_H + MC_KEY_VGAP))
+
+#define MC_ACT_Y				MC_KEY_ROW_Y(MC_KEY_ROWS)	// action row below the keys
+#define MC_ACT_H				36
 
 // Screen create / destroy, called from the UI mode switch
 void	marschat_ui_create(void);

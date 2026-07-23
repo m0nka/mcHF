@@ -301,7 +301,7 @@
 // session from the chat UI (CALLER or PEER); the emulated peer adopts the
 // other role automatically and starts talking. Mutually exclusive with
 // both beacon modes and needs a session, not WSPR_MONITOR_AUTO_START
-#define MARSCHAT_LOOPBACK_PEER
+//#define MARSCHAT_LOOPBACK_PEER
 //
 // Simulated packet loss for the loopback peer test, percent. A clean
 // loopback channel decodes every frame (~-6 dB), so nothing is ever lost
