@@ -21,8 +21,9 @@
 
 //#define 	LCD_LANE_CLK			62500
 //#define 	LCD_LANE_CLK			58750				// 58750
-#define 	LCD_LANE_CLK			55000
-#define	 	ST7701_PIXEL_CLK  		(LCD_LANE_CLK/2)
+//#define 	LCD_LANE_CLK			55000				// matched no PLL branch: DSI ran at 58.75MHz while all timings assumed byteclk/pixclk = 2
+#define 	LCD_LANE_CLK			54000				// 54.167MHz byte clock - exact 2:1 against the 27.083MHz PLL3 pixel clock
+#define	 	ILI9806E_PIXEL_CLK  	(LCD_LANE_CLK/2)
 
 #define DRIVER_32_BIT			1
 

@@ -26,6 +26,8 @@
 #include "sdram.h"
 #include "shared_tim.h"
 
+#include "cpu_trace.h"
+
 #include "ui_tests.h"
 
 // -----------------------------------------------------------------------------------------------
@@ -41,6 +43,10 @@
 // -----------------------------------------------------------------------------------------------
 // FT8 Desktop
 #include "desktop_ft8\ui_desktop_ft8.h"
+
+#ifdef CONTEXT_MARSCHAT
+#include "desktop_marschat\marschat_ui.h"
+#endif
 // -----------------------------------------------------------------------------------------------
 // Menu Mode
 #include "menu\ui_menu_module.h"
@@ -711,6 +717,49 @@ static void ui_proc_change_mode(void)
 			break;
 		}
 #endif
+#ifdef CONTEXT_MARSCHAT
+		// Switch to MarsChat mode
+		case MODE_DESKTOP_MARSCHAT:
+		{
+			printf("Entering MarsChat mode...\r\n");
+
+			// Destroy desktop controls
+			#ifdef DESKTOP_SHOW_VOLUME
+			ui_controls_volume_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_CLOCK
+			ui_controls_clock_panel_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_SPECTRUM
+			ui_controls_spectrum_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_FREQUENCY
+			ui_controls_frequency_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_SMETER
+			ui_controls_smeter_quit();
+			#endif
+
+			WM_SetCallback		(WM_HBKWIN, 0);
+			WM_InvalidateWindow	(WM_HBKWIN);
+
+			// Clear screen
+			GUI_SetBkColor(GUI_BLACK);
+			GUI_Clear();
+
+			// Show the chat screen
+			marschat_ui_create();
+
+			// Initial paint
+			GUI_Exec();
+
+			break;
+		}
+#endif
 #if 0
 		case MODE_QUICK_LOG:
 		{
@@ -743,6 +792,9 @@ static void ui_proc_change_mode(void)
 			//ui_side_enc_menu_destroy();
 			ui_desktop_ft8_destroy();
 			//ui_quick_log_destroy();
+			#ifdef CONTEXT_MARSCHAT
+			marschat_ui_destroy();
+			#endif
 
 			// Clear screen
 			GUI_SetBkColor(GUI_BLACK);
@@ -1101,6 +1153,31 @@ void ui_proc_task(void const *arg)
 
 ui_proc_loop:
 
+	// Loop rate vs consumed FFT frame rate monitor(waterfall sluggishness
+	// hunt) - repaint fps = min(fft feed rate, loop rate), so if the
+	// waterfall is slow while fft irq shows 13/s, the loop is the brake
+	#ifdef PROFILE_UI_REPAINT
+	{
+		extern struct UI_SW ui_sw;
+		static ulong loop_cnt = 0, paint_cnt = 0, rate_t0 = 0;
+		ulong now = xTaskGetTickCount();
+
+		loop_cnt++;
+		if(ui_sw.updated)
+			paint_cnt++;		// this iteration will consume a frame
+
+		if(rate_t0 == 0)
+			rate_t0 = now;
+		else if((now - rate_t0) >= 1000)
+		{
+			printf("ui loop %d/s, painted %d/s\r\n", (int)loop_cnt, (int)paint_cnt);
+			loop_cnt = 0;
+			paint_cnt = 0;
+			rate_t0 = now;
+		}
+	}
+	#endif
+
 	// Process notifications
 	ui_proc_notified(arg);
 
@@ -1109,6 +1186,10 @@ ui_proc_loop:
 		del_ms = (UI_PROC_SLEEP_TIME*2);
 	else if(ui_s.cur_state == MODE_DESKTOP_FT8)
 		del_ms = (UI_PROC_SLEEP_TIME*3);
+	#ifdef CONTEXT_MARSCHAT
+	else if(ui_s.cur_state == MODE_DESKTOP_MARSCHAT)
+		del_ms = (UI_PROC_SLEEP_TIME*2);
+	#endif
 	else
 	{
 		ui_proc_periodic();
@@ -1118,6 +1199,9 @@ ui_proc_loop:
 	// Give control to emWin
 	GUI_Exec();
 	GUI_Delay(del_ms);
+
+	// Periodic per task CPU load dump(100% CPU bug hunt)
+	cpu_trace_poll();
 
 	goto ui_proc_loop;
 }

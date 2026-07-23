@@ -101,11 +101,15 @@ typedef struct
 static wspr_cand	cand[WSPR_MAX_CAND];
 static int			ncand;
 
+// Decode time budget hook, polled between candidates (see header)
+static int			(*deadline_hook)(void) = NULL;
+
 // Fano metric table
 static int		mettab[2][256];
 
 // WSPR pseudo random sync vector (one bit per channel symbol)
-static const uint8_t pr3[WSPR_NSYM] =
+// Not static - shared with the encoder (wspr_encoder.c)
+const uint8_t wspr_pr3[WSPR_NSYM] =
 {
 	1,1,0,0,0,0,0,0,1,0,0,0,1,1,1,0,0,0,1,0,
 	0,1,0,1,1,1,1,0,0,0,0,0,0,0,1,0,0,1,0,1,
@@ -286,6 +290,16 @@ int wspr_decoder_feed(const int16_t *pcm, int num_samples)
 	}
 
 	return accepted;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : wspr_decoder_set_deadline_hook
+//* Object              : install/remove the decode time budget hook
+//* Context    			: CONTEXT_WSPR
+//*----------------------------------------------------------------------------
+void wspr_decoder_set_deadline_hook(int (*hook)(void))
+{
+	deadline_hook = hook;
 }
 
 //*----------------------------------------------------------------------------
@@ -512,7 +526,7 @@ static void coarse_sync(wspr_cand *c, int nframes)
 				p2 = ps[fr][(cb + 1) & (WSPR_FFT_SIZE - 1)];
 				p3 = ps[fr][(cb + 3) & (WSPR_FFT_SIZE - 1)];
 
-				ss  += (pr3[k] ? 1.0f : -1.0f) * ((p1 + p3) - (p0 + p2));
+				ss  += (wspr_pr3[k] ? 1.0f : -1.0f) * ((p1 + p3) - (p0 + p2));
 				pow += p0 + p1 + p2 + p3;
 			}
 
@@ -583,7 +597,7 @@ static float demod_pass(float fbb, float drift, int shift, float *soft)
 			p[t] = re * re + im * im;
 		}
 
-		ss   += (pr3[k] ? 1.0f : -1.0f) * ((p[1] + p[3]) - (p[0] + p[2]));
+		ss   += (wspr_pr3[k] ? 1.0f : -1.0f) * ((p[1] + p[3]) - (p[0] + p[2]));
 		ptot += p[0] + p[1] + p[2] + p[3];
 
 		if(soft != NULL)
@@ -784,12 +798,13 @@ static int unpack_message(const uint8_t *dat, WSPR_DECODE *d)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : wspr_decoder_run
-//* Object              : full decode pass over the fed capture
-//* Notes    			: returns number of unique decodes written to out[]
+//* Function Name       : wspr_decoder_run_raw
+//* Object              : full decode pass over the fed capture, raw bits out
+//* Notes    			: returns number of unique raw 50 bit payloads in out[],
+//* Notes    			: no interpretation - callers unpack per personality
 //* Context    			: CONTEXT_WSPR
 //*----------------------------------------------------------------------------
-int wspr_decoder_run(WSPR_DECODE *out, int max_out)
+int wspr_decoder_run_raw(WSPR_RAW_DECODE *out, int max_out)
 {
 	int		nframes, ic, k, i;
 	int		ndecodes = 0;
@@ -808,10 +823,16 @@ int wspr_decoder_run(WSPR_DECODE *out, int max_out)
 
 	for(ic = 0; (ic < ncand) && (ndecodes < max_out); ic++)
 	{
-		wspr_cand	*c = &cand[ic];
-		WSPR_DECODE	dec;
-		float		rms, scale;
-		int			dup;
+		wspr_cand		*c = &cand[ic];
+
+		// Out of time - candidates are sorted strongest first, so only
+		// the weakest ones are lost. A noise candidate can burn the
+		// whole Fano cycle budget, making the pass length unpredictable
+		if((deadline_hook != NULL) && (deadline_hook() != 0))
+			break;
+		WSPR_RAW_DECODE	raw;
+		float			rms, scale;
+		int				dup;
 
 		coarse_sync(c, nframes);
 
@@ -843,20 +864,21 @@ int wspr_decoder_run(WSPR_DECODE *out, int max_out)
 		if(wspr_fano(symbols, data, WSPR_NBITS, mettab, FANO_DELTA, FANO_MAXCYCLES) != 0)
 			continue;
 
-		memset(&dec, 0, sizeof(dec));
-		if(unpack_message(data, &dec) != 0)
-			continue;
+		// Canonical raw payload - 50 bits, tail bits in the last byte masked
+		memset(&raw, 0, sizeof(raw));
+		memcpy(raw.bits, data, sizeof(raw.bits));
+		raw.bits[6] &= 0xC0;
 
-		dec.freq_hz  = WSPR_CENTER_HZ + c->freq_bb;
-		dec.snr_db   = c->snr_db;
-		dec.dt_sec   = (float)c->shift / WSPR_FS_BB - 1.0f;
-		dec.drift_hz = c->drift;
+		raw.freq_hz  = WSPR_CENTER_HZ + c->freq_bb;
+		raw.snr_db   = c->snr_db;
+		raw.dt_sec   = (float)c->shift / WSPR_FS_BB - 1.0f;
+		raw.drift_hz = c->drift;
 
 		// Drop duplicates (same signal found via two near candidates)
 		dup = 0;
 		for(i = 0; i < ndecodes; i++)
 		{
-			if(strcmp(out[i].message, dec.message) == 0)
+			if(memcmp(out[i].bits, raw.bits, sizeof(raw.bits)) == 0)
 			{
 				dup = 1;
 				break;
@@ -865,7 +887,54 @@ int wspr_decoder_run(WSPR_DECODE *out, int max_out)
 		if(dup)
 			continue;
 
-		out[ndecodes++] = dec;
+		out[ndecodes++] = raw;
+	}
+
+	return ndecodes;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : wspr_raw_to_type1
+//* Object              : interpret one raw decode as a WSPR type 1 message
+//* Notes    			: returns 0 ok, 1 not valid type 1 (the payload may
+//* Notes    			: belong to another personality, e.g. MarsChat)
+//* Context    			: CONTEXT_WSPR
+//*----------------------------------------------------------------------------
+int wspr_raw_to_type1(const WSPR_RAW_DECODE *raw, WSPR_DECODE *dec)
+{
+	memset(dec, 0, sizeof(*dec));
+
+	if(unpack_message(raw->bits, dec) != 0)
+		return 1;
+
+	dec->freq_hz  = raw->freq_hz;
+	dec->snr_db   = raw->snr_db;
+	dec->dt_sec   = raw->dt_sec;
+	dec->drift_hz = raw->drift_hz;
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : wspr_decoder_run
+//* Object              : full decode pass over the fed capture, type 1 spots
+//* Notes    			: thin wrapper - raw pass + type 1 message unpack;
+//* Notes    			: raw payloads that are not valid type 1 are dropped
+//* Context    			: CONTEXT_WSPR
+//*----------------------------------------------------------------------------
+int wspr_decoder_run(WSPR_DECODE *out, int max_out)
+{
+	// Single caller (wspr task) - keep the raw list off the task stack
+	static WSPR_RAW_DECODE	raw[WSPR_MAX_DECODES];
+	int						nraw, i;
+	int						ndecodes = 0;
+
+	nraw = wspr_decoder_run_raw(raw, WSPR_MAX_DECODES);
+
+	for(i = 0; (i < nraw) && (ndecodes < max_out); i++)
+	{
+		if(wspr_raw_to_type1(&raw[i], &out[ndecodes]) == 0)
+			ndecodes++;
 	}
 
 	return ndecodes;

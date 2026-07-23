@@ -151,6 +151,7 @@
 #define MODE_SIDE_ENC_MENU		2
 #define MODE_DESKTOP_FT8		3
 #define MODE_QUICK_LOG			4
+#define MODE_DESKTOP_MARSCHAT	5
 //
 #define THEME_0					0
 #define THEME_1					1
@@ -202,6 +203,10 @@ __attribute__((__common__)) struct UI_DRIVER_STATE {
 #define UI_ICC_FITER				6
 #define UI_ICC_STEREO				7
 #define UI_ICC_TUNE					8
+#define UI_ICC_WSPR_START			9
+#define UI_ICC_WSPR_STOP			10
+#define UI_ICC_MC_TX_START			11
+#define UI_ICC_MC_TX_STOP			12
 
 #if 0
 // The 16 bit msg id is used in the DSP handler directly

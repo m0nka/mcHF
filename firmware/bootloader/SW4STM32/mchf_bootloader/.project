@@ -572,9 +572,9 @@
 			<locationURI>PARENT-3-PROJECT_LOC/base_hw/hw/MT48LC4M32B2/MT48LC4M32B2.c</locationURI>
 		</link>
 		<link>
-			<name>base_hw/hw/ST7701/st7701.c</name>
+			<name>proc/ui/lcd_driver/ili9806e.c</name>
 			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/base_hw/hw/ST7701/st7701.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/lcd_driver/ili9806e.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/lcd_driver/lcd_high.c</name>

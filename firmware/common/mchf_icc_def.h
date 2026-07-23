@@ -84,6 +84,48 @@
 // Tune mode
 #define ICC_SET_TUNE_MODE				12
 //
+// WSPR capture - M4 core taps the demodulated rx audio, decimates it
+// to 12 kHz mono and buffers it in chunks, the M7 core polls the chunks
+// out via ICC_WSPR_READ and writes the capture file to the SD card
+#define ICC_WSPR_START					13
+#define ICC_WSPR_STOP					14
+#define ICC_WSPR_READ					15
+//
+// ICC_WSPR_READ response layout:
+// [0]     signature (ICC_WSPR_SIG)
+// [1]     flags
+// [2..3]  payload size in bytes, little endian, 0 = ring empty
+// [4.. ]  payload - 16 bit signed LE mono PCM @ 12 kHz
+#define ICC_WSPR_SIG					0x9E
+#define ICC_WSPR_FLAG_ACTIVE			0x01	// capture still running on the M4 core
+#define ICC_WSPR_FLAG_OVERRUN			0x02	// M4 chunk ring overflowed, samples lost
+#define ICC_WSPR_HDR_SIZE				4
+//
+// chunk payload size in samples (1024 bytes, fits the 1100 byte rpmsg buffer)
+#define ICC_WSPR_CHUNK_SAMPLES			512
+//
+// MarsChat/WSPR 4-FSK symbol transmitter - the M4 core keys the TX
+// exciter itself, streams the symbol tones through the normal TX IQ
+// chain (own softdds instance, constant envelope, USB sideband) and
+// unkeys when the stream (and optional CW ID) is done. One symbol =
+// exactly 32768 samples @ 48 kHz = 8192/12000 s
+#define ICC_MC_TX_START					16
+#define ICC_MC_TX_STOP					17
+//
+// ICC_MC_TX_START payload layout:
+// [0..1]  audio tone base in Hz, little endian (e.g. 1500); symbol
+//         tones are base + sym * 12000/8192 Hz
+// [2]     number of symbols (162 for a WSPR frame, less for tests)
+// [3]     number of CW id elements, 0 = no CW id segment
+// [4..5]  samples per CW element, little endian (25 wpm dot = 2304)
+// [6..46] symbol stream, 2 bits per symbol, LSBs first
+//         (sym n = (byte[6 + n/4] >> (2*(n&3))) & 3)
+// [47.. ] CW id element bitstream, LSBs first, bit = tone on
+#define ICC_MC_TX_HDR_SIZE				6
+#define ICC_MC_TX_MAX_SYMS				162
+#define ICC_MC_TX_SYMS_BYTES			((ICC_MC_TX_MAX_SYMS + 3) / 4)
+#define ICC_MC_TX_MAX_CW_ELEM			255
+//
 // -------------------------------------------------------------------
 
 #define TRX_MODE_RX					0

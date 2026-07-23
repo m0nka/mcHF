@@ -800,13 +800,13 @@ void radio_init_on_reset(void)
 	tsu.demo_mode						= 0;
 	tsu.bt_enabled 						= 0;
 	tsu.brightness						= 30;
-	tsu.demo_mode 						= 1;
+	tsu.smet_type 						= 0;
 
 	// Enforce 20m on eeprom on error
 	tsu.curr_band 						= BAND_MODE_20;
-	tsu.band[tsu.curr_band].volume 		= 0;
+	tsu.band[tsu.curr_band].volume 		= 16;
 	tsu.band[tsu.curr_band].active_vfo  = VFO_A;
-	tsu.band[tsu.curr_band].vfo_a 		= 14203*1000;
+	tsu.band[tsu.curr_band].vfo_a 		= 14091*1000;
 	tsu.band[tsu.curr_band].fixed_mode 	= 0;
 	tsu.band[tsu.curr_band].nco_freq	= 0;
 	tsu.band[tsu.curr_band].demod_mode	= DEMOD_USB;

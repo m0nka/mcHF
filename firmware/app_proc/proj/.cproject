@@ -61,6 +61,8 @@
 									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/info"/>
 									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/clock"/>
 									<listOptionValue builtIn="false" value="../../../proc/ui/menu/items/logbook"/>
+									<listOptionValue builtIn="false" value="../../../proc/ui/desktop_marschat"/>
+                                    <listOptionValue builtIn="false" value="../../../proc/ui/theme"/>
 									<listOptionValue builtIn="false" value="../../../proc/ui/desktop"/>
 									<listOptionValue builtIn="false" value="../../../proc/ui/desktop_ft8"/>
 									<listOptionValue builtIn="false" value="../../../proc/ui/driver/backlight"/>
@@ -91,6 +93,7 @@
 									<listOptionValue builtIn="false" value="../../../proc/dsp"/>
 									<listOptionValue builtIn="false" value="../../../proc/dsp/digi/ft8_lib/"/>
 									<listOptionValue builtIn="false" value="../../../proc/wspr"/>
+									<listOptionValue builtIn="false" value="../../../proc/marschat"/>
 									<listOptionValue builtIn="false" value="../../../../"/>
 									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/CMSIS/Device/ST/STM32H7xx/Include"/>
 									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/STM32H7xx_HAL_Driver/Inc"/>
@@ -290,6 +293,8 @@
 									<listOptionValue builtIn="false" value="../../proc/ui/menu/items/info"/>
 									<listOptionValue builtIn="false" value="../../proc/ui/menu/items/clock"/>
 									<listOptionValue builtIn="false" value="../../proc/ui/menu/items/logbook"/>
+									<listOptionValue builtIn="false" value="../../proc/ui/desktop_marschat"/>
+                                    <listOptionValue builtIn="false" value="../../proc/ui/theme"/>
 									<listOptionValue builtIn="false" value="../../proc/ui/desktop"/>
 									<listOptionValue builtIn="false" value="../../proc/ui/desktop_ft8"/>
 									<listOptionValue builtIn="false" value="../../proc/ui/driver/backlight"/>
@@ -325,6 +330,7 @@
 									<listOptionValue builtIn="false" value="../../proc/lora/protocols/meshtastic/inc"/>
 									<listOptionValue builtIn="false" value="../../proc/dsp"/>
 									<listOptionValue builtIn="false" value="../../proc/wspr"/>
+									<listOptionValue builtIn="false" value="../../proc/marschat"/>
 									<listOptionValue builtIn="false" value="../../proc/sdcard"/>
 									<listOptionValue builtIn="false" value="../../proc/sdcard/fs"/>
 									<listOptionValue builtIn="false" value="../../proc/sdcard/hw"/>

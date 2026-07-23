@@ -21,6 +21,7 @@
 #include "ch224a.h"
 
 #include "bms_proc.h"
+#include "bms_gold.h"
 
 // Local state
 struct BMSState				bmss;
@@ -305,7 +306,7 @@ void bms_proc_charger_handler(void)
 	vbat = bq25730_read_vbat(&chip_cfg);
 	vbus = bq25730_read_vbus(&chip_cfg);
 	bq25730_read_ibat(&chip_cfg, &chv, &dcv);
-	printf("[%04x] vsys:%d vbat:%d vbus:%d ch:%d dc:%d cr:%d \r\n", stat, vsys, vbat, vbus, chv, dcv, curr);
+	//printf("[%04x] vsys:%d vbat:%d vbus:%d ch:%d dc:%d cr:%d \r\n", stat, vsys, vbat, vbus, chv, dcv, curr);
 	#else
 	bq25730_read_chg_stat(&chip_cfg);
 	bq25730_read_iin(&chip_cfg);
@@ -362,6 +363,22 @@ static void bms_proc_worker(void const *param)
 
 				break;
 			}
+
+			#ifdef CONTEXT_SD
+			// Dump gauge data flash to SD card
+			case 0x30:
+			{
+				bms_gold_backup();
+				break;
+			}
+
+			// Program gauge data flash from SD card gold file
+			case 0x31:
+			{
+				bms_gold_flash();
+				break;
+			}
+			#endif
 
 			default:
 				break;
@@ -438,6 +455,10 @@ void bms_proc_task(void const *arg)
 	bmss.run_on_dc			= 0;
 	bmss.shutdown_req 		= 0;
 	bmss.bms_unlock_state	= 0;
+	bmss.gold_state			= 0;
+	bmss.gold_perc			= 0;
+	bmss.gold_err			= 0;
+	bmss.gold_line			= 0;
 
 	// Detect BMS chip
 	bq40z80_init();

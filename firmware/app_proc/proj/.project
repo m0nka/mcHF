@@ -152,6 +152,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/startup/system_stm32h7xx_dualcore_bootcm7_cm4gated.c</locationURI>
 		</link>
 		<link>
+			<name>util/cpu_trace.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/util/cpu_trace.c</locationURI>
+		</link>
+		<link>
 			<name>util/cpu_utils.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/util/cpu_utils.c</locationURI>
@@ -547,6 +552,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/band/band_proc.c</locationURI>
 		</link>
 		<link>
+			<name>proc/bms/bms_gold.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/bms/bms_gold.c</locationURI>
+		</link>
+		<link>
 			<name>proc/bms/bms_proc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/bms/bms_proc.c</locationURI>
@@ -642,9 +652,29 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/vfo/vfo_proc.c</locationURI>
 		</link>
 		<link>
-			<name>proc/wspr/wspr_proc.c</name>
+			<name>proc/marschat/mc_frame.c</name>
 			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/wspr/wspr_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/mc_frame.c</locationURI>
+		</link>
+		<link>
+			<name>proc/marschat/mc_tx_build.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/mc_tx_build.c</locationURI>
+		</link>
+		<link>
+			<name>proc/marschat/mc_session.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/mc_session.c</locationURI>
+		</link>
+		<link>
+			<name>proc/marschat/marschat_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/marschat_proc.c</locationURI>
+		</link>
+		<link>
+			<name>proc/vfo/vfo_mc_gen.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/vfo/vfo_mc_gen.c</locationURI>
 		</link>
 		<link>
 			<name>proc/wspr/wspr_decoder.c</name>
@@ -652,9 +682,19 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/wspr/wspr_decoder.c</locationURI>
 		</link>
 		<link>
+			<name>proc/wspr/wspr_encoder.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/wspr/wspr_encoder.c</locationURI>
+		</link>
+		<link>
 			<name>proc/wspr/wspr_fano.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/wspr/wspr_fano.c</locationURI>
+		</link>
+		<link>
+			<name>proc/wspr/wspr_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/wspr/wspr_proc.c</locationURI>
 		</link>
 		<link>
 			<name>Middlewares/FreeRTOS/CMSIS-RTOS/cmsis_os.c</name>
@@ -1142,14 +1182,9 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/driver/backlight/shared_tim.c</locationURI>
 		</link>
 		<link>
-			<name>proc/ui/driver/mipi/otm8009a.c</name>
+			<name>proc/ui/driver/mipi/ili9806e.c</name>
 			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/driver/mipi/otm8009a.c</locationURI>
-		</link>
-		<link>
-			<name>proc/ui/driver/mipi/st7701.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/driver/mipi/st7701.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/driver/mipi/ili9806e.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/ui_lib/keypad/c_keypad.c</name>
@@ -1235,6 +1270,16 @@
 			<name>proc/ui/menu/items/lora/lora.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/lora/lora.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ui/theme/atlas_draw.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/theme/atlas_draw.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ui/desktop_marschat/marschat_ui.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop_marschat/marschat_ui.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/lora/lora_res.c</name>

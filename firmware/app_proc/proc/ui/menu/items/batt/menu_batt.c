@@ -21,6 +21,7 @@
 
 #include "ui_menu_module.h"
 #include "bms_proc.h"
+#include "bms_gold.h"
 
 #include "menu_batt.h"
 
@@ -108,6 +109,11 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate1[] =
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT8,		550,	160,	170, 			30,  				0, 		0x0,	0 },
 
 	{ BUTTON_CreateIndirect, 	"Shutdown",	ID_BUTTON_SHUTDOWN,	20, 	350, 	120, 			45, 				0, 		0x0, 	0 },
+
+	// Gold file backup/flash
+	{ BUTTON_CreateIndirect, 	"DF Backup",ID_BUTTON_DF_BACKUP,160, 	350, 	120, 			45, 				0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"DF Flash",	ID_BUTTON_DF_FLASH,	300, 	350, 	120, 			45, 				0, 		0x0, 	0 },
+	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT9,		440,	355,	280, 			35,  				0, 		0x0,	0 },
 };
 #if 0
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate2[] =
@@ -265,6 +271,44 @@ static uchar menu_batt_send_msg(xQueueHandle pvQueueHandle, ulong *ulMessageBuff
 	return 0;
 }
 
+static void UpdateGoldStatus(WM_HWIN hDlg)
+{
+	#ifdef CONTEXT_BMS
+	char buf[40];
+	WM_HWIN hItem;
+
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT9);
+
+	switch(bmss.gold_state)
+	{
+		case BMS_GOLD_BUSY_BACKUP:
+			sprintf(buf, "backup... %d%%", bmss.gold_perc);
+			break;
+
+		case BMS_GOLD_BUSY_FLASH:
+			sprintf(buf, "flash... %d%%", bmss.gold_perc);
+			break;
+
+		case BMS_GOLD_DONE:
+			if(bmss.gold_line)
+				sprintf(buf, "done, mfg %04x", bmss.gold_line);	// mfg status after flash
+			else
+				sprintf(buf, "done");							// backup
+			break;
+
+		case BMS_GOLD_ERROR:
+			sprintf(buf, "err %d at %d", bmss.gold_err, bmss.gold_line);
+			break;
+
+		default:
+			buf[0] = 0;
+			break;
+	}
+
+	TEXT_SetText(hItem, buf);
+	#endif
+}
+
 static void UpdateMonitorFrame(WM_HWIN hDlg)
 {
 	#ifdef CONTEXT_BMS
@@ -272,6 +316,10 @@ static void UpdateMonitorFrame(WM_HWIN hDlg)
 	char buf[40];
 	WM_HWIN hItem, hHeader;
 	ulong perc_val;
+
+	// Gold file job progress, shown also while cell
+	// readings are stalled by a running backup/flash
+	UpdateGoldStatus(hDlg);
 
 	if(!bmss.rr)
 		return;
@@ -514,6 +562,7 @@ static void UpdateCalibrationFrame(WM_HWIN hDlg)
 static void _cbMonitorControl(WM_MESSAGE * pMsg, int Id, int NCode)
 {
 	//WM_HWIN hItem;
+	ulong ulData[10];
 
 	switch(Id)
 	{
@@ -547,6 +596,58 @@ static void _cbMonitorControl(WM_MESSAGE * pMsg, int Id, int NCode)
 					{
 						printf("...bms shutdown \r\n");
 						bmss.shutdown_req = 1;
+					}
+					break;
+				}
+			}
+			break;
+		}
+
+		// -------------------------------------------------------------
+		// Button - dump gauge data flash to SD card
+		case ID_BUTTON_DF_BACKUP:
+		{
+			switch(NCode)
+			{
+				case WM_NOTIFICATION_RELEASED:
+				{
+					if((bmss.gold_state == BMS_GOLD_BUSY_BACKUP)||(bmss.gold_state == BMS_GOLD_BUSY_FLASH))
+						break;
+
+					if(menu_batt_ShowMessageBox(pMsg->hWin,
+												"Battery Manager",
+												"Dump BMS data flash to SD card (bms/backup.fs)?",
+												1))
+					{
+						printf("...bms df backup \r\n");
+						ulData[0] = 0x30;
+						menu_batt_send_msg(ps.xBmsRxQueue, ulData, 1);
+					}
+					break;
+				}
+			}
+			break;
+		}
+
+		// -------------------------------------------------------------
+		// Button - program gauge data flash from SD card gold file
+		case ID_BUTTON_DF_FLASH:
+		{
+			switch(NCode)
+			{
+				case WM_NOTIFICATION_RELEASED:
+				{
+					if((bmss.gold_state == BMS_GOLD_BUSY_BACKUP)||(bmss.gold_state == BMS_GOLD_BUSY_FLASH))
+						break;
+
+					if(menu_batt_ShowMessageBox(pMsg->hWin,
+												"Battery Manager",
+												"Program BMS from bms/gold.fs?\nKeep DC power connected!",
+												1))
+					{
+						printf("...bms df flash \r\n");
+						ulData[0] = 0x31;
+						menu_batt_send_msg(ps.xBmsRxQueue, ulData, 1);
 					}
 					break;
 				}
@@ -766,8 +867,8 @@ static void _cbDialog1(WM_MESSAGE * pMsg)
 			HEADER_AddItem(hItem,  20, "", 			14);
 			HEADER_AddItem(hItem, 125, "CELL5", 	14);
 
-			// Cell params
-			for(i = 0; i < 9; i++)
+			// Cell params, plus the gold job status text
+			for(i = 0; i < 10; i++)
 			{
 				hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_TEXT0 + i);
 

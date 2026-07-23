@@ -38,6 +38,9 @@
 #define ID_BUTTON_IC4		  		(GUI_ID_USER + 0x66)
 #define ID_BUTTON_IC5		  		(GUI_ID_USER + 0x67)
 
+#define ID_BUTTON_DF_BACKUP	  		(GUI_ID_USER + 0x68)
+#define ID_BUTTON_DF_FLASH	  		(GUI_ID_USER + 0x69)
+
 #define SOPTS						SLIDER_CF_HORIZONTAL
 
 #define BATT_MAX_COLUMN				8

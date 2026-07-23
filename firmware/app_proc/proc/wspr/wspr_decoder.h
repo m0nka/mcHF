@@ -41,8 +41,12 @@
 #define WSPR_DF					(375.0f / 256.0f)			// tone spacing, Hz
 
 // Audio passband
+// WSPR_SEARCH_HZ is overridable from the build line (host rig widens it
+// to hunt uncalibrated/drifting bench signals; target keeps the default)
 #define WSPR_CENTER_HZ			1500.0f						// nominal signal center
+#ifndef WSPR_SEARCH_HZ
 #define WSPR_SEARCH_HZ			110.0f						// search +/- around center
+#endif
 
 // Decoder dimensioning
 #define WSPR_MAX_BB_SAMPLES		(WSPR_CAPTURE_SEC * WSPR_FS_BB)
@@ -66,13 +70,44 @@ typedef struct
 
 } WSPR_DECODE;
 
+// One raw decode - the 50 payload bits without interpretation. Shared PHY
+// interface: the WSPR type 1 unpacker and other personalities (MarsChat
+// frame layer) are peer consumers of this
+typedef struct
+{
+	uint8_t	bits[7];										// 50 bits, MSB first, low 6 bits of bits[6] zero
+	float	freq_hz;										// audio freq of tone group center
+	float	snr_db;											// SNR in 2500 Hz ref bandwidth
+	float	dt_sec;											// time offset vs nominal +1s start
+	float	drift_hz;										// freq drift over transmission
+
+} WSPR_RAW_DECODE;
+
+// WSPR pseudo random sync vector, one bit per channel symbol
+// (defined in wspr_decoder.c, shared with the encoder)
+extern const uint8_t wspr_pr3[WSPR_NSYM];
+
 // Reset internal state, call before feeding a new capture
 void	wspr_decoder_reset	(void);
 
 // Stream in PCM samples (any chunk size), 12 kHz mono, returns samples accepted
 int		wspr_decoder_feed	(const int16_t *pcm, int num_samples);
 
-// Run full decode pass over fed samples, returns number of decodes
+// Run full decode pass over fed samples, raw 50 bit payloads out,
+// returns number of unique raw decodes
+int		wspr_decoder_run_raw(WSPR_RAW_DECODE *out, int max_out);
+
+// Optional decode time budget: the hook is polled between candidates
+// (strongest first) and a nonzero return stops the pass, dropping only
+// the weakest ones. NULL (default) = no limit. The decoder itself has
+// no clock - the caller owns the deadline (host builds pass NULL)
+void	wspr_decoder_set_deadline_hook(int (*hook)(void));
+
+// Interpret one raw decode as a WSPR type 1 message, returns 0 ok,
+// 1 not a valid type 1 payload (may belong to another personality)
+int		wspr_raw_to_type1	(const WSPR_RAW_DECODE *raw, WSPR_DECODE *dec);
+
+// Run full decode pass over fed samples, returns number of type 1 decodes
 int		wspr_decoder_run	(WSPR_DECODE *out, int max_out);
 
 #endif

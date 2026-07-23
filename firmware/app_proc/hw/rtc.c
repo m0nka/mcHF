@@ -16,8 +16,46 @@
 
 static k_AlarmCallback AlarmCallback;
   
+// The board has a 32.768 kHz crystal and SystemClock_Config already
+// selects it (board.c, and it hangs in Error_Handler(9) if the LSE fails
+// to start - so a booting radio proves the crystal runs). Without this
+// define the MspInit below quietly switched the RTC back to the LSI
+// while keeping the prescalers below, which divide by 32768: the LSI
+// runs near 28 kHz, so the wall clock lost about one second in six
+// (measured 110 RTC seconds against 128.9 real ones, 2026-07-21). That
+// is what made the RTC look like a badly drifting crystal
+#define USE_LSE
+
 #define RTC_ASYNCH_PREDIV  0x7F   /* LSE as RTC clock */
 #define RTC_SYNCH_PREDIV   0x00FF /* LSE as RTC clock */
+
+// -----------------------------------------------------------------------------
+// LSE trim - RTC smooth digital calibration (RM0433, RTC_CALR)
+//
+// With the LSE fix above in place the wall clock still lost about 2.5 s per
+// 24 h, i.e. roughly 29 ppm. That is the crystal and its load capacitors,
+// not anything software does - running slow is what too much load
+// capacitance looks like. The RTC trims it continuously in the backup
+// domain: over a 32 s window it adds 512 pulses when CALP is set and
+// subtracts CALM, one step being 1/2^20 = 0.954 ppm, range -487..+488 ppm.
+//
+// PER UNIT VALUE. This compensates THIS board's crystal, so it does not
+// belong in a shared header. Positive = the clock runs slow and is sped up.
+// To re-measure: set the clock against a reference, leave the radio running
+// for several days, then
+//
+//   ppm = seconds_lost * 1000000 / seconds_elapsed
+//
+// The value below comes from a 2-3 s/24 h observation (2026-07-22) and is
+// therefore only good to about +/-6 ppm - worth refining over a longer run.
+// What limits the result after that is temperature, not this number: a
+// 32.768 kHz tuning fork is parabolic at about -0.034 ppm/degC^2 either side
+// of a +25 degC peak, so a warm chassis costs several ppm on its own
+#define RTC_CALIB_PPM		29
+
+// ppm -> calibration steps of 1/2^20, rounded to nearest
+#define RTC_CALIB_STEPS		(((RTC_CALIB_PPM) * 1048576 + \
+							 (((RTC_CALIB_PPM) >= 0) ? 500000 : -500000)) / 1000000)
 
 #define BUTTON_WAKEUP_PIN                   GPIO_PIN_13
 RTC_HandleTypeDef RtcHandle;
@@ -83,6 +121,37 @@ void k_CalendarBkupInit(void)
 	if(HAL_RTC_Init(&RtcHandle) != HAL_OK)
 	{
 		return;
+	}
+
+	// Apply the LSE trim. Safe to re-run on every boot - CALR lives in the
+	// backup domain and this only rewrites it with the same value
+	{
+		int32_t		steps = RTC_CALIB_STEPS;
+		uint32_t	plus, minus;
+
+		// CALM is 9 bits, and the only way to a net gain is to add the
+		// full 512 and take the difference back off again
+		if(steps > 512)
+			steps = 512;
+		else if(steps < -511)
+			steps = -511;
+
+		if(steps > 0)
+		{
+			plus  = RTC_SMOOTHCALIB_PLUSPULSES_SET;
+			minus = (uint32_t)(512 - steps);
+		}
+		else
+		{
+			plus  = RTC_SMOOTHCALIB_PLUSPULSES_RESET;
+			minus = (uint32_t)(-steps);
+		}
+
+		if(HAL_RTCEx_SetSmoothCalib(&RtcHandle, RTC_SMOOTHCALIB_PERIOD_32SEC, plus, minus) != HAL_OK)
+			printf("rtc: lse trim failed\r\n");
+		else
+			printf("rtc: lse trim %d ppm (calp %d, calm %d)\r\n",
+					(int)RTC_CALIB_PPM, (plus != 0) ? 1 : 0, (int)minus);
 	}
 
 	// Fix crazy dates

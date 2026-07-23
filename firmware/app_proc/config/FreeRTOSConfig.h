@@ -45,6 +45,9 @@
 #if defined(__ICCARM__) || defined(__CC_ARM) || defined(__GNUC__)
  #include <stdint.h>
  extern uint32_t SystemCoreClock;
+ // Run time stats clock - DWT cycle counter based, only
+ // active when CPU_TRACE_ENABLE is defined in cpu_trace.h
+ #include "cpu_trace.h"
 #endif
 
 #define configUSE_PREEMPTION                    1
@@ -61,12 +64,18 @@
 #define configIDLE_SHOULD_YIELD                 1
 #define configUSE_MUTEXES                       1
 #define configQUEUE_REGISTRY_SIZE               8
-#define configCHECK_FOR_STACK_OVERFLOW          1
+#define configCHECK_FOR_STACK_OVERFLOW          2
 #define configUSE_RECURSIVE_MUTEXES             1
 #define configUSE_MALLOC_FAILED_HOOK            1
 #define configUSE_APPLICATION_TASK_TAG          0
 #define configUSE_COUNTING_SEMAPHORES           1
+#ifdef CPU_TRACE_ENABLE
+#define configGENERATE_RUN_TIME_STATS           1
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()	cpu_trace_init()
+#define portGET_RUN_TIME_COUNTER_VALUE()			cpu_trace_counter()
+#else
 #define configGENERATE_RUN_TIME_STATS           0
+#endif
 #define configAPPLICATION_ALLOCATED_HEAP        1
 
 /* Co-routine definitions. */

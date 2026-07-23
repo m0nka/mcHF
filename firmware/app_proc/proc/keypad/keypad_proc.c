@@ -635,8 +635,24 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
+			#if defined(CONTEXT_VIDEO) && defined(CONTEXT_MARSCHAT)
+			// Toggle the MarsChat screen, as F4 does for FT8
+			if(ui_s.cur_state != MODE_DESKTOP_MARSCHAT)
+			{
+				printf("F5->enter MarsChat\r\n");
+				ui_s.req_state = MODE_DESKTOP_MARSCHAT;
+			}
+			else
+			{
+				printf("F5->exit MarsChat\r\n");
+				ui_s.req_state = MODE_DESKTOP;
+			}
+
+			xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
+			#else
 			printf("F5->QuickLog\r\n");
 			//GUI_StoreKeyMsg('L', 1);
+			#endif
 		}
 		else
 			printf("F5 hold\r\n");
@@ -1430,7 +1446,10 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 		// -------------------------------------------------
 		// Main radio desktop
 		case MODE_DESKTOP:
-		case MODE_DESKTOP_FT8:	// so can exit via button
+		case MODE_DESKTOP_FT8:			// so can exit via button
+		#ifdef CONTEXT_MARSCHAT
+		case MODE_DESKTOP_MARSCHAT:		// ditto
+		#endif
 			keypad_cmd_processor_desktop(x,y,hold,release);
 			break;
 

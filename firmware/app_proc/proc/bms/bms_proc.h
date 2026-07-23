@@ -52,6 +52,12 @@ __attribute__((__common__)) struct BMSState {
 	// Seal/Unseal status
 	uchar bms_unlock_state;
 
+	// Gold file backup/flash progress(see bms_gold.h)
+	uchar  gold_state;
+	uchar  gold_perc;
+	uchar  gold_err;
+	ushort gold_line;
+
 } BMSState;
 
 void bms_proc_hw_init(void);

@@ -25,6 +25,13 @@
 //#include "hw_dsp_eep.h"
 #include "radio_init.h"
 
+#include "cpu_trace.h"
+
+#ifdef CONTEXT_WSPR
+#include "wspr_proc.h"
+#include "marschat_proc.h"
+#endif
+
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
 extern struct 	TransceiverState 		ts;
@@ -94,6 +101,9 @@ void HAL_HSEM_FreeCallback(uint32_t SemMask)
 		case __HAL_HSEM_SEMID_TO_MASK(HSEM_ID_4):
 		{
 			//printf("fft ready\r\n");
+
+			// FFT broadcast rate monitor(M4 flood detector)
+			cpu_trace_fft_irq_hit();
 
 			if(ps.hIccTask != NULL)
 			{
@@ -597,6 +607,46 @@ icc_proc_loop:
 	return 0;
 }
 
+#ifdef CONTEXT_WSPR
+//*----------------------------------------------------------------------------
+//* Function Name       : icc_proc_wspr_drain
+//* Object              : pull buffered capture chunks out of the M4 ring
+//* Notes    			: and push them to the wspr staging ring. Bounded,
+//* Notes   			: so a burst can not monopolise the icc task
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+static void icc_proc_wspr_drain(int max_chunks)
+{
+	ushort len;
+
+	while(max_chunks--)
+	{
+		if(icc_proc_cmd_xchange(ICC_WSPR_READ, NULL, 0) != 0)
+			break;
+
+		if(aRxBuffer[0] != ICC_WSPR_SIG)
+		{
+			printf("wspr chunk NA\r\n");
+			break;
+		}
+
+		len = aRxBuffer[2] | (aRxBuffer[3] << 8);
+
+		// Ring empty - also learn about a capture the M4 side ended
+		// on its own (safety stop when our stop command got lost)
+		if(len == 0)
+		{
+			if((aRxBuffer[1] & ICC_WSPR_FLAG_ACTIVE) == 0)
+				wspr_capture_mark_stopped();
+
+			break;
+		}
+
+		wspr_capture_push(aRxBuffer + ICC_WSPR_HDR_SIZE, len, aRxBuffer[1]);
+	}
+}
+#endif
+
 //*----------------------------------------------------------------------------
 //* Function Name       : icc_proc_dsp_command
 //* Object              :
@@ -698,6 +748,48 @@ static void icc_proc_dsp_command(ulong cmd)
 			icc_proc_cmd_xchange(ICC_SET_TUNE_MODE, data, 1);
 			break;
 		}
+
+	#ifdef CONTEXT_WSPR
+		// Start WSPR capture streaming on the M4 core
+		case UI_ICC_WSPR_START:
+		{
+			if(icc_proc_cmd_xchange(ICC_WSPR_START, NULL, 0) == 0)
+				wspr_capture_mark_started();
+
+			break;
+		}
+
+		// Stop the stream and pull whatever is left in the M4 ring
+		case UI_ICC_WSPR_STOP:
+		{
+			icc_proc_cmd_xchange(ICC_WSPR_STOP, NULL, 0);
+			icc_proc_wspr_drain(64);
+			wspr_capture_mark_stopped();
+			break;
+		}
+	#endif
+
+	#ifdef CONTEXT_MARSCHAT
+		// Hand a MarsChat symbol transmission to the M4 streamer - the
+		// payload is staged by the marschat task before the notify
+		case UI_ICC_MC_TX_START:
+		{
+			ushort	len;
+			uchar	*payload = marschat_icc_tx_payload(&len);
+
+			if(payload != NULL)
+				icc_proc_cmd_xchange(ICC_MC_TX_START, payload, len);
+
+			break;
+		}
+
+		// Abort a running symbol transmission
+		case UI_ICC_MC_TX_STOP:
+		{
+			icc_proc_cmd_xchange(ICC_MC_TX_STOP, NULL, 0);
+			break;
+		}
+	#endif
 
 		default:
 			return;
@@ -889,7 +981,8 @@ void icc_proc_hw_init(void)
 //*----------------------------------------------------------------------------
 void icc_proc_task(void const *arg)
 {
-	ulong 	ulNotificationValue = 0, ulNotif;
+	ulong 		ulNotificationValue = 0, ulNotif;
+	TickType_t	sleep;
 
 	vTaskDelay(ICC_PROC_START_DELAY);
 	printf("start\r\n");
@@ -900,8 +993,16 @@ void icc_proc_task(void const *arg)
 
 icc_proc_loop:
 
-	// Sleep forever and wait notification
-	ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, ICC_PROC_SLEEP_TIME);
+	// Sleep forever and wait notification - except while a WSPR capture
+	// streams from the M4 core, then wake regularly to pull the chunks
+	sleep = ICC_PROC_SLEEP_TIME;
+
+	#ifdef CONTEXT_WSPR
+	if(wspr_capture_active())
+		sleep = ICC_WSPR_POLL_TIME;
+	#endif
+
+	ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, sleep);
 
 	// Process commands
 	if((ulNotif) && (ulNotificationValue))
@@ -939,6 +1040,12 @@ icc_proc_loop:
 			icc_proc_dsp_command(ulNotificationValue);
 		}
 	}
+
+	#ifdef CONTEXT_WSPR
+	// Pull capture chunks on every wake up while the stream runs
+	if(wspr_capture_active())
+		icc_proc_wspr_drain(8);
+	#endif
 
 	goto icc_proc_loop;
 
