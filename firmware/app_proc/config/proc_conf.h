@@ -291,6 +291,25 @@
 // exists. Set the dial and USB mode from the UI first. Mutually
 // exclusive with MARSCHAT_LOOPBACK_BEACON
 //#define MARSCHAT_RADIATED_BEACON
+//
+// Uncomment for the SINGLE-RADIO two-station test: a second, fully
+// simulated MarsChat station runs inside this firmware in the opposite
+// role, and the two converse through the real session/ARQ code over the
+// CLK1 loopback injector. Stop-and-wait ARQ means exactly one station
+// keys per 120 s slot, so the one injector and one decoder are simply
+// time-shared by slot ownership - no emissions, PA never keyed. Start a
+// session from the chat UI (CALLER or PEER); the emulated peer adopts the
+// other role automatically and starts talking. Mutually exclusive with
+// both beacon modes and needs a session, not WSPR_MONITOR_AUTO_START
+#define MARSCHAT_LOOPBACK_PEER
+//
+// Simulated packet loss for the loopback peer test, percent. A clean
+// loopback channel decodes every frame (~-6 dB), so nothing is ever lost
+// and the ARQ retry / session-lost paths never run. Raise this (e.g. 25)
+// to make each station randomly skip an injection - the other side then
+// hears silence and the retry / delivered-after-N-tries / session-lost
+// logic gets exercised. 0 = clean happy-path conversation
+#define MARSCHAT_LOOPBACK_LOSS_PCT		0
 
 // CW id appended to every radiated MarsChat tx (ham legality - our
 // payload is not standard WSPR). Empty string = no CW id segment

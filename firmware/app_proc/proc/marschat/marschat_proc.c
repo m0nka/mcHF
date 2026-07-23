@@ -33,6 +33,11 @@
 #error "enable only one of MARSCHAT_LOOPBACK_BEACON / MARSCHAT_RADIATED_BEACON"
 #endif
 
+#if defined(MARSCHAT_LOOPBACK_PEER) && \
+	(defined(MARSCHAT_LOOPBACK_BEACON) || defined(MARSCHAT_RADIATED_BEACON))
+#error "MARSCHAT_LOOPBACK_PEER is exclusive with the beacon modes"
+#endif
+
 // FreeRTOS process state
 extern struct PROC_STATE	ps;
 
@@ -138,6 +143,55 @@ static MC_SESSION		mc_sess;
 static uint8_t			mc_slot_tx_armed = 0;		// payload staged, waiting for :01
 static uint8_t			mc_slot_dec_min = 0xFF;		// minute of the last slot decision
 static uint8_t			mc_slot_arm_min = 0xFF;		// minute of the last rx arm
+
+// ------------------------------------------------------------------------
+// Single-radio two-station loopback test (MARSCHAT_LOOPBACK_PEER)
+//
+// A second, fully simulated station runs here in the opposite role and the
+// two hold a real ARQ conversation over the CLK1 loopback injector. The
+// physical trick: stop-and-wait ARQ keys exactly one station per 120 s
+// slot, so the single injector and single decoder are time-shared by slot
+// ownership. Each slot, the owner injects its 162 WSPR symbols on CLK1 and
+// the radio decodes them; the raw hook then routes the decoded frame to
+// whichever session was NOT the transmitter (the listener). Our own tx
+// goes through the loopback too - the ICC / M4 radiated path is bypassed
+// so nothing is emitted
+#ifdef MARSCHAT_LOOPBACK_PEER
+
+#ifndef MARSCHAT_LOOPBACK_LOSS_PCT
+#define MARSCHAT_LOOPBACK_LOSS_PCT	0
+#endif
+
+// One WSPR frame over the CLK1 stepper: 162 symbols, 3 symbols = 2048 ms
+#define MC_LB_BURST_MS				110592
+
+static MC_SESSION		mc_peer;					// the emulated station
+static uint8_t			mc_local_syms[162];			// our frame, injected on our slots
+static uint8_t			mc_peer_syms[162];			// the peer's, on its slots
+static uint8_t			mc_peer_tx_armed = 0;
+static uint8_t			mc_peer_dec_min = 0xFF;
+
+// What the emulated peer has to say - a short scripted opener, then it
+// falls silent and only sends ARQ keep-alives. Words are up to
+// MC_PAYLOAD_CHARS (5) chars; the session consumes one per delivered slot
+static const char * const	mc_peer_msgs[] = { "HELLO", "FROM", "PEER", "OVER" };
+static uint8_t				mc_peer_msg_idx = 0;
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_lb_should_drop
+//* Object              : simulate packet loss so the ARQ retry paths run -
+//*						: a dropped injection is a frame the peer never hears
+//* Context    			: CONTEXT_MARSCHAT
+//*----------------------------------------------------------------------------
+static uint8_t mc_lb_should_drop(void)
+{
+#if MARSCHAT_LOOPBACK_LOSS_PCT > 0
+	return ((rand() % 100) < MARSCHAT_LOOPBACK_LOSS_PCT) ? 1 : 0;
+#else
+	return 0;
+#endif
+}
+#endif	// MARSCHAT_LOOPBACK_PEER
 
 // Session start/stop is requested from the gui task and executed here -
 // the state machine has a single owner
@@ -412,11 +466,54 @@ uchar *marschat_icc_tx_payload(ushort *len)
 //*						: (consumed - not logged as a WSPR spot)
 //* Context    			: CONTEXT_WSPR (called from the wspr task decode pass)
 //*----------------------------------------------------------------------------
+#ifdef MARSCHAT_LOOPBACK_PEER
+//*----------------------------------------------------------------------------
+//* Function Name       : marschat_peer_on_decode
+//* Object              : hand a frame our own station just injected to the
+//*						: emulated peer's session, so it acks and dedups it
+//* Context    			: CONTEXT_WSPR (from the decode pass)
+//*----------------------------------------------------------------------------
+static uchar marschat_peer_on_decode(const WSPR_RAW_DECODE *raw)
+{
+	MC_FRAME	f;
+	char		text[48];
+
+	if(mc_frame_unpack(raw->bits, &f) != 0)
+		return 0;
+
+	mc_codes_to_text(f.codes, MC_PAYLOAD_CHARS, text, sizeof(text));
+
+	printf("mc: [peer] heard seq(%d) ack(%d) \"%s\" \r\n", f.seq, f.ack, text);
+
+	mc_session_on_rx(&mc_peer, &f);
+
+	return 1;
+}
+#endif
+
 static uchar marschat_rx_raw(const WSPR_RAW_DECODE *raw)
 {
 	MC_FRAME	f;
 	char		text[48];
 	long		freq_c;
+
+#ifdef MARSCHAT_LOOPBACK_PEER
+	// Route the decode to the listener. Whoever owns this slot's parity was
+	// the transmitter (decode lands ~118 s in, still inside the same slot),
+	// so when it is our slot the frame was ours and belongs to the peer;
+	// otherwise it is the peer's frame and takes the normal local path
+	if((mc_sess.state == MC_SESS_ACTIVE) && (mc_peer.state == MC_SESS_ACTIVE))
+	{
+		RTC_TimeTypeDef	tm = {0};
+		RTC_DateTypeDef	dt = {0};
+
+		k_GetTime(&tm);
+		k_GetDate(&dt);
+
+		if(mc_session_owns_slot(&mc_sess, marschat_slot_parity(tm.Minutes)))
+			return marschat_peer_on_decode(raw);
+	}
+#endif
 
 	if(mc_frame_unpack(raw->bits, &f) != 0)
 		return 0;									// not ours - try type 1
@@ -476,6 +573,24 @@ static uchar marschat_rx_raw(const WSPR_RAW_DECODE *raw)
 //*----------------------------------------------------------------------------
 static void marschat_slot_tx_kick(void)
 {
+#ifdef MARSCHAT_LOOPBACK_PEER
+	// Our tx goes out on the loopback injector, not the radiated M4 path.
+	// A simulated drop just skips the injection - the session still counts
+	// it as sent and will retry when the peer's ack does not come back
+	if(mc_lb_should_drop())
+	{
+		printf("mc: local tx DROPPED (sim loss) \r\n");
+	}
+	else
+	{
+		vfo_mc_gen_start(marschat_current_dial_hz() + 1500, mc_local_syms, 162);
+	}
+
+	mc_tx_burst_ms   = MC_LB_BURST_MS;
+	mc_tx_busy       = 1;
+	mc_tx_busy_until = xTaskGetTickCount() + pdMS_TO_TICKS(mc_tx_burst_ms);
+	return;
+#else
 	if((ps.hIccTask == NULL) || (mc_icc_payload_len == 0))
 		return;
 
@@ -484,6 +599,7 @@ static void marschat_slot_tx_kick(void)
 	mc_tx_burst_ms   = mc_tx_build_duration_ms(mc_icc_payload);
 	mc_tx_busy       = 1;
 	mc_tx_busy_until = xTaskGetTickCount() + pdMS_TO_TICKS(mc_tx_burst_ms);
+#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -559,11 +675,20 @@ static void marschat_slot_sm(void)
 	{
 		mc_slot_arm_min = tm.Minutes;
 
+#ifdef MARSCHAT_LOOPBACK_PEER
+		// Nothing to arm here: loopback runs the monitor continuously (set
+		// at session start) so every even minute is captured, our own tx
+		// slots included, and the raw hook demuxes to the right session.
+		// A one-shot re-arm at :50 would clash with the current capture,
+		// which is still running until ~:50.6
+		(void)0;
+#else
 		if(!mc_session_owns_slot(&mc_sess, marschat_slot_parity((uint8_t)((tm.Minutes + 1) % 60))))
 		{
 			wspr_proc_monitor_once();
 			printf("mc: slot rx armed at %02d:%02d:%02d \r\n", tm.Hours, tm.Minutes, tm.Seconds);
 		}
+#endif
 	}
 
 	// --- slot boundary, even minute :00 --------------------------------
@@ -591,6 +716,15 @@ static void marschat_slot_sm(void)
 		{
 			mc_frame_pack(&f, bits);
 
+#ifdef MARSCHAT_LOOPBACK_PEER
+			// Injected on CLK1 at :01 - just the 162 symbols, no CW id
+			wspr_encode_raw(bits, mc_local_syms);
+			mc_slot_tx_armed = 1;
+
+			printf("mc: slot tx ftype(%d) seq(%d) ack(%d) try(%d) at %02d:%02d:%02d \r\n",
+					f.ftype, f.seq, f.ack, mc_sess.retries,
+					tm.Hours, tm.Minutes, tm.Seconds);
+#else
 			if(mc_tx_build_payload(bits, 1500, MARSCHAT_CW_ID, MARSCHAT_CW_WPM,
 									mc_icc_payload, &mc_icc_payload_len) == 0)
 			{
@@ -602,6 +736,7 @@ static void marschat_slot_sm(void)
 			}
 			else
 				printf("mc: tx payload build failed \r\n");
+#endif
 		}
 	}
 
@@ -630,9 +765,16 @@ static void marschat_session_sm(void)
 
 	if(req == 1)
 	{
+#ifdef MARSCHAT_LOOPBACK_PEER
+		// Loopback wants every slot captured (both stations share the one
+		// decoder), so the monitor runs continuously and the raw hook
+		// routes each decode to whichever session was listening
+		wspr_proc_monitor_set(1);
+#else
 		// A continuously armed wspr monitor would capture straight
 		// through our own tx slot - the scheduler arms per slot instead
 		wspr_proc_monitor_set(0);
+#endif
 
 		mc_session_start(&mc_sess, mc_sess_req_role);
 
@@ -642,6 +784,20 @@ static void marschat_session_sm(void)
 
 		printf("mc: session start as %s \r\n",
 				(mc_sess.role == MC_ROLE_CALLER) ? "caller (even slots)" : "peer (odd slots)");
+
+#ifdef MARSCHAT_LOOPBACK_PEER
+		// Bring the emulated station up in the opposite role, with its
+		// scripted opener reloaded
+		mc_session_start(&mc_peer,
+				(mc_sess.role == MC_ROLE_CALLER) ? MC_ROLE_PEER : MC_ROLE_CALLER);
+
+		mc_peer_tx_armed	= 0;
+		mc_peer_dec_min		= 0xFF;
+		mc_peer_msg_idx		= 0;
+
+		printf("mc: loopback peer up as %s \r\n",
+				(mc_peer.role == MC_ROLE_CALLER) ? "caller (even slots)" : "peer (odd slots)");
+#endif
 
 		marschat_ui_post_info((mc_sess.role == MC_ROLE_CALLER) ?
 								"session started - caller, even slots" :
@@ -655,10 +811,105 @@ static void marschat_session_sm(void)
 
 		mc_slot_tx_armed = 0;
 
+#ifdef MARSCHAT_LOOPBACK_PEER
+		mc_session_stop(&mc_peer);
+		mc_peer_tx_armed = 0;
+
+		if(vfo_mc_gen_active())
+			vfo_mc_gen_stop();
+#endif
+
 		printf("mc: session stop \r\n");
 		marschat_ui_post_info("session stopped");
 	}
 }
+
+#ifdef MARSCHAT_LOOPBACK_PEER
+//*----------------------------------------------------------------------------
+//* Function Name       : marschat_peer_sm
+//* Object              : slot scheduler for the emulated station - the mirror
+//*						: of marschat_slot_sm, but the payload is scripted and
+//*						: the burst is injected on the loopback. It only ever
+//*						: keys on the slots it owns, which are exactly the
+//*						: slots the local station is listening to
+//* Context    			: CONTEXT_MARSCHAT
+//*----------------------------------------------------------------------------
+static void marschat_peer_sm(void)
+{
+	RTC_TimeTypeDef	tm = {0};
+	RTC_DateTypeDef	dt = {0};
+	MC_FRAME		f;
+	uint8_t			codes[MC_PAYLOAD_CHARS];
+	uint8_t			bits[7];
+	uint8_t			have_new = 0;
+	uint8_t			act;
+
+	if(mc_peer.state != MC_SESS_ACTIVE)
+		return;
+
+	k_GetTime(&tm);
+	k_GetDate(&dt);
+
+	// --- slot decision, even minute :00 --------------------------------
+	if(((tm.Minutes & 1) == 0) && (tm.Seconds <= 1) && (mc_peer_dec_min != tm.Minutes))
+	{
+		mc_peer_dec_min = tm.Minutes;
+
+		// Offer the next scripted word until the script is spent, after
+		// which the session sends ack keep-alives on its own
+		if(mc_peer_msg_idx < (uint8_t)(sizeof(mc_peer_msgs) / sizeof(mc_peer_msgs[0])))
+		{
+			const char	*w = mc_peer_msgs[mc_peer_msg_idx];
+
+			memset(codes, 0, sizeof(codes));
+			if(mc_text_to_codes(w, codes, (int)strlen(w)) >= 0)
+				have_new = 1;
+		}
+
+		act = mc_session_slot(&mc_peer, marschat_slot_parity(tm.Minutes),
+								have_new ? codes : NULL, 0, &f);
+
+		if(act == MC_SLOT_TX_NEW)
+			mc_peer_msg_idx++;
+
+		if(MC_SLOT_IS_TX(act))
+		{
+			mc_frame_pack(&f, bits);
+			wspr_encode_raw(bits, mc_peer_syms);
+			mc_peer_tx_armed = 1;
+
+			printf("mc: [peer] slot tx seq(%d) ack(%d) try(%d) at %02d:%02d:%02d \r\n",
+					f.seq, f.ack, mc_peer.retries, tm.Hours, tm.Minutes, tm.Seconds);
+		}
+	}
+
+	// --- burst start, :01 ----------------------------------------------
+	if(mc_peer_tx_armed && ((tm.Minutes & 1) == 0) && (tm.Seconds >= 1) && (tm.Seconds < 10))
+	{
+		mc_peer_tx_armed = 0;
+
+		if(mc_lb_should_drop())
+		{
+			printf("mc: [peer] tx DROPPED (sim loss) \r\n");
+		}
+		else if(!vfo_mc_gen_active())
+		{
+			vfo_mc_gen_start(marschat_current_dial_hz() + 1500, mc_peer_syms, 162);
+		}
+	}
+
+	// --- result pickup for the peer side (log only) --------------------
+	{
+		uint8_t	seq = 0;
+		uint8_t	res = mc_session_take_result(&mc_peer, &seq);
+
+		if(res == MC_XFER_DELIVERED)
+			printf("mc: [peer] seq %d delivered \r\n", seq);
+		else if(res == MC_XFER_FAILED)
+			printf("mc: [peer] seq %d lost after %d tries \r\n", seq, MC_ARQ_RETRIES);
+	}
+}
+#endif
 
 #ifdef MARSCHAT_LOOPBACK_BEACON
 //*----------------------------------------------------------------------------
@@ -806,6 +1057,10 @@ marschat_proc_loop:
 	marschat_session_sm();
 	marschat_slot_sm();
 	marschat_slot_results();
+
+	#ifdef MARSCHAT_LOOPBACK_PEER
+	marschat_peer_sm();
+	#endif
 
 	#ifdef MARSCHAT_IMMEDIATE_SEND
 	// Bench path: outside a session the queue is drained as fast as the
