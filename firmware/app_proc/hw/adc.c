@@ -47,8 +47,9 @@ static void adc_configure(void)
 	LL_GPIO_SetPinMode(ADC3_INP1_PORT, ADC3_INP1, LL_GPIO_MODE_ANALOG);
 
 	// -----------------------------------------------------------------
-	// ADC3_INP8, Ambient light sensor (PF6)
-	LL_GPIO_SetPinMode(TX_LED_PORT, TX_LED, LL_GPIO_MODE_ANALOG);
+	// ADC3_INP8, Ambient light sensor (PF6) - repurposed as TX indicator LED,
+	// owned/driven by the M4 baseband core (see Board_TxLed). Do not claim PF6 here.
+	//LL_GPIO_SetPinMode(TX_LED_PORT, TX_LED, LL_GPIO_MODE_ANALOG);
 
 	// -----------------------------------------------------------------
 	// ADC3_INP3, PA Temperature (PF7)
@@ -437,12 +438,12 @@ static void MX_ADC3_Init(void)
 	LL_AHB4_GRP1_EnableClock(LL_AHB4_GRP1_PERIPH_GPIOC);
 
 	/**ADC3 GPIO Configuration
-  	  PF6   ------> ADC3_INP8
+  	  PF6   ------> repurposed as TX indicator LED, owned by the M4 core (not analog here)
   	  PF7   ------> ADC3_INP3
   	  PF10   ------> ADC3_INP6
   	  PC3_C   ------> ADC3_INP1
 	 */
-	GPIO_InitStruct.Pin = LL_GPIO_PIN_6|LL_GPIO_PIN_7|LL_GPIO_PIN_10;
+	GPIO_InitStruct.Pin = LL_GPIO_PIN_7|LL_GPIO_PIN_10;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOF, &GPIO_InitStruct);

@@ -405,6 +405,12 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 		// Tune mode on/off
 		case ICC_SET_TUNE_MODE:
 		{
+			// Manual LED toggle
+			if(icc_in_buffer[0])
+				HAL_GPIO_WritePin(TX_LED_PIO, TX_LED_PIN, GPIO_PIN_SET);
+			else
+				HAL_GPIO_WritePin(TX_LED_PIO, TX_LED_PIN, GPIO_PIN_RESET);
+
 			icc_radio_set_tune_mode(icc_in_buffer[0]);
 			break;
 		}
@@ -427,13 +433,24 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 
 		// MarsChat/WSPR symbol transmitter (keys the exciter itself)
 		case ICC_MC_TX_START:
+		{
+			// TX LED On
+			HAL_GPIO_WritePin(TX_LED_PIO, TX_LED_PIN, GPIO_PIN_SET);
+
 			icc_out_buffer[0x00] = icc_mc_tx_start(icc_in_buffer);
 			break;
+		}
 
+		// ToDo: Check if this is called!
 		case ICC_MC_TX_STOP:
+		{
+			// TX LED Off
+			HAL_GPIO_WritePin(TX_LED_PIO, TX_LED_PIN, GPIO_PIN_RESET);
+
 			icc_mc_tx_stop();
 			icc_out_buffer[0x00] = 0;
 			break;
+		}
 
 		default:
 			printf("unknown msg %d\r\n",cmd);

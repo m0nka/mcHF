@@ -57,6 +57,10 @@ typedef	unsigned int	uint;
 typedef	unsigned long	ulong;
 #endif
 
+// PF6 - mcHF Pro TX indicator LED (was ambient-light ADC, repurposed; M4 owns it)
+#define TX_LED_PIN              GPIO_PIN_6
+#define TX_LED_PIO              GPIOF
+
 void printf_init(uchar is_shared);
 
 #endif /* __MAIN_H */
