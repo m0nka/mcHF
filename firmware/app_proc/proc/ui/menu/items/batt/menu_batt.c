@@ -1148,7 +1148,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			WM_HWIN hDialog;
 
 		    // Create multipage widget
-			#ifndef PCB_V9_REV_A
+			#if 0
 		    hMulti = MULTIPAGE_CreateEx(5, 40, 830, 430, WM_HBKWIN, WM_CF_SHOW, 0, GUI_ID_MULTIPAGE0);
 			#else
 		    hMulti = MULTIPAGE_CreateEx(5, 40, 776, 430, WM_HBKWIN, WM_CF_SHOW, 0, GUI_ID_MULTIPAGE0);

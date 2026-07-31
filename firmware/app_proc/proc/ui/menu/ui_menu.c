@@ -176,7 +176,7 @@ static void _cbBk(WM_MESSAGE * pMsg)
 				GUI_SetColor(menu_layout[ui_s.theme_id].mbar_bkg_clr);
 				GUI_FillRect(menu_layout[ui_s.theme_id].mbar_x,
 							(menu_layout[ui_s.theme_id].mbar_y),
-							#ifndef PCB_V9_REV_A
+							#if 0
 							(menu_layout[ui_s.theme_id].mbar_sz_x + 535),
 							#else
 							(menu_layout[ui_s.theme_id].mbar_sz_x + 481),
@@ -405,7 +405,7 @@ void ui_menu_set_gui_profile(void)
   	//RADIO_SetDefaultFocusColor(GUI_LIGHTBLUE);
   	//RADIO_SetDefaultTextColor(GUI_LIGHTBLUE);
 
-	#ifndef PCB_V9_REV_A
+	#if 0
   	CALENDAR_SetDefaultSize(CALENDAR_SI_HEADER, 50);
   	CALENDAR_SetDefaultSize(CALENDAR_SI_CELL_X, 65);
   	CALENDAR_SetDefaultSize(CALENDAR_SI_CELL_Y, 45);
@@ -490,7 +490,7 @@ void ui_menu_init(void)
     //hKeypad = GUI_CreateKeyPad(WM_GetDesktopWindowEx(0));
 
 	// Create Exit button
-	#ifndef PCB_V9_REV_A
+	#if 0
     hButton = BUTTON_CreateEx(800, menu_layout[ui_s.theme_id].mbar_y, 45, 30, WM_GetDesktopWindowEx(0), WM_CF_SHOW, 0, ID_BUTTON_EXIT);
 	#else
     hButton = BUTTON_CreateEx(746, menu_layout[ui_s.theme_id].mbar_y, 45, 30, WM_GetDesktopWindowEx(0), WM_CF_SHOW, 0, ID_BUTTON_EXIT);

@@ -244,7 +244,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 				//printf("upd0 %d\r\n",Time.Seconds);
 
-				#ifndef PCB_V9_REV_A
+				#if 0
 				GUI_UpdateClock(AN_CLOCK_X, AN_CLOCK_Y, Time.Hours, Time.Minutes, Time.Seconds);
 				#endif
       
@@ -273,7 +273,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 				hItem = WM_GetDialogItem(pMsg->hWin, ID_SPINBOX_SEC);
 				Time.Seconds = SPINBOX_GetValue(hItem);
       
-				#ifndef PCB_V9_REV_A
+				#if 0
 				GUI_UpdateClock(AN_CLOCK_X, AN_CLOCK_Y, Time.Hours, Time.Minutes, Time.Seconds);
 				#endif
 			}

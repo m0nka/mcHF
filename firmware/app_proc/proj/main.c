@@ -144,10 +144,6 @@ void SysTick_Handler(void)
 	#endif
 }
 
-//
-// ToDo: There is something wrong with EXTI routing! Check before PCB rev B!
-//
-
 //*----------------------------------------------------------------------------
 //* Function Name       : EXTI0_IRQHandler
 //* Object              :
@@ -182,6 +178,27 @@ void EXTI0_IRQHandler(void)
 		portYIELD_FROM_ISR(xHigherPriorityTaskWoken );
 	}
 	#endif
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : EXTI1_IRQHandler
+//* Object              :
+//* Notes    			: exti trap, line1
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void EXTI1_IRQHandler(void)
+{
+	// Line 0
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_1) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_1);
+
+		#ifdef CONTEXT_GPS
+		GPS_PPS_IRQHandler();
+		#endif
+	}
 }
 
 //*----------------------------------------------------------------------------
@@ -246,8 +263,6 @@ void EXTI9_5_IRQHandler(void)
 
 		#ifdef CONTEXT_KEYPAD
 		keypad_proc_irq(8);
-		#else
-		GPS_PPS_IRQHandler();
 		#endif
 	}
 }

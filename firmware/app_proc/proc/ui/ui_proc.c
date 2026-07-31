@@ -416,7 +416,7 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 
 		        case '+':
 		        {
-					#ifndef PCB_V9_REV_A
+					#if 0
 		        	ui_actions_change_step(1);
 					#else
 					(tsu.curr_band)++;
@@ -429,7 +429,7 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 
 		        case '-':
 		        {
-					#ifndef PCB_V9_REV_A
+					#if 0
 		        	ui_actions_change_step(0);
 					#else
 					if(tsu.curr_band > BAND_MODE_160)
@@ -1221,7 +1221,7 @@ void ui_proc_power_cleanup(void)
 	// Show text
 	GUI_SetColor(GUI_WHITE);
 	GUI_SetFont(&GUI_Font32B_1);
-	#ifndef PCB_V9_REV_A
+	#if 0
 	GUI_DispStringAt("Good bye!", 350, 200);
 	#else
 	GUI_DispStringAt("Good bye!", 325, 215);

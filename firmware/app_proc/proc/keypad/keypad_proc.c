@@ -144,7 +144,7 @@ static void keypad_handle_multitap(uchar max_ids)
 //* Notes    			:
 //* Context    			: CONTEXT_DRIVER_KEYPAD
 //*----------------------------------------------------------------------------
-#ifndef PCB_V9_REV_A
+#if 0
 static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar release)
 {
 	#ifdef KEYPAD_ALLOW_DEBUG
@@ -1485,10 +1485,6 @@ static uchar keypad_check_input_lines_a(void)
 		return 2;
 	if((KEYPAD_Y3_PORT->IDR & KEYPAD_Y3_LL) != KEYPAD_Y3_LL)
 		return 3;
-	#ifndef PCB_V9_REV_A
-	if((KEYPAD_Y4_PORT->IDR & KEYPAD_Y4_LL) != KEYPAD_Y4_LL)
-		return 4;
-	#endif
 
 	return 0;
 }
@@ -1515,17 +1511,6 @@ static void keypad_set_out_lines_a(uchar y)
 		case 2:
 			scan_x3();
 			break;
-		#ifndef PCB_V9_REV_A
-		case 3:
-			scan_x4();
-			break;
-		case 4:
-			scan_x5();
-			break;
-		case 5:
-			scan_x6();
-			break;
-		#endif
 		default:
 			scan_off();
 			return;

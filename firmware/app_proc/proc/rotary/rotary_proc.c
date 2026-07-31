@@ -185,7 +185,7 @@ static void rotary_update_side_enc_menu_publics(int pot_diff)
 	}
 }
 
-#ifdef PCB_V9_REV_A
+#if 1
 static void rotary_check_side_enc(void)
 {
 	ushort 	cnt;
@@ -422,7 +422,7 @@ static void rotary_check_front_enc(void)
 	freq_old = cnt;
 }
 
-#ifdef PCB_V9_REV_A
+#if 1
 uchar rotary_side_enc_init(void)
 {
 	TIM_Encoder_InitTypeDef 	tim_config;

@@ -216,12 +216,6 @@ static void btm_proc_task(void *arg)
 		if(tsu.bt_enabled != loc_bt_enabled)
 		{
 			// Power state update
-			#ifndef PCB_V9_REV_A
-			if(tsu.bt_enabled)
-				HAL_GPIO_WritePin(RFM_DIO2_PORT, RFM_DIO2, GPIO_PIN_RESET);
-			else
-				HAL_GPIO_WritePin(RFM_DIO2_PORT, RFM_DIO2, GPIO_PIN_SET);
-			#else
 			#ifndef BT_EN_INV
 			if(tsu.bt_enabled)
 			#else
@@ -230,7 +224,6 @@ static void btm_proc_task(void *arg)
 				HAL_GPIO_WritePin(BT_EN_PORT, BT_EN_PIN, GPIO_PIN_RESET);
 			else
 				HAL_GPIO_WritePin(BT_EN_PORT, BT_EN_PIN, GPIO_PIN_SET);
-			#endif
 
 			loc_bt_enabled = tsu.bt_enabled;
 		}

@@ -73,7 +73,7 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 //							name		id						x		y		xsize	ysize	?		?		?
 // -----------------------------------------------------------------------------------------------------------------------------
 // Self
-#ifndef PCB_V9_REV_A
+#if 0
 { WINDOW_CreateIndirect,	"", 		ID_WINDOW_0,			0,    	0,		854,	430, 	0, 		0x64, 	0 },
 // Buttons
 { BUTTON_CreateIndirect, 	"Update",	ID_BUTTON_FW_UPDATE,	690, 	55, 	120, 	45, 	0, 		0x0, 	0 },

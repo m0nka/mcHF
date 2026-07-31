@@ -196,7 +196,7 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 
 	GPIO_InitStruct.Alternate = GPIO_AF1_TIM1;
-	#ifndef PCB_V9_REV_A
+	#if 0
 	GPIO_InitStruct.Pin = BMS_PWM_PIN;
 	HAL_GPIO_Init(BMS_PWM_PORT, &GPIO_InitStruct);
 	#endif

@@ -468,20 +468,10 @@ static void SDRAM_MspInit(SDRAM_HandleTypeDef  *hsdram)
 	gpio_init_structure.Alternate = GPIO_AF12_FMC;
 
 	// GPIOC configuration
-	#ifndef PCB_V9_REV_A
-	gpio_init_structure.Pin   = GPIO_PIN_0;
-	HAL_GPIO_Init(GPIOC, &gpio_init_structure);
-	#else
 	gpio_init_structure.Pin   = FMC_SDNWE_PIN;
 	HAL_GPIO_Init(FMC_SDNWE_PORT, &gpio_init_structure);
-	#endif
 
 	// GPIOD configuration
-	#ifndef PCB_V9_REV_A
-	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_8| GPIO_PIN_9 | GPIO_PIN_10 |\
-                          	  GPIO_PIN_14 | GPIO_PIN_15;
-	HAL_GPIO_Init(GPIOD, &gpio_init_structure);
-	#else
 	// PD0
 	gpio_init_structure.Pin = FMC_D2_PIN;
 	HAL_GPIO_Init(FMC_D2_PORT, &gpio_init_structure);
@@ -503,15 +493,8 @@ static void SDRAM_MspInit(SDRAM_HandleTypeDef  *hsdram)
 	// PD15
 	gpio_init_structure.Pin = FMC_D1_PIN;
 	HAL_GPIO_Init(FMC_D1_PORT, &gpio_init_structure);
-	#endif
 
 	// GPIOE configuration
-	#ifndef PCB_V9_REV_A
-	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_7| GPIO_PIN_8 | GPIO_PIN_9 |\
-                              GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |\
-                              GPIO_PIN_15;
-	HAL_GPIO_Init(GPIOE, &gpio_init_structure);
-	#else
 	// PE0
 	gpio_init_structure.Pin = FMC_NBL0_PIN;
 	HAL_GPIO_Init(FMC_NBL0_PORT, &gpio_init_structure);
@@ -545,15 +528,8 @@ static void SDRAM_MspInit(SDRAM_HandleTypeDef  *hsdram)
 	// PE15
 	gpio_init_structure.Pin = FMC_D12_PIN;
 	HAL_GPIO_Init(FMC_D12_PORT, &gpio_init_structure);
-	#endif
 
 	// GPIOF configuration
-	#ifndef PCB_V9_REV_A
-	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2| GPIO_PIN_3 | GPIO_PIN_4 |\
-                              GPIO_PIN_5 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |\
-                              GPIO_PIN_15;
-	HAL_GPIO_Init(GPIOF, &gpio_init_structure);
-	#else
 	// PF0
 	gpio_init_structure.Pin = FMC_A0_PIN;
 	HAL_GPIO_Init(FMC_A0_PORT, &gpio_init_structure);
@@ -587,13 +563,8 @@ static void SDRAM_MspInit(SDRAM_HandleTypeDef  *hsdram)
 	// PF15
 	gpio_init_structure.Pin = FMC_A9_PIN;
 	HAL_GPIO_Init(FMC_A9_PORT, &gpio_init_structure);
-	#endif
 
 	// GPIOG configuration
-	#ifndef PCB_V9_REV_A
-	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_8 | GPIO_PIN_15;
-	HAL_GPIO_Init(GPIOG, &gpio_init_structure);
-	#else
 	// PG0
 	gpio_init_structure.Pin = FMC_A10_PIN;
 	HAL_GPIO_Init(FMC_A10_PORT, &gpio_init_structure);
@@ -615,15 +586,8 @@ static void SDRAM_MspInit(SDRAM_HandleTypeDef  *hsdram)
 	// PG15
 	gpio_init_structure.Pin = FMC_SDNCAS_PIN;
 	HAL_GPIO_Init(FMC_SDNCAS_PORT, &gpio_init_structure);
-	#endif
 
 	// GPIOH configuration
-	#ifndef PCB_V9_REV_A
-	gpio_init_structure.Pin   = GPIO_PIN_2  | GPIO_PIN_3  | GPIO_PIN_8  | GPIO_PIN_9  |\
-                                GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 |\
-								GPIO_PIN_14 |GPIO_PIN_15;
-	HAL_GPIO_Init(GPIOH, &gpio_init_structure);
-	#else
 	// PH2
 	gpio_init_structure.Pin = FMC_SDCKE0_PIN;
 	HAL_GPIO_Init(FMC_SDCKE0_PORT, &gpio_init_structure);
@@ -654,14 +618,8 @@ static void SDRAM_MspInit(SDRAM_HandleTypeDef  *hsdram)
 	// PH15
 	gpio_init_structure.Pin = FMC_D23_PIN;
 	HAL_GPIO_Init(FMC_D23_PORT, &gpio_init_structure);
-	#endif
 
 	// GPIOI configuration
-	#ifndef PCB_V9_REV_A
-	gpio_init_structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 |\
-                              GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_9 | GPIO_PIN_10;
-	HAL_GPIO_Init(GPIOI, &gpio_init_structure);
-	#else
 	// PI0
 	gpio_init_structure.Pin = FMC_D24_PIN;
 	HAL_GPIO_Init(FMC_D24_PORT, &gpio_init_structure);
@@ -692,7 +650,6 @@ static void SDRAM_MspInit(SDRAM_HandleTypeDef  *hsdram)
 	// PI10
 	gpio_init_structure.Pin = FMC_D31_PIN;
 	HAL_GPIO_Init(FMC_D31_PORT, &gpio_init_structure);
-	#endif
 
 	/* Configure common MDMA parameters */
 	mdma_handle.Init.Request                  = MDMA_REQUEST_SW;

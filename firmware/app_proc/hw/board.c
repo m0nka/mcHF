@@ -456,11 +456,7 @@ void MPU_Config(void)
 	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_ENABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
-	#ifndef PCB_V9_REV_A
-	MPU_InitStruct.Size             = MPU_REGION_SIZE_4MB;
-	#else
 	MPU_InitStruct.Size             = MPU_REGION_SIZE_16MB;
-	#endif
 
 	// Setup SDRAM - emWin video buffers + app region(rev 9)
 	MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
@@ -476,7 +472,6 @@ void MPU_Config(void)
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
 	// Upper 8MB of ext SDRAM as app execution space
-	#ifdef PCB_V9_REV_A
 	MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
 	MPU_InitStruct.BaseAddress      = SDRAM_APP_ADDR;
 	MPU_InitStruct.Size             = MPU_REGION_SIZE_8MB;
@@ -489,13 +484,8 @@ void MPU_Config(void)
 	MPU_InitStruct.SubRegionDisable = 0x00;
 	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_ENABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
-	#endif
 
-	#ifndef PCB_V9_REV_A
-	MPU_InitStruct.Number           = MPU_REGION_NUMBER2;
-	#else
 	MPU_InitStruct.Number 			= MPU_REGION_NUMBER3;
-	#endif
 
 	// Setup D3 SRAM - OpenAMP core to core comms
 	MPU_InitStruct.Enable 			= MPU_REGION_ENABLE;
@@ -510,11 +500,7 @@ void MPU_Config(void)
 	MPU_InitStruct.DisableExec 		= MPU_INSTRUCTION_ACCESS_DISABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
-	#ifndef PCB_V9_REV_A
-	MPU_InitStruct.Number           = MPU_REGION_NUMBER3;
-	#else
 	MPU_InitStruct.Number 			= MPU_REGION_NUMBER4;
-	#endif
 
 	// Setup AXI SRAM - OS heap
 	MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
@@ -529,11 +515,7 @@ void MPU_Config(void)
 	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
-	#ifndef PCB_V9_REV_A
-	MPU_InitStruct.Number           = MPU_REGION_NUMBER4;
-	#else
 	MPU_InitStruct.Number 			= MPU_REGION_NUMBER5;
-	#endif
 
 	// Setup SRAM1 + SRAM2, DSP executable code (code + data)
 	MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
@@ -548,11 +530,7 @@ void MPU_Config(void)
 	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
-	#ifndef PCB_V9_REV_A
-	MPU_InitStruct.Number           = MPU_REGION_NUMBER5;
-	#else
 	MPU_InitStruct.Number 			= MPU_REGION_NUMBER6;
-	#endif
 
 	// Setup SRAM3, D2 domain, HW peripherals DMA buffers
 	MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
@@ -886,7 +864,7 @@ uint8_t bsp_config(void)
 	printf("-->%s v: %d.%d.%d\r\n", DEVICE_STRING, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE, MCHF_R_VER_BUILD);
 
 	// Useful during ushdr port
-	#ifndef REV_0_8_4_PATCH__
+	#if 0
 	printf("== allow m4 core to take control and stall application processor == \r\n");
 	HAL_Delay(500);
 	bsp_wake_second_core();
