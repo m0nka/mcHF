@@ -104,7 +104,7 @@
 // GNSS driver
 //
 //
-//#define CONTEXT_GPS
+#define CONTEXT_GPS
 
 // -----------------------------------------------------------------------------------------------
 // Storage process

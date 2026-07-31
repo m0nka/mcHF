@@ -572,6 +572,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/fan/fan_proc.c</locationURI>
 		</link>
 		<link>
+			<name>proc/gps/gps_calib.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/gps/gps_calib.c</locationURI>
+		</link>
+		<link>
 			<name>proc/gps/gps_proc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/gps/gps_proc.c</locationURI>
@@ -595,6 +600,26 @@
 			<name>proc/lora/lora_proc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/lora_proc.c</locationURI>
+		</link>
+		<link>
+			<name>proc/marschat/marschat_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/marschat_proc.c</locationURI>
+		</link>
+		<link>
+			<name>proc/marschat/mc_frame.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/mc_frame.c</locationURI>
+		</link>
+		<link>
+			<name>proc/marschat/mc_session.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/mc_session.c</locationURI>
+		</link>
+		<link>
+			<name>proc/marschat/mc_tx_build.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/mc_tx_build.c</locationURI>
 		</link>
 		<link>
 			<name>proc/pwm/pwm_proc.c</name>
@@ -647,34 +672,14 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/vfo/vfo_cw_gen.c</locationURI>
 		</link>
 		<link>
-			<name>proc/vfo/vfo_proc.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/vfo/vfo_proc.c</locationURI>
-		</link>
-		<link>
-			<name>proc/marschat/mc_frame.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/mc_frame.c</locationURI>
-		</link>
-		<link>
-			<name>proc/marschat/mc_tx_build.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/mc_tx_build.c</locationURI>
-		</link>
-		<link>
-			<name>proc/marschat/mc_session.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/mc_session.c</locationURI>
-		</link>
-		<link>
-			<name>proc/marschat/marschat_proc.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/marschat_proc.c</locationURI>
-		</link>
-		<link>
 			<name>proc/vfo/vfo_mc_gen.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/vfo/vfo_mc_gen.c</locationURI>
+		</link>
+		<link>
+			<name>proc/vfo/vfo_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/vfo/vfo_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/wspr/wspr_decoder.c</name>
@@ -987,6 +992,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop_ft8/ui_desktop_ft8.c</locationURI>
 		</link>
 		<link>
+			<name>proc/ui/desktop_marschat/marschat_ui.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop_marschat/marschat_ui.c</locationURI>
+		</link>
+		<link>
 			<name>proc/ui/driver/GUIConf.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/driver/GUIConf.c</locationURI>
@@ -1010,6 +1020,11 @@
 			<name>proc/ui/menu/ui_menu_module.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/ui_menu_module.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ui/theme/atlas_draw.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/theme/atlas_draw.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/ui_lib/ui_cool_progress.c</name>
@@ -1270,16 +1285,6 @@
 			<name>proc/ui/menu/items/lora/lora.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/menu/items/lora/lora.c</locationURI>
-		</link>
-		<link>
-			<name>proc/ui/theme/atlas_draw.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/theme/atlas_draw.c</locationURI>
-		</link>
-		<link>
-			<name>proc/ui/desktop_marschat/marschat_ui.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop_marschat/marschat_ui.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/menu/items/lora/lora_res.c</name>
