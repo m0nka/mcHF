@@ -110,9 +110,9 @@
 // Storage process
 //
 //
-#ifndef CONTEXT_GPS
+//#ifndef CONTEXT_GPS
 #define CONTEXT_SD
-#endif
+//#endif
 
 // -----------------------------------------------------------------------------------------------
 // Application loader

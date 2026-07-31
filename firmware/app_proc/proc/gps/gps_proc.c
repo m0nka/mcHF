@@ -108,7 +108,9 @@ static void GPS_GPIO_Init(void)
 {
     GPIO_InitTypeDef cfg = {0};
 
-    /* PB1 – GPS_EN, push-pull output, start LOW (disabled) */
+    /* PA8 – GPS_EN, push-pull output, start LOW (disabled). Was PB1 before
+     * the V9 rev B swap. PA8 is TIM1_CH1 on silicon but nothing drives that
+     * channel (the backlight uses CH2 on PA9), so plain GPIO is fine here */
     cfg.Pin   = GPS_EN_PIN;
     cfg.Mode  = GPIO_MODE_OUTPUT_PP;
     cfg.Pull  = GPIO_NOPULL;
@@ -118,18 +120,19 @@ static void GPS_GPIO_Init(void)
 }
 
 /* -------------------------------------------------------------------------- */
-#ifndef CONTEXT_KEYPAD
 static void GPS_EXTI_Init(void)
 {
     GPIO_InitTypeDef cfg = {0};
 
-    /* PA8 - 1PPS in. This was NOT set up anywhere before: GPS_GPIO_Init()
-     * only touches PB1, so the old comment here claiming the GPIO was
-     * already configured was wrong and the line never fired.
+    /* PB1 - 1PPS in (V9 rev B swapped PPS and GPS_EN: PPS moved PA8 -> PB1,
+     * GPS_EN moved PB1 -> PA8). EXTI line 1 is otherwise unused, so unlike
+     * the old PA8/line 8 arrangement this no longer collides with the
+     * keypad, which owns lines 8/11/12 - the #ifndef CONTEXT_KEYPAD that
+     * used to wrap this function is gone on purpose.
      *
-     * NOTE: EXTI line 8 is driven by exactly one port. CONTEXT_KEYPAD maps
-     * it to PORT I for KEYPAD_Y2 (keypad_proc.c), so PPS and the keypad are
-     * mutually exclusive - hence the #ifndef around this whole function */
+     * The pin itself was never configured anywhere before: GPS_GPIO_Init()
+     * only ever touched GPS_EN, so the old comment claiming the GPIO was
+     * already set up was wrong and the line could not have fired. */
     LL_APB4_GRP1_EnableClock(LL_APB4_GRP1_PERIPH_SYSCFG);
 
     cfg.Pin   = GPS_PPS_PIN;
@@ -138,14 +141,13 @@ static void GPS_EXTI_Init(void)
     cfg.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(GPS_PPS_PORT, &cfg);
 
-    LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTA, LL_SYSCFG_EXTI_LINE8);
-    LL_EXTI_EnableRisingTrig_0_31(LL_EXTI_LINE_8); /* pulse leading edge = UTC second */
-    LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_8);
+    LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTB, LL_SYSCFG_EXTI_LINE1);
+    LL_EXTI_EnableRisingTrig_0_31(LL_EXTI_LINE_1); /* pulse leading edge = UTC second */
+    LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_1);
 
     HAL_NVIC_SetPriority(GPS_PPS_EXTI_IRQn, 5, 0);  /* higher than UART    */
     HAL_NVIC_EnableIRQ(GPS_PPS_EXTI_IRQn);
 }
-#endif
 
 void GPS_Enable(bool enable)
 {
@@ -599,10 +601,8 @@ void gps_proc_init(void)
 	// Low level driver
 	gps_uart_init();
 
-    // EXTI mapping, to be resolved...
-	#ifndef CONTEXT_KEYPAD
+    // PPS on PB1/EXTI1 - no longer clashes with the keypad (lines 8/11/12)
     GPS_EXTI_Init();
-	#endif
 
     // Power on
     GPS_Enable(true);

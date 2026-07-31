@@ -27,7 +27,10 @@
 /* --------------------------------------------------------------------------
  * Pin / peripheral definitions
  * -------------------------------------------------------------------------- */
-#define GPS_PPS_EXTI_IRQn   EXTI9_5_IRQn      /* lines 5-9 share this IRQ   */
+/* V9 rev B: PPS is on PB1, so the edge arrives on the dedicated line 1
+ * vector. It used to be PA8 = EXTI9_5, which is shared with touch, lora
+ * and the keypad - line 1 is ours alone and needs no arbitration */
+#define GPS_PPS_EXTI_IRQn   EXTI1_IRQn        /* PB1, dedicated vector      */
 
 /* --------------------------------------------------------------------------
  * Sizing
