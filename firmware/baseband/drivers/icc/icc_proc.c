@@ -405,12 +405,8 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 		// Tune mode on/off
 		case ICC_SET_TUNE_MODE:
 		{
-			// Manual LED toggle
-			if(icc_in_buffer[0])
-				HAL_GPIO_WritePin(TX_LED_PIO, TX_LED_PIN, GPIO_PIN_SET);
-			else
-				HAL_GPIO_WritePin(TX_LED_PIO, TX_LED_PIN, GPIO_PIN_RESET);
-
+			// The TX LED follows the exciter keying in icc_radio_switch_txrx(),
+			// which the tune HSEM lines (20/21) reach on their own
 			icc_radio_set_tune_mode(icc_in_buffer[0]);
 			break;
 		}
@@ -431,22 +427,19 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 			ret_size = icc_wspr_get_buffer(icc_out_buffer);
 			break;
 
-		// MarsChat/WSPR symbol transmitter (keys the exciter itself)
+		// MarsChat/WSPR symbol transmitter (keys the exciter itself, and
+		// the TX LED follows that keying in icc_radio_switch_txrx())
 		case ICC_MC_TX_START:
 		{
-			// TX LED On
-			HAL_GPIO_WritePin(TX_LED_PIO, TX_LED_PIN, GPIO_PIN_SET);
-
 			icc_out_buffer[0x00] = icc_mc_tx_start(icc_in_buffer);
 			break;
 		}
 
-		// ToDo: Check if this is called!
+		// Abort only. The M7 core does NOT send this at the end of a normal
+		// transmission - the streamer runs to MC_PH_TAIL and unkeys itself
+		// through icc_mc_tx_key_request(), so nothing currently reaches here
 		case ICC_MC_TX_STOP:
 		{
-			// TX LED Off
-			HAL_GPIO_WritePin(TX_LED_PIO, TX_LED_PIN, GPIO_PIN_RESET);
-
 			icc_mc_tx_stop();
 			icc_out_buffer[0x00] = 0;
 			break;
