@@ -17,7 +17,7 @@
 #define GT911_I2C_ADDRESS 		0xBA
 //#define GT911_I2C_ADDRESS 	0x28
 
-#ifndef PCB_V9_REV_A
+#if 0
 #define TOUCH_X_SIZE			854
 #else
 #define TOUCH_X_SIZE			800
