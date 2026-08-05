@@ -574,15 +574,15 @@ int mchfMain(void)
 	AudioFilter_SetDefaultMemories();
 
 	// Audio Software Init (SAI streaming starts later, on ICC_START_I2S_PROC)
-	printf("audio init...\r\n");
+	//printf("audio init...\r\n");
 	AudioDriver_Init();
 
 	// Select a default filter and set up the processing chain, the wire
 	// state upload will re-do this with the real settings
-	printf("filter init...\r\n");
+	//printf("filter init...\r\n");
 	icc_radio_change_filter(4);						// 2.3 kHz
 
-	printf("m4 baseband ready\r\n");
+	//printf("m4 baseband ready\r\n");
 
 	// Transceiver main loop
 	for(;;)

@@ -318,9 +318,9 @@ void icc_radio_change_agc_mode(uint8_t agc_mode, uint8_t rf_gain)
 void icc_radio_change_filter(uint8_t filter_id)
 {
 	icc_radio_select_filter_path(filter_id);
-	printf("  filter path %d\r\n", ts.filter_path);
+	//printf("  filter path %d\r\n", ts.filter_path);
 	AudioDriver_SetProcessingChain(ts.dmod_mode, false);
-	printf("  chain ok\r\n");
+	//printf("  chain ok\r\n");
 }
 
 void icc_radio_change_stereo(uint8_t stereo_mode)
