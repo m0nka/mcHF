@@ -167,6 +167,17 @@ void bms_proc_hw_init(void)
 //*----------------------------------------------------------------------------
 void bms_proc_power_cleanup(void)
 {
+	GPIO_InitTypeDef  gpio_init_structure;
+
+	// -----------------------------------------------------------------------
+	// Power button cleanup - remove pullup, so the BMS PRES line is released!
+	// -----------------------------------------------------------------------
+	gpio_init_structure.Pull  = GPIO_NOPULL;
+	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
+	gpio_init_structure.Pin   = POWER_BUTTON;
+	gpio_init_structure.Mode  = GPIO_MODE_INPUT;
+	HAL_GPIO_Init(POWER_BUTTON_PORT, &gpio_init_structure);
+
 	// Lock the BMS
 	if(bmss.bms_unlock_state)
 		bq40z80_seal();
