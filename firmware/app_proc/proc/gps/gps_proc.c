@@ -481,7 +481,12 @@ void gps_proc(void *argument)
     NMEA_Line_t line;
 
 	vTaskDelay(GPS_PROC_START_DELAY);
-	printf("start\r\n");
+	//printf("start\r\n");
+
+	#if 1
+	printf("suspend\r\n");
+	vTaskDelete(NULL);
+	#endif
 
 	// Init
 	gps_proc_init();

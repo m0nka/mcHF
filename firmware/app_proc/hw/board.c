@@ -693,7 +693,7 @@ static void power_cntr_init(void)
 	#endif
 }
 
-// Via stop mode
+// Via BMS PRES line
 void bsp_power_off(void)
 {
 	//printf("power off in\r\n");
@@ -750,6 +750,10 @@ void bsp_power_off(void)
 
 	// LCD off
 	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+	//--shared_tim_change(0);
+
+	// Power LED Off
+	HAL_GPIO_WritePin(ON_LED_PORT, ON_LED, GPIO_PIN_RESET);
 
 	// Release PRES line
 	LL_GPIO_ResetOutputPin(POWER_HOLD_PORT, POWER_HOLD);
@@ -758,6 +762,7 @@ void bsp_power_off(void)
 	HAL_Delay(1000);
 	printf("stall \r\n");
 	while(1);
+	//--NVIC_SystemReset();
 }
 
 static void ptt_init(void)
