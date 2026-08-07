@@ -1078,7 +1078,7 @@
 // PG10		SD_PWR_CNTR
 #define SD_PWR_CNTR                   	GPIO_PIN_10
 #define SD_PWR_CNTR_PORT              	GPIOG
-#define SD_PWR_SWAP_POLARITY
+//#define SD_PWR_SWAP_POLARITY
 
 // PG11		POWER_BUTTON
 #define POWER_BUTTON					GPIO_PIN_11

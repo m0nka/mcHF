@@ -347,7 +347,7 @@ static bool GPS_ParseGGA(const char *line)
     if (GPS_Split(line, buf, f, 20) < 10)
     	return false;
 
-    printf("%s", line);
+    //printf("%s", line);
 
     /* Time: hhmmss[.ss] */
     const char *t = f[1];
@@ -483,7 +483,7 @@ void gps_proc(void *argument)
 	vTaskDelay(GPS_PROC_START_DELAY);
 	//printf("start\r\n");
 
-	#if 1
+	#if 0
 	printf("suspend\r\n");
 	vTaskDelete(NULL);
 	#endif

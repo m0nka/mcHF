@@ -87,6 +87,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/config/stm32h7xx_hal_conf.h</locationURI>
 		</link>
 		<link>
+			<name>config/unit_config.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/config/unit_config.h</locationURI>
+		</link>
+		<link>
 			<name>config/version.h</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/config/version.h</locationURI>

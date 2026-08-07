@@ -703,7 +703,7 @@ void bsp_power_off(void)
 
 	// Stop all repaints
 	#ifdef CONTEXT_VIDEO
-	ui_proc_power_cleanup();
+	ui_proc_power_cleanup(UI_CLEANUP);
 	#endif
 
 	// Safely stop OS
@@ -714,7 +714,9 @@ void bsp_power_off(void)
 	audio_proc_power_cleanup();
 	#endif
 
+	#ifdef CONTEXT_BAND
 	band_proc_power_cleanup();
+	#endif
 
 	#ifdef CONTEXT_ROTARY
 	rotary_proc_power_cleanup();
@@ -749,8 +751,9 @@ void bsp_power_off(void)
 	HAL_Delay(3000);
 
 	// LCD off
-	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
-	//--shared_tim_change(0);
+	#ifdef CONTEXT_VIDEO
+	ui_proc_power_cleanup(UI_BACKLIGHT_OFF);
+	#endif
 
 	// Power LED Off
 	HAL_GPIO_WritePin(ON_LED_PORT, ON_LED, GPIO_PIN_RESET);

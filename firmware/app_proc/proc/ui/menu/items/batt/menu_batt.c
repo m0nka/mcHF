@@ -1173,7 +1173,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 		    MULTIPAGE_SetFont	 (hMulti, &GUI_Font32B_ASCII);
 
 		    // StartUp Tab
-		    MULTIPAGE_SelectPage (hMulti, 0);
+		    MULTIPAGE_SelectPage (hMulti, 1);
 
 			break;
 		}

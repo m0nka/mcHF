@@ -58,7 +58,7 @@ void HardFault_Handler(void)
 	printf( "=       [%s]      =\r\n", pcTaskGetName(NULL));
 	printf( "====================\r\n");
 
-	#if 0
+	#if 1
 	NVIC_SystemReset();
 	#else
 	//HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
@@ -308,8 +308,11 @@ void Error_Handler(int err)
 	__disable_irq();
 	printf(" Error Handler %d\n", err);
 
-	//NVIC_SystemReset();
+	#if 1
+	NVIC_SystemReset();
+	#else
 	while(1);
+	#endif
 }
 
 #ifdef configUSE_MALLOC_FAILED_HOOK

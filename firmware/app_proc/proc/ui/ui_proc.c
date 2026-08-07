@@ -1211,8 +1211,20 @@ void ui_proc_clear_active(void)
 	ui_s.active_control_shown = 0;
 }
 
-void ui_proc_power_cleanup(void)
+void ui_proc_power_cleanup(uchar mode)
 {
+	// Backlight off
+	if(mode == UI_BACKLIGHT_OFF)
+	{
+		#if defined (CONTEXT_GPS) && defined (SWITCH_TO_GPIO_CNTR)
+		HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+		#else
+		shared_tim_change(0);
+		#endif
+
+		return;
+	}
+
 	// Clear screen
 	GUI_SetBkColor(GUI_BLACK);
 	GUI_Clear();

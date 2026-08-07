@@ -38,10 +38,13 @@
 #define		DESKTOP_SPECTRUM		1
 #define		DESKTOP_WATERFALL		2
 
+#define		UI_CLEANUP				0
+#define		UI_BACKLIGHT_OFF		1
+
 // ----------------------------------------------
 
 void ui_proc_clear_active(void);
-void ui_proc_power_cleanup(void);
+void ui_proc_power_cleanup(uchar mode);
 void ui_proc_task(void const *arg);
 
 #endif

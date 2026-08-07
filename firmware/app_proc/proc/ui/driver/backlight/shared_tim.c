@@ -203,11 +203,18 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
 
 void shared_tim_change(uchar val)
 {
-#ifndef CONTEXT_GPS
+	#if defined (CONTEXT_GPS) && defined (SWITCH_TO_GPIO_CNTR)
+	return;
+	#endif
+
+	printf("set brigthness: %d \r\n", val);
+
 	if(val > 100)
 		val = 100;
 	else if(val < 5)
 		val = 5;
+
+	val = val/3;
 
 	// Set the pulse value for channel 2
 	sConfig.Pulse = (uint32_t)(PERIOD_VALUE*val/100);
@@ -215,10 +222,11 @@ void shared_tim_change(uchar val)
 	HAL_TIM_PWM_Stop(&TimHandle, TIM_CHANNEL_2);
 	HAL_TIM_PWM_ConfigChannel(&TimHandle, &sConfig, TIM_CHANNEL_2);
 	HAL_TIM_PWM_Start(&TimHandle, TIM_CHANNEL_2);
-#endif
 }
 
-#ifndef CONTEXT_GPS
+#if defined (CONTEXT_GPS) && defined (SWITCH_TO_GPIO_CNTR)
+//
+#else
 static void shared_tim_init_a(void)
 {
 	#ifdef USE_LL_VERSION
@@ -328,19 +336,17 @@ static void shared_tim_init_a(void)
 
 void shared_tim_init(void)
 {
-	#ifndef CONTEXT_GPS
-	shared_tim_init_a();
-	#else
+	#if defined (CONTEXT_GPS) && defined (SWITCH_TO_GPIO_CNTR)
 	GPIO_InitTypeDef   GPIO_InitStruct;
-
-	  /* Common configuration for all channels */
-	  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	  //GPIO_InitStruct.Pull = GPIO_PULLUP;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-
-	  GPIO_InitStruct.Pin = LCD_BL_CTRL_PIN;
-	  HAL_GPIO_Init(LCD_BL_CTRL_GPIO_PORT, &GPIO_InitStruct);
-
-	  HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+	//
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	//GPIO_InitStruct.Pull = GPIO_PULLUP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	GPIO_InitStruct.Pin = LCD_BL_CTRL_PIN;
+	HAL_GPIO_Init(LCD_BL_CTRL_GPIO_PORT, &GPIO_InitStruct);
+	//
+	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+	#else
+	shared_tim_init_a();
 	#endif
 }
