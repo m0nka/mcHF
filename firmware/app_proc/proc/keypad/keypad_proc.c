@@ -543,6 +543,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		if(!hold)
 		{
 			printf("Mode\r\n");
+			GUI_StoreKeyMsg('K', 1);
 
 		}
 		else
@@ -573,10 +574,10 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		if(!hold)
 		{
 			printf("F1->Menu\r\n");
-#ifdef CONTEXT_VIDEO
+			#ifdef CONTEXT_VIDEO
 			ui_s.req_state = MODE_MENU;
 			xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
-#endif
+			#endif
 		}
 		else
 		{
@@ -620,21 +621,9 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			printf("F4->Keyb\r\n");
-			GUI_StoreKeyMsg('K', 1);
-		}
-		else
-		{
-			printf("F4 hold\r\n");
-		}
-		return;
-	}
+			//printf("F4->Keyb\r\n");
+			//--GUI_StoreKeyMsg('K', 1);
 
-	// F5 button
-	if((x == 2) && (y == 3) && (!release))
-	{
-		if(!hold)
-		{
 			#if defined(CONTEXT_VIDEO) && defined(CONTEXT_MARSCHAT)
 			// Toggle the MarsChat screen, as F4 does for FT8
 			if(ui_s.cur_state != MODE_DESKTOP_MARSCHAT)
@@ -650,9 +639,23 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 
 			xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
 			#else
-			printf("F5->QuickLog\r\n");
+			printf("F4->QuickLog\r\n");
 			//GUI_StoreKeyMsg('L', 1);
 			#endif
+		}
+		else
+		{
+			printf("F4 hold\r\n");
+		}
+		return;
+	}
+
+	// F5 button
+	if((x == 2) && (y == 3) && (!release))
+	{
+		if(!hold)
+		{
+			board_toggle_rx_tx();
 		}
 		else
 			printf("F5 hold\r\n");

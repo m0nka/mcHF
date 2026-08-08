@@ -111,6 +111,9 @@ static void _show_pa_sch(void)
 	GUI_DrawRoundedRect(FRAME_X - 2, FRAME_Y - 2, FRAME_X + FRAME_SZ_X + 2, FRAME_Y + FRAME_SZ_Y + 2, 3);
 }
 
+// moved to board.c as shared call
+//
+#if 0
 static void _toggle_rx_tx_loc(void)
 {
 	uchar new_state;
@@ -145,6 +148,7 @@ static void _toggle_rx_tx_loc(void)
 		HAL_HSEM_Release (HSEM_ID_20, 0);
 	}
 }
+#endif
 
 static void _bias_set(WM_MESSAGE * pMsg)
 {
@@ -254,7 +258,8 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 				case WM_NOTIFICATION_RELEASED:
 				{
 					//printf("TUNE click\r\n");
-					_toggle_rx_tx_loc();			// change trx mode
+					//_toggle_rx_tx_loc();			// change trx mode
+					board_toggle_rx_tx();
 					WM_InvalidateWindow(hPA);		// repaint bar around sch
 					break;
 				}
@@ -573,8 +578,12 @@ use_const_decl:
 
 static void KillPA(void)
 {
-	if(tsu.rxtx)	// Never leave in TX mode
-		_toggle_rx_tx_loc();
+	// Never leave in TX mode
+	if(tsu.rxtx)
+	{
+		//_toggle_rx_tx_loc();
+		board_toggle_rx_tx();
+	}
 
 	//printf("kill menu\r\n");
 	GUI_EndDialog(hPA, 0);

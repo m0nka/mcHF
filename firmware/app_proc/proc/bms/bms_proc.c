@@ -92,7 +92,7 @@ static void bms_proc_power_off(void)
    			// ...
 
    			// Power off process
-   			bsp_power_off();
+   			board_power_off();
    		}
    	}
 }

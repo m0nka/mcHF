@@ -16,20 +16,6 @@
 #include "board.h"
 #include "sdram.h"
 
-#define PWR_CFG_SMPS    0xCAFECAFE
-#define PWR_CFG_LDO     0x5ACAFE5A
-
-typedef struct pwr_db
-{
-  __IO uint32_t t[0x30/4];
-  __IO uint32_t PDR1;
-
-}PWDDBG_TypeDef;
-
-/* Private macro -------------------------------------------------------------*/
-#define PWDDBG                          ((PWDDBG_TypeDef*)PWR)
-#define DEVICE_IS_CUT_2_1()             (HAL_GetREVID() & 0x21ff) ? 1 : 0
-
 // Core unique regs loaded to RAM
 struct	CM7_CORE_DETAILS		ccd;
 
@@ -38,6 +24,15 @@ struct	TRANSCEIVER_STATE_UI	tsu;
 
 __IO  uint32_t SystemClock_MHz 		= M7_CLOCK;
 __IO  uint32_t SystemClock_changed 	= 0;
+
+// Public radio state
+extern struct	TRANSCEIVER_STATE_UI	tsu;
+
+// FreeRTOS process state
+extern struct PROC_STATE 				ps;
+
+// UI driver public state
+extern struct	UI_DRIVER_STATE			ui_s;
 
 /**
   * @brief  System Clock Configuration to 400MHz
@@ -603,7 +598,7 @@ void CPU_CACHE_Enable(void)
 	SCB_EnableDCache();
 }
 
-static void bsp_backlight_init(void)
+static void board_backlight_init(void)
 {
 	  GPIO_InitTypeDef  gpio_init_structure;
 
@@ -694,7 +689,7 @@ static void power_cntr_init(void)
 }
 
 // Via BMS PRES line
-void bsp_power_off(void)
+void board_power_off(void)
 {
 	//printf("power off in\r\n");
 
@@ -768,7 +763,7 @@ void bsp_power_off(void)
 	//--NVIC_SystemReset();
 }
 
-static void ptt_init(void)
+static void board_ptt_init(void)
 {
 	GPIO_InitTypeDef  gpio_init_structure;
 
@@ -784,7 +779,7 @@ static void ptt_init(void)
 	HAL_GPIO_WritePin(PTT_PIN_PORT, PTT_PIN, GPIO_PIN_RESET);
 }
 
-static void power_led_init(void)
+static void board_led_init(void)
 {
 	GPIO_InitTypeDef  gpio_init_structure;
 
@@ -822,7 +817,7 @@ void board_check_button(void)
 	}
 }
 
-void bsp_hold_power(void)
+void board_hold_power(void)
 {
 	LL_GPIO_InitTypeDef 		GPIO_InitStruct = {0};
 
@@ -841,7 +836,7 @@ void bsp_hold_power(void)
 	LL_GPIO_Init(POWER_HOLD_PORT, &GPIO_InitStruct);
 }
 
-void bsp_gpio_clocks_on(void)
+void board_gpio_clocks_on(void)
 {
 	// All GPIO clocks on
 	__HAL_RCC_GPIOA_CLK_ENABLE();
@@ -859,7 +854,7 @@ void bsp_gpio_clocks_on(void)
 	LL_GPIO_ResetOutputPin	(GPS_EN_PORT, GPS_EN_PIN);
 }
 
-uint8_t bsp_config(void)
+uint8_t board_config(void)
 {
 	//LL_GPIO_InitTypeDef 		GPIO_InitStruct = {0};
 
@@ -880,12 +875,9 @@ uint8_t bsp_config(void)
 	#endif
 
 	power_cntr_init();
-
-	power_led_init();
-
-	ptt_init();
-
-	bsp_backlight_init();
+	board_led_init();
+	board_ptt_init();
+	board_backlight_init();
 
 	// DSP core Keyer IRQ
 	#ifdef CONTEXT_ICC
@@ -905,3 +897,51 @@ uint8_t bsp_config(void)
 	return 0;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : board_toggle_rx_tx
+//* Object              :
+//* Notes    			: Tune button, this func should be thread safe!
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_ANY
+//*----------------------------------------------------------------------------
+void board_toggle_rx_tx(void)
+{
+	uchar new_state;
+
+	if((ps.hAudioTask == NULL)||(ps.hIccTask == NULL))
+		return;
+
+	if(tsu.rxtx)
+		new_state = 0;
+	else
+		new_state = 1;
+
+	tsu.tune = new_state;
+	tsu.rxtx = new_state;
+
+	// Change DSP mode to TUNE via cmd
+	if(new_state)
+		xTaskNotify(ps.hIccTask, 	UI_ICC_TUNE, 	eSetValueWithOverwrite);
+
+	// Switch Codec path
+	xTaskNotify(ps.hAudioTask, UI_RXTX_SWITCH, eSetValueWithOverwrite);
+
+	// In OS mode ??
+	vTaskDelay(100);
+
+	if(!tsu.rxtx)
+	{
+		// Fast DSP RX/TX switch
+		HAL_HSEM_FastTake(HSEM_ID_21);
+		HAL_HSEM_Release (HSEM_ID_21, 0);
+
+		// Change DSP mode, TUNE OFF
+		xTaskNotify(ps.hIccTask, UI_ICC_TUNE, eSetValueWithOverwrite);
+	}
+	else
+	{
+		HAL_HSEM_FastTake(HSEM_ID_20);
+		HAL_HSEM_Release (HSEM_ID_20, 0);
+	}
+}
