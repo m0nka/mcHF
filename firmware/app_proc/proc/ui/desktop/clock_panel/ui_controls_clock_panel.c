@@ -100,6 +100,22 @@ static void ui_controls_clock_refresh(void)
 	k_GetTime(&stimestructureget);
 	k_GetDate(&sdatestructureget);
 
+	// Lock indicator
+	GUI_SetFont(&GUI_Font16B_ASCII);
+	if(!gps_proc_time_set())
+	{
+		// Blink 'lock' indicator
+		if(stimestructureget.Seconds%2)
+			GUI_SetColor(GUI_DARKRED);
+		else
+			GUI_SetColor(CLOCK_PANEL_COL);
+	}
+	else
+	{
+		GUI_SetColor(GUI_DARKGREEN);	// solid color on lock
+	}
+	GUI_DispStringAt("lock", 10, (CLOCK_Y + 13));	// repaint always
+
 	// Clear seconds area
 	GUI_SetColor(CLOCK_PANEL_COL);
 	GUI_FillRect(	(CLOCK_X + CLOCK_HOURS_SHIFT),
@@ -120,9 +136,9 @@ static void ui_controls_clock_refresh(void)
 	// Clear sats area
 	GUI_SetColor(CLOCK_PANEL_COL);
 	GUI_FillRect(	10,
-					(CLOCK_Y + 12),
+					(CLOCK_Y - 14),
 					20,
-					(CLOCK_Y + 25));
+					(CLOCK_Y -  1));
 
 	uchar s_cnt = gps_proc_sats_cnt();
 
@@ -135,7 +151,7 @@ static void ui_controls_clock_refresh(void)
 		GUI_SetColor(GUI_DARKRED);
 
 	GUI_SetFont(&GUI_Font16B_ASCII);
-	GUI_DispStringAt(buf, 10, (CLOCK_Y + 12));
+	GUI_DispStringAt(buf, 10, (CLOCK_Y - 14));
 
 	// Temp, refresh data(ToDo: need a better way)
 	//if(s_cnt > 5)
