@@ -586,7 +586,11 @@ static void KillPA(void)
 	}
 
 	//printf("kill menu\r\n");
-	GUI_EndDialog(hPA, 0);
+	if(hPA)
+	{
+		GUI_EndDialog(hPA, 0);
+		hPA = 0;
+	}
 }
 
 #endif

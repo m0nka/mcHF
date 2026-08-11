@@ -595,8 +595,11 @@ static void ui_proc_change_mode(void)
 		return;
 
 	// Backlight off
-	//---HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+	#if defined (CONTEXT_GPS) && defined (SWITCH_TO_GPIO_CNTR)
+	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+	#else
 	shared_tim_change(20);
+	#endif
 
 	switch(state)
 	{
@@ -817,8 +820,11 @@ static void ui_proc_change_mode(void)
 	ui_s.lock_requests = 0;
 
 	// Backlight on
-	//---HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+	#if defined (CONTEXT_GPS) && defined (SWITCH_TO_GPIO_CNTR)
+	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+	#else
 	shared_tim_change(tsu.brightness);
+	#endif
 }
 
 //*----------------------------------------------------------------------------

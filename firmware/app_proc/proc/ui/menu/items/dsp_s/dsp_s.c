@@ -801,7 +801,12 @@ use_const_decl:
 static void KillDsps(void)
 {
 	//printf("kill menu\r\n");
-	GUI_EndDialog(hDSdialog, 0);
+
+	if(hDSdialog)
+	{
+		GUI_EndDialog(hDSdialog, 0);
+		hDSdialog = 0;
+	}
 }
 
 #endif

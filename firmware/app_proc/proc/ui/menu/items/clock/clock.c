@@ -405,7 +405,18 @@ use_const_decl:
 static void KillClock(void)
 {
 	//printf("kill menu\r\n");
-	GUI_EndDialog(hCdialog, 0);
+
+	if(hTimerTime)
+	{
+		WM_DeleteTimer(hTimerTime);
+		hTimerTime= 0;
+	}
+
+	if(hCdialog)
+	{
+		GUI_EndDialog(hCdialog, 0);
+		hCdialog = 0;
+	}
 }
 
 #endif

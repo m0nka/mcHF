@@ -525,7 +525,12 @@ static void KillUI(void)
 		#endif
 						}
 	//printf("kill menu\r\n");
-	GUI_EndDialog(hUdialog, 0);
+
+	if(hUdialog)
+	{
+		GUI_EndDialog(hUdialog, 0);
+		hUdialog = 0;
+	}
 }
 
 #endif

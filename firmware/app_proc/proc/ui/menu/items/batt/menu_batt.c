@@ -1209,6 +1209,8 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 //*----------------------------------------------------------------------------
 static void Startup(WM_HWIN hWin, uint16_t xpos, uint16_t ypos)
 {
+	//printf("load menu\r\n");
+
 	// Does the current theme require shift of the window ?
 	if(menu_layout[ui_s.theme_id].iconview_y == 0)
 		goto use_const_decl;
@@ -1238,8 +1240,20 @@ static void KillBatt(void)
 	menu_batt_send_msg(ps.xBmsRxQueue, ulData, 1);
 
 	//printf("kill menu\r\n");
-	GUI_EndDialog(hMulti,   0);
-	GUI_EndDialog(hBdialog, 0);
+
+	if(hTimerBattA)
+	{
+		WM_DeleteTimer(hTimerBattA);
+		hTimerBattA = 0;
+	}
+
+	// Unload safely
+	if(hBdialog)
+	{
+		GUI_EndDialog(hMulti,   0);
+		GUI_EndDialog(hBdialog, 0);
+		hBdialog = 0;
+	}
 }
 
 #endif

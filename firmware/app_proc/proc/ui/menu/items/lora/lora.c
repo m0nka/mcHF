@@ -441,7 +441,11 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			#ifdef CONTEXT_GPS
 			// The measurement itself keeps running in the PPS ISR - only
 			// the read out timer belongs to this window
-			WM_DeleteTimer(hTimerGpsCal);
+			if(hTimerGpsCal)
+			{
+				WM_DeleteTimer(hTimerGpsCal);
+				hTimerGpsCal = 0;
+			}
 			#endif
 			break;
 
@@ -508,7 +512,18 @@ use_const_decl:
 static void KillLora(void)
 {
 	//printf("kill menu\r\n");
-	GUI_EndDialog(hLdialog, 0);
+
+	if(hTimerGpsCal)
+	{
+		WM_DeleteTimer(hTimerGpsCal);
+		hTimerGpsCal = 0;
+	}
+
+	if(hLdialog)
+	{
+		GUI_EndDialog(hLdialog, 0);
+		hLdialog = 0;
+	}
 }
 
 #endif

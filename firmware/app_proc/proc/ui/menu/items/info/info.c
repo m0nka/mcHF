@@ -454,8 +454,14 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			break;
 
 		case WM_DELETE:
-			WM_DeleteTimer(hTimerListFill);
+		{
+			if(hTimerListFill)
+			{
+				WM_DeleteTimer(hTimerListFill);
+				hTimerListFill = 0;
+			}
 			break;
+		}
 
 		case WM_NOTIFY_PARENT:
 		{
@@ -522,7 +528,18 @@ use_const_decl:
 static void KillInfo(void)
 {
 	//printf("kill menu\r\n");
-	GUI_EndDialog(hIdialog, 0);
+
+	if(hTimerListFill)
+	{
+		WM_DeleteTimer(hTimerListFill);
+		hTimerListFill = 0;
+	}
+
+	if(hIdialog)
+	{
+		GUI_EndDialog(hIdialog, 0);
+		hIdialog = 0;
+	}
 
 	//LISTBOX_SetDefaultBkColor(LISTBOX_CI_UNSEL,GUI_WHITE);
 }

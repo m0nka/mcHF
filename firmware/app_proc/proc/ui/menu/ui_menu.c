@@ -507,10 +507,22 @@ void ui_menu_init(void)
 
 void ui_menu_destroy(void)
 {
+	// Kill any sub-menu that is left running(in case we are returning via F4 button click)
+	for(int i = 0; i < k_ModuleGetNumber(); i++)
+	{
+		if(module_prop[i].module->kill != NULL)
+			module_prop[i].module->kill();
+	}
+
+	// Give time for destruction to execute
+	GUI_Exec();
+	GUI_Delay(50);
+
 	WM_DeleteWindow		(hIcon);
 	WM_DeleteWindow		(hFooter);
 	WM_DeleteWindow		(hButton);
 	WM_DeleteWindow		(hHeader);
+
 	WM_SetCallback		(WM_HBKWIN, 0);
 	WM_InvalidateWindow	(WM_HBKWIN);
 }

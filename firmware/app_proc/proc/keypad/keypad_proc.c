@@ -542,7 +542,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			printf("Mode\r\n");
+			//printf("Mode\r\n");
 			GUI_StoreKeyMsg('K', 1);
 
 		}
@@ -573,9 +573,14 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			printf("F1->Menu\r\n");
+			//printf("F1->Menu\r\n");
 			#ifdef CONTEXT_VIDEO
-			ui_s.req_state = MODE_MENU;
+			//
+			if(ui_s.cur_state != MODE_MENU)
+				ui_s.req_state = MODE_MENU;
+			else
+				ui_s.req_state = MODE_DESKTOP;
+			//
 			xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
 			#endif
 		}
@@ -628,12 +633,12 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 			// Toggle the MarsChat screen, as F4 does for FT8
 			if(ui_s.cur_state != MODE_DESKTOP_MARSCHAT)
 			{
-				printf("F5->enter MarsChat\r\n");
+				//printf("F5->enter MarsChat\r\n");
 				ui_s.req_state = MODE_DESKTOP_MARSCHAT;
 			}
 			else
 			{
-				printf("F5->exit MarsChat\r\n");
+				//printf("F5->exit MarsChat\r\n");
 				ui_s.req_state = MODE_DESKTOP;
 			}
 
@@ -678,7 +683,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 static void keypad_cmd_processor_wm(uchar x,uchar y, uchar hold, uchar release)
 {
 	#ifdef KEYPAD_ALLOW_DEBUG
-	printf("x=%d, y=%d, hld=%d, rel=%d\r\n", x, y, hold, release);
+	//--printf("x=%d, y=%d, hld=%d, rel=%d\r\n", x, y, hold, release);
 	#endif
 #if 0
 	// SSB - USB/LSB
@@ -1449,6 +1454,7 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 		// -------------------------------------------------
 		// Main radio desktop
 		case MODE_DESKTOP:
+		case MODE_MENU:
 		case MODE_DESKTOP_FT8:			// so can exit via button
 		#ifdef CONTEXT_MARSCHAT
 		case MODE_DESKTOP_MARSCHAT:		// ditto
@@ -1458,7 +1464,7 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 
 		// -------------------------------------------------
 		// Route Keypad input to emWin Window Manager
-		case MODE_MENU:
+		//case MODE_MENU:
 		case MODE_QUICK_LOG:
 		case MODE_SIDE_ENC_MENU:
 			keypad_cmd_processor_wm(x,y,hold,release);
