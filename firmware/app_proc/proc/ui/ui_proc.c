@@ -636,6 +636,10 @@ static void ui_proc_change_mode(void)
 			WM_SetCallback		(WM_HBKWIN, 0);
 			WM_InvalidateWindow	(WM_HBKWIN);
 
+			// Give time for destruction to execute
+			GUI_Exec();
+			GUI_Delay(50);
+
 			// Clear screen
 			GUI_SetBkColor(GUI_BLACK);
 			GUI_Clear();
@@ -912,7 +916,8 @@ static void ui_proc_periodic(void)
 	a2 = ps.epoch;
 	#endif
 	//
-	ui_controls_spectrum_refresh(ui_proc_cb, 1);	// waterfall
+	if(!ui_s.active_control_shown)
+		ui_controls_spectrum_refresh(ui_proc_cb, 1);	// waterfall
 	//
 	#ifdef PROFILE_UI_REPAINT
 	b2 = (ps.epoch - a2);

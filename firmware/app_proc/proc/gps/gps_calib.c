@@ -77,9 +77,11 @@ void gps_calib_init(void)
 	gc.ticks_per_sec = (uint16_t)(gc.prediv_s + 1u);
 	gc.minute_ticks  = (int32_t)gc.ticks_per_sec * 60;
 
+	#ifdef GPS_CALIB_PRINT
 	printf("gps calib: %u subsecond ticks (%u us resolution)\r\n",
 			(unsigned)gc.ticks_per_sec,
 			(unsigned)(1000000UL / gc.ticks_per_sec));
+	#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -105,7 +107,9 @@ void gps_calib_start(void)
 
 	gc.run = 1;
 
+	#ifdef GPS_CALIB_PRINT
 	printf("gps calib: started, trim now %d ppm\r\n", (int)rtc_calib_ppm_get());
+	#endif
 }
 
 void gps_calib_stop(void)
@@ -320,8 +324,10 @@ int gps_calib_accept(void)
 
 	if(gps_calib_get(&st) != 0)
 	{
+		#ifdef GPS_CALIB_PRINT
 		printf("gps calib: not enough data yet (%u samples)\r\n",
 				(unsigned)st.samples);
+		#endif
 		return 1;
 	}
 
@@ -344,10 +350,12 @@ void gps_calib_print(void)
 
 	if(gps_calib_get(&st) != 0)
 	{
+		#ifdef GPS_CALIB_PRINT
 		printf("gps calib: %u samples, %u s, armed %d, sweep %u.%u lsb, ~%u min left\r\n",
 				(unsigned)st.samples, (unsigned)st.span_s, (int)st.armed,
 				(unsigned)(st.sweep_lsb_x10 / 10), (unsigned)(st.sweep_lsb_x10 % 10),
 				(unsigned)((st.eta_s + 59u) / 60u));
+		#endif
 		return;
 	}
 
@@ -358,12 +366,14 @@ void gps_calib_print(void)
 
 	e = st.err_ppm_x100;
 
+	#ifdef GPS_CALIB_PRINT
 	printf("gps calib: %u s, residual %c%d.%02d +/- %d.%02d ppm, trim %d -> %d, %u bad\r\n",
 			(unsigned)st.span_s,
 			sign, (int)(r / 100), (int)(r % 100),
 			(int)(e / 100), (int)(e % 100),
 			(int)st.trim_now_ppm, (int)st.trim_new_ppm,
 			(unsigned)st.glitches);
+	#endif
 }
 
 #endif // CONTEXT_GPS

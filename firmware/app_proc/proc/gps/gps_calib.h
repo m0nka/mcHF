@@ -12,6 +12,9 @@
 #ifndef __GPS_CALIB_H
 #define __GPS_CALIB_H
 
+// Local debug
+//#define GPS_CALIB_PRINT
+
 // A PPS edge more than this far from a whole number of seconds is noise,
 // not the GPS - drop it and restart the baseline. 1/4 second
 #define CALIB_PHASE_REJECT_DIV		4
