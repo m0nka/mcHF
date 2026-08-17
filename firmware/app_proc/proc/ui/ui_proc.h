@@ -19,6 +19,9 @@
 // Unit test this driver
 //#define UI_RUN_ALL_TESTS
 
+// Splash screen time
+#define SPLASH_STAY_ON_SCREEN		2000
+
 // Enable individual desktop controls
 #define 	DESKTOP_SHOW_BATTERY
 #define 	DESKTOP_SHOW_SMETER

@@ -832,6 +832,45 @@ static void ui_proc_change_mode(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : ui_proc_splash_screen
+//* Object              :
+//* Input Parameters    : show fw versions on start/super basic start screen
+//* Output Parameters   :
+//* Functions called    : CONTEXT_VIDEO
+//*----------------------------------------------------------------------------
+static void ui_proc_splash_screen(void)
+{
+	char fw_id[200];
+
+	GUI_SetFont(&GUI_Font32B_ASCII);
+	GUI_SetColor(GUI_WHITE);
+	GUI_DispStringAt("mcHF v9, rev B", 10, 10);
+
+    memset(fw_id,0,sizeof(fw_id));
+	sprintf(fw_id,"App Proc v: %d.%d.%d.%d",MCHF_R_VER_MAJOR, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE,MCHF_R_VER_BUILD);
+	GUI_DispStringAt(fw_id, 270, 200);
+
+	// Wait DSP(icc proc starts with 900mS delay after ui)
+	for(int i = 0; i < 100; i++)
+	{
+		if((tsu.dsp_rev1 != 0)||(tsu.dsp_rev2 != 0)||(tsu.dsp_rev3 != 0)||(tsu.dsp_rev4 != 0))
+		{
+			memset(fw_id,0,sizeof(fw_id));
+			sprintf(fw_id,"Baseband v: %d.%d.%d.%d",tsu.dsp_rev1,tsu.dsp_rev2,tsu.dsp_rev3,tsu.dsp_rev4);
+
+			GUI_SetColor(GUI_GREEN);
+			GUI_DispStringAt(fw_id, 270, 235);
+			break;
+		}
+
+		GUI_Delay(30);
+	}
+
+	// Show
+	GUI_Delay(SPLASH_STAY_ON_SCREEN);
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_emwin_init
 //* Object              :
 //* Input Parameters    :
@@ -853,6 +892,10 @@ static void ui_proc_emwin_init(void)
 
 	// UI init
 	GUI_Init();
+
+	// Splash screen
+	ui_proc_splash_screen();
+
 	GUI_X_InitOS();
 	WM_MULTIBUF_Enable(1);
 
@@ -1227,11 +1270,10 @@ void ui_proc_power_cleanup(uchar mode)
 	// Backlight off
 	if(mode == UI_BACKLIGHT_OFF)
 	{
-		#if defined (CONTEXT_GPS) && defined (SWITCH_TO_GPIO_CNTR)
-		HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
-		#else
-		shared_tim_change(0);
-		#endif
+		if(tsu.pwm_backlight == 0)
+			HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+		else
+			shared_tim_change(0);
 
 		return;
 	}

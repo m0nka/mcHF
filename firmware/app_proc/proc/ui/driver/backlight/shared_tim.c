@@ -177,6 +177,9 @@ TIM_HandleTypeDef	TimHandle;
 TIM_OC_InitTypeDef 	sConfig;
 uint32_t 			uhPrescalerValue = 0;
 
+// Public radio state
+extern struct	TRANSCEIVER_STATE_UI	tsu;
+
 void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
 {
   GPIO_InitTypeDef   GPIO_InitStruct;
@@ -203,11 +206,10 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
 
 void shared_tim_change(uchar val)
 {
-	#if defined (CONTEXT_GPS) && defined (SWITCH_TO_GPIO_CNTR)
-	return;
-	#endif
+	if(tsu.pwm_backlight == 0)
+		return;
 
-	printf("set brigthness: %d \r\n", val);
+	//printf("set brightness: %d \r\n", val);
 
 	if(val > 100)
 		val = 100;
@@ -224,9 +226,6 @@ void shared_tim_change(uchar val)
 	HAL_TIM_PWM_Start(&TimHandle, TIM_CHANNEL_2);
 }
 
-#if defined (CONTEXT_GPS) && defined (SWITCH_TO_GPIO_CNTR)
-//
-#else
 static void shared_tim_init_a(void)
 {
 	#ifdef USE_LL_VERSION
@@ -332,21 +331,23 @@ static void shared_tim_init_a(void)
 
 	#endif
 }
-#endif
 
 void shared_tim_init(void)
 {
-	#if defined (CONTEXT_GPS) && defined (SWITCH_TO_GPIO_CNTR)
 	GPIO_InitTypeDef   GPIO_InitStruct;
-	//
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	//GPIO_InitStruct.Pull = GPIO_PULLUP;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	GPIO_InitStruct.Pin = LCD_BL_CTRL_PIN;
-	HAL_GPIO_Init(LCD_BL_CTRL_GPIO_PORT, &GPIO_InitStruct);
-	//
-	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
-	#else
-	shared_tim_init_a();
-	#endif
+
+	if(tsu.pwm_backlight == 0)
+	{
+		HAL_TIM_PWM_Stop(&TimHandle, TIM_CHANNEL_2);
+
+		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+		//GPIO_InitStruct.Pull = GPIO_PULLUP;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+		GPIO_InitStruct.Pin = LCD_BL_CTRL_PIN;
+		HAL_GPIO_Init(LCD_BL_CTRL_GPIO_PORT, &GPIO_InitStruct);
+
+		HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+	}
+	else
+		shared_tim_init_a();
 }
