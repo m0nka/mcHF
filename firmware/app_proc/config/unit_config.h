@@ -18,7 +18,7 @@
 // pwm  - 24252mS
 //
 // Run the backlight in GPIO mode to limit GPS noise
-#define SWITCH_TO_GPIO_CNTR
+//--#define SWITCH_TO_GPIO_CNTR
 
 // Un-comment to arm the WSPR monitor automatically at boot (bench testing,
 // no UI hook needed) - captures every even minute and decodes to SD

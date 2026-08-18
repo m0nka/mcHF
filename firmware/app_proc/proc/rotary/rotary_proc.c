@@ -48,61 +48,8 @@ extern struct 	TransceiverState 		ts;
 
 extern struct	UI_DRIVER_STATE			ui_s;
 
-//extern struct 	S_METER					sm;
-
 // FreeRTOS process state
 extern struct PROC_STATE 				ps;
-
-// ---------------------------------
-// Block s-meter refresh exports
-//extern uchar	rotary_block;
-//extern ushort	rotary_timer;
-// ---------------------------------
-
-#ifdef USE_SIDE_ENC_FOR_S_METER
-extern ulong s_met_pos;
-#endif
-
-#if 0
-static void rotary_init_side_encoder_switch_pin(void)
-{
-#if 0
-	GPIO_InitTypeDef  	GPIO_InitStruct;
-
-	GPIO_InitStruct.Pin 		= GPIO_PIN_13;
-	GPIO_InitStruct.Mode 		= GPIO_MODE_INPUT;
-	GPIO_InitStruct.Pull 		= GPIO_PULLUP;
-	GPIO_InitStruct.Speed 		= GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-#endif
-}
-#endif
-
-#if 0
-static void rotary_check_side_encoder_switch(void)
-{
-#if 0
-	// Encoder button clicked ?
-	if(!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13))
-	{
-		while(!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13));
-
-		//printf("side encoder clicked\r\n");
-
-		// Toggle UI driver state(only enter from desktop)
-		if(ui_s.req_state == MODE_DESKTOP)
-		{
-			ui_s.req_state = MODE_SIDE_ENC_MENU;
-			return;
-		}
-
-		// Do not return from Menu mode
-		if(ui_s.req_state == MODE_SIDE_ENC_MENU)
-			ui_s.req_state = MODE_DESKTOP;
-	}
-#endif
-}
-#endif
 
 static void rotary_update_audio_publics(int pot_diff)
 {
@@ -185,8 +132,7 @@ static void rotary_update_side_enc_menu_publics(int pot_diff)
 	}
 }
 
-#if 1
-static void rotary_check_side_enc(void)
+static void rotary_proc_check_side_enc(void)
 {
 	ushort 	cnt;
 	int		pot_diff = 0;
@@ -216,46 +162,6 @@ static void rotary_check_side_enc(void)
 	// Flag preventing calling too often
 	audio_old = cnt;
 }
-#else
-static void rotary_check_side_enc(void)
-{
-	int		pot_diff = 0;
-
-	// --------------------------------------------
-	// ToDo: Use EXTI IRQ and proper debouncing!!!
-	// --------------------------------------------
-
-	if(HAL_GPIO_ReadPin(ENC1_I_PORT, ENC1_I))
-	{
-		vTaskDelay(80);
-		if(HAL_GPIO_ReadPin(ENC1_I_PORT, ENC1_I))
-		{
-			pot_diff = -1;
-			//printf("vol down \r\n");
-			vTaskDelay(80);
-		}
-	}
-
-	if(HAL_GPIO_ReadPin(ENC1_Q_PORT, ENC1_Q))
-	{
-		vTaskDelay(80);
-		if(HAL_GPIO_ReadPin(ENC1_Q_PORT, ENC1_Q))
-		{
-			pot_diff = +1;
-			//printf("vol up \r\n");
-			vTaskDelay(80);
-		}
-	}
-
-	if(pot_diff == 0)
-		return;
-
-	if(tsu.active_side_enc_id == 0)
-		rotary_update_audio_publics(pot_diff);
-	else
-		rotary_update_side_enc_menu_publics(pot_diff);
-}
-#endif
 
 static void rotary_update_freq_publics(int pot_diff)
 {
@@ -371,7 +277,7 @@ static void rotary_update_freq_publics(int pot_diff)
 	//save_band_info();
 }
 
-static void rotary_check_front_enc(void)
+static void rotary_proc_check_freq_enc(void)
 {
 	ushort 	cnt;
 	int		pot_diff = 0;
@@ -422,8 +328,7 @@ static void rotary_check_front_enc(void)
 	freq_old = cnt;
 }
 
-#if 1
-uchar rotary_side_enc_init(void)
+static uchar rotary_proc_freq_enc_init(void)
 {
 	TIM_Encoder_InitTypeDef 	tim_config;
 	TIM_MasterConfigTypeDef 	tim_master;
@@ -432,17 +337,17 @@ uchar rotary_side_enc_init(void)
 	__HAL_RCC_TIM2_CLK_ENABLE();
 
 	// PA1, TIM2, Q channel
-	GPIO_InitStruct.Pin 				= GPIO_PIN_1;
+	GPIO_InitStruct.Pin 				= ENC1_I;
 	GPIO_InitStruct.Mode 				= GPIO_MODE_AF_PP;
 	GPIO_InitStruct.Pull	 			= GPIO_PULLUP;
 	GPIO_InitStruct.Speed 				= GPIO_SPEED_FREQ_LOW;
-	GPIO_InitStruct.Alternate 			= GPIO_AF1_TIM2;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	GPIO_InitStruct.Alternate 			= ENC1_I_AF;
+	HAL_GPIO_Init(ENC1_I_PORT, &GPIO_InitStruct);
 
 	// PA15, TIM2, I channel
-	GPIO_InitStruct.Pin 				= GPIO_PIN_15;
-	GPIO_InitStruct.Alternate 			= GPIO_AF1_TIM2;
-	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin 				= ENC1_Q;
+	GPIO_InitStruct.Alternate 			= ENC1_Q_AF;
+	HAL_GPIO_Init(ENC1_Q_PORT, &GPIO_InitStruct);
 
 	htim2.Instance 						= TIM2;
 	htim2.Init.Prescaler 				= 0;
@@ -475,28 +380,8 @@ uchar rotary_side_enc_init(void)
 
 	return 0;
 }
-#else
-uchar rotary_side_enc_init(void)
-{
-	GPIO_InitTypeDef 			GPIO_InitStruct;
 
-	// --------------------------------------------
-	// ToDo: Use EXTI IRQ and proper debouncing!!!
-	// --------------------------------------------
-
-	GPIO_InitStruct.Mode 	= GPIO_MODE_INPUT;
-	GPIO_InitStruct.Pull	= GPIO_PULLDOWN;
-	GPIO_InitStruct.Speed 	= GPIO_SPEED_FREQ_LOW;
-
-	GPIO_InitStruct.Pin 	= ENC1_I;
-	HAL_GPIO_Init(ENC1_I_PORT, &GPIO_InitStruct);
-
-	GPIO_InitStruct.Pin 	= ENC1_Q;
-	HAL_GPIO_Init(ENC1_Q_PORT, &GPIO_InitStruct);
-}
-#endif
-
-uchar rotary_front_enc_init(void)
+static uchar rotary_proc_gain_enc_init(void)
 {
 	TIM_Encoder_InitTypeDef 	tim_config;
 	TIM_MasterConfigTypeDef 	tim_master;
@@ -545,9 +430,6 @@ uchar rotary_front_enc_init(void)
 	if(HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_1 | TIM_CHANNEL_2) != HAL_OK)
 		return 3;
 
-	HAL_NVIC_SetPriority(TIM1_TRG_COM_IRQn, 5 ,0U);
-	HAL_NVIC_EnableIRQ	(TIM1_TRG_COM_IRQn);
-
 	front_init_done = 1;
 	return 0;
 }
@@ -563,19 +445,16 @@ uchar rotary_front_enc_init(void)
 static void rotary_worker(void)
 {
 	// Encoders
-	rotary_check_side_enc();
-	rotary_check_front_enc();
-
-	// Push buttons
-	//rotary_check_side_encoder_switch();
+	rotary_proc_check_side_enc();
+	rotary_proc_check_freq_enc();
 }
 
 // call from main() on startup
 void rotary_proc_hw_init(void)
 {
 	// Encoders
-	rotary_side_enc_init();
-	rotary_front_enc_init();
+	rotary_proc_freq_enc_init();
+	rotary_proc_gain_enc_init();
 
 	// Push buttons, redundant - side switch is power, freq button routed to ESP32!
 	//rotary_init_side_encoder_switch_pin();
@@ -606,7 +485,3 @@ rotary_driver_loop:
 }
 
 #endif
-
-
-
-

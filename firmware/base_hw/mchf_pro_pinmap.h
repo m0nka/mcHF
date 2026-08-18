@@ -646,6 +646,7 @@
 // PA1			ENC1_I
 #define ENC1_I							GPIO_PIN_1
 #define ENC1_I_PORT						GPIOA
+#define ENC1_I_AF						GPIO_AF1_TIM2
 
 // PA2			LORA_POWER, Lora driver
 #define LORA_POWER						LL_GPIO_PIN_2
@@ -696,6 +697,7 @@
 // PA15			ENC1_Q
 #define ENC1_Q							GPIO_PIN_15
 #define ENC1_Q_PORT						GPIOA
+#define ENC1_Q_AF						GPIO_AF1_TIM2
 
 // ----------------------------------------------------
 // ----------------------------------------------------

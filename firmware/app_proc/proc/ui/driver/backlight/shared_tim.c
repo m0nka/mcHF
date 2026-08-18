@@ -180,12 +180,12 @@ uint32_t 			uhPrescalerValue = 0;
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
 
-void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
+static void shared_tim_connect_pin_to_timer(void)
 {
   GPIO_InitTypeDef   GPIO_InitStruct;
   /*##-1- Enable peripherals and GPIO Clocks #################################*/
   /* TIMx Peripheral clock enable */
-  __HAL_RCC_TIM1_CLK_ENABLE();
+  //__HAL_RCC_TIM1_CLK_ENABLE();
 
   /* Common configuration for all channels */
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -202,14 +202,31 @@ void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim)
   HAL_GPIO_Init(LCD_BL_CTRL_GPIO_PORT, &GPIO_InitStruct);
 }
 
+static void shared_tim_pin_as_gpio(void)
+{
+	GPIO_InitTypeDef   GPIO_InitStruct;
+
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+	GPIO_InitStruct.Pin = LCD_BL_CTRL_PIN;
+	HAL_GPIO_Init(LCD_BL_CTRL_GPIO_PORT, &GPIO_InitStruct);
+
+	// On only
+	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+}
+
 #endif
 
 void shared_tim_change(uchar val)
 {
-	if(tsu.pwm_backlight == 0)
-		return;
+	//printf("set brightness: %d(mode: %d) \r\n", val, tsu.pwm_backlight);
 
-	//printf("set brightness: %d \r\n", val);
+	if(tsu.pwm_backlight == 0)
+	{
+		//printf("no change, ignore \r\n");
+		return;
+	}
 
 	if(val > 100)
 		val = 100;
@@ -279,6 +296,8 @@ static void shared_tim_init_a(void)
 	       + Counter direction = Up
 	  */
 
+	__HAL_RCC_TIM1_CLK_ENABLE();
+
 	  TimHandle.Instance = TIM1;
 
 	  TimHandle.Init.Prescaler         = uhPrescalerValue;
@@ -334,20 +353,46 @@ static void shared_tim_init_a(void)
 
 void shared_tim_init(void)
 {
-	GPIO_InitTypeDef   GPIO_InitStruct;
+	// Track mode changes
+	static uchar loc_mode = 0xFF;
 
+	//printf("init backlight, mode: %d \r\n", tsu.pwm_backlight);
+
+	if(loc_mode == tsu.pwm_backlight)
+	{
+		//printf("no change, ignore \r\n");
+		return;
+	}
+
+	// Use miltiplexer to change pin function
 	if(tsu.pwm_backlight == 0)
 	{
+		// Reduce noise when pin is disconnected
 		HAL_TIM_PWM_Stop(&TimHandle, TIM_CHANNEL_2);
 
-		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-		//GPIO_InitStruct.Pull = GPIO_PULLUP;
-		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-		GPIO_InitStruct.Pin = LCD_BL_CTRL_PIN;
-		HAL_GPIO_Init(LCD_BL_CTRL_GPIO_PORT, &GPIO_InitStruct);
+		// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// Note: Disconnecting from the timer will mess with the freq encoder timer!
+		//       need fix
+		if(loc_mode != 0xFF)
+			printf("timer break here !!! \r\n");
+		// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
+		// --------------------------------------------------------------------------
 
-		HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+		// Use as gpio
+		shared_tim_pin_as_gpio();
 	}
 	else
+	{
+		// Connect pin to timer
+		shared_tim_connect_pin_to_timer();
+	}
+
+	// Init timer on start only
+	if(loc_mode == 0xFF)
 		shared_tim_init_a();
+
+	// Save mode
+	loc_mode = tsu.pwm_backlight;
 }
