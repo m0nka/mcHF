@@ -338,6 +338,58 @@ uchar bq40z80_mac_read(ushort cmd, uchar *buf, uchar len)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_read_sn
+//* Object              :
+//* Notes    			: read device serial number from bms chip
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_read_sn(ushort *sn)
+{
+	if(sn == NULL)
+		return 1;
+
+	if(bq40z80_read_16bit_reg(0x1C, sn) != 0)
+		return 2;
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_write_sn
+//* Object              :
+//* Notes    			: write device serial number to bms chip
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_write_sn(ushort sn)
+{
+	uchar res = 0;
+
+	bq40z80_unseal();
+
+	// ToDo: check which write is correct ?
+	#if 0
+	uchar t_buf[2];
+
+	t_buf[1] = (uchar)(sn);
+	t_buf[2] = (uchar)(sn >> 8);
+
+	if(bq40z80_mac_write(0x1C, t_buf, 2) != 0)
+		res = 1;
+	#else
+	if(bq40z80_write_16bit_reg(0x1C, sn) != 0)
+		res = 1;
+	#endif
+
+	bq40z80_seal();
+
+	return res;
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : bq40z80_read_mfg_status
 //* Object              :
 //* Notes    			: read ManufacturingStatus() via MAC 0x0057
@@ -689,6 +741,36 @@ void bq40z80_init(void)
 
 	bms_loc_init = 1;
 	//printf("== bms ready ==\r\n");
+
+	// Write SN
+	#if 0
+	ushort new_sn = 0x0004;
+	printf("Write SN: %04x \r\n", new_sn);
+	if(bq40z80_write_sn(new_sn) != 0)
+	{
+		printf(" error writing SN \r\n");
+	}
+	#endif
+
+	// Read SN
+	#if 1
+	ushort sn = 0;
+	uchar sn_res = 0;
+
+	// Invalid
+	bmss.sn = 0xFFFF;
+
+	sn_res = bq40z80_read_sn(&sn);
+	if(sn_res != 0)
+		printf(" error reading SN %d \r\n", sn_res);
+	else if(sn < 0x0002)
+		printf("invalid SN!(%04x) \r\n", sn);	// Default chip SN is 0x0001
+	else
+	{
+		bmss.sn = sn;
+		printf("SN: %04x \r\n", sn);
+	}
+	#endif
 
 	// Read battery status: 0x0040 - no cells
 	//

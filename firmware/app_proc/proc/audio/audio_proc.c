@@ -176,7 +176,7 @@ static void btm_proc_task(void *arg)
 	UNUSED(arg);
 
 	vTaskDelay(AUDIO_PROC_START_DELAY + 50);
-	printf("start  \r\n");
+	//printf("start  \r\n");
 
 	for(;;)
 	{
@@ -248,7 +248,7 @@ void audio_proc_task(void const * argument)
 	UNUSED(argument);
 
 	vTaskDelay(AUDIO_PROC_START_DELAY);
-	printf("start  \r\n");
+	//printf("start  \r\n");
 
 	// Stall here, maybe exit with timeout ?
 	#ifdef CONTEXT_ICC

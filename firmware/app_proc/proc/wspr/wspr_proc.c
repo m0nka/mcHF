@@ -725,7 +725,7 @@ void wspr_proc_task(void const *arg)
 	TickType_t	sleep;
 
 	vTaskDelay(WSPR_PROC_START_DELAY);
-	printf("start\r\n");
+	//printf("start\r\n");
 
 	#ifdef WSPR_MONITOR_AUTO_START
 	wspr_monitor_on = 1;

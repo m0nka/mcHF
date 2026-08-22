@@ -1025,7 +1025,7 @@ void marschat_proc_task(void const *arg)
 	TickType_t	sleep;
 
 	vTaskDelay(MARSCHAT_PROC_START_DELAY);
-	printf("start\r\n");
+	//printf("start\r\n");
 
 	mc_rx_queue = xQueueCreate(MARSCHAT_RX_QUEUE_LEN, sizeof(MC_UI_RX_MSG));
 	mc_tx_queue = xQueueCreate(MARSCHAT_TX_QUEUE_LEN, sizeof(MC_TX_CHUNK));

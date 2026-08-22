@@ -476,7 +476,7 @@ void rotary_proc_power_cleanup(void)
 void rotary_proc_task(void const *arg)
 {
 	vTaskDelay(ROTARY_PROC_START_DELAY);
-	printf("start\r\n");
+	//printf("start\r\n");
 
 rotary_driver_loop:
 	rotary_worker();

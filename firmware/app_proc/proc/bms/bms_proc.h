@@ -37,6 +37,8 @@ __attribute__((__common__)) struct BMSState {
 	short curr;
 	ulong pack_v;
 
+	ushort sn;
+
 	// Reading ready
 	uchar rr;
 

@@ -1148,7 +1148,7 @@ void ui_proc_task(void const *arg)
 	uchar del_ms = UI_PROC_SLEEP_TIME;
 
 	vTaskDelay(UI_PROC_START_DELAY);
-	printf("start\r\n");
+	//printf("start\r\n");
 
 	// Force PWM mode
 	tsu.pwm_backlight = 1;

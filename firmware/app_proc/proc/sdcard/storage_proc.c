@@ -253,7 +253,7 @@ void storage_proc_task(void const * argument)
 	ulong 	ulNotificationValue = 0, ulNotif;
 
 	vTaskDelay(SD_PROC_START_DELAY);
-	printf("start  \r\n");
+	//printf("start  \r\n");
 
 	#ifndef SD_DETECT_BEFORE_OS
 	//

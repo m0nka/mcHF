@@ -612,7 +612,7 @@ void os_apploader_task(void *pvParameters)
     pxAppLdrParametersPub = (APPLOADER_APP_PARAMETERS *)pxAppLdrParameters;
 
 	vTaskDelay(APP_PROC_START_DELAY);
-	printf("start\r\n");
+	//printf("start\r\n");
 
 	for(;;)
 	{

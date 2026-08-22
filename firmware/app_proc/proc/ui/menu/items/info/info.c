@@ -41,6 +41,8 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 // UI driver public state
 extern struct	UI_DRIVER_STATE			ui_s;
 
+extern struct BMSState	bmss;
+
 // Menu layout definitions from Flash
 extern const struct UIMenuLayout menu_layout[];
 
@@ -109,6 +111,11 @@ static void about_print_fw_vers(WM_HWIN hItem)
 {
 	char fw_id[200];
 	char *p = fw_id;
+
+	// Add Radio SN
+	memset(fw_id,0,sizeof(fw_id));
+	sprintf(p,"Radio SN: %04d",bmss.sn);
+	LISTBOX_AddString(hItem,fw_id);
 
     memset(fw_id,0,sizeof(fw_id));
     sprintf(p,"UI Firmware v: %d.%d.%d.%d",MCHF_R_VER_MAJOR, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE,MCHF_R_VER_BUILD);

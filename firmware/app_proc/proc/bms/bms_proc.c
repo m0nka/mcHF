@@ -477,7 +477,7 @@ static void bms_proc_worker(void const *param)
 void bms_proc_task(void const *arg)
 {
 	vTaskDelay(BMS_PROC_START_DELAY);
-	printf("start\r\n");
+	//printf("start\r\n");
 
 	// Init publics
 	bmss.charger_on 		= 0;
