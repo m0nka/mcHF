@@ -131,6 +131,8 @@ static MENU_ITEM _aMenuItems[] =
 };
 #endif
 
+WM_HTIMER      hStatusTimer;
+
 static void file_b_free_memory(void)
 {
 	// Free list memory
@@ -929,7 +931,7 @@ static void _RefreshBrowser(WM_HWIN hWin)
 
 static void _cbMediaConnection(WM_MESSAGE * pMsg) 
 {
-	static WM_HTIMER      hStatusTimer;
+	//static WM_HTIMER      hStatusTimer;
 	static uint8_t        prev_sd_status = 0;
    
 	switch (pMsg->MsgId)
@@ -1225,6 +1227,16 @@ static void KillFileb(void)
 	// Free list memory
 	file_b_free_memory();
 
-	GUI_EndDialog(hExplorerWin, 0);
+	if(hStatusTimer != 0)
+	{
+		WM_DeleteTimer(hStatusTimer);
+		hStatusTimer = 0;
+	}
+
+	if(hExplorerWin)
+	{
+		GUI_EndDialog(hExplorerWin, 0);
+		hExplorerWin = 0;
+	}
 }
 

@@ -56,7 +56,7 @@ typedef struct
 // Executable region
 #define SDRAM_APP_ADDR         					0xC0ACA000
 
-#ifndef PCB_V9_REV_A
+#if 0
 #define SDRAM_DEVICE_SIZE         				0x00400000
 #else
 #define SDRAM_DEVICE_SIZE         				0x01000000

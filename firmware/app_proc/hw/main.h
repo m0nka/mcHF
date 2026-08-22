@@ -70,6 +70,7 @@
 #include <string.h>
 #include <math.h>
 
+#include "unit_config.h"
 #include "version.h"
 #include "radio_init.h"
 #include "rtc.h"

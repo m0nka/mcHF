@@ -72,7 +72,7 @@ void fan_proc_task(void const *arg)
 	ulong 	ulNotificationValue = 0, ulNotif;
 
 	vTaskDelay(FAN_PROC_START_DELAY);
-	printf("start\r\n");
+	//printf("start\r\n");
 
 	// Fan Off
 	LL_GPIO_ResetOutputPin(FAN_CNTR_PORT, FAN_CNTR);

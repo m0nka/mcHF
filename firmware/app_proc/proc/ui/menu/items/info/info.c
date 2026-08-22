@@ -41,6 +41,8 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 // UI driver public state
 extern struct	UI_DRIVER_STATE			ui_s;
 
+extern struct BMSState	bmss;
+
 // Menu layout definitions from Flash
 extern const struct UIMenuLayout menu_layout[];
 
@@ -73,7 +75,7 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 //							name		id						x		y		xsize	ysize	?		?		?
 // -----------------------------------------------------------------------------------------------------------------------------
 // Self
-#ifndef PCB_V9_REV_A
+#if 0
 { WINDOW_CreateIndirect,	"", 		ID_WINDOW_0,			0,    	0,		854,	430, 	0, 		0x64, 	0 },
 // Buttons
 { BUTTON_CreateIndirect, 	"Update",	ID_BUTTON_FW_UPDATE,	690, 	55, 	120, 	45, 	0, 		0x0, 	0 },
@@ -109,6 +111,11 @@ static void about_print_fw_vers(WM_HWIN hItem)
 {
 	char fw_id[200];
 	char *p = fw_id;
+
+	// Add Radio SN
+	memset(fw_id,0,sizeof(fw_id));
+	sprintf(p,"Radio SN: %04d",bmss.sn);
+	LISTBOX_AddString(hItem,fw_id);
 
     memset(fw_id,0,sizeof(fw_id));
     sprintf(p,"UI Firmware v: %d.%d.%d.%d",MCHF_R_VER_MAJOR, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE,MCHF_R_VER_BUILD);
@@ -454,8 +461,14 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			break;
 
 		case WM_DELETE:
-			WM_DeleteTimer(hTimerListFill);
+		{
+			if(hTimerListFill)
+			{
+				WM_DeleteTimer(hTimerListFill);
+				hTimerListFill = 0;
+			}
 			break;
+		}
 
 		case WM_NOTIFY_PARENT:
 		{
@@ -522,7 +535,18 @@ use_const_decl:
 static void KillInfo(void)
 {
 	//printf("kill menu\r\n");
-	GUI_EndDialog(hIdialog, 0);
+
+	if(hTimerListFill)
+	{
+		WM_DeleteTimer(hTimerListFill);
+		hTimerListFill = 0;
+	}
+
+	if(hIdialog)
+	{
+		GUI_EndDialog(hIdialog, 0);
+		hIdialog = 0;
+	}
 
 	//LISTBOX_SetDefaultBkColor(LISTBOX_CI_UNSEL,GUI_WHITE);
 }

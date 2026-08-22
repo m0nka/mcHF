@@ -922,7 +922,7 @@ static void ui_controls_create_sw_big(void)
 {
 	#ifdef USE_MEM_DEVICE
 	// Create memory device (for spectrum only!)
-	if (hMemSpWf == 0)
+	if(hMemSpWf == 0)
 	{
 		hMemSpWf = GUI_MEMDEV_Create(MEMDEV_SP_X, MEMDEV_SP_Y,
 									 MEMDEV_SP_X_SZ, MEMDEV_SP_Y_SZ);
@@ -1318,7 +1318,12 @@ void ui_controls_spectrum_init(WM_HWIN hParent)
 	}
 	#endif
 
-	loc_vfo_mode = 0x99;
+	// Init pubs
+	loc_vfo_mode 	= 0x99;
+	old_dif			= 0;
+	api_conv_type 	= 1;
+	sw_light		= 1;
+	spk_type 		= 0;
 
 	// Clear waterfall
 	GUI_SetColor(GUI_BLACK);

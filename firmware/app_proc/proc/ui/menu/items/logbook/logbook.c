@@ -318,5 +318,10 @@ use_const_decl:
 static void KillLogbook(void)
 {
 	//printf("kill logbook\r\n");
-	GUI_EndDialog(hLogDialog, 0);
+
+	if(hLogDialog)
+	{
+		GUI_EndDialog(hLogDialog, 0);
+		hLogDialog = 0;
+	}
 }

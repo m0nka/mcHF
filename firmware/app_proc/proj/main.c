@@ -58,7 +58,7 @@ void HardFault_Handler(void)
 	printf( "=       [%s]      =\r\n", pcTaskGetName(NULL));
 	printf( "====================\r\n");
 
-	#if 0
+	#if 1
 	NVIC_SystemReset();
 	#else
 	//HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
@@ -144,10 +144,6 @@ void SysTick_Handler(void)
 	#endif
 }
 
-//
-// ToDo: There is something wrong with EXTI routing! Check before PCB rev B!
-//
-
 //*----------------------------------------------------------------------------
 //* Function Name       : EXTI0_IRQHandler
 //* Object              :
@@ -182,6 +178,27 @@ void EXTI0_IRQHandler(void)
 		portYIELD_FROM_ISR(xHigherPriorityTaskWoken );
 	}
 	#endif
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : EXTI1_IRQHandler
+//* Object              :
+//* Notes    			: exti trap, line1
+//* Notes   			:
+//* Notes    			:
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void EXTI1_IRQHandler(void)
+{
+	// Line 0
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_1) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_1);
+
+		#ifdef CONTEXT_GPS
+		GPS_PPS_IRQHandler();
+		#endif
+	}
 }
 
 //*----------------------------------------------------------------------------
@@ -246,8 +263,6 @@ void EXTI9_5_IRQHandler(void)
 
 		#ifdef CONTEXT_KEYPAD
 		keypad_proc_irq(8);
-		#else
-		GPS_PPS_IRQHandler();
 		#endif
 	}
 }
@@ -293,8 +308,11 @@ void Error_Handler(int err)
 	__disable_irq();
 	printf(" Error Handler %d\n", err);
 
-	//NVIC_SystemReset();
+	#if 1
+	NVIC_SystemReset();
+	#else
 	while(1);
+	#endif
 }
 
 #ifdef configUSE_MALLOC_FAILED_HOOK
@@ -717,10 +735,10 @@ static int start_proc(void)
 int main(void)
 {
 	// Hold power line
-	bsp_hold_power();
+	board_hold_power();
 
 	// All GPIO clocks
-	bsp_gpio_clocks_on();
+	board_gpio_clocks_on();
 
 	// Disable FMC Bank1 to avoid speculative/cache accesses
 	FMC_Bank1_R->BTCR[0] &= ~FMC_BCRx_MBKEN;
@@ -747,7 +765,7 @@ int main(void)
 	PeriphCommonClock_Config();
 
     // HW init
-    if(bsp_config() != 0)
+    if(board_config() != 0)
     	goto stall_radio;
 
     // RTC init

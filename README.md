@@ -24,7 +24,7 @@ Both hardware and firmware build on the work of many radio amateurs. The design 
 
 ## Hardware
 
-The radio is built around an STM32H747XI dual-core MCU: the Cortex-M7 (480 MHz) runs the user interface and system control, while the Cortex-M4 handles the real-time DSP (demodulation, AGC, filtering, spectrum FFT).
+The radio is built around an STM32H747BIT6 dual-core MCU: the Cortex-M7 (480 MHz) runs the user interface and system control, while the Cortex-M4 handles the real-time DSP (demodulation, AGC, filtering, spectrum FFT).
 
 ### Altium PCB project files
 

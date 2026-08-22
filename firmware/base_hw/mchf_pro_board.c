@@ -455,7 +455,7 @@ void MPU_Config(void)
 	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_ENABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
-	#ifndef PCB_V9_REV_A
+	#if 0
 	MPU_InitStruct.Size             = MPU_REGION_SIZE_4MB;
 	#else
 	MPU_InitStruct.Size             = MPU_REGION_SIZE_16MB;

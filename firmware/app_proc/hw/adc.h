@@ -35,7 +35,9 @@
 //
 // ----------------------------------------------------------------------
 //
-#define NUMBER_OF_ADC3_CHANNELS			7
+// 6, not 7: PF6/ADC3_INP8 (was ambient-light sensor) is repurposed as the TX
+// indicator LED, driven by the M4 baseband core. The M7 no longer samples it.
+#define NUMBER_OF_ADC3_CHANNELS			6
 //
 #define ADC_SAMP_TIME					LL_ADC_SAMPLINGTIME_810CYCLES_5
 

@@ -69,6 +69,135 @@ static ulong marschat_current_dial_hz(void)
 }
 
 // ------------------------------------------------------------------------
+// MarsChat dial frequencies per band (Hz, USB carrier). The WSPR TX
+// tones sit at dial + 1500 Hz. Entries set to 0 mean the band is not
+// usable for MarsChat - the VFO will not be changed on entry.
+//
+// Standard WSPR dial frequencies (ham mode, Region 1/2 compatible):
+//   idx  band   dial Hz
+//   0    2200m  (not used)
+//   1    630m   (not used)
+//   2    160m   1836600
+//   3    80m    3568600
+//   4    60m    5287200
+//   5    40m    7038600
+//   6    30m    10138700
+//   7    20m    14095600
+//   8    17m    18104600
+//   9    15m    21094600
+//   10   12m    24924600
+//   11   10m    28124600
+//   12   GEN    (not used)
+static const ulong mc_dial_freq[MAX_BANDS] =
+{
+	0,							// 0  - 2200m
+	0,							// 1  - 630m
+	1836600,					// 2  - 160m
+	3568600,					// 3  - 80m
+	5287200,					// 4  - 60m
+	7038600,					// 5  - 40m
+	10138700,					// 6  - 30m
+	14095600,					// 7  - 20m
+	18104600,					// 8  - 17m
+	21094600,					// 9  - 15m
+	24924600,					// 10 - 12m
+	28124600,					// 11 - 10m
+};
+
+// VFO save/restore for MarsChat mode entry/exit. The radio tunes to the
+// MarsChat dial frequency on entry and restores the user's frequency on
+// exit. Only the active VFO of the current band is touched.
+static ulong	mc_saved_freq = 0;
+static uchar	mc_saved_band = 0xFF;			// 0xFF = nothing saved
+
+//*----------------------------------------------------------------------------
+//* Function Name       : marschat_vfo_enter
+//* Object              : save user VFO and tune to the MarsChat frequency
+//*                      for the current band. Called from the GUI task on
+//*                      MODE_DESKTOP_MARSCHAT entry
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+void marschat_vfo_enter(void)
+{
+	struct BAND_INFO *b;
+	ulong mc_freq;
+
+	if(tsu.curr_band >= MAX_BANDS)
+		return;
+
+	mc_freq = mc_dial_freq[tsu.curr_band];
+
+	// No MarsChat frequency for this band - leave VFO alone
+	if(mc_freq == 0)
+	{
+		printf("mc: no dial freq for band %d, vfo unchanged \r\n", tsu.curr_band);
+		mc_saved_band = 0xFF;
+		return;
+	}
+
+	b = &tsu.band[tsu.curr_band];
+
+	// Save the current frequency so we can restore it on exit
+	if(b->active_vfo == VFO_A)
+		mc_saved_freq = b->vfo_a;
+	else
+		mc_saved_freq = b->vfo_b;
+
+	mc_saved_band = tsu.curr_band;
+
+	// Set the MarsChat dial frequency
+	if(b->active_vfo == VFO_A)
+		b->vfo_a = mc_freq;
+	else
+		b->vfo_b = mc_freq;
+
+	// Tell the VFO task to reprogram the Si5351
+	if(ps.hVfoTask != NULL)
+		xTaskNotify(ps.hVfoTask, UI_NEW_FREQ_EVENT, eSetValueWithOverwrite);
+
+	printf("mc: vfo -> %u Hz (saved %u Hz, band %d) \r\n",
+			(uint)mc_freq, (uint)mc_saved_freq, mc_saved_band);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : marschat_vfo_exit
+//* Object              : restore the VFO frequency saved on MarsChat entry
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+void marschat_vfo_exit(void)
+{
+	struct BAND_INFO *b;
+
+	// Nothing was saved (band had no MarsChat freq, or never entered)
+	if(mc_saved_band == 0xFF)
+		return;
+
+	// The user may have changed bands while in MarsChat (unlikely but
+	// guard against it): only restore if we are still on the same band
+	if(mc_saved_band != tsu.curr_band)
+	{
+		printf("mc: band changed (%d -> %d), skip vfo restore \r\n",
+				mc_saved_band, tsu.curr_band);
+		mc_saved_band = 0xFF;
+		return;
+	}
+
+	b = &tsu.band[tsu.curr_band];
+
+	if(b->active_vfo == VFO_A)
+		b->vfo_a = mc_saved_freq;
+	else
+		b->vfo_b = mc_saved_freq;
+
+	mc_saved_band = 0xFF;
+
+	if(ps.hVfoTask != NULL)
+		xTaskNotify(ps.hVfoTask, UI_NEW_FREQ_EVENT, eSetValueWithOverwrite);
+
+	printf("mc: vfo restored -> %u Hz \r\n", (uint)mc_saved_freq);
+}
+
+// ------------------------------------------------------------------------
 // ICC_MC_TX_START payload staging - built here, sent by the icc task
 // (which owns all M4 traffic) when it processes UI_ICC_MC_TX_START
 
@@ -275,6 +404,42 @@ void marschat_session_stop(void)
 
 	if(ps.hMarschatTask != NULL)
 		xTaskNotify(ps.hMarschatTask, MARSCHAT_NOTIFY_WAKE, eSetBits);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : marschat_force_stop
+//* Object              : immediate session + TX teardown for mode exit.
+//*                      marschat_session_stop() is async (sets a flag for
+//*                      the marschat task), but on mode exit the GUI task
+//*                      needs everything stopped NOW before it restores
+//*                      the VFO. This does the critical bits synchronously:
+//*                      abort the M4 burst, disarm the WSPR monitor, and
+//*                      mark the session off. The marschat task will see
+//*                      the state change on its next wake and reconcile
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+void marschat_force_stop(void)
+{
+	// Abort a running M4 TX burst
+	if(mc_tx_busy)
+	{
+		if(ps.hIccTask != NULL)
+			xTaskNotify(ps.hIccTask, UI_ICC_MC_TX_STOP, eSetValueWithOverwrite);
+
+		mc_tx_busy = 0;
+		printf("mc: force tx abort \r\n");
+	}
+
+	// Disarm the WSPR capture monitor
+	wspr_proc_monitor_set(0);
+
+	// Drop the session - the marschat task checks mc_sess.state on
+	// every loop iteration and will see MC_SESS_OFF
+	mc_session_stop(&mc_sess);
+	mc_slot_tx_armed = 0;
+	mc_sess_req      = 0;
+
+	printf("mc: force stop \r\n");
 }
 
 //*----------------------------------------------------------------------------
@@ -811,6 +976,17 @@ static void marschat_session_sm(void)
 
 		mc_slot_tx_armed = 0;
 
+		// Abort any running M4 TX burst (the exciter may still be
+		// keying a ~110 s 4-FSK stream when the user stops the session)
+		if(mc_tx_busy)
+		{
+			if(ps.hIccTask != NULL)
+				xTaskNotify(ps.hIccTask, UI_ICC_MC_TX_STOP, eSetValueWithOverwrite);
+
+			mc_tx_busy = 0;
+			printf("mc: tx abort \r\n");
+		}
+
 #ifdef MARSCHAT_LOOPBACK_PEER
 		mc_session_stop(&mc_peer);
 		mc_peer_tx_armed = 0;
@@ -1025,7 +1201,7 @@ void marschat_proc_task(void const *arg)
 	TickType_t	sleep;
 
 	vTaskDelay(MARSCHAT_PROC_START_DELAY);
-	printf("start\r\n");
+	//printf("start\r\n");
 
 	mc_rx_queue = xQueueCreate(MARSCHAT_RX_QUEUE_LEN, sizeof(MC_UI_RX_MSG));
 	mc_tx_queue = xQueueCreate(MARSCHAT_TX_QUEUE_LEN, sizeof(MC_TX_CHUNK));

@@ -218,7 +218,7 @@ void lora_proc_task(void const *arg)
 
 	// Delay start, so UI can paint properly
 	vTaskDelay(LORA_PROC_START_DELAY);
-	printf("start\r\n");
+	//printf("start\r\n");
 
 	// Get rx queue ptr
 	RxQueue = (xQueueHandle *)arg;

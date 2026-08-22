@@ -309,7 +309,7 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 		// Start all local processes
 		case ICC_START_I2S_PROC:
 		{
-			printf("i2s start req\r\n");
+			//printf("i2s start req\r\n");
 
 			// Start UHSDR audio processing and SAI streaming,
 			// response byte checked by the M7 core (0 = ok)
@@ -318,7 +318,7 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 			// Background spectrum processor init
 			icc_spectrum_init();
 
-			printf("i2s start: %d\r\n", icc_out_buffer[0x00]);
+			//printf("i2s start: %d\r\n", icc_out_buffer[0x00]);
 			break;
 		}
 
@@ -373,7 +373,7 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 		// Change demodulator mode
 		case ICC_CHANGE_DEMOD_MODE:
 		{
-			printf("change demod mode %d/%d\r\n", icc_in_buffer[0], icc_in_buffer[1]);
+			//printf("change demod mode %d/%d\r\n", icc_in_buffer[0], icc_in_buffer[1]);
 			icc_radio_change_demod_mode(icc_in_buffer[0], icc_in_buffer[1]);
 			break;
 		}
@@ -381,7 +381,7 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 		// Change AGC mode
 		case ICC_CHANGE_AGC_MODE:
 		{
-			printf("change agc mode (%d/%d)\r\n", icc_in_buffer[0], icc_in_buffer[1]);
+			//printf("change agc mode (%d/%d)\r\n", icc_in_buffer[0], icc_in_buffer[1]);
 			icc_radio_change_agc_mode(icc_in_buffer[0], icc_in_buffer[1]);
 			break;
 		}
@@ -389,7 +389,7 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 		// Change filter
 		case ICC_CHANGE_FILTER:
 		{
-			printf("change filter %d\r\n", icc_in_buffer[0]);
+			//printf("change filter %d\r\n", icc_in_buffer[0]);
 			icc_radio_change_filter(icc_in_buffer[0]);
 			break;
 		}
@@ -397,7 +397,7 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 		// Change stereo mode
 		case ICC_CHANGE_STEREO:
 		{
-			printf("stereo mode %d\r\n", icc_in_buffer[0]);
+			//printf("stereo mode %d\r\n", icc_in_buffer[0]);
 			icc_radio_change_stereo(icc_in_buffer[0]);
 			break;
 		}
@@ -405,6 +405,8 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 		// Tune mode on/off
 		case ICC_SET_TUNE_MODE:
 		{
+			// The TX LED follows the exciter keying in icc_radio_switch_txrx(),
+			// which the tune HSEM lines (20/21) reach on their own
 			icc_radio_set_tune_mode(icc_in_buffer[0]);
 			break;
 		}
@@ -425,15 +427,23 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 			ret_size = icc_wspr_get_buffer(icc_out_buffer);
 			break;
 
-		// MarsChat/WSPR symbol transmitter (keys the exciter itself)
+		// MarsChat/WSPR symbol transmitter (keys the exciter itself, and
+		// the TX LED follows that keying in icc_radio_switch_txrx())
 		case ICC_MC_TX_START:
+		{
 			icc_out_buffer[0x00] = icc_mc_tx_start(icc_in_buffer);
 			break;
+		}
 
+		// Abort only. The M7 core does NOT send this at the end of a normal
+		// transmission - the streamer runs to MC_PH_TAIL and unkeys itself
+		// through icc_mc_tx_key_request(), so nothing currently reaches here
 		case ICC_MC_TX_STOP:
+		{
 			icc_mc_tx_stop();
 			icc_out_buffer[0x00] = 0;
 			break;
+		}
 
 		default:
 			printf("unknown msg %d\r\n",cmd);

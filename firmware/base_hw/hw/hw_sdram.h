@@ -36,7 +36,7 @@ typedef struct
 #define SDRAM_INSTANCES_NBR       1U
 #define SDRAM_DEVICE_ADDR         0xC0000000
 
-#ifndef PCB_V9_REV_A
+#if 0
 #define SDRAM_DEVICE_SIZE         0x00400000
 #else
 #define SDRAM_DEVICE_SIZE         0x01000000

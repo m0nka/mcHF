@@ -10,7 +10,7 @@
 
 #define VCHARGE_TARGET  		21000
 #define VSYSMIN_TARGET  		15400
-#define ICHRG_TARGET    		1200
+#define ICHRG_TARGET    		1200/4	// == Why on RevB ??? == ToDo: investigate!
 
 #define BQ25730_DEFAULT_ADDR 	0x6B
 #define ADDR_CHRGOPT0   		0x00

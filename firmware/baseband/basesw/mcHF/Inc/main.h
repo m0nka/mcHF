@@ -10,13 +10,13 @@
 // Hardware semaphores for core to core comms
 //
 // OpenAMP
-#define HSEM_ID_0           0 			// CM7 to CM4 Notification
-#define HSEM_ID_1           1 			// CM4 to CM7 Notification
+#define HSEM_ID_0           		0 			// CM7 to CM4 Notification
+#define HSEM_ID_1           		1 			// CM4 to CM7 Notification
 
 #define	MCHF_D_VER_MAJOR			0
 #define	MCHF_D_VER_MINOR			2
 #define	MCHF_D_VER_RELEASE			12
-#define	MCHF_D_VER_BUILD			5
+#define	MCHF_D_VER_BUILD			6
 
 #endif
 
@@ -56,6 +56,10 @@ typedef	unsigned int	uint;
 #ifndef ulong
 typedef	unsigned long	ulong;
 #endif
+
+// PF6 - mcHF Pro TX indicator LED (was ambient-light ADC, repurposed; M4 owns it)
+#define TX_LED_PIN              GPIO_PIN_6
+#define TX_LED_PIO              GPIOF
 
 void printf_init(uchar is_shared);
 

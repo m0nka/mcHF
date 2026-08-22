@@ -34,7 +34,7 @@
 #define ID_TEXT_SPIN_0             	(GUI_ID_USER + 0x07)
 #define ID_BUTTON_LOCK			  	(GUI_ID_USER + 0x08)
 
-#ifndef PCB_V9_REV_A
+#if 0
 #define CLK_X			854
 #define SP0X			485
 #define SP1X			610

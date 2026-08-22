@@ -144,7 +144,7 @@ static void keypad_handle_multitap(uchar max_ids)
 //* Notes    			:
 //* Context    			: CONTEXT_DRIVER_KEYPAD
 //*----------------------------------------------------------------------------
-#ifndef PCB_V9_REV_A
+#if 0
 static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar release)
 {
 	#ifdef KEYPAD_ALLOW_DEBUG
@@ -542,7 +542,8 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			printf("Mode\r\n");
+			//printf("Mode\r\n");
+			GUI_StoreKeyMsg('K', 1);
 
 		}
 		else
@@ -572,11 +573,16 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			printf("F1->Menu\r\n");
-#ifdef CONTEXT_VIDEO
-			ui_s.req_state = MODE_MENU;
+			//printf("F1->Menu\r\n");
+			#ifdef CONTEXT_VIDEO
+			//
+			if(ui_s.cur_state != MODE_MENU)
+				ui_s.req_state = MODE_MENU;
+			else
+				ui_s.req_state = MODE_DESKTOP;
+			//
 			xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
-#endif
+			#endif
 		}
 		else
 		{
@@ -620,8 +626,27 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			printf("F4->Keyb\r\n");
-			GUI_StoreKeyMsg('K', 1);
+			//printf("F4->Keyb\r\n");
+			//--GUI_StoreKeyMsg('K', 1);
+
+			#if defined(CONTEXT_VIDEO) && defined(CONTEXT_MARSCHAT)
+			// Toggle the MarsChat screen, as F4 does for FT8
+			if(ui_s.cur_state != MODE_DESKTOP_MARSCHAT)
+			{
+				//printf("F5->enter MarsChat\r\n");
+				ui_s.req_state = MODE_DESKTOP_MARSCHAT;
+			}
+			else
+			{
+				//printf("F5->exit MarsChat\r\n");
+				ui_s.req_state = MODE_DESKTOP;
+			}
+
+			xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
+			#else
+			printf("F4->QuickLog\r\n");
+			//GUI_StoreKeyMsg('L', 1);
+			#endif
 		}
 		else
 		{
@@ -635,24 +660,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			#if defined(CONTEXT_VIDEO) && defined(CONTEXT_MARSCHAT)
-			// Toggle the MarsChat screen, as F4 does for FT8
-			if(ui_s.cur_state != MODE_DESKTOP_MARSCHAT)
-			{
-				printf("F5->enter MarsChat\r\n");
-				ui_s.req_state = MODE_DESKTOP_MARSCHAT;
-			}
-			else
-			{
-				printf("F5->exit MarsChat\r\n");
-				ui_s.req_state = MODE_DESKTOP;
-			}
-
-			xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
-			#else
-			printf("F5->QuickLog\r\n");
-			//GUI_StoreKeyMsg('L', 1);
-			#endif
+			board_toggle_rx_tx();
 		}
 		else
 			printf("F5 hold\r\n");
@@ -675,7 +683,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 static void keypad_cmd_processor_wm(uchar x,uchar y, uchar hold, uchar release)
 {
 	#ifdef KEYPAD_ALLOW_DEBUG
-	printf("x=%d, y=%d, hld=%d, rel=%d\r\n", x, y, hold, release);
+	//--printf("x=%d, y=%d, hld=%d, rel=%d\r\n", x, y, hold, release);
 	#endif
 #if 0
 	// SSB - USB/LSB
@@ -1446,6 +1454,7 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 		// -------------------------------------------------
 		// Main radio desktop
 		case MODE_DESKTOP:
+		case MODE_MENU:
 		case MODE_DESKTOP_FT8:			// so can exit via button
 		#ifdef CONTEXT_MARSCHAT
 		case MODE_DESKTOP_MARSCHAT:		// ditto
@@ -1455,7 +1464,7 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 
 		// -------------------------------------------------
 		// Route Keypad input to emWin Window Manager
-		case MODE_MENU:
+		//case MODE_MENU:
 		case MODE_QUICK_LOG:
 		case MODE_SIDE_ENC_MENU:
 			keypad_cmd_processor_wm(x,y,hold,release);
@@ -1485,10 +1494,6 @@ static uchar keypad_check_input_lines_a(void)
 		return 2;
 	if((KEYPAD_Y3_PORT->IDR & KEYPAD_Y3_LL) != KEYPAD_Y3_LL)
 		return 3;
-	#ifndef PCB_V9_REV_A
-	if((KEYPAD_Y4_PORT->IDR & KEYPAD_Y4_LL) != KEYPAD_Y4_LL)
-		return 4;
-	#endif
 
 	return 0;
 }
@@ -1515,17 +1520,6 @@ static void keypad_set_out_lines_a(uchar y)
 		case 2:
 			scan_x3();
 			break;
-		#ifndef PCB_V9_REV_A
-		case 3:
-			scan_x4();
-			break;
-		case 4:
-			scan_x5();
-			break;
-		case 5:
-			scan_x6();
-			break;
-		#endif
 		default:
 			scan_off();
 			return;
@@ -1608,7 +1602,7 @@ void keypad_proc_task(void const * argument)
 
 	// Delay start, so UI can paint properly
 	vTaskDelay(KEYPAD_PROC_START_DELAY);
-	printf("start\r\n");
+	//printf("start\r\n");
 
 	// Enable process wake-up
 	NVIC_EnableIRQ	(EXTI15_10_IRQn);

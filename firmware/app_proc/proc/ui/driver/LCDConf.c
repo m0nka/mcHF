@@ -782,7 +782,7 @@ static void LCD_LL_Init(void)
 
 	// kHz math, so the integer divisions don't understate the result
 	int dsi_clk = (25000/dsiPllInit.PLLIDF)*2*dsiPllInit.PLLNDIV/2/(1 << dsiPllInit.PLLODF)/8;
-	printf("dsi byte clk = %dkHz \r\n", dsi_clk);
+	//printf("dsi byte clk = %dkHz \r\n", dsi_clk);
 
     // Timing parameters for all Video modes
     VSYNC  		= ILI9806E_VSYNC;
@@ -797,7 +797,7 @@ static void LCD_LL_Init(void)
 
     Clockratio 	= LCD_LANE_CLK/ILI9806E_PIXEL_CLK;
 
-	#if 1
+	#if 0
     // The reference value given by the manufacturer is 58.2MHz,  then fps is :
     // fps = 58200000 / (480 + 160 + 160 +24) * (1280 + 12 + 10 + 2) = 54Hz
     int refresh_rate   = (ILI9806E_PIXEL_CLK * 1000)/((lcd_x_size + HSYNC + HBP + HFP)*(VSYNC + lcd_y_size + VBP + VFP));
@@ -871,7 +871,7 @@ static void LCD_LL_Init(void)
     HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
 
     int ltdc_clk = 25000 / PeriphClkInitStruct.PLL3.PLL3M  * PeriphClkInitStruct.PLL3.PLL3N / PeriphClkInitStruct.PLL3.PLL3R;
-    printf("ltdc pix clk = %dkHz \r\n", ltdc_clk);
+    //printf("ltdc pix clk = %dkHz \r\n", ltdc_clk);
 
    	hltdc.Instance 					= LTDC;
    	hltdc.Init.HSPolarity 			= LTDC_HSPOLARITY_AL;

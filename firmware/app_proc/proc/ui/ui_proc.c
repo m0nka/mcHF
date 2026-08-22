@@ -46,6 +46,7 @@
 
 #ifdef CONTEXT_MARSCHAT
 #include "desktop_marschat\marschat_ui.h"
+#include "marschat_proc.h"
 #endif
 // -----------------------------------------------------------------------------------------------
 // Menu Mode
@@ -416,7 +417,7 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 
 		        case '+':
 		        {
-					#ifndef PCB_V9_REV_A
+					#if 0
 		        	ui_actions_change_step(1);
 					#else
 					(tsu.curr_band)++;
@@ -429,7 +430,7 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 
 		        case '-':
 		        {
-					#ifndef PCB_V9_REV_A
+					#if 0
 		        	ui_actions_change_step(0);
 					#else
 					if(tsu.curr_band > BAND_MODE_160)
@@ -595,8 +596,10 @@ static void ui_proc_change_mode(void)
 		return;
 
 	// Backlight off
-	//---HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
-	shared_tim_change(20);
+	if(tsu.pwm_backlight == 0)
+		HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+	else
+		shared_tim_change(20);
 
 	switch(state)
 	{
@@ -632,6 +635,10 @@ static void ui_proc_change_mode(void)
 
 			WM_SetCallback		(WM_HBKWIN, 0);
 			WM_InvalidateWindow	(WM_HBKWIN);
+
+			// Give time for destruction to execute
+			GUI_Exec();
+			GUI_Delay(50);
 
 			// Clear screen
 			GUI_SetBkColor(GUI_BLACK);
@@ -723,6 +730,10 @@ static void ui_proc_change_mode(void)
 		{
 			printf("Entering MarsChat mode...\r\n");
 
+			// Tune to the MarsChat dial frequency for this band
+			// (saves the current VFO so it can be restored on exit)
+			marschat_vfo_enter();
+
 			// Destroy desktop controls
 			#ifdef DESKTOP_SHOW_VOLUME
 			ui_controls_volume_quit();
@@ -794,6 +805,14 @@ static void ui_proc_change_mode(void)
 			//ui_quick_log_destroy();
 			#ifdef CONTEXT_MARSCHAT
 			marschat_ui_destroy();
+
+			// Stop any running session and abort the M4 TX burst before
+			// restoring the VFO - the exciter must not be keying when
+			// the Si5351 moves to a different frequency
+			marschat_force_stop();
+
+			// Restore the VFO frequency that was saved on MarsChat entry
+			marschat_vfo_exit();
 			#endif
 
 			// Clear screen
@@ -817,8 +836,49 @@ static void ui_proc_change_mode(void)
 	ui_s.lock_requests = 0;
 
 	// Backlight on
-	//---HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
-	shared_tim_change(tsu.brightness);
+	if(tsu.pwm_backlight == 0)
+		HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+	else
+		shared_tim_change(tsu.brightness);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : ui_proc_splash_screen
+//* Object              :
+//* Input Parameters    : show fw versions on start/super basic start screen
+//* Output Parameters   :
+//* Functions called    : CONTEXT_VIDEO
+//*----------------------------------------------------------------------------
+static void ui_proc_splash_screen(void)
+{
+	char fw_id[200];
+
+	GUI_SetFont(&GUI_Font32B_ASCII);
+	GUI_SetColor(GUI_WHITE);
+	GUI_DispStringAt("mcHF v9, rev B", 10, 10);
+
+    memset(fw_id,0,sizeof(fw_id));
+	sprintf(fw_id,"App Proc v: %d.%d.%d.%d",MCHF_R_VER_MAJOR, MCHF_R_VER_MINOR, MCHF_R_VER_RELEASE,MCHF_R_VER_BUILD);
+	GUI_DispStringAt(fw_id, 270, 200);
+
+	// Wait DSP(icc proc starts with 900mS delay after ui)
+	for(int i = 0; i < 100; i++)
+	{
+		if((tsu.dsp_rev1 != 0)||(tsu.dsp_rev2 != 0)||(tsu.dsp_rev3 != 0)||(tsu.dsp_rev4 != 0))
+		{
+			memset(fw_id,0,sizeof(fw_id));
+			sprintf(fw_id,"Baseband v: %d.%d.%d.%d",tsu.dsp_rev1,tsu.dsp_rev2,tsu.dsp_rev3,tsu.dsp_rev4);
+
+			GUI_SetColor(GUI_GREEN);
+			GUI_DispStringAt(fw_id, 270, 235);
+			break;
+		}
+
+		GUI_Delay(30);
+	}
+
+	// Show
+	GUI_Delay(SPLASH_STAY_ON_SCREEN);
 }
 
 //*----------------------------------------------------------------------------
@@ -843,6 +903,10 @@ static void ui_proc_emwin_init(void)
 
 	// UI init
 	GUI_Init();
+
+	// Splash screen
+	ui_proc_splash_screen();
+
 	GUI_X_InitOS();
 	WM_MULTIBUF_Enable(1);
 
@@ -906,7 +970,8 @@ static void ui_proc_periodic(void)
 	a2 = ps.epoch;
 	#endif
 	//
-	ui_controls_spectrum_refresh(ui_proc_cb, 1);	// waterfall
+	if(!ui_s.active_control_shown)
+		ui_controls_spectrum_refresh(ui_proc_cb, 1);	// waterfall
 	//
 	#ifdef PROFILE_UI_REPAINT
 	b2 = (ps.epoch - a2);
@@ -1096,7 +1161,10 @@ void ui_proc_task(void const *arg)
 	uchar del_ms = UI_PROC_SLEEP_TIME;
 
 	vTaskDelay(UI_PROC_START_DELAY);
-	printf("start\r\n");
+	//printf("start\r\n");
+
+	// Force PWM mode
+	tsu.pwm_backlight = 1;
 
 	// Backlight PWM
 	shared_tim_init();
@@ -1211,8 +1279,19 @@ void ui_proc_clear_active(void)
 	ui_s.active_control_shown = 0;
 }
 
-void ui_proc_power_cleanup(void)
+void ui_proc_power_cleanup(uchar mode)
 {
+	// Backlight off
+	if(mode == UI_BACKLIGHT_OFF)
+	{
+		if(tsu.pwm_backlight == 0)
+			HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_RESET);
+		else
+			shared_tim_change(0);
+
+		return;
+	}
+
 	// Clear screen
 	GUI_SetBkColor(GUI_BLACK);
 	GUI_Clear();
@@ -1221,7 +1300,7 @@ void ui_proc_power_cleanup(void)
 	// Show text
 	GUI_SetColor(GUI_WHITE);
 	GUI_SetFont(&GUI_Font32B_1);
-	#ifndef PCB_V9_REV_A
+	#if 0
 	GUI_DispStringAt("Good bye!", 350, 200);
 	#else
 	GUI_DispStringAt("Good bye!", 325, 215);

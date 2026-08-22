@@ -70,7 +70,7 @@ extern struct	UI_DRIVER_STATE			ui_s;
 
 #define ID_BUTTON_ADD            	(GUI_ID_USER + 0x18)
 
-#ifndef PCB_V9_REV_A
+#if 0
 #define QL_X						254
 #else
 #define QL_X						200

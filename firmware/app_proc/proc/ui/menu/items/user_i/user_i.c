@@ -62,9 +62,10 @@ WM_HWIN   	hUdialog;
 #define ID_CHECKBOX_1				(GUI_ID_USER + 0x03)
 #define ID_CHECKBOX_2				(GUI_ID_USER + 0x04)
 #define ID_CHECKBOX_3				(GUI_ID_USER + 0x05)
+#define ID_CHECKBOX_4				(GUI_ID_USER + 0x06)
 
 //#define ID_RADIO_0         		(GUI_ID_USER + 0x05)
-#define ID_ICONVIEW_0    			(GUI_ID_USER + 0x06)
+#define ID_ICONVIEW_0    			(GUI_ID_USER + 0x07)
 
 static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 {
@@ -80,10 +81,11 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 	{ SLIDER_CreateIndirect,   	NULL,     		GUI_ID_SLIDER0,		60, 	35, 	400,  	40 									},
 	//
 	// Check boxes
-	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_0, 		20, 	260,	250, 	30, 	0, 		0x0, 	0 },
-	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_1, 		20, 	300,	250, 	30, 	0, 		0x0, 	0 },
-	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_2, 		20, 	340,	250, 	30, 	0, 		0x0, 	0 },
-	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_3, 		20, 	380,	250, 	30, 	0, 		0x0, 	0 },
+	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_0, 		20, 	160,	250, 	30, 	0, 		0x0, 	0 },
+	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_1, 		20, 	200,	250, 	30, 	0, 		0x0, 	0 },
+	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_2, 		20, 	240,	250, 	30, 	0, 		0x0, 	0 },
+	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_3, 		20, 	280,	250, 	30, 	0, 		0x0, 	0 },
+	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_4, 		20, 	100,	250, 	30, 	0, 		0x0, 	0 },
 	//
 	// Radio box						    																(spacing << 8)|(no_items)
 	//{ RADIO_CreateIndirect, 	"Radio", 					ID_RADIO_0, 		500, 	300, 	160, 	80, 	0, 		0x2003,	0 },
@@ -218,7 +220,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			break;
 		}
 
-#if 1
+
 		// ------------------------------------------------------------
 		//
 		case ID_CHECKBOX_2:
@@ -242,7 +244,7 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 		    }
 			break;
 		}
-#endif
+
 		// ------------------------------------------------------------
 		//
 		case ID_CHECKBOX_3:
@@ -274,6 +276,41 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 
 					// Save to eeprom
 //!					*(uchar *)(EEP_BASE + EEP_DEMO_MODE) = tsu.demo_mode;
+
+					break;
+				}
+				default:
+					break;
+		    }
+			break;
+		}
+
+		// ------------------------------------------------------------
+		//
+		case ID_CHECKBOX_4:
+		{
+			switch(NCode)
+		    {
+				case WM_NOTIFICATION_CLICKED:
+					break;
+				case WM_NOTIFICATION_RELEASED:
+					break;
+				case WM_NOTIFICATION_VALUE_CHANGED:
+				{
+					hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_4);
+
+					if(CHECKBOX_GetState(hItem))
+					{
+						tsu.pwm_backlight = 1;
+					}
+					else
+					{
+						tsu.pwm_backlight = 0;
+					}
+
+					// Re-init
+					shared_tim_init();
+					shared_tim_change(tsu.brightness);
 
 					break;
 				}
@@ -413,6 +450,11 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			CHECKBOX_SetText(hItem, "Demo Mode");
 			CHECKBOX_SetState(hItem, tsu.demo_mode);
 
+			hItem = WM_GetDialogItem(pMsg->hWin, ID_CHECKBOX_4);
+			CHECKBOX_SetFont(hItem,&GUI_Font16_1);
+			CHECKBOX_SetText(hItem, "PWM Backlight");
+			CHECKBOX_SetState(hItem, tsu.pwm_backlight);
+
 			#if 0
 			// Initialization of 'Radio'
 			hItem = WM_GetDialogItem(pMsg->hWin, ID_RADIO_0);
@@ -525,7 +567,12 @@ static void KillUI(void)
 		#endif
 						}
 	//printf("kill menu\r\n");
-	GUI_EndDialog(hUdialog, 0);
+
+	if(hUdialog)
+	{
+		GUI_EndDialog(hUdialog, 0);
+		hUdialog = 0;
+	}
 }
 
 #endif

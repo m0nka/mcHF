@@ -43,6 +43,9 @@ uchar bq40z80_df_write_row(ushort addr, uchar *data, uchar len);
 uchar bq40z80_full_access(void);
 uchar bq40z80_device_reset(void);
 
+uchar bq40z80_read_sn(ushort *val);
+uchar bq40z80_write_sn(ushort sn);
+
 uchar bq40z80_read_mfg_status(ushort *val);
 uchar bq40z80_gauging_toggle(void);
 uchar bq40z80_fet_en_toggle(void);

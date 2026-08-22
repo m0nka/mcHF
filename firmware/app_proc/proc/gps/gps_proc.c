@@ -35,6 +35,7 @@
 #include "gps_uart.h"
 
 #include "gps_proc.h"
+#include "gps_calib.h"
 #include "rtc.h"
 #include <string.h>
 #include <stdlib.h>
@@ -107,7 +108,9 @@ static void GPS_GPIO_Init(void)
 {
     GPIO_InitTypeDef cfg = {0};
 
-    /* PB1 – GPS_EN, push-pull output, start LOW (disabled) */
+    /* PA8 – GPS_EN, push-pull output, start LOW (disabled). Was PB1 before
+     * the V9 rev B swap. PA8 is TIM1_CH1 on silicon but nothing drives that
+     * channel (the backlight uses CH2 on PA9), so plain GPIO is fine here */
     cfg.Pin   = GPS_EN_PIN;
     cfg.Mode  = GPIO_MODE_OUTPUT_PP;
     cfg.Pull  = GPIO_NOPULL;
@@ -117,14 +120,34 @@ static void GPS_GPIO_Init(void)
 }
 
 /* -------------------------------------------------------------------------- */
-#ifndef CONTEXT_KEYPAD
 static void GPS_EXTI_Init(void)
 {
-    /* GPIO already configured in GPIO_Init; just enable the NVIC line */
+    GPIO_InitTypeDef cfg = {0};
+
+    /* PB1 - 1PPS in (V9 rev B swapped PPS and GPS_EN: PPS moved PA8 -> PB1,
+     * GPS_EN moved PB1 -> PA8). EXTI line 1 is otherwise unused, so unlike
+     * the old PA8/line 8 arrangement this no longer collides with the
+     * keypad, which owns lines 8/11/12 - the #ifndef CONTEXT_KEYPAD that
+     * used to wrap this function is gone on purpose.
+     *
+     * The pin itself was never configured anywhere before: GPS_GPIO_Init()
+     * only ever touched GPS_EN, so the old comment claiming the GPIO was
+     * already set up was wrong and the line could not have fired. */
+    LL_APB4_GRP1_EnableClock(LL_APB4_GRP1_PERIPH_SYSCFG);
+
+    cfg.Pin   = GPS_PPS_PIN;
+    cfg.Mode  = GPIO_MODE_INPUT;
+    cfg.Pull  = GPIO_NOPULL;                        /* module drives it push-pull */
+    cfg.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPS_PPS_PORT, &cfg);
+
+    LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTB, LL_SYSCFG_EXTI_LINE1);
+    LL_EXTI_EnableRisingTrig_0_31(LL_EXTI_LINE_1); /* pulse leading edge = UTC second */
+    LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_1);
+
     HAL_NVIC_SetPriority(GPS_PPS_EXTI_IRQn, 5, 0);  /* higher than UART    */
     HAL_NVIC_EnableIRQ(GPS_PPS_EXTI_IRQn);
 }
-#endif
 
 void GPS_Enable(bool enable)
 {
@@ -324,7 +347,7 @@ static bool GPS_ParseGGA(const char *line)
     if (GPS_Split(line, buf, f, 20) < 10)
     	return false;
 
-    printf("%s", line);
+    //printf("%s", line);
 
     /* Time: hhmmss[.ss] */
     const char *t = f[1];
@@ -458,7 +481,12 @@ void gps_proc(void *argument)
     NMEA_Line_t line;
 
 	vTaskDelay(GPS_PROC_START_DELAY);
-	printf("start\r\n");
+	//printf("start\r\n");
+
+	#if 0
+	printf("suspend\r\n");
+	vTaskDelete(NULL);
+	#endif
 
 	// Init
 	gps_proc_init();
@@ -494,22 +522,68 @@ gps_proc_loop:
 
         if (gps_pending.valid)
         {
-            GPS_SyncRTC(&gps_pending);
-            gps_pending.rtc_synced = true;
+            /* Sync ONCE. This used to run on every PPS, which re-slammed the
+             * calendar once a second: that makes measuring drift impossible
+             * (the error is wiped before it can accumulate) and each write
+             * enters RTC INIT mode and stalls the clock. After the first
+             * sync the RTC is left alone and only observed - see gps_calib.c */
+            if (!gps_pending.rtc_synced)
+            {
+                GPS_SyncRTC(&gps_pending);
+                gps_pending.rtc_synced = true;
+
+                /* The calendar just jumped, so any phase history is void */
+                gps_calib_start();
+            }
+
             gps_data = gps_pending;
         }
-        else if (gps_pending.time_valid)
+        else if ((gps_pending.time_valid) && (!gps_pending.rtc_synced))
         {
             GPS_SyncRTC(&gps_pending);
         }
 
         xSemaphoreGive(data_mutex);
      }
+
+    /* Trust PPS only with a real fix - most modules free run the pulse
+     * without a lock, and those edges would quietly poison the average */
+    gps_calib_arm(gps_pending.valid && gps_pending.rtc_synced);
+
+    /* Progress line every 60 s while a run is going */
+    {
+        static ulong calib_report = 0;
+
+        if (calib_report == 0)
+            calib_report = ps.epoch;
+        else if ((calib_report + 60000) < ps.epoch)
+        {
+            gps_calib_print();
+            calib_report = ps.epoch;
+        }
+    }
 	#else
     gps_test_run();
 	#endif
 
     goto gps_proc_loop;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : GPS_PPS_IRQHandler
+//* Object              : GPS 1PPS rising edge, dispatched from EXTI9_5 in
+//*						: proj/main.c. The edge marks the true UTC second
+//* Notes    			: the RTC phase MUST be latched here and not handed
+//*						: to a task - task latency is milliseconds, which is
+//*						: the whole measurement
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+void GPS_PPS_IRQHandler(void)
+{
+    gps_calib_pps_edge();
+
+    pps_pending    = true;
+    pps_pending_ms = HAL_GetTick();
 }
 
 void gps_proc_init(void)
@@ -526,13 +600,14 @@ void gps_proc_init(void)
 
     GPS_GPIO_Init();
 
+    // LSE trim measurement engine (reads PREDIV_S out of the RTC)
+    gps_calib_init();
+
 	// Low level driver
 	gps_uart_init();
 
-    // EXTI mapping, to be resolved...
-	#ifndef CONTEXT_KEYPAD
+    // PPS on PB1/EXTI1 - no longer clashes with the keypad (lines 8/11/12)
     GPS_EXTI_Init();
-	#endif
 
     // Power on
     GPS_Enable(true);

@@ -459,6 +459,7 @@ int mchfMain(void)
 // flow is a CLINT project style superloop
 // ------------------------------------------------------------------
 
+#include "main.h"
 #include <stdio.h>
 
 #include "uhsdr_board.h"
@@ -535,11 +536,30 @@ static void TransceiverStateInit(void)
 	agc_wdsp_conf.tau_hang_decay = 500;
 }
 
+static void Board_Led_Init(void)
+{
+    GPIO_InitTypeDef  GPIO_InitStructure;
+
+    HAL_GPIO_WritePin(TX_LED_PIO, TX_LED_PIN, GPIO_PIN_RESET); // default off (RX)
+
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_PULLUP;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+
+    // PF6 - mcHF Pro TX indicator LED. GPIOF clock is enabled in proj/main.c.
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Pin = TX_LED_PIN;
+    HAL_GPIO_Init(TX_LED_PIO, &GPIO_InitStructure);
+}
+
 // Power on
 int mchfMain(void)
 {
 	// Set default transceiver state
 	TransceiverStateInit();
+
+	// Copied from uhsdr_board.c
+	Board_Led_Init();
 
 	// PTT output + CW paddle interrupts
 	icc_radio_hw_init();
@@ -554,15 +574,15 @@ int mchfMain(void)
 	AudioFilter_SetDefaultMemories();
 
 	// Audio Software Init (SAI streaming starts later, on ICC_START_I2S_PROC)
-	printf("audio init...\r\n");
+	//printf("audio init...\r\n");
 	AudioDriver_Init();
 
 	// Select a default filter and set up the processing chain, the wire
 	// state upload will re-do this with the real settings
-	printf("filter init...\r\n");
+	//printf("filter init...\r\n");
 	icc_radio_change_filter(4);						// 2.3 kHz
 
-	printf("m4 baseband ready\r\n");
+	//printf("m4 baseband ready\r\n");
 
 	// Transceiver main loop
 	for(;;)

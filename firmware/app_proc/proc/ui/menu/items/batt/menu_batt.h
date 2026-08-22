@@ -68,7 +68,7 @@
 #define ROW_CELL3T					9
 #define ROW_CELL4T					10
 
-#ifndef PCB_V9_REV_A
+#if 0
 #define TBL1X						790
 #define TBL2X						780
 #else

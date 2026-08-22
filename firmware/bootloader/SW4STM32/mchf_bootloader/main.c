@@ -371,11 +371,7 @@ void MPU_Config(void)
 	MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_ENABLE;
 	HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
-	#ifndef PCB_V9_REV_A
-	MPU_InitStruct.Size             = MPU_REGION_SIZE_4MB;
-	#else
 	MPU_InitStruct.Size             = MPU_REGION_SIZE_16MB;
-	#endif
 
 	// Setup SDRAM - emWin video buffers
 	MPU_InitStruct.Enable           = MPU_REGION_ENABLE;

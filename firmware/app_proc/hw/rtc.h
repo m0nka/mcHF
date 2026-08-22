@@ -28,4 +28,13 @@ void k_SetAlarmCallback (k_AlarmCallback alarmCallback);
 
 void k_rtc_stop(void);
 
+// LSE trim (RTC_CALR smooth calibration). Positive ppm = clock runs slow
+// and is sped up. The measured per unit value lives in the backup domain
+// and overrides the compiled in default at boot - see proc/gps/gps_calib.c
+int     rtc_calib_ppm_apply(int32_t ppm);
+int     rtc_calib_ppm_save (int32_t ppm);
+int32_t rtc_calib_ppm_get  (void);
+int32_t rtc_calib_ppm_load (void);
+void    rtc_calib_ppm_clear(void);
+
 #endif

@@ -62,7 +62,7 @@ void bms_proc_hw_init(void)
 	gpio_init_structure.Pull  = GPIO_PULLDOWN;
 	gpio_init_structure.Speed = GPIO_SPEED_FREQ_LOW;
 
-	#ifndef PCB_V9_REV_A
+	#if 0
 	gpio_init_structure.Pin   = BMS_PWM_PIN;
 	gpio_init_structure.Pull  = GPIO_NOPULL;
 	gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
@@ -142,7 +142,7 @@ void bms_proc_is_charging(void)
 	if(charge_mode == 0)
 	{
 		// Full charge allowed
-		#ifndef PCB_V9_REV_A
+		#if 0
 		HAL_GPIO_WritePin(BMS_PWM_PORT, BMS_PWM_PIN, GPIO_PIN_RESET);
 		#endif
 	}

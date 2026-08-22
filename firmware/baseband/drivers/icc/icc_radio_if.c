@@ -45,6 +45,13 @@
 // PG3 - CW paddle DAH
 #define ICC_PADDLE_DAH_PIN		GPIO_PIN_3
 #define ICC_PADDLE_DAH_PORT		GPIOG
+//
+// PF6 - front panel TX LED. Same pin as TX_LED_PIN/TX_LED_PIO in the UHSDR
+// side main.h, redefined here because this TU cannot include that header.
+// Driven from icc_radio_switch_txrx() below so the LED mirrors the exciter
+// PTT line rather than the arrival of any particular ICC command
+#define ICC_TX_LED_PIN			GPIO_PIN_6
+#define ICC_TX_LED_PORT			GPIOF
 
 // ------------------------------------------------------------------
 // Local state
@@ -179,6 +186,13 @@ static void icc_radio_map_nco(int16_t nco_freq)
 // TX/RX switching - minimal M4 side variant of RadioManagement_SwitchTxRx.
 // The RF side (oscillator, band relays, PA bias) is handled by the M7 core,
 // here we only flip the DSP processing direction and the TX exciter PTT line
+//
+// This is the single choke point for keying on this core - the tune HSEM
+// lines, the PTT/cw_gen handler and the MarsChat symbol streamer all come
+// through here - so the front panel TX LED is driven alongside the PTT pin.
+// It used to be toggled from the ICC command handlers instead, which left
+// it stuck on after a MarsChat transmission: that path ends on the M4 by
+// itself and no ICC command marks the end (see icc_proc.c ICC_MC_TX_STOP)
 static void icc_radio_switch_txrx(uint8_t tx_on)
 {
 	if(tx_on)
@@ -189,7 +203,8 @@ static void icc_radio_switch_txrx(uint8_t tx_on)
 		UhsdrHwI2s_Codec_ClearTxDmaBuffer();
 
 		ts.txrx_mode = TRX_MODE_TX;
-		HAL_GPIO_WritePin(ICC_PTT_PORT, ICC_PTT_PIN, GPIO_PIN_SET);		// TX exciter power on
+		HAL_GPIO_WritePin(ICC_PTT_PORT, ICC_PTT_PIN, GPIO_PIN_SET);			// TX exciter power on
+		HAL_GPIO_WritePin(ICC_TX_LED_PORT, ICC_TX_LED_PIN, GPIO_PIN_SET);	// Front panel TX LED on
 
 		// Notify M7 core
 		icc_proc_notify_of_tx();
@@ -200,7 +215,8 @@ static void icc_radio_switch_txrx(uint8_t tx_on)
 			return;
 
 		ts.txrx_mode = TRX_MODE_RX;
-		HAL_GPIO_WritePin(ICC_PTT_PORT, ICC_PTT_PIN, GPIO_PIN_RESET);	// TX exciter power off
+		HAL_GPIO_WritePin(ICC_PTT_PORT, ICC_PTT_PIN, GPIO_PIN_RESET);		// TX exciter power off
+		HAL_GPIO_WritePin(ICC_TX_LED_PORT, ICC_TX_LED_PIN, GPIO_PIN_RESET);	// Front panel TX LED off
 
 		// Notify M7 core
 		icc_proc_notify_of_rx();
@@ -302,9 +318,9 @@ void icc_radio_change_agc_mode(uint8_t agc_mode, uint8_t rf_gain)
 void icc_radio_change_filter(uint8_t filter_id)
 {
 	icc_radio_select_filter_path(filter_id);
-	printf("  filter path %d\r\n", ts.filter_path);
+	//printf("  filter path %d\r\n", ts.filter_path);
 	AudioDriver_SetProcessingChain(ts.dmod_mode, false);
-	printf("  chain ok\r\n");
+	//printf("  chain ok\r\n");
 }
 
 void icc_radio_change_stereo(uint8_t stereo_mode)

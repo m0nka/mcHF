@@ -23,6 +23,13 @@
 
 #include "ui_lora_state.h"
 
+// Non HF radios share this page - Sub-GHz, GNSS and the BT audio module
+#include "rtc.h"
+#include "gps_proc.h"
+#ifdef CONTEXT_GPS
+#include "gps_calib.h"
+#endif
+
 extern GUI_CONST_STORAGE GUI_BITMAP bmheliumhntlogo;
   
 // UI driver public state
@@ -59,7 +66,15 @@ WM_HWIN   	hLdialog;
 //#define ID_BUTTON_EEP_RESET		  	(GUI_ID_USER + 0x04)
 #define ID_CHECKBOX_0				(GUI_ID_USER + 0x03)
 
-static const GUI_WIDGET_CREATE_INFO _aDialog[] = 
+// GNSS clock calibration
+#define ID_BUTTON_GPS_CAL			(GUI_ID_USER + 0x05)
+#define ID_BUTTON_GPS_ACCEPT		(GUI_ID_USER + 0x06)
+#define ID_BUTTON_GPS_CLEAR			(GUI_ID_USER + 0x07)
+
+// Live refresh of the calibration read out
+#define GPS_CAL_TIMER_MS			1000
+
+static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 {
 	// -----------------------------------------------------------------------------------------------------------------------------
 	//							name					id						x		y		xsize	ysize	?		?		?
@@ -77,7 +92,105 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_0, 		20, 	260,	250, 	30, 	0, 		0x0, 	0 },
 
 	{ TEXT_CreateIndirect, 		"OFF",					GUI_ID_TEXT0,			180,	40,		120, 	45,  	0, 		0x0,	0 },
+
+	#ifdef CONTEXT_GPS
+	// ---- GNSS clock calibration, right hand column -----------------------------------------------------------------------------
+	{ TEXT_CreateIndirect,		"GNSS clock trim",		GUI_ID_TEXT1,			400,	30,		380,	25,		0,		0x0,	0 },
+	{ TEXT_CreateIndirect,		"",						GUI_ID_TEXT2,			400,	65,		380,	25,		0,		0x0,	0 },
+	{ TEXT_CreateIndirect,		"",						GUI_ID_TEXT3,			400,	95,		380,	25,		0,		0x0,	0 },
+	{ TEXT_CreateIndirect,		"",						GUI_ID_TEXT4,			400,	125,	380,	25,		0,		0x0,	0 },
+	{ TEXT_CreateIndirect,		"",						GUI_ID_TEXT5,			400,	155,	380,	25,		0,		0x0,	0 },
+
+	{ BUTTON_CreateIndirect,	"Start",				ID_BUTTON_GPS_CAL,		400,	195,	110,	45,		0,		0x0,	0 },
+	{ BUTTON_CreateIndirect,	"Accept",				ID_BUTTON_GPS_ACCEPT,	520,	195,	110,	45,		0,		0x0,	0 },
+	{ BUTTON_CreateIndirect,	"Default",				ID_BUTTON_GPS_CLEAR,	640,	195,	110,	45,		0,		0x0,	0 },
+	#endif
 };
+
+#ifdef CONTEXT_GPS
+static WM_HTIMER	hTimerGpsCal;
+
+//*----------------------------------------------------------------------------
+//* Function Name       : _gps_calib_refresh
+//* Object              : repaint the calibration read out. Everything is
+//*						: scaled integer - gps_calib.c hands out ppm x100 so
+//*						: no float formatting is needed anywhere
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void _gps_calib_refresh(WM_HWIN hDlg)
+{
+	gps_calib_stat_t	st;
+	WM_HWIN				hItem;
+	char				buf[64];
+	int					have, r;
+	char				sign;
+
+	have = (gps_calib_get(&st) == 0);
+
+	// State of the pulse train
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT2);
+	if(!st.running)
+		sprintf(buf, "Idle - %d sats", (int)gps_proc_sats_cnt());
+	else if(!st.armed)
+		sprintf(buf, "Waiting for fix - %d sats", (int)gps_proc_sats_cnt());
+	else
+		sprintf(buf, "Measuring - %d sats, %u bad edges",
+				(int)gps_proc_sats_cnt(), (unsigned)st.glitches);
+	TEXT_SetText(hItem, buf);
+
+	// Progress. Sweep is the dithering quality and the real gate on a
+	// result, so it is on screen rather than hidden in the maths
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT3);
+	sprintf(buf, "%u pps, %u:%02u elapsed, sweep %u.%u lsb",
+			(unsigned)st.samples,
+			(unsigned)(st.span_s / 3600u), (unsigned)((st.span_s / 60u) % 60u),
+			(unsigned)(st.sweep_lsb_x10 / 10u), (unsigned)(st.sweep_lsb_x10 % 10u));
+	TEXT_SetText(hItem, buf);
+
+	// Measured drift
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT4);
+	if(have)
+	{
+		r    = (int)st.residual_ppm_x100;
+		sign = (r < 0) ? '-' : '+';
+		if(r < 0)
+			r = -r;
+
+		sprintf(buf, "Drift %c%d.%02d +/- %d.%02d ppm", sign, r / 100, r % 100,
+				(int)(st.err_ppm_x100 / 100), (int)(st.err_ppm_x100 % 100));
+	}
+	else if(st.running)
+	{
+		if(st.eta_s != 0)
+			sprintf(buf, "Need ~%u more min", (unsigned)((st.eta_s + 59u) / 60u));
+		else
+			sprintf(buf, "Collecting...");
+	}
+	else
+	{
+		sprintf(buf, "Not measured");
+	}
+	TEXT_SetText(hItem, buf);
+
+	// Trim in force, and what accepting would store
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT5);
+	if(have)
+		sprintf(buf, "Trim %d -> %d ppm", (int)st.trim_now_ppm, (int)st.trim_new_ppm);
+	else
+		sprintf(buf, "Trim %d ppm", (int)st.trim_now_ppm);
+	TEXT_SetText(hItem, buf);
+
+	hItem = WM_GetDialogItem(hDlg, ID_BUTTON_GPS_CAL);
+	BUTTON_SetText(hItem, st.running ? "Stop" : "Start");
+
+	// Accepting a result that does not exist yet would store a fantasy
+	hItem = WM_GetDialogItem(hDlg, ID_BUTTON_GPS_ACCEPT);
+	if(have)
+		WM_EnableWindow(hItem);
+	else
+		WM_DisableWindow(hItem);
+}
+#endif
 
 // API Driver messaging
 //extern osMessageQId 					hApiMessage;
@@ -124,6 +237,57 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			}
 			break;
 		}
+
+		#ifdef CONTEXT_GPS
+		// -------------------------------------------------------------
+		// Start / stop a GNSS clock trim measurement. The RTC is NOT
+		// touched by this - gps_proc.c syncs it once on the first fix and
+		// then only observes, which is what makes the drift measurable
+		case ID_BUTTON_GPS_CAL:
+		{
+			if(NCode == WM_NOTIFICATION_RELEASED)
+			{
+				gps_calib_stat_t st;
+
+				gps_calib_get(&st);
+
+				if(st.running)
+					gps_calib_stop();
+				else
+					gps_calib_start();
+
+				_gps_calib_refresh(pMsg->hWin);
+			}
+			break;
+		}
+
+		// -------------------------------------------------------------
+		// Store the measured trim for this unit. gps_calib_accept() does
+		// the trim_new = trim_now - residual subtraction itself
+		case ID_BUTTON_GPS_ACCEPT:
+		{
+			if(NCode == WM_NOTIFICATION_RELEASED)
+			{
+				if(gps_calib_accept() != 0)
+					printf("gps calib: accept refused\r\n");
+
+				_gps_calib_refresh(pMsg->hWin);
+			}
+			break;
+		}
+
+		// -------------------------------------------------------------
+		// Forget the measured value, back to the compiled in default
+		case ID_BUTTON_GPS_CLEAR:
+		{
+			if(NCode == WM_NOTIFICATION_RELEASED)
+			{
+				rtc_calib_ppm_clear();
+				_gps_calib_refresh(pMsg->hWin);
+			}
+			break;
+		}
+		#endif
 
 		// ------------------------------------------------------------
 		//
@@ -217,8 +381,40 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			CHECKBOX_SetText(hItem, "Enable BT Audio");
 			CHECKBOX_SetState(hItem, tsu.bt_enabled);
 
+			#ifdef CONTEXT_GPS
+			{
+				int i;
+
+				hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_TEXT1);
+				TEXT_SetFont(hItem, &GUI_Font20_1);
+				TEXT_SetTextColor(hItem, GUI_WHITE);
+
+				for(i = 0; i < 4; i++)
+				{
+					hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_TEXT2 + i);
+					TEXT_SetFont(hItem, &GUI_Font16_1);
+					TEXT_SetTextColor(hItem, GUI_WHITE);
+				}
+
+				_gps_calib_refresh(pMsg->hWin);
+
+				// A measurement runs for hours, so the page only needs a
+				// slow tick to follow it
+				hTimerGpsCal = WM_CreateTimer(pMsg->hWin, 0, GPS_CAL_TIMER_MS, 0);
+			}
+			#endif
+
 			break;
 		}
+
+		#ifdef CONTEXT_GPS
+		case WM_TIMER:
+		{
+			_gps_calib_refresh(pMsg->hWin);
+			WM_RestartTimer(pMsg->Data.v, GPS_CAL_TIMER_MS);
+			break;
+		}
+		#endif
 
 		case WM_PAINT:
 		{
@@ -242,6 +438,15 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 		}
 
 		case WM_DELETE:
+			#ifdef CONTEXT_GPS
+			// The measurement itself keeps running in the PPS ISR - only
+			// the read out timer belongs to this window
+			if(hTimerGpsCal)
+			{
+				WM_DeleteTimer(hTimerGpsCal);
+				hTimerGpsCal = 0;
+			}
+			#endif
 			break;
 
 		case WM_NOTIFY_PARENT:
@@ -307,7 +512,18 @@ use_const_decl:
 static void KillLora(void)
 {
 	//printf("kill menu\r\n");
-	GUI_EndDialog(hLdialog, 0);
+
+	if(hTimerGpsCal)
+	{
+		WM_DeleteTimer(hTimerGpsCal);
+		hTimerGpsCal = 0;
+	}
+
+	if(hLdialog)
+	{
+		GUI_EndDialog(hLdialog, 0);
+		hLdialog = 0;
+	}
 }
 
 #endif

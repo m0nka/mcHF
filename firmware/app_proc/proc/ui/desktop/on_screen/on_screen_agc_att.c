@@ -37,7 +37,7 @@
 #define GUI_ID_BTN4 			  	(GUI_ID_USER + 0x57)
 #define GUI_ID_BTN5 			  	(GUI_ID_USER + 0x58)
 
-#ifndef PCB_V9_REV_A
+#if 0
 #define AGC_X						254
 #else
 #define AGC_X						200
