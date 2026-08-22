@@ -30,6 +30,18 @@
 
 void	marschat_proc_task(void const *arg);
 
+// VFO save/restore on MarsChat mode entry/exit. The radio tunes to the
+// per-band MarsChat dial frequency on entry and restores the user's
+// original frequency when leaving. Called from the GUI task mode switch
+void	marschat_vfo_enter(void);
+void	marschat_vfo_exit(void);
+
+// Immediate session + TX teardown for mode exit. Aborts any running M4
+// burst, disarms the WSPR monitor, and drops the session synchronously
+// so the VFO can be safely restored. Called from the GUI task before
+// marschat_vfo_exit()
+void	marschat_force_stop(void);
+
 // Staged ICC_MC_TX_START payload for the icc task (UI_ICC_MC_TX_START
 // handler) - NULL when nothing is staged
 uchar	*marschat_icc_tx_payload(ushort *len);

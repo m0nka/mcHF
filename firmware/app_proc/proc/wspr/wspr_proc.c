@@ -448,27 +448,27 @@ static void wspr_proc_monitor_sm(void)
 			if(tsu.dsp_alive != 2)
 				break;
 
+			// Try to open an archival SD file - the live decoder feed
+			// carries the decode on its own, so a missing/failed card
+			// does not abort the capture
 			f_mkdir(WSPR_DIR);								// ok if it exists
 
-			// Rotating capture name, so the previous recordings survive
 			snprintf(wspr_capture_path, sizeof(wspr_capture_path),
 					"0://wspr/cap%d.raw", wspr_cap_idx);
 			wspr_cap_idx = (uchar)((wspr_cap_idx + 1) & 0x07);
 
-			if(f_open(&wspr_capture_file, wspr_capture_path, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK)
-			{
-				printf("wspr: capture create err \r\n");
-				break;
-			}
+			if(f_open(&wspr_capture_file, wspr_capture_path, FA_WRITE | FA_CREATE_ALWAYS) == FR_OK)
+				wspr_capture_file_open = 1;
+			else
+				printf("wspr: no sd - live feed only \r\n");
 
-			wspr_capture_file_open	= 1;
 			wspr_capture_written	= 0;
 			wspr_capture_synced		= 0;
 			wspr_capture_overrun	= 0;
 			wspr_stage_wr			= 0;
 			wspr_stage_rd			= 0;
 
-			// Arm the live decoder feed alongside the SD copy
+			// Arm the live decoder feed (independent of the SD copy)
 			wspr_decoder_reset();
 			wspr_fed_bytes			= 0;
 			wspr_live_feed			= 1;

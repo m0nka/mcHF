@@ -46,6 +46,7 @@
 
 #ifdef CONTEXT_MARSCHAT
 #include "desktop_marschat\marschat_ui.h"
+#include "marschat_proc.h"
 #endif
 // -----------------------------------------------------------------------------------------------
 // Menu Mode
@@ -729,6 +730,10 @@ static void ui_proc_change_mode(void)
 		{
 			printf("Entering MarsChat mode...\r\n");
 
+			// Tune to the MarsChat dial frequency for this band
+			// (saves the current VFO so it can be restored on exit)
+			marschat_vfo_enter();
+
 			// Destroy desktop controls
 			#ifdef DESKTOP_SHOW_VOLUME
 			ui_controls_volume_quit();
@@ -800,6 +805,14 @@ static void ui_proc_change_mode(void)
 			//ui_quick_log_destroy();
 			#ifdef CONTEXT_MARSCHAT
 			marschat_ui_destroy();
+
+			// Stop any running session and abort the M4 TX burst before
+			// restoring the VFO - the exciter must not be keying when
+			// the Si5351 moves to a different frequency
+			marschat_force_stop();
+
+			// Restore the VFO frequency that was saved on MarsChat entry
+			marschat_vfo_exit();
 			#endif
 
 			// Clear screen
