@@ -19,6 +19,9 @@
 
 #include "ch224a.h"
 
+// Power system state
+extern struct 	BMSState				bmss;
+
 uchar ch224a_on_init = 0;
 
 #if 0
@@ -56,10 +59,12 @@ uchar ch224a_detect(void)
 	if(shared_i2c_is_ready(CH224A_I2C_ADDR, 10) != 0)
 	{
 		if(ch224a_on_init)
-			printf("== charger removed ==\r\n");
+		{
+			//printf("== charger removed ==\r\n");
+		}
 
 		// Charger removed
-		ch224a_on_init = 0;
+		ch224a_on_init 		= 0;
 
 		return 1;
 	}
@@ -72,7 +77,10 @@ uchar ch224a_detect(void)
 		return 2;
 
 	stat = resp[0];
-	printf("usbpd stat: 0x%2x \r\n", stat);
+	//printf("usbpd stat: 0x%2x \r\n", stat);
+
+	// Save status
+	bmss.usbpd_status = stat;
 
 	// PD flag set ?
 	if((stat & 0x08) == 0x00)
@@ -86,7 +94,10 @@ uchar ch224a_detect(void)
 	curr  = resp[1] << 8 | resp[0];
 	curr *= 50;
 
-	printf("chmax curr: %dmA \r\n", curr);
+	//printf("chmax curr: %dmA \r\n", curr);
+
+	// Save to public
+	bmss.max_curr = curr;
 
 	// Current enough
 	if(curr < 1600)
@@ -97,7 +108,7 @@ uchar ch224a_detect(void)
 
 	ch224a_on_init = 1;
 
-	printf("== charger detected ==\r\n");
+	//printf("== charger detected ==\r\n");
 	return 0;
 }
 

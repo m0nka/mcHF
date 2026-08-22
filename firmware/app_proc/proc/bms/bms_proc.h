@@ -58,6 +58,19 @@ __attribute__((__common__)) struct BMSState {
 	uchar  gold_err;
 	ushort gold_line;
 
+	// USB-PD
+	ushort max_curr;
+	uchar  usbpd_status;
+
+	// Charger publics
+	ushort ch_stat;
+	ushort ch_chv;
+	ushort ch_dcv;
+	ushort ch_curr;
+	ushort ch_vsys;
+	ushort ch_vbat;
+	ushort ch_vbus;
+
 } BMSState;
 
 void bms_proc_hw_init(void);

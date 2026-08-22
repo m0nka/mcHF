@@ -300,30 +300,33 @@ void bms_proc_init_charger(void)
 
 void bms_proc_charger_handler(void)
 {
+#if 0
 	static uchar skip_on_print = 0;
 
-	if(skip_on_print < 20)
+	if(skip_on_print < 3)
 	{
 		skip_on_print++;
 		return;
 	}
 	skip_on_print = 0;
+#endif
 
-	#if 1
-	ushort stat, chv, dcv, curr, vsys, vbat, vbus;
-	stat = bq25730_read_chg_stat(&chip_cfg);
-	curr = bq25730_read_iin(&chip_cfg);
-	vsys = bq25730_read_vsys(&chip_cfg);
-	vbat = bq25730_read_vbat(&chip_cfg);
-	vbus = bq25730_read_vbus(&chip_cfg);
-	bq25730_read_ibat(&chip_cfg, &chv, &dcv);
-	//printf("[%04x] vsys:%d vbat:%d vbus:%d ch:%d dc:%d cr:%d \r\n", stat, vsys, vbat, vbus, chv, dcv, curr);
-	#else
-	bq25730_read_chg_stat(&chip_cfg);
-	bq25730_read_iin(&chip_cfg);
-	bq25730_read_vsys(&chip_cfg);
-	bq25730_read_vbat(&chip_cfg);
-	bq25730_read_vbus(&chip_cfg);
+	bmss.ch_stat = bq25730_read_chg_stat(&chip_cfg);
+	bmss.ch_curr = bq25730_read_iin(&chip_cfg);
+	bmss.ch_vsys = bq25730_read_vsys(&chip_cfg);
+	bmss.ch_vbat = bq25730_read_vbat(&chip_cfg);
+	bmss.ch_vbus = bq25730_read_vbus(&chip_cfg);
+	bq25730_read_ibat(&chip_cfg, &bmss.ch_chv, &bmss.ch_dcv);
+
+	#if 0
+	printf("[%04x] vsys:%d vbat:%d vbus:%d ch:%d dc:%d cr:%d \r\n",
+			bmss.ch_stat,
+			bmss.ch_vsys,
+			bmss.ch_vbat,
+			bmss.ch_vbus,
+			bmss.ch_chv,
+			bmss.ch_dcv,
+			bmss.ch_curr);
 	#endif
 }
 
@@ -398,7 +401,22 @@ static void bms_proc_worker(void const *param)
 
 	// How often do we need to handle it ?
 	if(ch224a_detect() == 0)
+	{
 		bms_proc_charger_handler();
+	}
+	else
+	{
+		// Clear publics
+		bmss.max_curr 		= 0;
+		bmss.usbpd_status 	= 0;
+		bmss.ch_stat		= 0;
+		bmss.ch_chv			= 0;
+		bmss.ch_dcv			= 0;
+		bmss.ch_curr		= 0;
+		bmss.ch_vsys		= 0;
+		bmss.ch_vbat		= 0;
+		bmss.ch_vbus		= 0;
+	}
 
 	// Handle power off
 	bms_proc_power_off();
@@ -470,6 +488,16 @@ void bms_proc_task(void const *arg)
 	bmss.gold_perc			= 0;
 	bmss.gold_err			= 0;
 	bmss.gold_line			= 0;
+	bmss.max_curr			= 0;
+	bmss.usbpd_status		= 0;
+
+	bmss.ch_stat			= 0;
+	bmss.ch_chv				= 0;
+	bmss.ch_dcv				= 0;
+	bmss.ch_curr			= 0;
+	bmss.ch_vsys			= 0;
+	bmss.ch_vbat			= 0;
+	bmss.ch_vbus			= 0;
 
 	// Detect BMS chip
 	bq40z80_init();

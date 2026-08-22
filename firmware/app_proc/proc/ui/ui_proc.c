@@ -1150,6 +1150,9 @@ void ui_proc_task(void const *arg)
 	vTaskDelay(UI_PROC_START_DELAY);
 	printf("start\r\n");
 
+	// Force PWM mode
+	tsu.pwm_backlight = 1;
+
 	// Backlight PWM
 	shared_tim_init();
 	shared_tim_change(tsu.brightness);

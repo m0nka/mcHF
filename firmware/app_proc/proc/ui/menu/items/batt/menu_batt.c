@@ -33,6 +33,7 @@ extern struct	UI_DRIVER_STATE			ui_s;
 // FreeRTOS process state
 extern struct PROC_STATE 				ps;
 
+// Power system state
 extern struct 	BMSState				bmss;
 
 // Menu layout definitions from Flash
@@ -63,20 +64,35 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate0[] =
 {
 	// -----------------------------------------------------------------------------------------------------------------------------
-	//							name					id						x		y		xsize	ysize	?		?		?
+	//							name			id				x		y		xsize	ysize	?		?		?
 	// -----------------------------------------------------------------------------------------------------------------------------
 	// Self
    	{ WINDOW_CreateIndirect,   	"", 			0,              0,   	0, 		TBL1X, 	430, 	FRAMEWIN_CF_MOVEABLE },
 	//
 	// Blocks
-	{ BUTTON_CreateIndirect, 	"USB-PD",	 	ID_BUTTON_IC1,	10, 	90, 	80, 	120, 	0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"Charger",	 	ID_BUTTON_IC2,	200, 	90, 	120, 	120, 	0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"BMS",		 	ID_BUTTON_IC3,	300, 	300, 	120, 	120, 	0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"Battery",		ID_BUTTON_IC4,	470, 	300, 	120, 	120, 	0, 		0x0, 	0 },
-	{ BUTTON_CreateIndirect, 	"System",		ID_BUTTON_IC5,	470, 	30, 	120, 	120, 	0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"USB-PD",	 	ID_BUTTON_IC1,	10, 	10, 	160, 	120, 	0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"Charger",	 	ID_BUTTON_IC2,	260, 	10, 	160, 	120, 	0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"System",		ID_BUTTON_IC3,	10, 	300, 	160, 	 80, 	0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"Battery",		ID_BUTTON_IC4,	500, 	300, 	160, 	 80, 	0, 		0x0, 	0 },
+	{ BUTTON_CreateIndirect, 	"BMS",			ID_BUTTON_IC5,	500, 	10, 	160, 	120, 	0, 		0x0, 	0 },
 	//
+	// Info text USB-PD
+	{ TEXT_CreateIndirect, 		"",				GUI_ID_TEXT0,	10,		140,	160, 	30,  	0, 		0x0,	0 },
+	{ TEXT_CreateIndirect, 		"",				GUI_ID_TEXT1,	10,		175,	160, 	30,  	0, 		0x0,	0 },
+	// Info text BMS
+	{ TEXT_CreateIndirect, 		"",				GUI_ID_TEXT2,	500,	140,	160, 	30,  	0, 		0x0,	0 },
+	{ TEXT_CreateIndirect, 		"",				GUI_ID_TEXT3,	500,	175,	160, 	30,  	0, 		0x0,	0 },
+	{ TEXT_CreateIndirect, 		"",				GUI_ID_TEXT4,	500,	210,	160, 	30,  	0, 		0x0,	0 },
+	// Info text Charger
+	{ TEXT_CreateIndirect, 		"",				GUI_ID_TEXT5,	260,	140,	160, 	30,  	0, 		0x0,	0 },
+	{ TEXT_CreateIndirect, 		"",				GUI_ID_TEXT6,	260,	175,	160, 	30,  	0, 		0x0,	0 },
+	{ TEXT_CreateIndirect, 		"",				GUI_ID_TEXT7,	260,	210,	160, 	30,  	0, 		0x0,	0 },
+	{ TEXT_CreateIndirect, 		"",				GUI_ID_TEXT8,	260,	245,	160, 	30,  	0, 		0x0,	0 },
+	// Info text Battery
+	{ TEXT_CreateIndirect, 		"",				GUI_ID_TEXT9,	500,	390,	160, 	30,  	0, 		0x0,	0 },
+	// Info text System,
+	{ TEXT_CreateIndirect, 		"",				GUI_ID_TEXT9+1,	10,		390,	160, 	30,  	0, 		0x0,	0 },
 	//
-	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT0,		10,		110,	125, 			30,  				0, 		0x0,	0 },
 };
 
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate1[] =
@@ -306,6 +322,85 @@ static void UpdateGoldStatus(WM_HWIN hDlg)
 	}
 
 	TEXT_SetText(hItem, buf);
+	#endif
+}
+
+static void UpdatePowerRouting(WM_HWIN hDlg)
+{
+	#ifdef CONTEXT_BMS
+	int i;
+	char buf[40];
+	WM_HWIN hItem, hHeader;
+	ulong perc_val;
+
+	if(!bmss.rr)
+		return;
+
+	//printf("ui update\r\n");
+
+	// ------------------------------------------------
+	// USB-PD max current
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT0);
+	sprintf(buf, "max: %dmA", (int)bmss.max_curr);
+	TEXT_SetText(hItem, buf);
+
+	// USB-PD status
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT1);
+	sprintf(buf, "status: 0x%2x", bmss.usbpd_status);
+	TEXT_SetText(hItem, buf);
+
+	// ------------------------------------------------
+	// Show BMS pack voltage
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT2);
+	sprintf(buf, "Pack: %dmV", (int)bmss.pack_v);
+	TEXT_SetText(hItem, buf);
+
+	// Show BMS current
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT3);
+	sprintf(buf, "Curr: %dmA", bmss.curr);
+	TEXT_SetText(hItem, buf);
+
+	// Show SOC
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT4);
+	sprintf(buf, "SOC:  %d%%", bmss.perc);
+	TEXT_SetText(hItem, buf);
+
+	// ------------------------------------------------
+	// Show Charger Vbus
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT5);
+	sprintf(buf, "Vbus: %dmV", bmss.ch_vbus);
+	TEXT_SetText(hItem, buf);
+
+	// Show Charger current(charging)
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT6);
+	sprintf(buf, "Curr: %dmA", bmss.ch_curr);
+	TEXT_SetText(hItem, buf);
+
+	// Show Charger Voltage
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT7);
+	sprintf(buf, "Vchg: %dmV", bmss.ch_chv);
+	TEXT_SetText(hItem, buf);
+
+	// Charger status
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT8);
+	sprintf(buf, "status: 0x%04x", bmss.ch_stat);
+	TEXT_SetText(hItem, buf);
+
+	// ------------------------------------------------
+	// Show Charger Vbat
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT9);
+	sprintf(buf, "Vbat: %dmV", bmss.ch_vbat);
+	TEXT_SetText(hItem, buf);
+
+	// ------------------------------------------------
+	// Show Charger Vsys
+	hItem = WM_GetDialogItem(hDlg, GUI_ID_TEXT9 + 1);
+	sprintf(buf, "Vsys: %dmV", bmss.ch_vsys);
+	TEXT_SetText(hItem, buf);
+
+	// Clear update flag
+	bmss.rr = 0;
+
 	#endif
 }
 
@@ -770,27 +865,52 @@ static void _cbSettingsControl(WM_MESSAGE * pMsg, int Id, int NCode)
 static void _cbDialog0(WM_MESSAGE * pMsg)
 {
 	//int 	Id,NCode;
-	//WM_HWIN hDlg;
+	WM_HWIN hDlg;
 	WM_HWIN 	hItem;
+	int 	i;
 
-	//hDlg = pMsg->hWin;
+	hDlg = pMsg->hWin;
 
 	switch (pMsg->MsgId)
 	{
 		case WM_INIT_DIALOG:
 		{
-			for(int i = 0; i < 5; i++)
+			hTimerBattA = WM_CreateTimer(pMsg->hWin, 0, BTIMER_PERIOD, 0);
+
+			// Buttons look
+			for(i = 0; i < 5; i++)
 			{
 				hItem = WM_GetDialogItem(pMsg->hWin, ID_BUTTON_IC1 + i);
 				BUTTON_SetFont(hItem,&GUI_Font20B_1);
 			}
 
+			// Edit boxes look
+			for(i = 0; i < 11; i++)
+			{
+				hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_TEXT0 + i);
+				menu_bms_edit_look_a(hItem);
+			}
+
+			UpdatePowerRouting(hDlg);
 			break;
 		}
 
 		case WM_PAINT:
-			//UpdateCalibrationFrame(hDlg);
+			UpdatePowerRouting(hDlg);
 			break;
+
+		case WM_TIMER:
+		{
+			WM_InvalidateWindow(pMsg->hWin);
+			WM_RestartTimer(pMsg->Data.v, BTIMER_PERIOD);
+			break;
+		}
+
+		case WM_DELETE:
+		{
+			WM_DeleteTimer(hTimerBattA);
+			break;
+		}
 
 		case WM_NOTIFY_PARENT:
 		{
@@ -1173,7 +1293,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 		    MULTIPAGE_SetFont	 (hMulti, &GUI_Font32B_ASCII);
 
 		    // StartUp Tab
-		    MULTIPAGE_SelectPage (hMulti, 1);
+		    MULTIPAGE_SelectPage (hMulti, 0);
 
 			break;
 		}

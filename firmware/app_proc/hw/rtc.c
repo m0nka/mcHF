@@ -88,9 +88,9 @@ void check_date_sanity(void)
 	k_GetTime(&stimestructureget);
 	k_GetDate(&sdatestructureget);
 
-	if(sdatestructureget.Year < 25)
+	if(sdatestructureget.Year < 26)
 	{
-		sdatestructureget.Year = 25;		// Can't be travelling back in time, can we ?
+		sdatestructureget.Year = 26;		// Can't be travelling back in time, can we ?
 	}
 	else if(sdatestructureget.Year > 31)
 		sdatestructureget.Year = 31;		// Am i still alive to update this code, yay! Open the JD!
