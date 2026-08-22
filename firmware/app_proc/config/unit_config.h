@@ -62,7 +62,7 @@
 
 // CW id appended to every radiated MarsChat tx (ham legality - our
 // payload is not standard WSPR). Empty string = no CW id segment
-#define MARSCHAT_CW_ID					""
+#define MARSCHAT_CW_ID					"M0NKA"
 #define MARSCHAT_CW_WPM					25
 
 // Uncomment to keep the pre-session bench behaviour available: with no
