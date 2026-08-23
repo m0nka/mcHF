@@ -34,27 +34,26 @@ void keypad_proc_irq(uchar id)
 	ks.irq_id = id;
 }
 
+void EXTI9_5_IRQHandler(void)
+{
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_8) != RESET)
+	{
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_8);
+		keypad_proc_irq(8);
+	}
+}
+
 void EXTI15_10_IRQHandler(void)
 {
 	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_11) != RESET)
 	{
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_11);
-		keypad_proc_irq(4);
+		keypad_proc_irq(11);
 	}
 	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_12) != RESET)
 	{
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_12);
-		keypad_proc_irq(2);
-	}
-	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_13) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_13);
-		keypad_proc_irq(1);
-	}
-	else if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) != RESET)
-	{
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
-		keypad_proc_irq(3);
+		keypad_proc_irq(12);
 	}
 }
 
@@ -74,9 +73,9 @@ void keypad_proc_init(void)
 	LL_GPIO_SetPinMode(KEYPAD_Y3_PORT, KEYPAD_Y3_LL, LL_GPIO_MODE_INPUT);
 
 	// All with pullups
-	LL_GPIO_SetPinPull(KEYPAD_Y1_PORT, KEYPAD_Y1_LL, LL_GPIO_PULL_UP);
-	LL_GPIO_SetPinPull(KEYPAD_Y2_PORT, KEYPAD_Y2_LL, LL_GPIO_PULL_UP);
-	LL_GPIO_SetPinPull(KEYPAD_Y3_PORT, KEYPAD_Y3_LL, LL_GPIO_PULL_UP);
+	LL_GPIO_SetPinPull(KEYPAD_Y1_PORT, KEYPAD_Y1_LL, LL_GPIO_PULL_UP);	// PG12 (was PD6)
+	LL_GPIO_SetPinPull(KEYPAD_Y2_PORT, KEYPAD_Y2_LL, LL_GPIO_PULL_UP);	// PI8
+	LL_GPIO_SetPinPull(KEYPAD_Y3_PORT, KEYPAD_Y3_LL, LL_GPIO_PULL_UP);	// PI11
 
 	// Slow speed
 	LL_GPIO_SetPinSpeed(KEYPAD_Y1_PORT, KEYPAD_Y1_LL, LL_GPIO_SPEED_FREQ_LOW);
@@ -86,29 +85,31 @@ void keypad_proc_init(void)
 	// This clock already set ?
 	LL_APB4_GRP1_EnableClock(LL_APB4_GRP1_PERIPH_SYSCFG);
 
-	// Connect External Line to the GPIO
+	// KEYPAD_Y3
 	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTI, LL_SYSCFG_EXTI_LINE11);
-	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE13);
-	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE14);
-
-	// Enable interrupt
-	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_11);
-	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_13);
-	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_14);
-
-	// On falling edge
 	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_11);
-	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_13);
-	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_14);
+	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_11);
+
+	// KEYPAD_Y2
+	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTI, LL_SYSCFG_EXTI_LINE8);
+	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_8);
+	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_8);
+
+	// KEYPAD_Y1
+	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_12);
+	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTG, LL_SYSCFG_EXTI_LINE12);
+	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_12);
 
 	// All vertical lines as outputs(low)
-	LL_GPIO_SetPinMode(KEYPAD_X1_PORT, KEYPAD_X1_LL, LL_GPIO_MODE_OUTPUT);
-	LL_GPIO_SetPinMode(KEYPAD_X2_PORT, KEYPAD_X2_LL, LL_GPIO_MODE_OUTPUT);
-	LL_GPIO_SetPinMode(KEYPAD_X3_PORT, KEYPAD_X3_LL, LL_GPIO_MODE_OUTPUT);
+	LL_GPIO_SetPinMode(KEYPAD_X1_PORT, KEYPAD_X1_LL, LL_GPIO_MODE_OUTPUT);	// PD3
+	LL_GPIO_SetPinMode(KEYPAD_X2_PORT, KEYPAD_X2_LL, LL_GPIO_MODE_OUTPUT);	// PD7
+	LL_GPIO_SetPinMode(KEYPAD_X3_PORT, KEYPAD_X3_LL, LL_GPIO_MODE_OUTPUT);	// PD6(was PG12)
+
 	//
 	LL_GPIO_SetPinSpeed(KEYPAD_X1_PORT, KEYPAD_X1_LL, LL_GPIO_SPEED_FREQ_LOW);
 	LL_GPIO_SetPinSpeed(KEYPAD_X2_PORT, KEYPAD_X2_LL, LL_GPIO_SPEED_FREQ_LOW);
 	LL_GPIO_SetPinSpeed(KEYPAD_X3_PORT, KEYPAD_X3_LL, LL_GPIO_SPEED_FREQ_LOW);
+
 	//
 	LL_GPIO_ResetOutputPin(KEYPAD_X1_PORT, KEYPAD_X1_LL);
 	LL_GPIO_ResetOutputPin(KEYPAD_X2_PORT, KEYPAD_X2_LL);
@@ -122,6 +123,9 @@ void keypad_proc_init(void)
 	// Enable process wake-up
 	NVIC_EnableIRQ	(EXTI15_10_IRQn);
 	NVIC_SetPriority(EXTI15_10_IRQn, 15);
+
+	NVIC_EnableIRQ	(EXTI9_5_IRQn);
+	NVIC_SetPriority(EXTI9_5_IRQn, 15);
 }
 
 #if 0
@@ -218,15 +222,6 @@ static void keypad_set_out_lines_a(uchar y)
 		case 2:
 			scan_x3();
 			break;
-		case 3:
-			scan_x4();
-			break;
-		case 4:
-			scan_x5();
-			break;
-		case 5:
-			scan_x6();
-			break;
 		default:
 			scan_off();
 			return;
@@ -299,7 +294,6 @@ uchar keypad_proc_is_held_on_start(void)
 {
 	uchar res = 0;
 
-	#ifndef REV_0_8_4_PATCH
 	keypad_set_out_lines_a(0);
 
 	// F4, held on start
@@ -314,10 +308,6 @@ uchar keypad_proc_is_held_on_start(void)
 	}
 
 	keypad_set_out_lines_a(8);
-	#else
-	res = 1;
-	stay_in_boot = 1;
-	#endif
 
 	return res;
 }
@@ -336,6 +326,7 @@ void keypad_proc(void)
 	{
 		// Disable wait
 		NVIC_DisableIRQ	(EXTI15_10_IRQn);
+		NVIC_DisableIRQ	(EXTI9_5_IRQn);
 		scan_off();
 
 		// Quick scan on a single horizontal line
@@ -344,6 +335,7 @@ void keypad_proc(void)
 		// Back to wait
 		scan_on();
 		NVIC_EnableIRQ	(EXTI15_10_IRQn);
+		NVIC_EnableIRQ	(EXTI9_5_IRQn);
 		ks.irq_id = 0;
 	}
 }

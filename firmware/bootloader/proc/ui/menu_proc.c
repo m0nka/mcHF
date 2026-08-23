@@ -69,7 +69,7 @@ extern ushort  pack_volt;
 
 // Horizontal positions
 #define COL_LEFT        10      // default left column
-#define SCREEN_W        480     // visible horizontal extent (Y axis)
+#define SCREEN_W        800     // visible horizontal extent (Y axis)
 
 // -----------------------------------------------------------------------
 // Local state
@@ -210,9 +210,10 @@ static void menu_draw_header(void)
 
     // Version on the right
     lcd_high_SetTextColor(LCD_COLOR_WHITE);
-    sprintf(buff, "v%d.%d.%d.%d", MCHF_L_VER_MAJOR, MCHF_L_VER_MINOR,
-            MCHF_L_VER_RELEASE, MCHF_L_VER_BUILD);
-    lcd_high_DisplayStringAt(HDR_X + 2, 350, (uchar *)buff, LEFT_MODE);
+    sprintf(buff, "v %d.%d.%d.%d", 	MCHF_L_VER_MAJOR, MCHF_L_VER_MINOR,
+            						MCHF_L_VER_RELEASE, MCHF_L_VER_BUILD);
+
+    lcd_high_DisplayStringAt(HDR_X + 2, 200, (uchar *)buff, LEFT_MODE);
 
     // Separator below header
     lcd_high_FillRect(HDR_X + HDR_H, 0, 1, SCREEN_W, LCD_COLOR_GRAY);
@@ -266,10 +267,10 @@ static void menu_draw_status(void)
     char buff[48];
 
     // Separator above status line
-    lcd_high_FillRect(STAT_X - 4, 0, 1, SCREEN_W, LCD_COLOR_GRAY);
+//    lcd_high_FillRect(STAT_X - 4, 0, 1, SCREEN_W, LCD_COLOR_GRAY);
 
     // Clear status line area
-    lcd_high_FillRect(STAT_X, 0, 16, SCREEN_W, LCD_COLOR_BLACK);
+//    lcd_high_FillRect(STAT_X, 0, 16, SCREEN_W, LCD_COLOR_BLACK);
 
     lcd_high_SetBackColor(LCD_COLOR_BLACK);
     lcd_high_SetFont(&Font16);
@@ -760,6 +761,8 @@ static void menu_process_key(uchar key)
 // -----------------------------------------------------------------------
 void menu_proc_key_event(uchar x, uchar y, uchar hold)
 {
+	uchar pend = 0xFF;
+
     if(hold)
         return;
 
@@ -769,7 +772,19 @@ void menu_proc_key_event(uchar x, uchar y, uchar hold)
     if((sys_timer - menu_start_time) < 1500)
         return;
 
-    menu_pending = x;
+    // Coordinates to Function menu
+    if((x == 1)&&(y == 2))
+    	pend = MENU_BTN_1;
+    else if((x == 2)&&(y == 2))
+    	pend = MENU_BTN_2;
+    else if((x == 3)&&(y == 3))
+    	pend = MENU_BTN_3;
+    else if((x == 1)&&(y == 3))
+    	pend = MENU_BTN_4;
+    else if((x == 2)&&(y == 3))
+    	pend = MENU_BTN_5;
+
+    menu_pending = pend;
 }
 
 // -----------------------------------------------------------------------

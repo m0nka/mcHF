@@ -564,9 +564,7 @@ int main(void)
     SystemClock_Config();
 
     // Keyboard early init
-	#ifndef REV_0_8_4_PATCH
     keypad_proc_init();
-	#endif
 
 	// Init hw
     critical_hw_init_and_run_fw();
@@ -574,38 +572,33 @@ int main(void)
 	// Proc init
 	mchf_pro_board_init();
 
-	#ifndef REV_0_8_4_PATCH
+	// Init BMS
 	bms_proc_init();
-    shared_tim_init();
-	#endif
 
+	// Init LCD backlight
+    shared_tim_init();
+
+    // UI process init
     ui_proc_init();
 
-	#ifndef REV_0_8_4_PATCH
+    // Self-test init
     selftest_proc_init();
-	#endif
 
     while(1)
     {
     	// BMS comms
-		#ifndef REV_0_8_4_PATCH
     	bms_proc();
-		#endif
 
     	// UI repaint
     	ui_proc();
 
     	// Self test state machine
-		#ifndef REV_0_8_4_PATCH
     	selftest_proc();
-		#endif
 
     	// Blink the speaker LED
     	show_alive();
 
     	// Scan keyboard
-		#ifndef REV_0_8_4_PATCH
     	keypad_proc();
-		#endif
     }
 }

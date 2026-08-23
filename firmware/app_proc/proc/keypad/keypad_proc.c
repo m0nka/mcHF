@@ -1618,7 +1618,7 @@ keypad_proc_loop:
 		if(ks.irq_id)
 		{
 			// Disable wait
-			NVIC_DisableIRQ	(EXTI15_10_IRQn);
+			NVIC_DisableIRQ	(EXTI15_10_IRQn);		// ToDo: Line 8 is shared and not disabled, still need this ?
 			scan_off();
 
 			//--printf("irq id: %d \r\n", ks.irq_id);
