@@ -17,6 +17,7 @@
 #include "selftest_proc.h"
 #include "bms_proc.h"
 #include "keypad_proc.h"
+#include "menu_proc.h"
 
 #include "shared_tim.h"
 #include "hw_sdram.h"

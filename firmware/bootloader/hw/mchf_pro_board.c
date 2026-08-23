@@ -18,10 +18,23 @@
 
 #include "hw_lcd.h"
 
+#include "hw_sd.h"
+#include "ff.h"
+#include "ff_gen_drv.h"
+#include "sd_diskio.h"
+#include "hw_flash.h"
+
+#include "selftest_proc.h"
+
 CRC_HandleTypeDef   CrcHandle;
 RTC_HandleTypeDef 	RtcHandle;
 
 extern const unsigned char dsp_idle[816];
+
+// FatFS objects defined in selftest_proc.c
+extern FATFS SDFatFs;
+extern FIL  MyFile;
+extern char SDPath[4];
 
 extern ulong reset_reason;
 extern uchar gen_boot_reason_err;
@@ -221,7 +234,6 @@ void jump_to_fw(uint32_t SubDemoAddress)
 	HAL_NVIC_SystemReset();
 }
 
-#if 0
 uchar update_radio(void)
 {
 	uchar res = 0;
@@ -238,26 +250,53 @@ uchar update_radio(void)
 	// Init CRC unit
 	if(HAL_CRC_Init(&CrcHandle) != HAL_OK)
 	{
-		//printf("error crc unit!\r\n");
+		printf("crc init err\r\n");
 		return 1;
 	}
 
-	// Open flash file from SD card
-	if(f_open(&MyFile, "radio.bin", FA_READ) != FR_OK)
+	// Init SD card + FatFS if not already mounted
+	if(test_sd_card() != 0)
 	{
-		//printf("error open file!\r\n");
-		return 2;
+		printf("sd card init err\r\n");
+		return 16;
+	}
+
+	// Init FatFS
+	if(FATFS_LinkDriver(&SD_Driver, SDPath) != 0)
+	{
+		printf("fs link err\r\n");
+		return 17;
+	}
+
+	if(f_mount(&SDFatFs, (TCHAR const*)SDPath, 0) != FR_OK)
+	{
+		printf("fs mount err\r\n");
+		return 18;
+	}
+
+	// Open flash file from SD card
+	if(f_open(&MyFile, "0:/radio.bin", FA_READ) != FR_OK)
+	{
+		printf("open radio.bin err\r\n");
+		res = 2;
+		goto fw_upd_clean_up;
 	}
 
 	ulong fs = f_size(&MyFile);
-	//printf("file size: %d bytes\r\n", (int)fs);
+	printf("radio.bin size: %d bytes\r\n", (int)fs);
+
+	if(fs < 512)
+	{
+		printf("file too small\r\n");
+		res = 19;
+		goto fw_upd_clean_up;
+	}
 
 	// Remove checksum
 	fs -= 4;
 
 	if(f_lseek(&MyFile, fs) != FR_OK)
 	{
-		//printf("error chksum location!\r\n");
 		res = 3;
 		goto fw_upd_clean_up;
 	}
@@ -267,23 +306,20 @@ uchar update_radio(void)
 
 	if(f_read(&MyFile, &chk, 4, (void *)&read) != FR_OK)
 	{
-		//printf("error chksum read!\r\n");
 		res = 4;
 		goto fw_upd_clean_up;
 	}
 
 	if(read != 4)
 	{
-		//printf("error chksum size!\r\n");
 		res = 5;
 		goto fw_upd_clean_up;
 	}
-	//printf("file crc: 0x%x\r\n", chk);
+	printf("file crc: 0x%x\r\n", (int)chk);
 
 	// Roll back
 	if(f_lseek(&MyFile, 0) != FR_OK)
 	{
-		//printf("error rollback!\r\n");
 		res = 6;
 		goto fw_upd_clean_up;
 	}
@@ -292,13 +328,9 @@ uchar update_radio(void)
 	ulong leftov = fs%512;
 	ulong calc_crc = 0;
 
-	//printf("chunks count: %d\r\n", blocks);
-	//printf("extra bytes: %d\r\n", leftov);
-
 	uchar *temp = malloc(512);
 	if(temp == NULL)
 	{
-		//printf("error alloc temp block!\r\n");
 		res = 7;
 		goto fw_upd_clean_up;
 	}
@@ -306,7 +338,6 @@ uchar update_radio(void)
 	// First
 	if(f_read(&MyFile, temp, 512, (void *)&read) != FR_OK)
 	{
-		//printf("error chunk read!\r\n");
 		free(temp);
 		res = 8;
 		goto fw_upd_clean_up;
@@ -314,7 +345,6 @@ uchar update_radio(void)
 
 	if(read != 512)
 	{
-		//printf("error first chunk size!\r\n");
 		free(temp);
 		res = 9;
 		goto fw_upd_clean_up;
@@ -328,7 +358,6 @@ uchar update_radio(void)
 	{
 		if(f_read(&MyFile, temp, 512, (void *)&read) != FR_OK)
 		{
-			//printf("error chunk read!\r\n");
 			free(temp);
 			res = 10;
 			goto fw_upd_clean_up;
@@ -336,7 +365,6 @@ uchar update_radio(void)
 
 		if(read != 512)
 		{
-			//printf("error next(%d) chunk size!\r\n", i);
 			free(temp);
 			res = 11;
 			goto fw_upd_clean_up;
@@ -350,7 +378,6 @@ uchar update_radio(void)
 	{
 		if(f_read(&MyFile, temp, leftov, (void *)&read) != FR_OK)
 		{
-			//printf("error leftover read!\r\n");
 			free(temp);
 			res = 12;
 			goto fw_upd_clean_up;
@@ -358,7 +385,6 @@ uchar update_radio(void)
 
 		if(read != leftov)
 		{
-			//printf("error last chunk size!\r\n");
 			free(temp);
 			res = 13;
 			goto fw_upd_clean_up;
@@ -367,28 +393,134 @@ uchar update_radio(void)
 		calc_crc = HAL_CRC_Accumulate(&CrcHandle, (uint32_t *)temp, leftov/4);
 	}
 	free(temp);
-	//printf("calc checksum: 0x%x\r\n", calc_crc);
+	printf("calc crc: 0x%x\r\n", (int)calc_crc);
 
 	// Test CRC
 	if(chk != calc_crc)
 	{
-		//printf("crc mismatch!\r\n");
+		printf("crc mismatch!\r\n");
 		res = 14;
 		goto fw_upd_clean_up;
 	}
 
+	printf("flashing to 0x%08x...\r\n", (int)RADIO_FIRM_ADDR);
+
 	// Flash the file
 	if(hw_flash_program_file(&MyFile, RADIO_FIRM_ADDR) != 0)
 	{
-		//printf("error writing file!\r\n");
+		printf("flash write err\r\n");
 		res = 15;
 	}
+	else
+		printf("flash complete\r\n");
 
 fw_upd_clean_up:
 	f_close(&MyFile);
+	fs_cleanup();
 	return res;
 }
-#endif
+
+// -----------------------------------------------------------------------
+// Update baseband DSP core from baseband.bin on SD card
+//
+// The baseband binary is loaded into D2 SRAM (SRAM1+SRAM2 at 0x30000000)
+// where the CM4 core executes from. No flash erase needed.
+// -----------------------------------------------------------------------
+uchar update_baseband(void)
+{
+	uchar	res = 0;
+	ulong	read = 0;
+	ulong	curr_addr = 0;
+
+	// Init SD card
+	if(test_sd_card() != 0)
+	{
+		printf("sd card init err\r\n");
+		return 1;
+	}
+
+	// Init FatFS
+	if(FATFS_LinkDriver(&SD_Driver, SDPath) != 0)
+	{
+		printf("fs link err\r\n");
+		return 2;
+	}
+
+	if(f_mount(&SDFatFs, (TCHAR const*)SDPath, 0) != FR_OK)
+	{
+		printf("fs mount err\r\n");
+		return 3;
+	}
+
+	// Open the file
+	if(f_open(&MyFile, "0:/baseband.bin", FA_READ) != FR_OK)
+	{
+		printf("open baseband.bin err\r\n");
+		res = 4;
+		goto bb_upd_clean_up;
+	}
+
+	// Get size
+	ulong fs = f_size(&MyFile);
+	printf("baseband.bin size: %d bytes\r\n", (int)fs);
+
+	if(fs == 0)
+	{
+		res = 5;
+		goto bb_upd_clean_up;
+	}
+
+	// Sanity check, D2 SRAM is 256KB
+	if(fs > (256*1024))
+	{
+		printf("file too large for D2 SRAM\r\n");
+		res = 6;
+		goto bb_upd_clean_up;
+	}
+
+	uchar *temp = malloc(512);
+	if(temp == NULL)
+	{
+		res = 7;
+		goto bb_upd_clean_up;
+	}
+
+	// Copy file to D2 SRAM in 512-byte chunks
+	while(curr_addr < fs)
+	{
+		ulong chunk = 512;
+		if((fs - curr_addr) < 512)
+			chunk = fs - curr_addr;
+
+		if(f_read(&MyFile, temp, chunk, (void *)&read) != FR_OK)
+		{
+			free(temp);
+			res = 8;
+			goto bb_upd_clean_up;
+		}
+
+		if(read != chunk)
+		{
+			free(temp);
+			res = 9;
+			goto bb_upd_clean_up;
+		}
+
+		memcpy((void *)(D2_AHBSRAM_BASE + curr_addr), (void *)temp, chunk);
+		curr_addr += chunk;
+	}
+
+	free(temp);
+	printf("baseband loaded to D2 SRAM, %d bytes\r\n", (int)curr_addr);
+
+	// Mark the DSP firmware ID in backup registers
+	WRITE_REG(BKP_REG_DSP_ID, DSP_LOADED_UHSDR);
+
+bb_upd_clean_up:
+	f_close(&MyFile);
+	fs_cleanup();
+	return res;
+}
 
 #if 0
 static int boot_dsp_core(ulong *checksum)

@@ -236,6 +236,165 @@ ushort bq40z80_read_pack_voltage(void)
 	return 0;
 }
 
+// -----------------------------------------------------------------------
+// MAC block write to ManufacturerBlockAccess(0x44)
+// -----------------------------------------------------------------------
+uchar bq40z80_mac_write(ushort cmd, uchar *data, uchar len)
+{
+	uchar t_buf[40];
+	uchar i;
+
+	if(len > BQ40Z80_DF_ROW)
+		return 1;
+
+	t_buf[0] = len + 2;				// SMBus block byte count
+	t_buf[1] = (uchar)(cmd);			// MAC command word, little endian
+	t_buf[2] = (uchar)(cmd >> 8);
+
+	for(i = 0; i < len; i++)
+		t_buf[3 + i] = data[i];
+
+	if(shared_i2c_write_reg(0x16, 0x44, t_buf, (len + 3)) != 0)
+		return 2;
+
+	return 0;
+}
+
+// -----------------------------------------------------------------------
+// MAC block read from ManufacturerBlockAccess(0x44)
+// -----------------------------------------------------------------------
+uchar bq40z80_mac_read(ushort cmd, uchar *buf, uchar len)
+{
+	uchar t_buf[40];
+
+	if((buf == NULL)||(len > BQ40Z80_DF_ROW))
+		return 1;
+
+	if(bq40z80_mac_write(cmd, NULL, 0) != 0)
+		return 2;
+
+	bq40z80_delay(10);
+
+	if(shared_i2c_read_reg(0x16, 0x44, t_buf, (len + 3)) != 0)
+		return 3;
+
+	// Check the command word echo
+	if((t_buf[1] != (uchar)(cmd))||(t_buf[2] != (uchar)(cmd >> 8)))
+		return 4;
+
+	memcpy(buf, (t_buf + 3), len);
+
+	return 0;
+}
+
+// -----------------------------------------------------------------------
+// Unseal the gauge (unlock MAC access)
+// -----------------------------------------------------------------------
+uchar bq40z80_unseal(void)
+{
+	if(bq40z80_write_16bit_reg(0x00, 0x0414) != 0)
+		return 1;
+
+	bq40z80_delay(20);
+
+	if(bq40z80_write_16bit_reg(0x00, 0x3672) != 0)
+		return 2;
+
+	return 0;
+}
+
+// -----------------------------------------------------------------------
+// Seal the gauge (lock bms)
+// -----------------------------------------------------------------------
+uchar bq40z80_seal(void)
+{
+	if(bq40z80_write_16bit_reg(0x00, 0x0030) != 0)
+		return 1;
+
+	return 0;
+}
+
+// -----------------------------------------------------------------------
+// Promote from unsealed to full access (needed for DF writes)
+// -----------------------------------------------------------------------
+uchar bq40z80_full_access(void)
+{
+	if(bq40z80_write_16bit_reg(0x00, BQ40Z80_FA_KEY_W0) != 0)
+		return 1;
+
+	bq40z80_delay(20);
+
+	if(bq40z80_write_16bit_reg(0x00, BQ40Z80_FA_KEY_W1) != 0)
+		return 2;
+
+	bq40z80_delay(20);
+
+	return 0;
+}
+
+// -----------------------------------------------------------------------
+// DeviceReset(0x0041), gauge reboots and re-reads data flash
+// -----------------------------------------------------------------------
+uchar bq40z80_device_reset(void)
+{
+	if(bq40z80_write_16bit_reg(0x00, 0x0041) != 0)
+		return 1;
+
+	return 0;
+}
+
+// -----------------------------------------------------------------------
+// Read ManufacturingStatus() via MAC 0x0057
+// -----------------------------------------------------------------------
+uchar bq40z80_read_mfg_status(ushort *val)
+{
+	uchar buf[2];
+
+	if(val == NULL)
+		return 1;
+
+	if(bq40z80_mac_read(0x0057, buf, 2) != 0)
+		return 2;
+
+	*val = (buf[1] << 8)|buf[0];
+
+	return 0;
+}
+
+// -----------------------------------------------------------------------
+// Toggle GAUGE_EN (MAC 0x0021)
+// -----------------------------------------------------------------------
+uchar bq40z80_gauging_toggle(void)
+{
+	if(bq40z80_write_16bit_reg(0x00, 0x0021) != 0)
+		return 1;
+
+	return 0;
+}
+
+// -----------------------------------------------------------------------
+// Toggle FET_EN (MAC 0x0022)
+// -----------------------------------------------------------------------
+uchar bq40z80_fet_en_toggle(void)
+{
+	if(bq40z80_write_16bit_reg(0x00, 0x0022) != 0)
+		return 1;
+
+	return 0;
+}
+
+// -----------------------------------------------------------------------
+// Read a data flash row (needs unsealed mode)
+// -----------------------------------------------------------------------
+uchar bq40z80_df_read_row(ushort addr, uchar *buf, uchar len)
+{
+	if((addr < BQ40Z80_DF_START)||(addr > BQ40Z80_DF_END))
+		return 1;
+
+	return bq40z80_mac_read(addr, buf, len);
+}
+
+// -----------------------------------------------------------------------
 void bq40z80_init(void)
 {
 	//ulong err;

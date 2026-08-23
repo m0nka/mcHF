@@ -31,6 +31,7 @@
 #include "keypad_proc.h"
 
 #include "ui_proc.h"
+#include "menu_proc.h"
 
 static uint32_t LCD_X_Size = 0;
 static uint32_t LCD_Y_Size = 0;
@@ -124,20 +125,6 @@ uchar bare_lcd_init(void)
 	HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET); 			// backlight on
 
 	lcd_high_Clear(LCD_COLOR_BLACK);
-
-	//draw_atlas_ui();
-
-	// Right side info bar
-	//lcd_high_DrawRect(1, 345, 479, 134, LCD_COLOR_WHITE);							// rect outline
-
-	lcd_high_DrawRect(290, 345, 189, 134, LCD_COLOR_LIGHTGRAY);
-	lcd_high_DrawRect(  1, 345, 279, 134, LCD_COLOR_LIGHTBLUE);
-	lcd_high_DrawRect(  1,  19,  70, 320, LCD_COLOR_LIGHTCYAN);
-	//
-	//lcd_high_SetBackColor(LCD_COLOR_WHITE);
-	lcd_high_SetTextColor(LCD_COLOR_BLACK);
-	lcd_high_DisplayStringAt(LINE(0) + 1, 335, (uint8_t *)"boot version", LEFT_MODE);	// label
-	lcd_high_DisplayStringAt(LINE(2) + 1, 335, (uint8_t *)"coop version", LEFT_MODE);	// label
 
 	return 0;
 }
@@ -315,233 +302,18 @@ void ui_proc_show_keyboard(void)
 
 void ui_proc_bootup(void)
 {
-	char 	buff[200];
-	int 	line = 1;
-
 	// Init LCD
-    if(bare_lcd_init() != 0)
-    {
-    	goto run_radio;
-    }
+	if(bare_lcd_init() != 0)
+		return;
 
-    // Text attributes
-	lcd_high_SetBackColor(LCD_COLOR_BLACK);
-	lcd_high_SetTextColor(LCD_COLOR_WHITE);
-	lcd_high_SetFont(&Font16);
-
-	// -----------------------------------------------------------------------------------------------
-	// -----------------------------------------------------------------------------------------------
-	sprintf(buff, "%s(via F4)", DEVICE_STRING);
-	lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)buff, LEFT_MODE);
-	line += 2;
-	sprintf(buff, "%d.%d.%d.%d", MCHF_L_VER_MAJOR, MCHF_L_VER_MINOR, MCHF_L_VER_RELEASE, MCHF_L_VER_BUILD);
-	lcd_high_DisplayStringAt(LINE(1) + 1, 350, (uint8_t *)buff, LEFT_MODE);	// label
-
-	// Show bms flags in the right panel
-	ui_proc_show_bms_flags();
-
-    // Text attributes
-	lcd_high_SetBackColor(LCD_COLOR_BLACK);
-	lcd_high_SetTextColor(LCD_COLOR_WHITE);
-	lcd_high_SetFont(&Font16);
-
-	// -----------------------------------------------------------------------------------------------
-	// -----------------------------------------------------------------------------------------------
-	// Test for general boot error (clocks, lcd, etc)
-	lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing BOOT UP....", LEFT_MODE);
-
-	if(gen_boot_reason_err == 0)
-	{
-		//HAL_Delay(500);
-		lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing BOOT UP....PASS", LEFT_MODE);
-	}
-	else
-	{
-		//HAL_Delay(500);
-		sprintf(buff, "Update Firmware....FAIL(%d)", gen_boot_reason_err);
-		lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)buff, LEFT_MODE);
-	}
-	line++;
-
-	// -----------------------------------------------------------------------------------------------
-	// -----------------------------------------------------------------------------------------------
-	// Test BMS
-	lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing BMS........", LEFT_MODE);
-
-	if((batt_status != 0xFFFF)&&(batt_status != 0))
-	{
-		//HAL_Delay(500);
-		lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing BMS........PASS", LEFT_MODE);
-	}
-	else
-	{
-		//HAL_Delay(500);
-		sprintf(buff, "Testing BMS........FAIL(%04x)", batt_status);
-		lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)buff, LEFT_MODE);
-	}
-	line++;
-
-	// -----------------------------------------------------------------------------------------------
-	// -----------------------------------------------------------------------------------------------
-	// SDRAM test
-	lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing SDRAM......", LEFT_MODE);
-
-	if(sdram_test() != 0)
-	{
-		//HAL_Delay(500);
-		lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing SDRAM......FAIL.", LEFT_MODE);
-		goto stall;
-	}
-	else
-	{
-		//HAL_Delay(500);
-		lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing SDRAM......PASS", LEFT_MODE);
-	}
-	line++;
-
-	// -----------------------------------------------------------------------------------------------
-	// -----------------------------------------------------------------------------------------------
-	// SD Card test
-	lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing SD Card....", LEFT_MODE);
-
-	if(test_sd_card() == 0)
-	{
-		//HAL_Delay(500);
-		lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing SD Card....PASS", LEFT_MODE);
-		line++;
-
-		if(reset_reason == RESET_UPDATE_FW)
-		{
-			//HAL_Delay(500);
-			lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Update Firmware....", LEFT_MODE);
-
-			uchar res = 0;//update_radio();
-			if(res == 0)
-			{
-				//HAL_Delay(500);
-				lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Update Firmware....PASS", LEFT_MODE);
-			}
-			else
-			{
-				//HAL_Delay(500);
-				sprintf(buff, "Update Firmware....FAIL(%d)", res);
-				lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)buff, LEFT_MODE);
-			}
-			line++;
-		}
-
-		#if 0
-		lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Upload DSP Core....", LEFT_MODE);
-		uchar d_res = load_default_dsp_core(1);
-		if(d_res == 0)
-			lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Upload DSP Core....PASS", LEFT_MODE);
-		else
-		{
-			sprintf(buff, "Upload DSP Core....FAIL(%d)", d_res);
-			lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)buff, LEFT_MODE);
-		}
-		line++;
-		#endif
-
-		// Clean up anyway, do we need on fail sd test as well ?
-		fs_cleanup();
-	}
-	else
-	{
-		//HAL_Delay(500);
-		lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing SD Card....FAIL", LEFT_MODE);
-		line++;
-	}
-
-	// -----------------------------------------------------------------------------------------------
-	// -----------------------------------------------------------------------------------------------
-	// Firmware test
-//!	lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing Firmware...", LEFT_MODE);
-
-run_radio:
-	return;
-
-stall:
-	return;
-
-
-#if 0
-	if(is_firmware_valid() == 0)
-	{
-		//HAL_Delay(500);
-//!		lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing Firmware...PASS", LEFT_MODE);
-		line++;
-
-//!		lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Booting to radio...", LEFT_MODE);
-		//HAL_Delay(2000);
-
-		// Jump
-		jump_to_fw(RADIO_FIRM_ADDR);
-	}
-
-	HAL_Delay(500);
-	lcd_high_DisplayStringAt(LINE(line), LEFT_POS, (uchar *)"Testing Firmware...FAIL", LEFT_MODE);
-	line++;
-
-	// Test - chip blank programming
-	#if 0
-	HAL_PWR_EnableBkUpAccess();
-	WRITE_REG(BKP_REG_RESET_REASON, RESET_UPDATE_FW);
-	HAL_PWR_DisableBkUpAccess();
-	NVIC_SystemReset();
-	#endif
-
-	// -----------------------------------------------------------------------------------------------
-	// -----------------------------------------------------------------------------------------------
-	// Stall, and power off eventually
-stall:
-
-	ulong pc = 0;
-	while(1)
-	{
-		HAL_Delay(1000);
-		pc++;
-
-		// On timeout go to sleep, to prevent draining of batteries
-		if(pc > 25)
-		{
-			lcd_high_DisplayStringAt(LINE(line), 10, (uchar *)"Testing Power Off...", LEFT_MODE);
-			line++;
-
-			printf("== will power off ==\r\n");
-			power_off_x(0);
-		}
-	}
-#endif
+	// Start the menu system
+	menu_proc_init();
 }
 
 void ui_proc(void)
 {
-	static ulong ui_timer = 0;
-
-	// Run timer
-	if(ui_timer == 0)
-		ui_timer = sys_timer;
-	else if((ui_timer + 500) < sys_timer)
-		ui_timer = sys_timer;
-	else
-		return;
-
-	// Toggle backlight, to track fading problem on 4.3inch LCD
-	#if 0
-	static uchar xl = 0;
-	if(xl++ > 10)
-	{
-		HAL_GPIO_TogglePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN);
-		xl = 0;
-	}
-	#endif
-
-	ui_proc_show_bms_flags();
-	ui_proc_show_charge_msg();
-	ui_proc_show_soc();
-	ui_proc_show_charge_data();
-	ui_proc_show_keyboard();
+	// Menu system handles all UI painting
+	menu_proc();
 }
 
 void ui_proc_init(void)

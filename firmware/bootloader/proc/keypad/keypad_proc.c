@@ -14,6 +14,7 @@
 #include "mchf_pro_board.h"
 
 #include "keypad_proc.h"
+#include "menu_proc.h"
 
 // Local keypad state
 struct 			KEYPAD_STATE			ks;
@@ -164,24 +165,14 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 {
 	//printf("x=%d, y=%d, hld=%d, rel=%d\r\n", x, y, hold, release);
 
-	// Button held on start
-	if((x == 1)&&(y == 4)&&(hold == 1)&&(release == 1))
-	{
-		//printf("stay in boot request  \r\n");
-		stay_in_boot = 1;
-	}
-
-	// Button held on start
-	if((x == 5)&&(y == 3)&&(hold == 1)&&(release == 1))
-	{
-		//printf("leave boot request  \r\n");
-		stay_in_boot = 0;
-	}
-
+	// Dispatch to the menu system on button press (not hold)
 	if((hold == 0)&&(release == 0))
 	{
 		ks.curr_x = x;
 		ks.curr_y = y;
+
+		// Feed key event to menu (short press)
+		menu_proc_key_event(x, y, 0);
 	}
 }
 

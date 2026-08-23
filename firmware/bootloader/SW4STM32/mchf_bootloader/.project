@@ -522,6 +522,11 @@
 			<locationURI>PARENT-3-PROJECT_LOC/base_hw/hw/hw_uart.c</locationURI>
 		</link>
 		<link>
+			<name>proc/bms/bms_gold.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/bms/bms_gold.c</locationURI>
+		</link>
+		<link>
 			<name>proc/bms/bms_proc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/bms/bms_proc.c</locationURI>
@@ -535,6 +540,11 @@
 			<name>proc/selftest/selftest_proc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/selftest/selftest_proc.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ui/menu_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/menu_proc.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/ui_proc.c</name>

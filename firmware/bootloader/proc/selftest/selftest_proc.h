@@ -13,14 +13,19 @@
 #ifndef __SELFTEST_PROC_H
 #define __SELFTEST_PROC_H
 
-int 	sdram_test(void);
+int     sdram_test(void);
 
-int 	test_sd_card(void);
-void 	fs_cleanup(void);
+int     test_sd_card(void);
+void    fs_cleanup(void);
 
-ulong 	is_firmware_valid(void);
+ulong   is_firmware_valid(void);
 
-void selftest_proc();
-void selftest_proc_init();
+void selftest_proc(void);
+void selftest_proc_init(void);
+
+// FW update/boot functions (implemented in mchf_pro_board.c)
+uchar   update_radio(void);
+uchar   update_baseband(void);
+void    jump_to_fw(uint32_t addr);
 
 #endif
