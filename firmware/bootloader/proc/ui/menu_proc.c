@@ -28,6 +28,7 @@
 extern ulong   sys_timer;
 extern uchar   gen_boot_reason_err;
 extern ushort  batt_status;
+extern uchar   flash_source;           // 0 = SD, 1 = USB (in mchf_pro_board.c)
 extern uchar   charge_mode;
 extern uchar   soc;
 extern short   pack_curr;
@@ -108,6 +109,19 @@ static void action_bms_gold_flash(void);
 static void action_system_info(void);
 static void action_boot_radio(void);
 
+// Extended HW test actions
+static void action_5v_toggle(void);
+static void action_fan_toggle(void);
+static void action_leds_toggle(void);
+static void action_backlight_cycle(void);
+static void action_bq25730_ch224a(void);
+static void action_codec_i2c(void);
+static void action_si5351_i2c(void);
+static void action_gt911_i2c(void);
+static void action_gps_check(void);
+static void action_lora_check(void);
+static void action_encoders_read(void);
+
 // -----------------------------------------------------------------------
 // Menu definitions
 // -----------------------------------------------------------------------
@@ -125,17 +139,57 @@ static const menu_item_t main_menu[] = {
 };
 
 static const menu_item_t hw_menu[] = {
-    { "[F1] SDRAM Test",        MENU_BTN_1 },
-    { "[F2] SD Card Test",      MENU_BTN_2 },
-    { "[F3] BMS Comms Test",    MENU_BTN_3 },
-    { "[F4] Run All Tests",     MENU_BTN_4 },
+    { "[F1] Core (RAM/SD/BMS)", MENU_BTN_1 },
+    { "[F2] Power/GPIO",        MENU_BTN_2 },
+    { "[F3] I2C Bus",           MENU_BTN_3 },
+    { "[F4] Peripherals",       MENU_BTN_4 },
     { "[F5] Back",              MENU_BTN_5 },
 };
 
-static const menu_item_t fw_menu[] = {
-    { "[F1] App Proc (SD)",     MENU_BTN_1 },
-    { "[F2] Baseband DSP (SD)", MENU_BTN_2 },
-    { "[F3] ---",               MENU_BTN_3 },
+static const menu_item_t hw_core_menu[] = {
+    { "[F1] SDRAM Test",        MENU_BTN_1 },
+    { "[F2] SD Card Test",      MENU_BTN_2 },
+    { "[F3] BMS Comms Test",    MENU_BTN_3 },
+    { "[F4] Run All Core",      MENU_BTN_4 },
+    { "[F5] Back",              MENU_BTN_5 },
+};
+
+static const menu_item_t hw_power_menu[] = {
+    { "[F1] 5V/8V Toggle",      MENU_BTN_1 },
+    { "[F2] Fan Toggle",        MENU_BTN_2 },
+    { "[F3] LEDs Toggle",       MENU_BTN_3 },
+    { "[F4] Backlight Cycle",   MENU_BTN_4 },
+    { "[F5] Back",              MENU_BTN_5 },
+};
+
+static const menu_item_t hw_i2c_menu[] = {
+    { "[F1] BQ25730 + CH224A",  MENU_BTN_1 },
+    { "[F2] Codec (CS4245)",    MENU_BTN_2 },
+    { "[F3] SI5351 Clock Gen",  MENU_BTN_3 },
+    { "[F4] GT911 Touch",       MENU_BTN_4 },
+    { "[F5] Back",              MENU_BTN_5 },
+};
+
+static const menu_item_t hw_periph_menu[] = {
+    { "[F1] GPS Check",         MENU_BTN_1 },
+    { "[F2] LoRa Check",        MENU_BTN_2 },
+    { "[F3] Encoders Read",     MENU_BTN_3 },
+    { "[F4] ---",               MENU_BTN_4 },
+    { "[F5] Back",              MENU_BTN_5 },
+};
+
+static const menu_item_t fw_menu_sd[] = {
+    { "[F1] Flash App Proc",    MENU_BTN_1 },
+    { "[F2] Flash Baseband",    MENU_BTN_2 },
+    { "[F3] Source: SD Card",   MENU_BTN_3 },
+    { "[F4] ---",               MENU_BTN_4 },
+    { "[F5] Back",              MENU_BTN_5 },
+};
+
+static const menu_item_t fw_menu_usb[] = {
+    { "[F1] Flash App Proc",    MENU_BTN_1 },
+    { "[F2] Flash Baseband",    MENU_BTN_2 },
+    { "[F3] Source: USB Stick",  MENU_BTN_3 },
     { "[F4] ---",               MENU_BTN_4 },
     { "[F5] Back",              MENU_BTN_5 },
 };
@@ -153,7 +207,11 @@ static const menu_item_t *menu_get_items(uchar *count)
     switch(menu_id)
     {
         case MENU_HW_TESTS:    *count = 5; return hw_menu;
-        case MENU_FW_UPDATE:   *count = 5; return fw_menu;
+        case MENU_HW_CORE:     *count = 5; return hw_core_menu;
+        case MENU_HW_POWER:    *count = 5; return hw_power_menu;
+        case MENU_HW_I2C:      *count = 5; return hw_i2c_menu;
+        case MENU_HW_PERIPH:   *count = 5; return hw_periph_menu;
+        case MENU_FW_UPDATE:   *count = 5; return flash_source ? fw_menu_usb : fw_menu_sd;
         case MENU_BMS_TOOLS:   *count = 5; return bms_menu;
         default:               *count = 5; return main_menu;
     }
@@ -164,7 +222,11 @@ static const char *menu_get_title(void)
     switch(menu_id)
     {
         case MENU_HW_TESTS:    return "Hardware Tests";
-        case MENU_FW_UPDATE:   return "Firmware Update";
+        case MENU_HW_CORE:     return "HW > Core Tests";
+        case MENU_HW_POWER:    return "HW > Power/GPIO";
+        case MENU_HW_I2C:      return "HW > I2C Bus";
+        case MENU_HW_PERIPH:   return "HW > Peripherals";
+        case MENU_FW_UPDATE:   return flash_source ? "FW Update [USB]" : "FW Update [SD]";
         case MENU_BMS_TOOLS:   return "BMS Tools";
         default:               return "Main Menu";
     }
@@ -438,7 +500,10 @@ static void action_fw_app(void)
 {
     menu_log_clear();
     menu_log_add("App proc FW update...");
-    menu_log_add("Reading radio.bin from SD...");
+    if(flash_source)
+        menu_log_add("Reading radio.bin from USB...");
+    else
+        menu_log_add("Reading radio.bin from SD...");
     menu_redraw_content();
 
     uchar res = update_radio();
@@ -459,13 +524,16 @@ static void action_fw_baseband(void)
 {
     menu_log_clear();
     menu_log_add("Baseband FW update...");
-    menu_log_add("Reading baseband.bin from SD...");
+    if(flash_source)
+        menu_log_add("Reading baseband.bin from USB..");
+    else
+        menu_log_add("Flashing baseband.bin to bank2");
     menu_redraw_content();
 
     uchar res = update_baseband();
 
     if(res == 0)
-        menu_log_add("Baseband update...PASS");
+        menu_log_add("Baseband flash....PASS");
     else
     {
         char buff[48];
@@ -600,6 +668,188 @@ static void action_boot_radio(void)
 }
 
 // -----------------------------------------------------------------------
+// Extended HW test actions
+// -----------------------------------------------------------------------
+static void action_5v_toggle(void)
+{
+    int state = test_5v_toggle();
+
+    if(state)
+        menu_log_add("5V/8V rail.......ON");
+    else
+        menu_log_add("5V/8V rail.......OFF");
+
+    menu_redraw_content();
+}
+
+static void action_fan_toggle(void)
+{
+    int state = test_fan_toggle();
+
+    if(state)
+        menu_log_add("Fan..............ON");
+    else
+        menu_log_add("Fan..............OFF");
+
+    menu_redraw_content();
+}
+
+static void action_leds_toggle(void)
+{
+    int state = test_leds_toggle();
+
+    if(state)
+        menu_log_add("LEDs (PWR+TX)....ON");
+    else
+        menu_log_add("LEDs (PWR+TX)....OFF");
+
+    menu_redraw_content();
+}
+
+static void action_backlight_cycle(void)
+{
+    char buff[48];
+    int level = test_backlight_cycle();
+
+    static const char *names[] = {
+        "OFF", "25%", "50%", "75%", "100%"
+    };
+
+    sprintf(buff, "Backlight........%s", names[level]);
+    menu_log_add(buff);
+    menu_redraw_content();
+}
+
+static void action_bq25730_ch224a(void)
+{
+    uchar bq_ok = 0, ch_ok = 0;
+
+    menu_log_add("I2C scan BQ25730+CH224A..");
+    menu_redraw_content();
+
+    test_bq25730_ch224a(&bq_ok, &ch_ok);
+
+    if(bq_ok)
+        menu_log_add("BQ25730 (0xD6)...FOUND");
+    else
+        menu_log_add("BQ25730 (0xD6)...MISSING");
+
+    if(ch_ok)
+        menu_log_add("CH224A  (0x44)...FOUND");
+    else
+        menu_log_add("CH224A  (0x44)...MISSING");
+
+    menu_redraw_content();
+}
+
+static void action_codec_i2c(void)
+{
+    menu_log_add("CS4245 I2C check (0x98).");
+    menu_redraw_content();
+
+    int res = test_codec_i2c();
+
+    if(res == 0)
+        menu_log_add("CS4245...........PASS");
+    else
+    {
+        char buff[48];
+        sprintf(buff, "CS4245...........FAIL(%d)", res);
+        menu_log_add(buff);
+    }
+
+    menu_redraw_content();
+}
+
+static void action_si5351_i2c(void)
+{
+    menu_log_add("SI5351 I2C check (0xC0).");
+    menu_redraw_content();
+
+    int res = test_si5351_i2c();
+
+    if(res == 0)
+        menu_log_add("SI5351...........PASS");
+    else
+    {
+        char buff[48];
+        sprintf(buff, "SI5351...........FAIL(%d)", res);
+        menu_log_add(buff);
+    }
+
+    menu_redraw_content();
+}
+
+static void action_gt911_i2c(void)
+{
+    menu_log_add("GT911 I2C check........");
+    menu_redraw_content();
+
+    int res = test_gt911_i2c();
+
+    if(res == 0)
+        menu_log_add("GT911 Touch......PASS");
+    else
+    {
+        char buff[48];
+        sprintf(buff, "GT911 Touch......FAIL(%d)", res);
+        menu_log_add(buff);
+    }
+
+    menu_redraw_content();
+}
+
+static void action_gps_check(void)
+{
+    menu_log_add("GPS check (5V on)......");
+    menu_redraw_content();
+
+    int res = test_gps_check();
+
+    if(res == 0)
+        menu_log_add("GPS..............PASS");
+    else
+        menu_log_add("GPS..............FAIL");
+
+    menu_redraw_content();
+}
+
+static void action_lora_check(void)
+{
+    menu_log_add("LoRa check (5V on).....");
+    menu_redraw_content();
+
+    int res = test_lora_check();
+
+    if(res == 0)
+        menu_log_add("LoRa (SX1262)....PASS");
+    else
+        menu_log_add("LoRa (SX1262)....FAIL");
+
+    menu_redraw_content();
+}
+
+static void action_encoders_read(void)
+{
+    char buff[48];
+    uchar enc1 = 0, enc2 = 0;
+
+    menu_log_add("Sampling encoders (1s)...");
+    menu_redraw_content();
+
+    test_encoders(&enc1, &enc2);
+
+    sprintf(buff, "ENC1(vol) count: %d", (signed char)enc1);
+    menu_log_add(buff);
+
+    sprintf(buff, "ENC2(frq) count: %d", (signed char)enc2);
+    menu_log_add(buff);
+
+    menu_log_add("Rotate knobs, press again");
+    menu_redraw_content();
+}
+
+// -----------------------------------------------------------------------
 // Process a key event in the current menu
 // -----------------------------------------------------------------------
 static void menu_process_key(uchar key)
@@ -654,6 +904,46 @@ static void menu_process_key(uchar key)
             switch(key)
             {
                 case MENU_BTN_1:
+                    menu_id = MENU_HW_CORE;
+                    menu_log_clear();
+                    menu_dirty = 1;
+                    break;
+
+                case MENU_BTN_2:
+                    menu_id = MENU_HW_POWER;
+                    menu_log_clear();
+                    menu_dirty = 1;
+                    break;
+
+                case MENU_BTN_3:
+                    menu_id = MENU_HW_I2C;
+                    menu_log_clear();
+                    menu_dirty = 1;
+                    break;
+
+                case MENU_BTN_4:
+                    menu_id = MENU_HW_PERIPH;
+                    menu_log_clear();
+                    menu_dirty = 1;
+                    break;
+
+                case MENU_BTN_5:
+                    menu_id = MENU_MAIN;
+                    menu_log_clear();
+                    menu_dirty = 1;
+                    break;
+
+                default:
+                    break;
+            }
+            break;
+        }
+
+        case MENU_HW_CORE:
+        {
+            switch(key)
+            {
+                case MENU_BTN_1:
                     action_running = 1;
                     action_hw_sdram();
                     action_running = 0;
@@ -678,7 +968,121 @@ static void menu_process_key(uchar key)
                     break;
 
                 case MENU_BTN_5:
-                    menu_id = MENU_MAIN;
+                    menu_id = MENU_HW_TESTS;
+                    menu_log_clear();
+                    menu_dirty = 1;
+                    break;
+
+                default:
+                    break;
+            }
+            break;
+        }
+
+        case MENU_HW_POWER:
+        {
+            switch(key)
+            {
+                case MENU_BTN_1:
+                    action_running = 1;
+                    action_5v_toggle();
+                    action_running = 0;
+                    break;
+
+                case MENU_BTN_2:
+                    action_running = 1;
+                    action_fan_toggle();
+                    action_running = 0;
+                    break;
+
+                case MENU_BTN_3:
+                    action_running = 1;
+                    action_leds_toggle();
+                    action_running = 0;
+                    break;
+
+                case MENU_BTN_4:
+                    action_running = 1;
+                    action_backlight_cycle();
+                    action_running = 0;
+                    break;
+
+                case MENU_BTN_5:
+                    menu_id = MENU_HW_TESTS;
+                    menu_log_clear();
+                    menu_dirty = 1;
+                    break;
+
+                default:
+                    break;
+            }
+            break;
+        }
+
+        case MENU_HW_I2C:
+        {
+            switch(key)
+            {
+                case MENU_BTN_1:
+                    action_running = 1;
+                    action_bq25730_ch224a();
+                    action_running = 0;
+                    break;
+
+                case MENU_BTN_2:
+                    action_running = 1;
+                    action_codec_i2c();
+                    action_running = 0;
+                    break;
+
+                case MENU_BTN_3:
+                    action_running = 1;
+                    action_si5351_i2c();
+                    action_running = 0;
+                    break;
+
+                case MENU_BTN_4:
+                    action_running = 1;
+                    action_gt911_i2c();
+                    action_running = 0;
+                    break;
+
+                case MENU_BTN_5:
+                    menu_id = MENU_HW_TESTS;
+                    menu_log_clear();
+                    menu_dirty = 1;
+                    break;
+
+                default:
+                    break;
+            }
+            break;
+        }
+
+        case MENU_HW_PERIPH:
+        {
+            switch(key)
+            {
+                case MENU_BTN_1:
+                    action_running = 1;
+                    action_gps_check();
+                    action_running = 0;
+                    break;
+
+                case MENU_BTN_2:
+                    action_running = 1;
+                    action_lora_check();
+                    action_running = 0;
+                    break;
+
+                case MENU_BTN_3:
+                    action_running = 1;
+                    action_encoders_read();
+                    action_running = 0;
+                    break;
+
+                case MENU_BTN_5:
+                    menu_id = MENU_HW_TESTS;
                     menu_log_clear();
                     menu_dirty = 1;
                     break;
@@ -703,6 +1107,17 @@ static void menu_process_key(uchar key)
                     action_running = 1;
                     action_fw_baseband();
                     action_running = 0;
+                    break;
+
+                case MENU_BTN_3:
+                    // Toggle flash source: SD <-> USB
+                    flash_source = flash_source ? 0 : 1;
+                    menu_log_clear();
+                    if(flash_source)
+                        menu_log_add("Source: USB Stick");
+                    else
+                        menu_log_add("Source: SD Card");
+                    menu_dirty = 1;
                     break;
 
                 case MENU_BTN_5:

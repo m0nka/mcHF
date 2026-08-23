@@ -28,6 +28,7 @@
 #include "hw_flash.h"
 
 #include "selftest_proc.h"
+#include "shared_i2c.h"
 
 extern SD_HandleTypeDef hsd_sdmmc[1];
 FATFS SDFatFs;  						/* File system object for SD card logical drive */
@@ -259,6 +260,439 @@ ulong is_firmware_valid(void)
 
 	// ToDo: test CRC
 	// ...
+
+	return 0;
+}
+
+// ---------------------------------------------------------------
+// Extended HW tests
+// ---------------------------------------------------------------
+
+// I2C4 handle defined in shared_i2c.c
+extern I2C_HandleTypeDef hbus_i2c1;
+
+// ---------------------------------------------------------------
+// Power/GPIO tests
+// ---------------------------------------------------------------
+
+static uchar vcc_5v_state = 0;
+
+int test_5v_toggle(void)
+{
+	vcc_5v_state ^= 1;
+
+#ifndef REV_0_8_4_PATCH
+	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON,
+					  vcc_5v_state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+#else
+	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON,
+					  vcc_5v_state ? GPIO_PIN_RESET : GPIO_PIN_SET);
+#endif
+
+	return vcc_5v_state;
+}
+
+static uchar fan_state = 0;
+
+int test_fan_toggle(void)
+{
+	LL_GPIO_InitTypeDef gpio = {0};
+
+	fan_state ^= 1;
+
+	// Set output level BEFORE switching to output mode (match app code)
+	if(fan_state)
+		LL_GPIO_SetOutputPin(FAN_CNTR_PORT, FAN_CNTR);
+	else
+		LL_GPIO_ResetOutputPin(FAN_CNTR_PORT, FAN_CNTR);
+
+	gpio.Pin       = FAN_CNTR;
+	gpio.Mode      = LL_GPIO_MODE_OUTPUT;
+	gpio.Pull      = LL_GPIO_PULL_DOWN;
+	gpio.Speed     = LL_GPIO_SPEED_LOW;
+	gpio.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	LL_GPIO_Init(FAN_CNTR_PORT, &gpio);
+
+	return fan_state;
+}
+
+static uchar leds_state = 0;
+
+int test_leds_toggle(void)
+{
+	leds_state ^= 1;
+
+	if(leds_state)
+	{
+		LL_GPIO_SetOutputPin(ON_LED_PORT, ON_LED);
+		LL_GPIO_SetOutputPin(TX_LED_PORT, TX_LED);
+	}
+	else
+	{
+		LL_GPIO_ResetOutputPin(ON_LED_PORT, ON_LED);
+		LL_GPIO_ResetOutputPin(TX_LED_PORT, TX_LED);
+	}
+
+	return leds_state;
+}
+
+static uchar bl_level = 4;
+
+int test_backlight_cycle(void)
+{
+	static const ushort duties[] = { 0, 250, 500, 750, 999 };
+
+	bl_level = (bl_level + 1) % 5;
+	TIM1->CCR2 = duties[bl_level];
+
+	return bl_level;
+}
+
+// ---------------------------------------------------------------
+// I2C bus tests
+// ---------------------------------------------------------------
+
+int test_bq25730_ch224a(uchar *bq_ok, uchar *ch_ok)
+{
+	*bq_ok = 0;
+	*ch_ok = 0;
+
+	// BQ25730 at 0xD6 (0x6B << 1)
+	if(shared_i2c_is_ready(0xD6, 3) == 0)
+	{
+		*bq_ok = 1;
+
+		// Read ManufacturerID (reg 0x2E) and ChipID (reg 0x2F)
+		uchar data[2] = {0, 0};
+		shared_i2c_read_reg(0xD6, 0x2E, &data[0], 1);
+		shared_i2c_read_reg(0xD6, 0x2F, &data[1], 1);
+		printf("bq25730: manuf=0x%02x chip=0x%02x\r\n", data[0], data[1]);
+	}
+
+	// CH224A at 0x44 (0x22 << 1)
+	if(shared_i2c_is_ready(0x44, 3) == 0)
+		*ch_ok = 1;
+
+	return (*bq_ok && *ch_ok) ? 0 : 1;
+}
+
+int test_codec_i2c(void)
+{
+	GPIO_InitTypeDef gpio = {0};
+
+	// Take codec out of reset (active low reset)
+	gpio.Pin   = CODEC_RESET;
+	gpio.Mode  = GPIO_MODE_OUTPUT_PP;
+	gpio.Pull  = GPIO_NOPULL;
+	gpio.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(CODEC_RESET_PORT, &gpio);
+	HAL_GPIO_WritePin(CODEC_RESET_PORT, CODEC_RESET, GPIO_PIN_SET);
+	HAL_Delay(50);
+
+	// CS4245 needs a first register read before comms work reliably
+	// Read chip ID register (0x01) — shared_i2c handles pin swap to codec
+	uchar chip_id = 0;
+	int res = shared_i2c_read_reg(0x98, 0x01, &chip_id, 1);
+
+	if(res == 0)
+		printf("cs4245: chip_id=0x%02x\r\n", chip_id);
+	else
+		printf("cs4245: read err %d\r\n", res);
+
+	// Put codec back in reset
+	HAL_GPIO_WritePin(CODEC_RESET_PORT, CODEC_RESET, GPIO_PIN_RESET);
+
+	return res;
+}
+
+int test_si5351_i2c(void)
+{
+	I2C_HandleTypeDef hi2c2 = {0};
+	GPIO_InitTypeDef gpio;
+
+	// Enable I2C2 clock
+	__HAL_RCC_I2C2_CLK_ENABLE();
+	__HAL_RCC_I2C2_FORCE_RESET();
+	__HAL_RCC_I2C2_RELEASE_RESET();
+
+	// Configure PH4 (SCL) and PH5 (SDA) as I2C2
+	gpio.Mode      = GPIO_MODE_AF_OD;
+	gpio.Pull      = GPIO_PULLUP;
+	gpio.Speed     = GPIO_SPEED_FREQ_HIGH;
+	gpio.Alternate = GPIO_AF4_I2C2;
+
+	gpio.Pin = GPIO_PIN_4;
+	HAL_GPIO_Init(GPIOH, &gpio);
+	gpio.Pin = GPIO_PIN_5;
+	HAL_GPIO_Init(GPIOH, &gpio);
+
+	// Init I2C2 (reuse timing from I2C4)
+	hi2c2.Instance             = I2C2;
+	hi2c2.Init.Timing          = hbus_i2c1.Init.Timing;
+	hi2c2.Init.OwnAddress1     = 0;
+	hi2c2.Init.AddressingMode  = I2C_ADDRESSINGMODE_7BIT;
+	hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+	hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+	hi2c2.Init.NoStretchMode   = I2C_NOSTRETCH_DISABLE;
+
+	if(HAL_I2C_Init(&hi2c2) != HAL_OK)
+	{
+		__HAL_RCC_I2C2_CLK_DISABLE();
+		return 1;
+	}
+
+	// Check SI5351 at 0xC0 (0x60 << 1)
+	int res = 0;
+	if(HAL_I2C_IsDeviceReady(&hi2c2, 0xC0, 3, 100) != HAL_OK)
+		res = 2;
+
+	// Cleanup
+	HAL_I2C_DeInit(&hi2c2);
+	__HAL_RCC_I2C2_CLK_DISABLE();
+	HAL_GPIO_DeInit(GPIOH, GPIO_PIN_4 | GPIO_PIN_5);
+
+	return res;
+}
+
+int test_gt911_i2c(void)
+{
+	I2C_HandleTypeDef hi2c_ts = {0};
+	GPIO_InitTypeDef gpio;
+
+	// Touch uses I2C1 on PB6/PB7
+	__HAL_RCC_I2C1_CLK_ENABLE();
+	__HAL_RCC_I2C1_FORCE_RESET();
+	__HAL_RCC_I2C1_RELEASE_RESET();
+
+	// Configure PB6 (SCL) and PB7 (SDA)
+	gpio.Mode      = GPIO_MODE_AF_OD;
+	gpio.Pull      = GPIO_PULLUP;
+	gpio.Speed     = GPIO_SPEED_FREQ_HIGH;
+	gpio.Alternate = GPIO_AF4_I2C1;
+
+	gpio.Pin = TOUCH_SCK_SCL_PIN;
+	HAL_GPIO_Init(TOUCH_SCK_SCL_GPIO_PORT, &gpio);
+	gpio.Pin = TOUCH_SDA_SDA_PIN;
+	HAL_GPIO_Init(TOUCH_SDA_SDA_GPIO_PORT, &gpio);
+
+	// Init I2C1 (reuse timing from I2C4)
+	hi2c_ts.Instance             = I2C1;
+	hi2c_ts.Init.Timing          = hbus_i2c1.Init.Timing;
+	hi2c_ts.Init.OwnAddress1     = 0;
+	hi2c_ts.Init.AddressingMode  = I2C_ADDRESSINGMODE_7BIT;
+	hi2c_ts.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+	hi2c_ts.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+	hi2c_ts.Init.NoStretchMode   = I2C_NOSTRETCH_DISABLE;
+
+	if(HAL_I2C_Init(&hi2c_ts) != HAL_OK)
+	{
+		__HAL_RCC_I2C1_CLK_DISABLE();
+		return 1;
+	}
+
+	// Try primary address 0xBA, then alternate 0x28
+	int res = 0;
+	if(HAL_I2C_IsDeviceReady(&hi2c_ts, 0xBA, 3, 100) != HAL_OK)
+	{
+		if(HAL_I2C_IsDeviceReady(&hi2c_ts, 0x28, 3, 100) != HAL_OK)
+			res = 2;
+	}
+
+	// Cleanup
+	HAL_I2C_DeInit(&hi2c_ts);
+	__HAL_RCC_I2C1_CLK_DISABLE();
+	HAL_GPIO_DeInit(TOUCH_SCK_SCL_GPIO_PORT, TOUCH_SCK_SCL_PIN);
+	HAL_GPIO_DeInit(TOUCH_SDA_SDA_GPIO_PORT, TOUCH_SDA_SDA_PIN);
+
+	return res;
+}
+
+// ---------------------------------------------------------------
+// Peripheral tests
+// ---------------------------------------------------------------
+
+// Ensure 5V rail is on (GPS, LoRa, etc. need it)
+static void ensure_5v_on(void)
+{
+#ifndef REV_0_8_4_PATCH
+	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, GPIO_PIN_SET);
+#else
+	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, GPIO_PIN_RESET);
+#endif
+	vcc_5v_state = 1;
+
+	// Let rail stabilize
+	HAL_Delay(50);
+}
+
+int test_gps_check(void)
+{
+	GPIO_InitTypeDef gpio = {0};
+
+	printf("gps: 5v + enabling...\r\n");
+
+	// GPS module needs the 5V rail
+	ensure_5v_on();
+
+	// Enable GPS power
+	gpio.Pin   = GPS_EN_PIN;
+	gpio.Mode  = GPIO_MODE_OUTPUT_PP;
+	gpio.Pull  = GPIO_NOPULL;
+	gpio.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPS_EN_PORT, &gpio);
+	HAL_GPIO_WritePin(GPS_EN_PORT, GPS_EN_PIN, GPIO_PIN_SET);
+
+	// Wait for GPS to boot (M10 needs ~100ms)
+	HAL_Delay(300);
+
+	// Check GPS RX line (MCU RX <- GPS TX on PG9)
+	// Idle UART = high, so if GPS is alive, its TX drives our RX high
+	gpio.Pin   = GPS_RX_PIN;
+	gpio.Mode  = GPIO_MODE_INPUT;
+	gpio.Pull  = GPIO_PULLDOWN;
+	gpio.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPS_RX_PORT, &gpio);
+
+	HAL_Delay(10);
+
+	int rx_level = HAL_GPIO_ReadPin(GPS_RX_PORT, GPS_RX_PIN);
+	printf("gps: rx_level=%d\r\n", rx_level);
+
+	int res = (rx_level == GPIO_PIN_SET) ? 0 : 1;
+
+	// Disable GPS
+	HAL_GPIO_WritePin(GPS_EN_PORT, GPS_EN_PIN, GPIO_PIN_RESET);
+
+	printf("gps: done, res=%d\r\n", res);
+	return res;
+}
+
+int test_lora_check(void)
+{
+	LL_GPIO_InitTypeDef ll_gpio = {0};
+
+	printf("lora: 5v + init...\r\n");
+
+	// LoRa module needs the 5V rail
+	ensure_5v_on();
+
+	// Configure NRST (PA3) as output, drive HIGH to release from reset
+	LL_GPIO_SetOutputPin(LORA_NRST_PORT, LORA_NRST);
+	ll_gpio.Pin        = LORA_NRST;
+	ll_gpio.Mode       = LL_GPIO_MODE_OUTPUT;
+	ll_gpio.Pull       = LL_GPIO_PULL_NO;
+	ll_gpio.Speed      = LL_GPIO_SPEED_LOW;
+	ll_gpio.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	LL_GPIO_Init(LORA_NRST_PORT, &ll_gpio);
+
+	// Configure NSS (PC1) as output, drive HIGH (deselected)
+	LL_GPIO_SetOutputPin(LORA_NSS_PORT, LORA_NSS);
+	ll_gpio.Pin = LORA_NSS;
+	LL_GPIO_Init(LORA_NSS_PORT, &ll_gpio);
+
+	// Configure POWER (PA2) as output
+	ll_gpio.Pin = LORA_POWER;
+	LL_GPIO_Init(LORA_POWER_PORT, &ll_gpio);
+
+	// Configure BUSY (PC5) as input with pull-down
+	ll_gpio.Pin  = LORA_BUSY;
+	ll_gpio.Mode = LL_GPIO_MODE_INPUT;
+	ll_gpio.Pull = LL_GPIO_PULL_DOWN;
+	LL_GPIO_Init(LORA_BUSY_PORT, &ll_gpio);
+
+	// Power on
+#ifdef LORA_POWER_INV
+	LL_GPIO_ResetOutputPin(LORA_POWER_PORT, LORA_POWER);
+#else
+	LL_GPIO_SetOutputPin(LORA_POWER_PORT, LORA_POWER);
+#endif
+
+	printf("lora: power on, waiting...\r\n");
+
+	// Wait for SX1262 boot, BUSY should go low after ~3ms
+	HAL_Delay(50);
+
+	int busy = LL_GPIO_IsInputPinSet(LORA_BUSY_PORT, LORA_BUSY);
+	printf("lora: busy=%d\r\n", busy);
+
+	int res = 0;
+	if(busy)
+	{
+		HAL_Delay(100);
+		busy = LL_GPIO_IsInputPinSet(LORA_BUSY_PORT, LORA_BUSY);
+		printf("lora: retry busy=%d\r\n", busy);
+		if(busy)
+			res = 1;
+	}
+
+	// Power off
+#ifdef LORA_POWER_INV
+	LL_GPIO_SetOutputPin(LORA_POWER_PORT, LORA_POWER);
+#else
+	LL_GPIO_ResetOutputPin(LORA_POWER_PORT, LORA_POWER);
+#endif
+
+	printf("lora: done, res=%d\r\n", res);
+	return res;
+}
+
+// Encoder counters — persist across calls so user sees accumulated rotation
+static short enc1_count = 0;
+static short enc2_count = 0;
+static uchar enc1_prev  = 0xFF;
+static uchar enc2_prev  = 0xFF;
+
+// Simple quadrature direction table: prev_state(2bit) | new_state(2bit) -> +1/-1/0
+static const signed char quad_table[16] = {
+//  new: 00  01  10  11
+	 0, -1, +1,  0,   // prev 00
+	+1,  0,  0, -1,   // prev 01
+	-1,  0,  0, +1,   // prev 10
+	 0, +1, -1,  0    // prev 11
+};
+
+int test_encoders(uchar *enc1, uchar *enc2)
+{
+	GPIO_InitTypeDef gpio = {0};
+
+	gpio.Mode  = GPIO_MODE_INPUT;
+	gpio.Pull  = GPIO_PULLUP;
+	gpio.Speed = GPIO_SPEED_FREQ_LOW;
+
+	gpio.Pin = ENC1_I;
+	HAL_GPIO_Init(ENC1_I_PORT, &gpio);
+	gpio.Pin = ENC1_Q;
+	HAL_GPIO_Init(ENC1_Q_PORT, &gpio);
+	gpio.Pin = ENC2_I_PIN;
+	HAL_GPIO_Init(ENC2_I_PORT, &gpio);
+	gpio.Pin = ENC2_Q_PIN;
+	HAL_GPIO_Init(ENC2_Q_PORT, &gpio);
+
+	// Sample for ~1 second, counting transitions
+	for(int n = 0; n < 200; n++)
+	{
+		HAL_Delay(5);
+
+		uchar i1 = HAL_GPIO_ReadPin(ENC1_I_PORT, ENC1_I) ? 1 : 0;
+		uchar q1 = HAL_GPIO_ReadPin(ENC1_Q_PORT, ENC1_Q) ? 1 : 0;
+		uchar i2 = HAL_GPIO_ReadPin(ENC2_I_PORT, ENC2_I_PIN) ? 1 : 0;
+		uchar q2 = HAL_GPIO_ReadPin(ENC2_Q_PORT, ENC2_Q_PIN) ? 1 : 0;
+
+		uchar s1 = (i1 << 1) | q1;
+		uchar s2 = (i2 << 1) | q2;
+
+		if(enc1_prev != 0xFF)
+			enc1_count += quad_table[(enc1_prev << 2) | s1];
+		if(enc2_prev != 0xFF)
+			enc2_count += quad_table[(enc2_prev << 2) | s2];
+
+		enc1_prev = s1;
+		enc2_prev = s2;
+	}
+
+	// Return current counts packed as signed bytes
+	*enc1 = (uchar)(enc1_count & 0xFF);
+	*enc2 = (uchar)(enc2_count & 0xFF);
 
 	return 0;
 }

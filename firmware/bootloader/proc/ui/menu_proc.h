@@ -20,6 +20,10 @@
 #define MENU_HW_TESTS           1
 #define MENU_FW_UPDATE          2
 #define MENU_BMS_TOOLS          3
+#define MENU_HW_CORE            4   // sub: SDRAM, SD Card, BMS
+#define MENU_HW_POWER           5   // sub: 5V toggle, Fan, LEDs, Backlight
+#define MENU_HW_I2C             6   // sub: BQ25730+CH224A, Codec, SI5351, GT911
+#define MENU_HW_PERIPH          7   // sub: GPS, LoRa, Encoders
 
 // -----------------------------------------------------------------------
 // Key button IDs mapped to menu actions

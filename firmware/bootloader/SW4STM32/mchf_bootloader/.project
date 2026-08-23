@@ -87,6 +87,16 @@
 			<locationURI>PARENT-2-PROJECT_LOC/hw/shared_tim.c</locationURI>
 		</link>
 		<link>
+			<name>hw/usb_host.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/usb_host.c</locationURI>
+		</link>
+		<link>
+			<name>hw/usbh_diskio.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/usbh_diskio.c</locationURI>
+		</link>
+		<link>
 			<name>startup/startup_stm32h747xx_CM7.s</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/startup_stm32h747xx_CM7.s</locationURI>
@@ -595,6 +605,61 @@
 			<name>proc/ui/lcd_driver/lcd_low.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/lcd_driver/lcd_low.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/STM32H7xx_HAL_Driver/stm32h7xx_hal_hcd.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_hcd.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/STM32H7xx_HAL_Driver/stm32h7xx_ll_usb.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_usb.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/USB_Host/Core/usbh_core.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Middlewares/ST/STM32_USB_Host_Library/Core/Src/usbh_core.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/USB_Host/Core/usbh_ctlreq.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Middlewares/ST/STM32_USB_Host_Library/Core/Src/usbh_ctlreq.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/USB_Host/Core/usbh_ioreq.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Middlewares/ST/STM32_USB_Host_Library/Core/Src/usbh_ioreq.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/USB_Host/Core/usbh_pipes.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Middlewares/ST/STM32_USB_Host_Library/Core/Src/usbh_pipes.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/USB_Host/MSC/usbh_msc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/USB_Host/MSC/usbh_msc_bot.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc_bot.c</locationURI>
+		</link>
+		<link>
+			<name>Middlewares/USB_Host/MSC/usbh_msc_scsi.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc_scsi.c</locationURI>
+		</link>
+		<link>
+			<name>hw/usb_host.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/usb_host.c</locationURI>
+		</link>
+		<link>
+			<name>hw/usbh_diskio.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/usbh_diskio.c</locationURI>
 		</link>
 	</linkedResources>
 	<variableList>

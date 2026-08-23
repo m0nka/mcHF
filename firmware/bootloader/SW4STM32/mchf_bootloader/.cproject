@@ -61,6 +61,8 @@
 									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Drivers/CMSIS/Include"/>
 									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Middlewares/Third_Party/FatFs/src"/>
 									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Middlewares/Third_Party/FatFs/src/drivers"/>
+									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Middlewares/ST/STM32_USB_Host_Library/Core/Inc"/>
+									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Inc"/>
 									<listOptionValue builtIn="false" value="../../../../STM32CubeH7/Utilities/Fonts"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.definedsymbols.2021096400" name="Define symbols (-D)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.definedsymbols" useByScannerDiscovery="false" valueType="definedSymbols">

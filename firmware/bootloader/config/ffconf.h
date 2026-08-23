@@ -168,8 +168,9 @@
 / Drive/Volume Configurations
 /---------------------------------------------------------------------------*/
 
-#define _VOLUMES	1
-/* Number of volumes (logical drives) to be used. */
+#define _VOLUMES	2
+/* Number of volumes (logical drives) to be used.
+/  0: = SD card,  1: = USB stick */
 
 
 #define _STR_VOLUME_ID	0
