@@ -592,7 +592,15 @@ static void ui_proc_change_mode(void)
 		return;
 
 	// Don't enter Menu if we have virtual dialog shown
-	if((ui_s.active_control_shown)&&(ui_s.req_state == MODE_MENU))
+	if((ui_s.active_control_shown)&&((ui_s.req_state == MODE_MENU)||(ui_s.req_state == MODE_DESKTOP_MARSCHAT)))
+		return;
+
+	// Don't toggle between MarsChat and Menu
+	if((ui_s.req_state == MODE_MENU)&&(ui_s.cur_state == MODE_DESKTOP_MARSCHAT))
+		return;
+
+	// Don't toggle between MarsChat and Menu
+	if((ui_s.req_state == MODE_DESKTOP_MARSCHAT)&&(ui_s.cur_state == MODE_MENU))
 		return;
 
 	// Backlight off
