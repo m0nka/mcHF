@@ -67,6 +67,16 @@
 			<locationURI>PARENT-2-PROJECT_LOC/hw/bq40z80.c</locationURI>
 		</link>
 		<link>
+			<name>hw/diskio.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/diskio.c</locationURI>
+		</link>
+		<link>
+			<name>hw/ff_gen_drv.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/hw/ff_gen_drv.c</locationURI>
+		</link>
+		<link>
 			<name>hw/mchf_pro_board.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/hw/mchf_pro_board.c</locationURI>
@@ -562,29 +572,14 @@
 			<locationURI>PARENT-2-PROJECT_LOC/proc/ui/ui_proc.c</locationURI>
 		</link>
 		<link>
-			<name>Middlewares/FatFs/Core/diskio.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/FatFs/src/diskio.c</locationURI>
-		</link>
-		<link>
 			<name>Middlewares/FatFs/Core/ff.c</name>
 			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/FatFs/src/ff.c</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/app_proc/middleware/ff16/source/ff.c</locationURI>
 		</link>
 		<link>
-			<name>Middlewares/FatFs/Core/ff_gen_drv.c</name>
+			<name>Middlewares/FatFs/Options/ffunicode.c</name>
 			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/FatFs/src/ff_gen_drv.c</locationURI>
-		</link>
-		<link>
-			<name>Middlewares/FatFs/Options/syscall.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/FatFs/src/option/syscall.c</locationURI>
-		</link>
-		<link>
-			<name>Middlewares/FatFs/Options/unicode.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/STM32CubeH7/Middlewares/Third_Party/FatFs/src/option/unicode.c</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/app_proc/middleware/ff16/source/ffunicode.c</locationURI>
 		</link>
 		<link>
 			<name>base_hw/hw/MT48LC4M32B2/MT48LC4M32B2.c</name>

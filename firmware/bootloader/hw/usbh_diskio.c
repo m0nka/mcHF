@@ -24,7 +24,7 @@ extern USBH_HandleTypeDef hUSBHost;
 // -----------------------------------------------------------------------
 // Scratch buffer for unaligned reads (no DMA, so only alignment matters)
 // -----------------------------------------------------------------------
-static DWORD scratch[_MAX_SS / 4];
+static DWORD scratch[FF_MAX_SS / 4];
 
 // -----------------------------------------------------------------------
 // FatFS disk I/O interface
@@ -58,7 +58,7 @@ static DRESULT usb_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
             if(status != USBH_OK)
                 goto read_error;
 
-            memcpy(&buff[count * _MAX_SS], scratch, _MAX_SS);
+            memcpy(&buff[count * FF_MAX_SS], scratch, FF_MAX_SS);
         }
     }
     else
@@ -88,7 +88,7 @@ read_error:
     }
 }
 
-#if _USE_WRITE == 1
+#if FF_FS_READONLY == 0
 static DRESULT usb_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 {
     USBH_StatusTypeDef status;
@@ -98,7 +98,7 @@ static DRESULT usb_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
     {
         while(count--)
         {
-            memcpy(scratch, &buff[count * _MAX_SS], _MAX_SS);
+            memcpy(scratch, &buff[count * FF_MAX_SS], FF_MAX_SS);
 
             status = USBH_MSC_Write(&hUSBHost, lun, sector + count,
                                     (BYTE *)scratch, 1);
@@ -138,7 +138,6 @@ write_error:
 }
 #endif
 
-#if _USE_IOCTL == 1
 static DRESULT usb_ioctl(BYTE lun, BYTE cmd, void *buff)
 {
     MSC_LUNTypeDef info;
@@ -178,7 +177,6 @@ static DRESULT usb_ioctl(BYTE lun, BYTE cmd, void *buff)
 
     return RES_ERROR;
 }
-#endif
 
 // -----------------------------------------------------------------------
 // FatFS driver structure — registered via FATFS_LinkDriver()
@@ -188,10 +186,8 @@ const Diskio_drvTypeDef USBH_Driver =
     usb_initialize,
     usb_status,
     usb_read,
-#if _USE_WRITE == 1
+#if FF_FS_READONLY == 0
     usb_write,
 #endif
-#if _USE_IOCTL == 1
     usb_ioctl,
-#endif
 };

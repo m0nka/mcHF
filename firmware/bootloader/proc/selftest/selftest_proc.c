@@ -56,7 +56,7 @@ int test_sd_card(void)
 
 	if(HAL_GPIO_ReadPin(SD_DET_PORT, SD_DET))
 	{
-		//printf("sd card na\r\n");
+		printf("sd card na\r\n");
 		return 1;
 	}
 	//printf("sd card in\r\n");
@@ -78,10 +78,14 @@ int test_sd_card(void)
 	HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
 	#endif
 
+	// Wait for SD card power to stabilize
+	HAL_Delay(100);
+
 	// Init low level driver
-	if(BSP_SD_Init(0) != 0)
+	int sd_ret = BSP_SD_Init(0);
+	if(sd_ret != 0)
 	{
-		//printf("sd low level driver init err!\r\n");
+		printf("sd low level driver init err (%d)!\r\n", sd_ret);
 		return 2;
 	}
 
@@ -94,7 +98,7 @@ int test_sd_card(void)
 	// Read boot sector
 	if(BSP_SD_ReadBlocks(0, (ulong *)boot, 0, 1) != 0)
 	{
-		//printf("sd unable to read boot sector!\r\n");
+		printf("sd unable to read boot sector!\r\n");
 		return 3;
 	}
 	//print_hex_array((uchar *)(&boot[0] + 512 - 32), 32);
@@ -113,7 +117,7 @@ int test_sd_card(void)
 			break;
 	}
 
-	//printf("read blocks: %d\r\n", i);
+	printf("read blocks: %d\r\n", i);
 
 	if(i < 10000)
 		return 5;

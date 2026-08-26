@@ -520,6 +520,8 @@ __RAM_CODE_SECTION static HAL_StatusTypeDef hw_flash_unlock(void)
   return HAL_OK;
 }
 
+uchar f_chunk[FLASH_CHUNK];
+
 /**
   * @brief  Copy program code file into the Internal Flash memory
   * @param  hItem    : Progress bar used to indicate the transfer progression
@@ -542,7 +544,7 @@ __RAM_CODE_SECTION int hw_flash_program_file(FIL * pResFile, uint32_t Address)
 
   //printf("hw_flash_program_file\r\n");
 
-  pSdData = (uint8_t *)ff_malloc(FLASH_CHUNK);
+  pSdData = f_chunk;//(uint8_t *)ff_malloc(FLASH_CHUNK);
   if (pSdData == NULL)
   {
     return -1;
@@ -550,7 +552,7 @@ __RAM_CODE_SECTION int hw_flash_program_file(FIL * pResFile, uint32_t Address)
 
   if (f_lseek(pResFile, 0) != FR_OK)
   {
-    ff_free(pSdData);
+    //ff_free(pSdData);
     return -2;
   }
 
@@ -657,7 +659,7 @@ __RAM_CODE_SECTION int hw_flash_program_file(FIL * pResFile, uint32_t Address)
       goto unlock_and_exit;
     }
 
-    printf("curr %d\r\n", ++sector);
+    //printf("curr %d\r\n", ++sector);
     //PROGBAR_SetValue(hItem, ++sector);
 
   } while(numOfReadBytes == FLASH_CHUNK);
@@ -669,7 +671,7 @@ unlock_and_exit:
   else
     HAL_FLASHEx_Unlock_Bank2();
 
-  ff_free(pSdData);
+  //ff_free(pSdData);
 
   return Ret;
 }

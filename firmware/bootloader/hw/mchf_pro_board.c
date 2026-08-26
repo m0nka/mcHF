@@ -264,9 +264,10 @@ static uchar mount_flash_source(void)
 			return 17;
 		}
 
-		if(f_mount(&SDFatFs, (TCHAR const*)SDPath, 0) != FR_OK)
+		FRESULT fr = f_mount(&SDFatFs, (TCHAR const*)SDPath, 1);
+		if(fr != FR_OK)
 		{
-			printf("fs mount err\r\n");
+			printf("fs mount err (fr=%d)\r\n", fr);
 			return 18;
 		}
 
@@ -297,9 +298,10 @@ static uchar mount_flash_source(void)
 		}
 		usb_linked = 1;
 
-		if(f_mount(&USBFatFs, (TCHAR const*)USBPath, 0) != FR_OK)
+		FRESULT fr = f_mount(&USBFatFs, (TCHAR const*)USBPath, 1);
+		if(fr != FR_OK)
 		{
-			printf("usb fs mount err\r\n");
+			printf("usb fs mount err (fr=%d)\r\n", fr);
 			usb_host_deinit();
 			return 18;
 		}
@@ -328,12 +330,6 @@ static void unmount_flash_source(void)
 	}
 }
 
-// Returns the file path prefix for the active source
-static const char *flash_source_prefix(void)
-{
-	return (flash_source == 0) ? "0:/" : "1:/";
-}
-
 uchar update_radio(void)
 {
 	uchar res = 0;
@@ -341,7 +337,7 @@ uchar update_radio(void)
 	__HAL_RCC_CRC_CLK_ENABLE();
 
 	CrcHandle.Instance = CRC;
-	CrcHandle.Init.DefaultPolynomialUse    = DEFAULT_POLYNOMIAL_DISABLE;
+	CrcHandle.Init.DefaultPolynomialUse    = DEFAULT_POLYNOMIAL_ENABLE;
 	CrcHandle.Init.DefaultInitValueUse     = DEFAULT_INIT_VALUE_ENABLE;
 	CrcHandle.Init.InputDataInversionMode  = CRC_INPUTDATA_INVERSION_NONE;
 	CrcHandle.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_DISABLE;
@@ -359,15 +355,19 @@ uchar update_radio(void)
 	if(res != 0)
 		return res;
 
-	// Build file path
+	// Build file path using the actual driver-assigned path
 	char fpath[20];
-	strcpy(fpath, flash_source_prefix());
+	const char *prefix = (flash_source == 0) ? SDPath : USBPath;
+	strcpy(fpath, prefix);
 	strcat(fpath, "radio.bin");
 
+	printf("file: %s \r\n", fpath);
+
 	// Open flash file
-	if(f_open(&MyFile, fpath, FA_READ) != FR_OK)
+	FRESULT fres = f_open(&MyFile, fpath, FA_READ);
+	if(fres != FR_OK)
 	{
-		printf("open radio.bin err\r\n");
+		printf("open radio.bin err (fr=%d)\r\n", fres);
 		res = 2;
 		goto fw_upd_clean_up;
 	}
@@ -418,24 +418,17 @@ uchar update_radio(void)
 	ulong leftov = fs%512;
 	ulong calc_crc = 0;
 
-	uchar *temp = malloc(512);
-	if(temp == NULL)
-	{
-		res = 7;
-		goto fw_upd_clean_up;
-	}
+	uchar temp[512];
 
 	// First
 	if(f_read(&MyFile, temp, 512, (void *)&read) != FR_OK)
 	{
-		free(temp);
 		res = 8;
 		goto fw_upd_clean_up;
 	}
 
 	if(read != 512)
 	{
-		free(temp);
 		res = 9;
 		goto fw_upd_clean_up;
 	}
@@ -448,14 +441,12 @@ uchar update_radio(void)
 	{
 		if(f_read(&MyFile, temp, 512, (void *)&read) != FR_OK)
 		{
-			free(temp);
 			res = 10;
 			goto fw_upd_clean_up;
 		}
 
 		if(read != 512)
 		{
-			free(temp);
 			res = 11;
 			goto fw_upd_clean_up;
 		}
@@ -468,21 +459,18 @@ uchar update_radio(void)
 	{
 		if(f_read(&MyFile, temp, leftov, (void *)&read) != FR_OK)
 		{
-			free(temp);
 			res = 12;
 			goto fw_upd_clean_up;
 		}
 
 		if(read != leftov)
 		{
-			free(temp);
 			res = 13;
 			goto fw_upd_clean_up;
 		}
 
 		calc_crc = HAL_CRC_Accumulate(&CrcHandle, (uint32_t *)temp, leftov/4);
 	}
-	free(temp);
 	printf("calc crc: 0x%x\r\n", (int)calc_crc);
 
 	// Test CRC
@@ -524,7 +512,7 @@ uchar update_baseband(void)
 	__HAL_RCC_CRC_CLK_ENABLE();
 
 	CrcHandle.Instance = CRC;
-	CrcHandle.Init.DefaultPolynomialUse    = DEFAULT_POLYNOMIAL_DISABLE;
+	CrcHandle.Init.DefaultPolynomialUse    = DEFAULT_POLYNOMIAL_ENABLE;
 	CrcHandle.Init.DefaultInitValueUse     = DEFAULT_INIT_VALUE_ENABLE;
 	CrcHandle.Init.InputDataInversionMode  = CRC_INPUTDATA_INVERSION_NONE;
 	CrcHandle.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_DISABLE;
@@ -541,15 +529,17 @@ uchar update_baseband(void)
 	if(res != 0)
 		return res;
 
-	// Build file path
+	// Build file path using the actual driver-assigned path
 	char fpath[24];
-	strcpy(fpath, flash_source_prefix());
+	const char *prefix = (flash_source == 0) ? SDPath : USBPath;
+	strcpy(fpath, prefix);
 	strcat(fpath, "baseband.bin");
 
 	// Open the file
-	if(f_open(&MyFile, fpath, FA_READ) != FR_OK)
+	FRESULT fres = f_open(&MyFile, fpath, FA_READ);
+	if(fres != FR_OK)
 	{
-		printf("open baseband.bin err\r\n");
+		printf("open baseband.bin err (fr=%d)\r\n", fres);
 		res = 2;
 		goto bb_upd_clean_up;
 	}
@@ -609,24 +599,17 @@ uchar update_baseband(void)
 	ulong leftov = fs%512;
 	ulong calc_crc = 0;
 
-	uchar *temp = malloc(512);
-	if(temp == NULL)
-	{
-		res = 8;
-		goto bb_upd_clean_up;
-	}
+	uchar temp[512];
 
 	// First block
 	if(f_read(&MyFile, temp, 512, (void *)&read) != FR_OK)
 	{
-		free(temp);
 		res = 9;
 		goto bb_upd_clean_up;
 	}
 
 	if(read != 512)
 	{
-		free(temp);
 		res = 10;
 		goto bb_upd_clean_up;
 	}
@@ -639,14 +622,12 @@ uchar update_baseband(void)
 	{
 		if(f_read(&MyFile, temp, 512, (void *)&read) != FR_OK)
 		{
-			free(temp);
 			res = 11;
 			goto bb_upd_clean_up;
 		}
 
 		if(read != 512)
 		{
-			free(temp);
 			res = 12;
 			goto bb_upd_clean_up;
 		}
@@ -659,21 +640,18 @@ uchar update_baseband(void)
 	{
 		if(f_read(&MyFile, temp, leftov, (void *)&read) != FR_OK)
 		{
-			free(temp);
 			res = 13;
 			goto bb_upd_clean_up;
 		}
 
 		if(read != leftov)
 		{
-			free(temp);
 			res = 14;
 			goto bb_upd_clean_up;
 		}
 
 		calc_crc = HAL_CRC_Accumulate(&CrcHandle, (uint32_t *)temp, leftov/4);
 	}
-	free(temp);
 	printf("calc crc: 0x%x\r\n", (int)calc_crc);
 
 	// Verify CRC
