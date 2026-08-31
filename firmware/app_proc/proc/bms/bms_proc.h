@@ -73,6 +73,12 @@ __attribute__((__common__)) struct BMSState {
 	ushort ch_vbat;
 	ushort ch_vbus;
 
+	// CC Gain calibration (populated by cmd 0x33, written by cmd 0x34)
+	float  cal_cc_raw;		// current CC Gain raw float from DF @0x4000+6
+	float  cal_cc_new;		// proposed/entered new CC Gain value
+	uchar  cal_state;		// 0=idle, 1=read ok, 2=write ok, 3=read err,
+							// 4=write err, 10=displayed
+
 } BMSState;
 
 void bms_proc_hw_init(void);

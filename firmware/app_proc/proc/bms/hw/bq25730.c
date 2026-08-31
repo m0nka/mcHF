@@ -409,7 +409,7 @@ ushort bq25730_read_chg_stat(bq25730_config_t *cfg)
     if(bq25730_i2c_read_registers(ADDR_CHRG_STAT, databuf, 2))
     	return 0xFFFF;
 
-    //printf("stat: %02x %02x \r\n", databuf[0], databuf[1]);
+    //printf("charger status: %02x %02x \r\n", databuf[0], databuf[1]);
 
     return ((databuf[0] << 8) | databuf[1]);
 }

@@ -40,6 +40,11 @@
 
 #define ID_BUTTON_DF_BACKUP	  		(GUI_ID_USER + 0x68)
 #define ID_BUTTON_DF_FLASH	  		(GUI_ID_USER + 0x69)
+#define ID_BUTTON_CAL_CHECK	  		(GUI_ID_USER + 0x6A)
+#define ID_EDIT_CC_GAIN		  		(GUI_ID_USER + 0x6B)
+#define ID_BUTTON_CAL_WRITE	  		(GUI_ID_USER + 0x6C)
+#define ID_TEXT_CC_INFO		  		(GUI_ID_USER + 0x6D)
+#define ID_TEXT_CC_RATIO	  		(GUI_ID_USER + 0x6E)
 
 #define SOPTS						SLIDER_CF_HORIZONTAL
 
