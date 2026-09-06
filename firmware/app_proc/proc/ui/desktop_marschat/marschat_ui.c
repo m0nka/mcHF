@@ -67,6 +67,30 @@ static uint8_t		mc_ui_sending = 0;			// input locked, message in flight
 static uint8_t		mc_ui_role = MC_ROLE_CALLER;
 
 // ---------------------------------------------------------------------
+// Collapsible keyboard: the 26 character keys and the shift key live in
+// hMcKeyboard, a child window that slides up from below the screen on
+// compose-bar tap and slides back down after SEND or an explicit hide.
+// The action row (SPACE .. PEER) stays on hMcDialog so the session
+// controls are always reachable; SPACE/DEL/CLEAR are hidden while the
+// keyboard is off-screen, and SEND/CALLER/PEER spread wider
+static WM_HWIN				hMcKeyboard;
+static WM_HWIN				hMcCharKeys[MC_KEY_CHARS];
+static WM_HWIN				hMcShiftKey;
+static WM_HWIN				hMcTypeBtn;				// "TYPE" button, shown when kb hidden
+static uint8_t				mc_ui_kb_shown = 0;
+
+// Slide animation state
+static GUI_ANIM_HANDLE		hMcAnim;
+
+typedef struct
+{
+	WM_HWIN	hWin;
+	int		dir;								// 0 = show (up), 1 = hide (down)
+} MC_KB_ANIM;
+
+static MC_KB_ANIM			mc_kb_anim;
+
+// ---------------------------------------------------------------------
 // Message list. Custom drawn rather than a LISTBOX: the rows carry a
 // direction chip, a timestamp and an SNR column, none of which a listbox
 // can style
@@ -123,9 +147,130 @@ static const char *mc_ui_page(void)
 	return mc_ui_shift ? mc_ui_page_symbols : mc_ui_page_letters;
 }
 
-// The 40 character keys are created in a grid at WM_INIT_DIALOG (see
-// mc_ui_create_keys), so only the window and the fixed action row live in
-// the static template
+// ---------------------------------------------------------------------
+// Keyboard slide animation - same API pattern as c_keypad.c but the
+// visual is the Atlas-themed keyboard, not the old Segger skin
+//
+// Dir 0 = slide up (show), 1 = slide down (hide).  The Pos parameter
+// goes from 0 to GUI_ANIM_RANGE over MC_ANIM_TIME with ANIM_ACCELDECEL
+// easing, and each step repositions hMcKeyboard via WM_MoveTo
+static void mc_ui_anim_step(GUI_ANIM_INFO *pInfo, void *pVoid)
+{
+	MC_KB_ANIM	*p = (MC_KB_ANIM *)pVoid;
+	int			y;
+
+	if(p->dir)
+	{
+		// Hiding: MC_KB_Y → MC_UI_H (off the bottom)
+		y = MC_KB_Y + (((MC_UI_H - MC_KB_Y) * pInfo->Pos) / GUI_ANIM_RANGE);
+	}
+	else
+	{
+		// Showing: MC_UI_H → MC_KB_Y
+		y = MC_UI_H - (((MC_UI_H - MC_KB_Y) * pInfo->Pos) / GUI_ANIM_RANGE);
+	}
+
+	WM_MoveTo(p->hWin, 0, y);
+}
+
+static void mc_ui_anim_done(void *pVoid)
+{
+	(void)pVoid;
+	hMcAnim = 0;
+
+	// Final repaint to clean up any exposed region
+	WM_InvalidateWindow(hMcDialog);
+}
+
+static void mc_ui_anim_start(int dir)
+{
+	mc_kb_anim.hWin = hMcKeyboard;
+	mc_kb_anim.dir  = dir;
+
+	hMcAnim = GUI_ANIM_Create(MC_ANIM_TIME, 10, &mc_kb_anim, 0);
+	GUI_ANIM_AddItem(hMcAnim, 0, MC_ANIM_TIME, ANIM_ACCELDECEL, &mc_kb_anim, mc_ui_anim_step);
+	GUI_ANIM_StartEx(hMcAnim, 1, mc_ui_anim_done);
+}
+
+// Layout the action row buttons for the current keyboard state. TYPE is
+// always visible and toggles between "TYPE" (opens keyboard) and "HIDE"
+// (closes it). When the keyboard is showing, SPACE/DEL/CLEAR appear and
+// CALLER/PEER hide. When the keyboard is hidden, the reverse
+static void mc_ui_layout_action_row(int kb_shown)
+{
+	WM_HWIN	hSpace  = WM_GetDialogItem(hMcDialog, ID_BUTTON_SPACE);
+	WM_HWIN	hDel    = WM_GetDialogItem(hMcDialog, ID_BUTTON_BACKSPACE);
+	WM_HWIN	hClear  = WM_GetDialogItem(hMcDialog, ID_BUTTON_CLEAR);
+	WM_HWIN	hSend   = WM_GetDialogItem(hMcDialog, ID_BUTTON_SEND);
+	WM_HWIN	hCaller = WM_GetDialogItem(hMcDialog, ID_BUTTON_CALLER);
+	WM_HWIN	hPeer   = WM_GetDialogItem(hMcDialog, ID_BUTTON_PEER);
+
+	if(kb_shown)
+	{
+		// Keyboard open: show text-entry buttons, hide session buttons
+		WM_ShowWindow(hSpace);
+		WM_ShowWindow(hDel);
+		WM_ShowWindow(hClear);
+		WM_HideWindow(hCaller);
+		WM_HideWindow(hPeer);
+
+		BUTTON_SetText(hMcTypeBtn, "HIDE");
+
+		// [HIDE] [SPACE] [DEL] [CLEAR] [SEND]
+		WM_SetWindowPos(hMcTypeBtn, 10,  MC_ACT_Y, 110, MC_ACT_H);
+		WM_SetWindowPos(hSpace,     124, MC_ACT_Y, 200, MC_ACT_H);
+		WM_SetWindowPos(hDel,       328, MC_ACT_Y, 110, MC_ACT_H);
+		WM_SetWindowPos(hClear,     442, MC_ACT_Y, 110, MC_ACT_H);
+		WM_SetWindowPos(hSend,      556, MC_ACT_Y, 234, MC_ACT_H);
+	}
+	else
+	{
+		// Keyboard hidden: hide text-entry buttons, show session buttons
+		WM_HideWindow(hSpace);
+		WM_HideWindow(hDel);
+		WM_HideWindow(hClear);
+		WM_ShowWindow(hCaller);
+		WM_ShowWindow(hPeer);
+
+		BUTTON_SetText(hMcTypeBtn, "TYPE");
+
+		// [TYPE] [SEND] [CALLER] [PEER]
+		WM_SetWindowPos(hMcTypeBtn, MC_FULL_TYPE_X,    MC_ACT_Y, MC_FULL_TYPE_W,   MC_ACT_H);
+		WM_SetWindowPos(hSend,      MC_FULL_SEND_X,    MC_ACT_Y, MC_FULL_SEND_W,   MC_ACT_H);
+		WM_SetWindowPos(hCaller,    MC_FULL_CALLER_X,  MC_ACT_Y, MC_FULL_CALLER_W, MC_ACT_H);
+		WM_SetWindowPos(hPeer,      MC_FULL_PEER_X,    MC_ACT_Y, MC_FULL_PEER_W,   MC_ACT_H);
+	}
+}
+
+static void mc_ui_show_keyboard(void)
+{
+	if(mc_ui_kb_shown || mc_ui_sending || hMcAnim)
+		return;
+
+	mc_ui_kb_shown = 1;
+
+	mc_ui_layout_action_row(1);
+
+	WM_InvalidateWindow(hMcDialog);
+	mc_ui_anim_start(0);
+}
+
+static void mc_ui_hide_keyboard(void)
+{
+	if(!mc_ui_kb_shown || hMcAnim)
+		return;
+
+	mc_ui_kb_shown = 0;
+
+	mc_ui_layout_action_row(0);
+
+	WM_InvalidateWindow(hMcDialog);
+	mc_ui_anim_start(1);
+}
+
+// The character keys are now created in a grid inside hMcKeyboard (see
+// mc_ui_create_keys), so only the window and the fixed action row live
+// in the static template
 static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 {
 	// -----------------------------------------------------------------------------------------------------------------------------
@@ -609,6 +754,7 @@ static int mc_ui_button_skin(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo)
 	GUI_COLOR		face, edge, ink;
 	int				id, w, h, tw;
 	int				pressed, enabled, active = 0;
+	int				is_key;
 
 	if(pDrawItemInfo->Cmd != WIDGET_ITEM_DRAW_BACKGROUND)
 		return 0;									// text and focus are ours too, drawn below
@@ -621,73 +767,48 @@ static int mc_ui_button_skin(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo)
 
 	BUTTON_GetText(hObj, text, sizeof(text));
 
-	marschat_get_status(&st);
+	// Keyboard character keys and shift keep the original skin
+	is_key = ((id >= ID_BUTTON_CHAR_0) && (id < (ID_BUTTON_CHAR_0 + MC_KEY_CHARS)))
+		   || (id == ID_BUTTON_SHIFT);
 
-	// Which role button is currently the live one
-	if((id == ID_BUTTON_CALLER) || (id == ID_BUTTON_PEER))
+	if(is_key)
 	{
-		uint8_t want = (id == ID_BUTTON_CALLER) ? MC_ROLE_CALLER : MC_ROLE_PEER;
+		// ------- keyboard key: gradient fill, existing look -------
+		if((id == ID_BUTTON_SHIFT))
+		{
+			face = ATLAS_PANEL;
+			edge = ATLAS_AMBER;
+			ink  = ATLAS_AMBER;
+		}
+		else
+		{
+			face = ATLAS_PANEL;
+			edge = ATLAS_LINE;
+			ink  = ATLAS_CYAN_HI;
+		}
 
-		active = ((st.state == MC_SESS_ACTIVE) && (st.role == want)) ? 1 : 0;
-	}
+		if(!enabled)
+		{
+			face = ATLAS_GROUND;
+			edge = ATLAS_LINE_OFF;
+			ink  = ATLAS_OFF;
+		}
 
-	// Face colours per button family
-	if(id == ID_BUTTON_SEND)
-	{
-		face = ATLAS_CYAN;
-		edge = ATLAS_CYAN_HI;
-		ink  = ATLAS_INK;
-	}
-	else if(active)
-	{
-		face = ATLAS_AMBER;
-		edge = ATLAS_AMBER;
-		ink  = ATLAS_INK;
-	}
-	else if((id == ID_BUTTON_CALLER) || (id == ID_BUTTON_PEER) || (id == ID_BUTTON_SHIFT))
-	{
-		face = ATLAS_PANEL;
-		edge = ATLAS_AMBER;
-		ink  = ATLAS_AMBER;
-	}
-	else
-	{
-		face = ATLAS_PANEL;
-		edge = ATLAS_LINE;
-		ink  = ATLAS_CYAN_HI;
-	}
+		if(pressed && enabled)
+		{
+			GUI_SetColor(ATLAS_BAND);
+			GUI_FillRect(0, 0, w - 1, h - 1);
+			ink = GUI_WHITE;
+		}
+		else
+		{
+			atlas_bar(0, 0, w, h, ATLAS_BAND, face);
+		}
 
-	if(!enabled)
-	{
-		face = ATLAS_GROUND;
-		edge = ATLAS_LINE_OFF;
-		ink  = ATLAS_OFF;
-	}
+		GUI_SetColor(edge);
+		GUI_DrawRect(0, 0, w - 1, h - 1);
 
-	if(pressed && enabled)
-	{
-		// Pressed reads as the face lighting up
-		GUI_SetColor((id == ID_BUTTON_SEND) ? ATLAS_CYAN_HI : ATLAS_BAND);
-		GUI_FillRect(0, 0, w - 1, h - 1);
-		ink = (id == ID_BUTTON_SEND) ? ATLAS_INK : GUI_WHITE;
-	}
-	else if((id == ID_BUTTON_SEND) || active)
-	{
-		atlas_bar(0, 0, w, h, (id == ID_BUTTON_SEND) ? ATLAS_CYAN_HI : ATLAS_AMBER, face);
-	}
-	else
-	{
-		atlas_bar(0, 0, w, h, ATLAS_BAND, face);
-	}
-
-	GUI_SetColor(edge);
-	GUI_DrawRect(0, 0, w - 1, h - 1);
-
-	// Label - keys get the big font, the action row the tracked one
-	GUI_SetTextMode(GUI_TM_TRANS);
-
-	if((id >= ID_BUTTON_CHAR_0) && (id < (ID_BUTTON_CHAR_0 + MC_KEY_CHARS)))
-	{
+		GUI_SetTextMode(GUI_TM_TRANS);
 		GUI_SetFont(&GUI_Font24B_1);
 		tw = atlas_text_width(text, 0);
 		GUI_SetColor(ink);
@@ -695,6 +816,63 @@ static int mc_ui_button_skin(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo)
 	}
 	else
 	{
+		// ------- action row: atlas translucent panel style -------
+		// Semi-transparent flat rectangle, no gradient, lighter
+		// cyan text in large caps - matches the DEMODULATE /
+		// TRIANGULATE buttons in the Atlas reference
+		marschat_get_status(&st);
+
+		if((id == ID_BUTTON_CALLER) || (id == ID_BUTTON_PEER))
+		{
+			uint8_t want = (id == ID_BUTTON_CALLER) ? MC_ROLE_CALLER : MC_ROLE_PEER;
+
+			active = ((st.state == MC_SESS_ACTIVE) && (st.role == want)) ? 1 : 0;
+		}
+
+		if(id == ID_BUTTON_SEND)
+		{
+			face = ATLAS_CYAN_DEEP;
+			edge = ATLAS_CYAN;
+			ink  = ATLAS_CYAN_HI;
+		}
+		else if(active)
+		{
+			face = ATLAS_AMBER_DEEP;
+			edge = ATLAS_AMBER;
+			ink  = ATLAS_AMBER;
+		}
+		else
+		{
+			face = ATLAS_LINE_OFF;
+			edge = ATLAS_LINE;
+			ink  = ATLAS_CYAN;
+		}
+
+		if(!enabled)
+		{
+			face = ATLAS_GROUND;
+			edge = ATLAS_LINE_OFF;
+			ink  = ATLAS_OFF;
+		}
+
+		if(pressed && enabled)
+		{
+			// Brighten the fill, keep it flat
+			GUI_SetColor(ATLAS_OFF);
+			GUI_FillRect(0, 0, w - 1, h - 1);
+			ink = ATLAS_CYAN_HI;
+		}
+		else
+		{
+			// Flat fill - no gradient
+			GUI_SetColor(face);
+			GUI_FillRect(0, 0, w - 1, h - 1);
+		}
+
+		GUI_SetColor(edge);
+		GUI_DrawRect(0, 0, w - 1, h - 1);
+
+		GUI_SetTextMode(GUI_TM_TRANS);
 		GUI_SetFont(&GUI_Font16B_1);
 		tw = atlas_text_width(text, 3);
 		GUI_SetColor(ink);
@@ -711,7 +889,7 @@ static int mc_ui_button_skin(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo)
 //*						: repaint just the keyboard
 //* Context    			: CONTEXT_VIDEO (gui task)
 //*----------------------------------------------------------------------------
-static void mc_ui_apply_page(WM_HWIN hWin)
+static void mc_ui_apply_page(void)
 {
 	const char	*page = mc_ui_page();
 	int			i;
@@ -723,23 +901,26 @@ static void mc_ui_apply_page(WM_HWIN hWin)
 		label[0] = page[i];
 		label[1] = 0;
 
-		BUTTON_SetText(WM_GetDialogItem(hWin, ID_BUTTON_CHAR_0 + i), label);
-		WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_CHAR_0 + i));
+		BUTTON_SetText(hMcCharKeys[i], label);
+		WM_InvalidateWindow(hMcCharKeys[i]);
 	}
 
 	// The shift face names the page it takes you TO, phone-keyboard style
-	BUTTON_SetText(WM_GetDialogItem(hWin, ID_BUTTON_SHIFT), mc_ui_shift ? "ABC" : "123");
-	WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_SHIFT));
+	BUTTON_SetText(hMcShiftKey, mc_ui_shift ? "ABC" : "123");
+	WM_InvalidateWindow(hMcShiftKey);
 }
 
 //*----------------------------------------------------------------------------
 //* Function Name       : mc_ui_create_keys
 //* Object              : build the 26 character keys plus the shift key as a
-//*						: grid of skinned buttons, children of the dialog.
-//*						: Shift takes the last slot (bottom right)
+//*						: grid of skinned buttons, children of hMcKeyboard
+//*						: (the sliding container, not the dialog). Coordinates
+//*						: are relative to the container - column x is the same
+//*						: because the container starts at x=0, row y is just
+//*						: the row index times the pitch
 //* Context    			: CONTEXT_VIDEO (gui task, WM_INIT_DIALOG)
 //*----------------------------------------------------------------------------
-static void mc_ui_create_keys(WM_HWIN hWin)
+static void mc_ui_create_keys(void)
 {
 	int	i;
 
@@ -747,58 +928,68 @@ static void mc_ui_create_keys(WM_HWIN hWin)
 	{
 		int		col = i % MC_KEY_COLS;
 		int		row = i / MC_KEY_COLS;
-		WM_HWIN	hKey;
 
-		hKey = BUTTON_CreateEx(MC_KEY_COL_X(col), MC_KEY_ROW_Y(row),
-								MC_KEY_W, MC_KEY_H,
-								hWin, WM_CF_SHOW, 0, ID_BUTTON_CHAR_0 + i);
+		hMcCharKeys[i] = BUTTON_CreateEx(MC_KEY_COL_X(col),
+										 row * (MC_KEY_H + MC_KEY_VGAP),
+										 MC_KEY_W, MC_KEY_H,
+										 hMcKeyboard, WM_CF_SHOW, 0,
+										 ID_BUTTON_CHAR_0 + i);
 
-		BUTTON_SetSkin(hKey, mc_ui_button_skin);
+		BUTTON_SetSkin(hMcCharKeys[i], mc_ui_button_skin);
 	}
 
 	// Shift in the last slot
 	{
 		int		col = MC_KEY_CHARS % MC_KEY_COLS;
 		int		row = MC_KEY_CHARS / MC_KEY_COLS;
-		WM_HWIN	hKey;
 
-		hKey = BUTTON_CreateEx(MC_KEY_COL_X(col), MC_KEY_ROW_Y(row),
-								MC_KEY_W, MC_KEY_H,
-								hWin, WM_CF_SHOW, 0, ID_BUTTON_SHIFT);
+		hMcShiftKey = BUTTON_CreateEx(MC_KEY_COL_X(col),
+									  row * (MC_KEY_H + MC_KEY_VGAP),
+									  MC_KEY_W, MC_KEY_H,
+									  hMcKeyboard, WM_CF_SHOW, 0,
+									  ID_BUTTON_SHIFT);
 
-		BUTTON_SetSkin(hKey, mc_ui_button_skin);
+		BUTTON_SetSkin(hMcShiftKey, mc_ui_button_skin);
 	}
 
 	// Labels come from the active page
-	mc_ui_apply_page(hWin);
+	mc_ui_apply_page();
 }
 
 //*----------------------------------------------------------------------------
 //* Function Name       : mc_ui_set_input_enabled
-//* Object              : lock/unlock the keys while a message drains out
+//* Object              : lock/unlock the keys while a message drains out.
+//*						: The char keys and shift live in hMcKeyboard, the
+//*						: action row lives in hMcDialog
 //* Context    			: CONTEXT_VIDEO (gui task)
 //*----------------------------------------------------------------------------
-static void mc_ui_set_input_enabled(WM_HWIN hWin, int enabled)
+static void mc_ui_set_input_enabled(int enabled)
 {
 	static const int action_ids[] =
 	{
-		ID_BUTTON_SHIFT, ID_BUTTON_SPACE, ID_BUTTON_BACKSPACE, ID_BUTTON_CLEAR, ID_BUTTON_SEND
+		ID_BUTTON_SPACE, ID_BUTTON_BACKSPACE, ID_BUTTON_CLEAR, ID_BUTTON_SEND
 	};
 	int	i;
 
+	// Char keys (children of hMcKeyboard)
 	for(i = 0; i < MC_KEY_CHARS; i++)
 	{
-		WM_HWIN	hItem = WM_GetDialogItem(hWin, ID_BUTTON_CHAR_0 + i);
-
 		if(enabled)
-			WM_EnableWindow(hItem);
+			WM_EnableWindow(hMcCharKeys[i]);
 		else
-			WM_DisableWindow(hItem);
+			WM_DisableWindow(hMcCharKeys[i]);
 	}
 
+	// Shift (child of hMcKeyboard)
+	if(enabled)
+		WM_EnableWindow(hMcShiftKey);
+	else
+		WM_DisableWindow(hMcShiftKey);
+
+	// Action row (children of hMcDialog)
 	for(i = 0; i < (int)GUI_COUNTOF(action_ids); i++)
 	{
-		WM_HWIN	hItem = WM_GetDialogItem(hWin, action_ids[i]);
+		WM_HWIN	hItem = WM_GetDialogItem(hMcDialog, action_ids[i]);
 
 		if(enabled)
 			WM_EnableWindow(hItem);
@@ -809,18 +1000,19 @@ static void mc_ui_set_input_enabled(WM_HWIN hWin, int enabled)
 
 //*----------------------------------------------------------------------------
 //* Function Name       : mc_ui_invalidate_all
-//* Object              : repaint the whole screen - dialog, the two child
-//*						: windows and every button
+//* Object              : repaint the whole screen - dialog, both child
+//*						: windows and every button in both the dialog and
+//*						: the keyboard container
 //* Notes    			: the buttons are skinned, so their faces carry
 //*						: enabled state that a plain dialog invalidate
 //*						: would not reach
 //* Context    			: CONTEXT_VIDEO (gui task)
 //*----------------------------------------------------------------------------
-static void mc_ui_invalidate_all(WM_HWIN hWin)
+static void mc_ui_invalidate_all(void)
 {
 	int	i;
 
-	WM_InvalidateWindow(hWin);
+	WM_InvalidateWindow(hMcDialog);
 
 	if(hMcTitle)
 		WM_InvalidateWindow(hMcTitle);
@@ -828,16 +1020,25 @@ static void mc_ui_invalidate_all(WM_HWIN hWin)
 	if(hMcSlot)
 		WM_InvalidateWindow(hMcSlot);
 
-	for(i = 0; i < MC_KEY_CHARS; i++)
-		WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_CHAR_0 + i));
+	if(hMcKeyboard)
+		WM_InvalidateWindow(hMcKeyboard);
 
-	WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_SHIFT));
-	WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_SPACE));
-	WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_BACKSPACE));
-	WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_CLEAR));
-	WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_SEND));
-	WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_CALLER));
-	WM_InvalidateWindow(WM_GetDialogItem(hWin, ID_BUTTON_PEER));
+	// Char keys and shift (children of hMcKeyboard)
+	for(i = 0; i < MC_KEY_CHARS; i++)
+		WM_InvalidateWindow(hMcCharKeys[i]);
+
+	WM_InvalidateWindow(hMcShiftKey);
+
+	// Action row (children of hMcDialog)
+	WM_InvalidateWindow(WM_GetDialogItem(hMcDialog, ID_BUTTON_SPACE));
+	WM_InvalidateWindow(WM_GetDialogItem(hMcDialog, ID_BUTTON_BACKSPACE));
+	WM_InvalidateWindow(WM_GetDialogItem(hMcDialog, ID_BUTTON_CLEAR));
+	WM_InvalidateWindow(WM_GetDialogItem(hMcDialog, ID_BUTTON_SEND));
+	WM_InvalidateWindow(WM_GetDialogItem(hMcDialog, ID_BUTTON_CALLER));
+	WM_InvalidateWindow(WM_GetDialogItem(hMcDialog, ID_BUTTON_PEER));
+
+	if(hMcTypeBtn)
+		WM_InvalidateWindow(hMcTypeBtn);
 }
 
 //*----------------------------------------------------------------------------
@@ -893,34 +1094,42 @@ static void _cbSlot(WM_MESSAGE *pMsg)
 		WM_DefaultProc(pMsg);
 }
 
-static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_ui_on_button
+//* Object              : handle a button release from either the dialog
+//*						: (action row) or the keyboard container (char keys,
+//*						: shift). No pMsg dependency - both callbacks forward
+//*						: the id and notification code here
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void mc_ui_on_button(int id, int ncode)
 {
 	MC_UI_STATUS	st;
 
-	if(NCode != WM_NOTIFICATION_RELEASED)
+	if(ncode != WM_NOTIFICATION_RELEASED)
 		return;
 
-	if((Id >= ID_BUTTON_CHAR_0) && (Id < ID_BUTTON_CHAR_0 + MC_KEY_CHARS))
+	if((id >= ID_BUTTON_CHAR_0) && (id < ID_BUTTON_CHAR_0 + MC_KEY_CHARS))
 	{
 		if((!mc_ui_sending) && (mc_ui_compose_len < MC_UI_COMPOSE_MAX))
 		{
-			mc_ui_compose[mc_ui_compose_len++] = mc_ui_page()[Id - ID_BUTTON_CHAR_0];
+			mc_ui_compose[mc_ui_compose_len++] = mc_ui_page()[id - ID_BUTTON_CHAR_0];
 			mc_ui_compose[mc_ui_compose_len]   = 0;
 		}
+
+		WM_InvalidateWindow(hMcDialog);
 		return;
 	}
 
-	// Shift pages the character keys between letters and symbols. It locks
-	// with the rest of the keyboard while a message drains, so no guard is
-	// needed here; it never touches the draft
-	if(Id == ID_BUTTON_SHIFT)
+	// Shift pages the character keys between letters and symbols
+	if(id == ID_BUTTON_SHIFT)
 	{
 		mc_ui_shift ^= 1;
-		mc_ui_apply_page(pMsg->hWin);
+		mc_ui_apply_page();
 		return;
 	}
 
-	switch(Id)
+	switch(id)
 	{
 		case ID_BUTTON_SPACE:
 		{
@@ -972,7 +1181,10 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			{
 				mc_ui_add_line(MC_UI_LINE_TX, mc_ui_compose, NULL);
 				mc_ui_sending = 1;
-				mc_ui_set_input_enabled(pMsg->hWin, 0);
+				mc_ui_set_input_enabled(0);
+
+				// Collapse the keyboard after queuing a message
+				mc_ui_hide_keyboard();
 			}
 			else
 				mc_ui_add_line(MC_UI_LINE_INFO, "send queue full, try again", NULL);
@@ -980,10 +1192,19 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			break;
 		}
 
+		case ID_BUTTON_TYPE:
+		{
+			if(mc_ui_kb_shown)
+				mc_ui_hide_keyboard();
+			else
+				mc_ui_show_keyboard();
+			break;
+		}
+
 		case ID_BUTTON_CALLER:
 		case ID_BUTTON_PEER:
 		{
-			uint8_t	want = (Id == ID_BUTTON_CALLER) ? MC_ROLE_CALLER : MC_ROLE_PEER;
+			uint8_t	want = (id == ID_BUTTON_CALLER) ? MC_ROLE_CALLER : MC_ROLE_PEER;
 
 			marschat_get_status(&st);
 
@@ -1003,7 +1224,190 @@ static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 			break;
 	}
 
-	WM_InvalidateWindow(pMsg->hWin);
+	WM_InvalidateWindow(hMcDialog);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_ui_paint_status
+//* Object              : atlas-styled status panel drawn in the space freed
+//*						: by the collapsed keyboard. Richer layout than the
+//*						: compact telemetry column: signal quality, session
+//*						: state, and the slot timeline at full width
+//* Context    			: CONTEXT_VIDEO (gui task, WM_PAINT, !mc_ui_kb_shown)
+//*----------------------------------------------------------------------------
+static void mc_ui_paint_status(void)
+{
+	MC_UI_STATUS	st;
+	char			buf[32];
+	int				col1 = MC_STAT_X + 16;
+	int				col2 = MC_STAT_X + 220;
+	int				col3 = MC_STAT_X + 520;
+	int				y    = MC_STAT_Y + 6;
+	int				bar_w, progress;
+
+	marschat_get_status(&st);
+
+	atlas_panel(MC_STAT_X, MC_STAT_Y, MC_STAT_W, MC_STAT_H, 1);
+	GUI_SetTextMode(GUI_TM_TRANS);
+
+	// ---- Column 1: signal quality ----
+	GUI_SetFont(&GUI_Font13B_1);
+	GUI_SetColor(ATLAS_DIM);
+	atlas_text(col1, y, "SIGNAL", 2);
+
+	y += 18;
+
+	if(mc_ui_have_rx)
+	{
+		snprintf(buf, sizeof(buf), "%d dB", mc_ui_last_snr);
+		GUI_SetFont(&GUI_Font24B_1);
+		GUI_SetColor(ATLAS_CYAN);
+		atlas_text(col1, y, buf, 1);
+
+		// SNR quality bar
+		bar_w = mc_ui_last_snr + 40;				// -40 dB = 0, 0 dB = 40
+		if(bar_w < 0) bar_w = 0;
+		if(bar_w > 60) bar_w = 60;
+
+		atlas_track(col1, y + 30, 160, 6, (bar_w * 160) / 60, ATLAS_LINE_OFF, ATLAS_CYAN);
+	}
+	else
+	{
+		GUI_SetFont(&GUI_Font24B_1);
+		GUI_SetColor(ATLAS_DIM);
+		atlas_text(col1, y, "NO RX", 1);
+
+		atlas_track(col1, y + 30, 160, 6, 0, ATLAS_LINE_OFF, ATLAS_CYAN);
+	}
+
+	y += 42;
+
+	if(mc_ui_have_rx)
+	{
+		int frac = mc_ui_last_dt % 100;
+		if(frac < 0) frac = -frac;
+
+		snprintf(buf, sizeof(buf), "DT %d.%02d s", mc_ui_last_dt / 100, frac);
+	}
+	else
+		snprintf(buf, sizeof(buf), "DT -");
+
+	GUI_SetFont(&GUI_Font13B_1);
+	GUI_SetColor(ATLAS_DIM);
+	atlas_text(col1, y, buf, 2);
+
+	// ---- Column 2: slot timeline (full width) ----
+	y = MC_STAT_Y + 6;
+
+	GUI_SetFont(&GUI_Font13B_1);
+	GUI_SetColor(ATLAS_DIM);
+	atlas_text(col2, y, "SLOT TIMELINE", 2);
+
+	y += 20;
+
+	// Large slot map - 120 s burst (111 s tone + 9 s decode/CW)
+	atlas_track(col2, y, 260, 10, (260 * 111) / 120, ATLAS_CYAN_DEEP, ATLAS_CYAN_DEEP);
+
+	// Lime tail (decode + CW id window)
+	GUI_SetColor(ATLAS_LIME);
+	GUI_FillRect(col2 + (260 * 111) / 120 + 1, y, col2 + 259, y + 9);
+
+	// Tick marks every 30 s
+	GUI_SetColor(ATLAS_DIM);
+	GUI_DrawVLine(col2 + (260 * 30) / 120, y + 11, y + 15);
+	GUI_DrawVLine(col2 + (260 * 60) / 120, y + 11, y + 15);
+	GUI_DrawVLine(col2 + (260 * 90) / 120, y + 11, y + 15);
+
+	GUI_SetFont(&GUI_Font13B_1);
+	atlas_text(col2, y + 13, "0", 0);
+	atlas_text(col2 + 260 - 20, y + 13, "120s", 0);
+
+	y += 32;
+
+	// Current slot progress
+	if(st.state != MC_SESS_OFF)
+	{
+		progress = ((120 - st.secs_to_slot) * 260) / 120;
+		if(progress < 0) progress = 0;
+
+		atlas_track(col2, y, 260, 8, progress,
+					ATLAS_LINE_OFF,
+					st.tx_busy ? ATLAS_AMBER : ATLAS_CYAN);
+
+		GUI_SetFont(&GUI_Font13B_1);
+		GUI_SetColor(st.tx_busy ? ATLAS_AMBER : ATLAS_CYAN);
+
+		snprintf(buf, sizeof(buf), "%s IN %ds", st.next_is_ours ? "TX" : "RX",
+				st.secs_to_slot);
+		atlas_text(col2, y + 12, buf, 2);
+	}
+	else
+	{
+		atlas_track(col2, y, 260, 8, 0, ATLAS_LINE_OFF, ATLAS_CYAN);
+	}
+
+	// ---- Column 3: session / ARQ state ----
+	y = MC_STAT_Y + 6;
+
+	GUI_SetFont(&GUI_Font13B_1);
+	GUI_SetColor(ATLAS_DIM);
+	atlas_text(col3, y, "SESSION", 2);
+
+	y += 20;
+
+	snprintf(buf, sizeof(buf), "SEQ %d", st.tx_seq);
+	mc_ui_telem_cell(col3, y, "TX", buf, ATLAS_AMBER);
+
+	snprintf(buf, sizeof(buf), "SEQ %d", st.last_rx_seq);
+	mc_ui_telem_cell(col3 + 120, y, "ACK", buf, ATLAS_AMBER);
+
+	y += 40;
+
+	if(st.pending)
+		snprintf(buf, sizeof(buf), "%d / %d", st.retries, MC_ARQ_RETRIES);
+	else
+		snprintf(buf, sizeof(buf), "-");
+
+	mc_ui_telem_cell(col3, y, "TRIES", buf, st.pending ? ATLAS_AMBER : ATLAS_DIM);
+
+	snprintf(buf, sizeof(buf), "%d", st.queued_chunks);
+	mc_ui_telem_cell(col3 + 120, y, "QUEUE", buf, st.queued_chunks ? ATLAS_CYAN : ATLAS_DIM);
+
+	// ---- Decorative ticks below the panel ----
+	atlas_ticks(MC_STAT_X + 12, MC_STAT_Y + MC_STAT_H + 2, MC_STAT_W - 24, 2, 8, 1, ATLAS_CYAN_DEEP);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : _cbKeyboard
+//* Object              : callback for the keyboard container window. Draws
+//*						: the atlas background behind the character keys and
+//*						: forwards button presses to mc_ui_on_button
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void _cbKeyboard(WM_MESSAGE *pMsg)
+{
+	switch(pMsg->MsgId)
+	{
+		case WM_PAINT:
+		{
+			atlas_background(0, 0, MC_KB_W, MC_KB_H);
+
+			// Top accent: lime hairline then a subtle border
+			GUI_SetColor(ATLAS_LIME);
+			GUI_DrawHLine(0, 0, MC_KB_W - 1);
+			GUI_SetColor(ATLAS_LINE);
+			GUI_DrawHLine(1, 0, MC_KB_W - 1);
+			break;
+		}
+
+		case WM_NOTIFY_PARENT:
+			mc_ui_on_button(WM_GetId(pMsg->hWinSrc), pMsg->Data.v);
+			break;
+
+		default:
+			WM_DefaultProc(pMsg);
+			break;
+	}
 }
 
 static void _cbDialog(WM_MESSAGE * pMsg)
@@ -1015,11 +1419,34 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 	{
 		case WM_INIT_DIALOG:
 		{
-			// Character keys are built here as a grid of children; the
-			// action row comes from the static template and only needs
-			// its skin
-			mc_ui_create_keys(pMsg->hWin);
+			// Latch the dialog handle early - GUI_CreateDialogBox has
+			// not returned yet, so the static hMcDialog is still 0 at
+			// this point, but mc_ui_layout_action_row and friends need
+			// it to find the template buttons via WM_GetDialogItem
+			hMcDialog = pMsg->hWin;
 
+			// The keyboard container lives below the visible area and
+			// slides up on demand. Created before the char keys so it
+			// can serve as their parent
+			hMcKeyboard = WM_CreateWindowAsChild(0, MC_UI_H, MC_KB_W, MC_KB_H,
+								pMsg->hWin, WM_CF_SHOW, _cbKeyboard, 0);
+
+			mc_ui_create_keys();
+
+			// TYPE button - created programmatically (not in the
+			// template) so it can be shown/hidden. It opens the
+			// keyboard and is the only way to trigger it - WM_TOUCH
+			// on a WINDOW is unreliable on a resistive panel
+			hMcTypeBtn = BUTTON_CreateEx(MC_FULL_TYPE_X, MC_ACT_Y,
+										 MC_FULL_TYPE_W, MC_ACT_H,
+										 pMsg->hWin, WM_CF_SHOW, 0,
+										 ID_BUTTON_TYPE);
+
+			BUTTON_SetText(hMcTypeBtn, "TYPE");
+			BUTTON_SetSkin(hMcTypeBtn, mc_ui_button_skin);
+
+			// Action row buttons come from the static template - just
+			// apply the atlas skin
 			{
 				static const int ids[] =
 				{
@@ -1059,17 +1486,29 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 			hMcTimer = WM_CreateTimer(pMsg->hWin, 0, 500, 0);
 
-			mc_ui_set_input_enabled(pMsg->hWin, !mc_ui_sending);
+			// Keyboard starts hidden - set the expanded action row
+			mc_ui_kb_shown = 0;
+			hMcAnim        = 0;
+			mc_ui_layout_action_row(0);
+			mc_ui_set_input_enabled(!mc_ui_sending);
 			break;
 		}
 
 		case WM_PAINT:
 		{
 			atlas_background(0, MC_TITLE_H, MC_UI_W, MC_UI_H - MC_TITLE_H);
+			atlas_grid(0, MC_TITLE_H, MC_UI_W, MC_UI_H - MC_TITLE_H, 80);
 
 			mc_ui_paint_history();
 			mc_ui_paint_telemetry();
 			mc_ui_paint_compose();
+
+			// The status panel is always painted behind the keyboard
+			// container. When the container is on-screen it hides the
+			// panel; when it slides away the panel is revealed
+			if(!mc_ui_kb_shown)
+				mc_ui_paint_status();
+
 			break;
 		}
 
@@ -1080,9 +1519,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 			dirty = mc_ui_drain_rx();
 
-			// Message fully drained - clear the draft and unlock input.
-			// In a session the last chunk is only really gone once the
-			// peer has acknowledged it
+			// Message fully drained - clear the draft and unlock input
 			marschat_get_status(&st);
 
 			if((mc_ui_sending) && (!st.tx_busy) && (!st.pending) && (st.queued_chunks == 0))
@@ -1091,7 +1528,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 				mc_ui_compose_len	= 0;
 				mc_ui_compose[0]	= 0;
 
-				mc_ui_set_input_enabled(pMsg->hWin, 1);
+				mc_ui_set_input_enabled(1);
 				dirty = 1;
 			}
 
@@ -1100,7 +1537,7 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 			if(dirty)
 			{
-				mc_ui_invalidate_all(pMsg->hWin);
+				mc_ui_invalidate_all();
 			}
 			else
 			{
@@ -1119,8 +1556,14 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 
 			// Children go with the dialog - drop the handles so a
 			// later repaint cannot reach a dead window
-			hMcTitle = 0;
-			hMcSlot  = 0;
+			hMcTitle    = 0;
+			hMcSlot     = 0;
+			hMcKeyboard = 0;
+
+			memset(hMcCharKeys, 0, sizeof(hMcCharKeys));
+			hMcShiftKey = 0;
+			hMcTypeBtn  = 0;
+			hMcAnim     = 0;
 			break;
 		}
 
@@ -1129,9 +1572,13 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			Id    = WM_GetId(pMsg->hWinSrc);
 			NCode = pMsg->Data.v;
 
-			_cbControl(pMsg, Id, NCode);
+			mc_ui_on_button(Id, NCode);
 			break;
 		}
+
+		// WM_TOUCH removed — TYPE/HIDE button is the sole keyboard
+		// toggle; WM_TOUCH on a plain WINDOW was unreliable on the
+		// resistive panel anyway
 
 		case WM_KEY:
 		{

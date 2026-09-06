@@ -52,6 +52,13 @@
 // Ground: flat fill plus the faint 6 px banding of the reference
 void	atlas_background(int x, int y, int w, int h);
 
+// Overlay grid: faint vertical and horizontal lines at a wider pitch
+// than the banding, with small edge labels ("X:nn") - the sci-fi
+// instrumentation texture visible in the Atlas reference stills.
+// Call after atlas_background, before content. pitch is the spacing
+// between grid lines (80 is a good default)
+void	atlas_grid(int x, int y, int w, int h, int pitch);
+
 // Panel: fill + hairline border, with amber corner brackets when
 // brackets != 0
 void	atlas_panel(int x, int y, int w, int h, uint8_t brackets);
