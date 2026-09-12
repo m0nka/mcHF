@@ -19,10 +19,12 @@
 #include "rtc.h"
 #include "ff.h"
 
+#include "mc_ec.h"
 #include "mc_identity.h"
 #include "mc_contacts.h"
 #include "mc_rx.h"
 #include "mc_tx.h"
+#include "lora_radio.h"
 
 #include "meshchat_proc.h"
 
@@ -49,6 +51,7 @@ typedef struct
 #define MESHCHAT_REQ_ADD		3
 #define MESHCHAT_REQ_FORGET		4
 #define MESHCHAT_REQ_ADD_CHAN	5
+#define MESHCHAT_REQ_DEL_CHAN	6
 
 typedef struct
 {
@@ -75,6 +78,8 @@ static volatile uint8_t		mc_sd_waited;		// half seconds spent waiting for a card
 // When the card was last looked for again, while running without one
 static uint32_t				mc_store_poll_tick;
 
+static uint8_t			mc_queue_tx(const MC_TX_PACKET *pkt);
+
 // Scratch owned by this task - none of it is touched anywhere else
 static MESHCHAT_RX_RAW	mc_raw;
 static MC_RX_EVENT		mc_ev;
@@ -100,6 +105,11 @@ static uint8_t			mc_echo_last = 0xFF;	// most recent transmission
 
 // Payloads we have already dealt with, so a message repeated by three
 // repeaters is shown once
+// Where packets go once the modem has handed them over. Counted so a
+// mesh that looks lossy can be told apart from one we are throwing away
+// ourselves - the two need completely different fixes
+static MESHCHAT_STAT	mc_stat;
+
 static uint32_t			mc_seen_fp[MESHCHAT_SEEN_MAX];
 static uint8_t			mc_seen_head;
 
@@ -595,6 +605,11 @@ const MESHCHAT_MSG *meshchat_msg_at(const MESHCHAT_CONV *conv, uint8_t idx)
 // ---------------------------------------------------------------------
 // From the radio task
 
+const MESHCHAT_STAT *meshchat_stats(void)
+{
+	return &mc_stat;
+}
+
 void meshchat_rx_packet(const uint8_t *data, uint16_t size, int8_t snr)
 {
 	MESHCHAT_RX_RAW	raw;
@@ -610,9 +625,19 @@ void meshchat_rx_packet(const uint8_t *data, uint16_t size, int8_t snr)
 	raw.size	= size;
 	raw.snr		= snr;
 
-	// Drop rather than block - the radio task must get back to listening
+	// Drop rather than block - the radio task must get back to listening.
+	// Counted, because this is the one loss the radio inflicts on itself:
+	// the queue only fills when this task is busy, and an Ed25519 advert
+	// verify is long enough to do it
 	if(xQueueSend(mc_rx_q, &raw, 0) != pdPASS)
+	{
+		mc_stat.q_drop++;
+		printf("meshchat: RX QUEUE FULL, packet dropped (%d so far) \r\n",
+				(int)mc_stat.q_drop);
 		return;
+	}
+
+	mc_stat.queued++;
 
 	if(ps.hMeshchatTask != NULL)
 		xTaskNotify(ps.hMeshchatTask, MESHCHAT_NOTIFY_WAKE, eSetBits);
@@ -697,6 +722,21 @@ uint8_t meshchat_forget_contact(uint8_t contact_idx)
 	return mc_post_req(&req);
 }
 
+uint8_t meshchat_remove_channel(const MESHCHAT_CONV *conv)
+{
+	MESHCHAT_REQ	req;
+
+	if((conv == NULL) || (conv->kind != MESHCHAT_CONV_CHANNEL))
+		return 1;
+
+	memset(&req, 0, sizeof(req));
+
+	req.kind = MESHCHAT_REQ_DEL_CHAN;
+	req.conv = *conv;
+
+	return mc_post_req(&req);
+}
+
 uint8_t meshchat_add_channel(const char *name)
 {
 	MESHCHAT_REQ	req;
@@ -773,6 +813,64 @@ static void mc_notify_ui(const MC_RX_EVENT *ev)
 	xTaskNotify(ps.hUiTask, UI_LORA_NOTIFICATION, eSetValueWithOverwrite);
 }
 
+#ifdef MESHCHAT_DEBUG_DM_KEY
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_dump_hex
+//* Object              : hex for the debug UART, in chunks - the tiny
+//*						: printf is not happy with very long lines
+//* Context    			: CONTEXT_MESHCHAT
+//*----------------------------------------------------------------------------
+static void mc_dump_hex(const char *label, const uint8_t *p, uint16_t len)
+{
+	uint16_t	i;
+
+	printf("meshchat dm-debug: %s ", label);
+
+	for(i = 0; i < len; i++)
+	{
+		printf("%02X", p[i]);
+
+		if(((i + 1) % 32) == 0)
+			printf(" \r\n                   ");
+	}
+
+	printf(" \r\n");
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_dump_dm_attempt
+//* Object              : everything needed to solve the direct message
+//*						: key schedule offline against a real packet
+//* Context    			: CONTEXT_MESHCHAT
+//*----------------------------------------------------------------------------
+static void mc_dump_dm_attempt(void)
+{
+	const MC_IDENTITY	*id = mc_identity_get();
+	MC_CONTACT			*c  = mc_contacts_find_by_hash(mc_ev.src_hash);
+	uint8_t				secret[MC_EC_KEY_SIZE];
+
+	mc_dump_hex("pkt     ", mc_raw.data, mc_raw.size);
+	mc_dump_hex("our pub ", id->pub, MC_EC_KEY_SIZE);
+
+	if(c == NULL)
+	{
+		printf("meshchat dm-debug: sender %02X is not in the contact table \r\n",
+				mc_ev.src_hash);
+		return;
+	}
+
+	mc_dump_hex("their pub", c->pub_key, MC_EC_KEY_SIZE);
+
+	// The full 32 byte X25519 output - the contact only caches the 16
+	// bytes we currently use as the key, and the answer may well be a
+	// hash of the whole thing
+	if(mc_ec_shared_secret(secret, id->seed, c->pub_key) == 0)
+		mc_dump_hex("shared  ", secret, MC_EC_KEY_SIZE);
+
+	memset(secret, 0, sizeof(secret));
+}
+#endif
+
 //*----------------------------------------------------------------------------
 //* Function Name       : mc_handle_rx
 //* Object              : decode one packet and file it
@@ -784,22 +882,116 @@ static void mc_handle_rx(void)
 
 	mc_rx_decode(mc_raw.data, mc_raw.size, mc_raw.snr, &mc_ev);
 
+	// Understood at all ? A packet on a channel we do not hold the key
+	// for, or a direct message for somebody else, is not a loss - it is
+	// simply not ours, and lumping the two together is what makes a
+	// mesh look lossier than it is
+	if((mc_ev.kind == MC_RX_ADVERT) || (mc_ev.kind == MC_RX_CHANNEL) ||
+	   (mc_ev.kind == MC_RX_DIRECT))
+		mc_stat.decoded++;
+	else
+		mc_stat.unreadable++;
+
 	#ifdef MESHCHAT_DEBUG_RX
 	printf("meshchat: rx %d bytes, %s, snr %d, kind %d \r\n",
 			(int)mc_raw.size, mc_ev.type_short, (int)mc_ev.snr, (int)mc_ev.kind);
+
+	// A direct message sent to us that would not open. Called out
+	// loudly because it is the one thing that separates "nobody has
+	// messaged this radio" from "the direct message key schedule is
+	// wrong" - the one part of the protocol never checked against
+	// another node
+	#ifdef MESHCHAT_DEBUG_DM_KEY
+	// Every ACK on the air, with the value it carries. Paired with the
+	// dump of what we sent, this is what identifies the quantity an ACK
+	// is computed over - the last unknown in the direct message flow
+	if(mc_ev.kind == MC_RX_ACK)
+	{
+		printf("meshchat dm-debug: ACK crc %08X \r\n", (unsigned int)mc_ev.ack_crc);
+		mc_dump_hex("ack pkt ", mc_raw.data, mc_raw.size);
+	}
+
+	// PATH is what a MeshCore node actually answers a flooded direct
+	// message with - it returns the route AND acknowledges, which is
+	// why the phone keeps retrying at us. Its payload is encrypted with
+	// the same pairwise key, so dumping the bytes next to the message
+	// we sent is enough to work the format out
+	if(mc_ev.type == MESHCORE_PAYLOAD_TYPE_PATH)
+		mc_dump_hex("path pkt", mc_raw.data, mc_raw.size);
 	#endif
+
+	if((mc_ev.addressed_to_us) && (mc_ev.kind != MC_RX_DIRECT))
+	{
+		printf("meshchat:   DM addressed to us from %02X, could NOT decrypt "
+			   "(sender not an added contact, or wrong key schedule) \r\n",
+			   mc_ev.src_hash);
+
+		#ifdef MESHCHAT_DEBUG_DM_KEY
+		mc_dump_dm_attempt();
+		#endif
+	}
+	#endif
+
+	// An acknowledgement for something we sent - mark it delivered
+	if(mc_ev.has_path_ack)
+	{
+		uint8_t	i;
+
+		for(i = 0; i < mc_msg_used; i++)
+		{
+			MESHCHAT_MSG	*m = &mc_msgs[mc_history_index(i)];
+
+			if((!m->in_use) || (!m->ack_wait))
+				continue;
+
+			if(memcmp(m->ack, mc_ev.path_ack, 4) != 0)
+				continue;
+
+			m->ack_wait	 = 0;
+			m->delivered = 1;
+
+			mc_revision++;
+
+			printf("meshchat:   delivered: '%s' acked by %s \r\n", m->text, mc_ev.sender);
+			break;
+		}
+	}
 
 	// One of ours coming back off a repeater. Counted as proof the
 	// signal got out, and deliberately not filed as an incoming message
 	// - it is the message we already showed as sent
 	if(mc_echo_match(&mc_ev))
+	{
+		mc_stat.echo++;
 		return;
+	}
 
 	// A copy of something already handled, arriving by another route.
 	// Adverts are exempt: a repeated advert is still a live sighting of
 	// that node and should refresh its entry
 	if((mc_ev.kind != MC_RX_ADVERT) && (mc_seen_check(mc_ev.payload_fp)))
 	{
+		// A repeat of a direct message still has to be answered. The
+		// sender is repeating precisely because it has not heard our
+		// acknowledgement - if the first one was lost, staying silent
+		// on every retry means it never gets through
+		if((mc_ev.kind == MC_RX_DIRECT) && (mc_ev.needs_ack))
+		{
+			MC_CONTACT	*c = mc_contacts_find(mc_ev.pub_key);
+
+			if((c != NULL) && (mc_tx_build_path_ack(&mc_pkt, c, mc_ev.ack_reply) == 0))
+			{
+				mc_queue_tx(&mc_pkt);
+				printf("meshchat:   repeat of a dm, ack re-sent \r\n");
+			}
+
+			mc_stat.dup++;
+
+			return;
+		}
+
+		mc_stat.dup++;
+
 		#ifdef MESHCHAT_DEBUG_RX
 		printf("meshchat:   duplicate, ignored \r\n");
 		#endif
@@ -888,6 +1080,22 @@ static void mc_handle_rx(void)
 			mc_history_add(&conv, MESHCHAT_DIR_RX, c->name, mc_ev.text, mc_ev.snr);
 
 			c->unread++;
+
+			// Answer it, or the sender keeps retransmitting. MeshCore
+			// acknowledges a flooded direct message with a PATH packet
+			// that carries the ack nested inside
+			if(mc_ev.needs_ack)
+			{
+				if(mc_tx_build_path_ack(&mc_pkt, c, mc_ev.ack_reply) == 0)
+				{
+					mc_queue_tx(&mc_pkt);
+
+					printf("meshchat:   ack %02X%02X%02X%02X sent to %s \r\n",
+							mc_ev.ack_reply[0], mc_ev.ack_reply[1],
+							mc_ev.ack_reply[2], mc_ev.ack_reply[3], c->name);
+				}
+			}
+
 			break;
 		}
 
@@ -933,6 +1141,8 @@ static uint8_t mc_queue_tx(const MC_TX_PACKET *pkt)
 static void mc_handle_send(const MESHCHAT_REQ *req)
 {
 	uint32_t	ts = mc_now_epoch();
+	uint8_t		expect_ack[4];
+	uint8_t		have_expect = 0;
 	uint8_t		err;
 
 	if(req->conv.kind == MESHCHAT_CONV_CHANNEL)
@@ -972,7 +1182,17 @@ static void mc_handle_send(const MESHCHAT_REQ *req)
 			return;
 		}
 
-		err = mc_tx_build_direct_text(&mc_pkt, c, req->text, ts);
+		err = mc_tx_build_direct_text(&mc_pkt, c, req->text, ts, expect_ack);
+
+		if(!err)
+			have_expect = 1;
+
+		#ifdef MESHCHAT_DEBUG_DM_KEY
+		// What we put on the air, so the ACK that comes back can be
+		// matched against a message whose bytes we know exactly
+		if(!err)
+			mc_dump_hex("sent dm ", mc_pkt.data, mc_pkt.len);
+		#endif
 
 		if(err)
 		{
@@ -989,6 +1209,16 @@ static void mc_handle_send(const MESHCHAT_REQ *req)
 	}
 
 	mc_history_add(&req->conv, MESHCHAT_DIR_TX, mc_identity_get()->name, req->text, 0);
+
+	// Remember what will acknowledge it, so the reply can be matched
+	// back to this line and shown as delivered
+	if(have_expect)
+	{
+		MESHCHAT_MSG	*m = &mc_msgs[(mc_msg_head + MESHCHAT_MSG_MAX - 1) % MESHCHAT_MSG_MAX];
+
+		memcpy(m->ack, expect_ack, sizeof(m->ack));
+		m->ack_wait = 1;
+	}
 }
 
 //*----------------------------------------------------------------------------
@@ -1037,6 +1267,41 @@ static void mc_handle_req(const MESHCHAT_REQ *req)
 		case MESHCHAT_REQ_FORGET:
 		{
 			mc_contacts_forget(req->arg);
+			mc_revision++;
+			break;
+		}
+
+		case MESHCHAT_REQ_DEL_CHAN:
+		{
+			MC_CHANNEL	*ch = mc_channels_find_by_hash(req->conv.chan_hash);
+			char		was[MC_CHANNEL_NAME_MAX + 1];
+			uint8_t		err;
+
+			if(ch == NULL)
+				break;
+
+			// The name has to be taken before the entry is cleared
+			strncpy(was, ch->name, MC_CHANNEL_NAME_MAX);
+			was[MC_CHANNEL_NAME_MAX] = 0;
+
+			err = mc_channels_remove_by_hash(req->conv.chan_hash);
+
+			// Refused rather than failed. Said in the conversation
+			// itself, not just the log - the screen is where the user
+			// pressed the button
+			if(err == MC_CHANNEL_PROTECTED)
+			{
+				printf("meshchat: channel '%s' is the default, not removed \r\n", was);
+
+				mc_history_add(&req->conv, MESHCHAT_DIR_INFO, NULL,
+							   "the default channel cannot be deleted", 0);
+
+				mc_revision++;
+				break;
+			}
+
+			printf("meshchat: channel '%s' removed \r\n", was);
+
 			mc_revision++;
 			break;
 		}
@@ -1159,8 +1424,12 @@ meshchat_proc_loop:
 
 	// Normally notification driven, but while there is no card we have
 	// to come round on our own to look for one
+	// Normally a packet or a request wakes us. The cap is what makes the
+	// statistics below come round on their own on a quiet mesh - a
+	// report that only prints when traffic arrives cannot show that no
+	// traffic arrived, which is exactly the case being investigated
 	xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue,
-					mc_store_is_writable() ? MESHCHAT_PROC_SLEEP_TIME
+					mc_store_is_writable() ? MESHCHAT_STAT_PERIOD_MS
 										   : MESHCHAT_STORE_POLL_MS);
 
 	// Received packets first - decoding is what feeds the rest
@@ -1201,6 +1470,36 @@ meshchat_proc_loop:
 
 				mc_revision++;
 			}
+		}
+	}
+
+	// ------------------------------------------------------------
+	// Periodic account of where the traffic went. Printed from this
+	// task rather than the radio one so both halves can be shown
+	// together - the modem's view and ours - which is what makes the
+	// difference between the mesh losing packets and this radio
+	// losing them visible at a glance
+	// ------------------------------------------------------------
+	{
+		static uint32_t		stat_tick = 0;
+		uint32_t			now = (uint32_t)xTaskGetTickCount();
+
+		if((stat_tick == 0) || ((now - stat_tick) >= MESHCHAT_STAT_PERIOD_MS))
+		{
+			const LORA_RX_STAT *r = lora_radio_stats();
+
+			stat_tick = now;
+
+			printf("meshchat rx stats: modem done %d, crc err %d, hdr err %d, "
+				   "timeout %d, rearm %d, max poll gap %d ms \r\n",
+					(int)r->rx_done, (int)r->crc_err, (int)r->hdr_err,
+					(int)r->rx_timeout, (int)r->rearm, (int)r->max_gap_ms);
+
+			printf("meshchat rx stats: queued %d, QUEUE DROPS %d, decoded %d, "
+				   "not ours %d, dup %d, echo %d; tx ok %d, tx fail %d \r\n",
+					(int)mc_stat.queued, (int)mc_stat.q_drop, (int)mc_stat.decoded,
+					(int)mc_stat.unreadable, (int)mc_stat.dup, (int)mc_stat.echo,
+					(int)r->tx_ok, (int)r->tx_fail);
 		}
 	}
 

@@ -44,6 +44,12 @@
 #define MC_CHANNEL_NAME_MAX		16
 #define MC_CHANNEL_KEY_SIZE		16
 
+// A channel authenticates with an HMAC over its 16 byte key; a direct
+// message authenticates with an HMAC over the full 32 byte X25519 shared
+// secret, while still taking its AES-128 key from the first 16. The two
+// paths therefore share the cipher but not the MAC key length
+#define MC_DM_MAC_KEY_SIZE		MC_EC_KEY_SIZE
+
 #define MC_CONTACTS_FILE		"0://meshchat/contacts.bin"
 #define MC_CHANNELS_FILE		"0://meshchat/channels.bin"
 
@@ -62,9 +68,14 @@ typedef struct
 	uint8_t		path[MESHCORE_MAX_PATH_SIZE];
 
 	// Direct message key: the X25519 shared secret with this node,
-	// cached because deriving it costs a scalar multiplication and an
-	// incoming message must be decrypted in the radio task
-	uint8_t		shared[MC_CHANNEL_KEY_SIZE];
+	// cached because deriving it costs a scalar multiplication.
+	//
+	// All 32 bytes are kept, not just the 16 the cipher uses. MeshCore
+	// takes the AES-128 key from the first half but authenticates with
+	// an HMAC over the WHOLE secret - proven by brute forcing a real
+	// direct message from a phone against its captured MAC, see
+	// claude/meshchat_test/solve_dm_key.py
+	uint8_t		shared[MC_EC_KEY_SIZE];
 	uint8_t		have_shared;
 
 	uint8_t		saved;							// user added it, persist it
@@ -161,7 +172,16 @@ uint8_t		mc_channels_add(const char *name, const uint8_t key[MC_CHANNEL_KEY_SIZE
 // name, so it is added by key instead
 uint8_t		mc_channels_add_by_name(const char *name);
 
+// What the remove calls answer when the channel is one that must not
+// go away. Distinct from a plain failure so the screen can say why
+#define MC_CHANNEL_PROTECTED	2
+
+// The default channel - the one whose key is fixed rather than derived,
+// so it cannot be typed back in from its name once it is gone
+uint8_t		mc_channel_is_default(const MC_CHANNEL *ch);
+
 uint8_t		mc_channels_remove(uint8_t idx);
+uint8_t		mc_channels_remove_by_hash(uint8_t hash);
 
 // hash = SHA-256(key)[0]
 uint8_t		mc_channel_hash_of(const uint8_t key[MC_CHANNEL_KEY_SIZE]);

@@ -377,6 +377,19 @@ static void lora_radio_signal_stats(struct LORA_PACKET_RX *lp)
 	#endif
 }
 
+static LORA_RX_STAT	lora_stat;
+
+const LORA_RX_STAT *lora_radio_stats(void)
+{
+	return &lora_stat;
+}
+
+void lora_radio_stats_gap(uint32_t gap_ms)
+{
+	if(gap_ms > lora_stat.max_gap_ms)
+		lora_stat.max_gap_ms = gap_ms;
+}
+
 void lora_radio_rx_check(struct LORA_PACKET_RX *lp)
 {
 	ushort 	a = 0;
@@ -394,8 +407,17 @@ void lora_radio_rx_check(struct LORA_PACKET_RX *lp)
 		//printf("start rx \r\n");
 
 		sx126x_clear_irq_status	 (&radio_drv, RADIOLIB_SX126X_IRQ_ALL);
+		sx126x_irq_flush		 (&radio_drv);
+
+		#ifdef LORA_RX_CONTINUOUS
+		sx126x_set_op_mode_rx	 (&radio_drv, RX_CONTINUOUS_F);
+		#else
 		sx126x_set_op_mode_rx	 (&radio_drv, RX_TIMEOUT_F);
+		#endif
+
 		sx126x_set_dio_irq_params(&radio_drv, RADIOLIB_SX126X_IRQ_ALL, RADIOLIB_SX126X_IRQ_RX_DONE|RADIOLIB_SX126X_IRQ_TIMEOUT, 0, 0);
+
+		lora_stat.rearm++;
 
 		rx_state = 1;	// wait
 		return;
@@ -413,7 +435,13 @@ void lora_radio_rx_check(struct LORA_PACKET_RX *lp)
 		if((a & RADIOLIB_SX126X_IRQ_TIMEOUT) == RADIOLIB_SX126X_IRQ_TIMEOUT)
 		{
 			//printf("--> timeout \r\n");
+			lora_stat.rx_timeout++;
+
 			sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_TIMEOUT);
+
+			// Single shot mode leaves the modem in standby once the
+			// timer expires, so it has to be put back into receive
+			rx_state = 0;
 			return;
 		}
 		else if(a)
@@ -440,6 +468,7 @@ void lora_radio_rx_check(struct LORA_PACKET_RX *lp)
 
 			if((a & RADIOLIB_SX126X_IRQ_CRC_ERR) == RADIOLIB_SX126X_IRQ_CRC_ERR)
 			{
+				lora_stat.crc_err++;
 				printf("--> crc error \r\n");
 				sx126x_clear_irq_status(&radio_drv, a);
 				goto restart_rx;
@@ -447,6 +476,7 @@ void lora_radio_rx_check(struct LORA_PACKET_RX *lp)
 
 			if((a & RADIOLIB_SX126X_IRQ_HEADER_ERR) == RADIOLIB_SX126X_IRQ_HEADER_ERR)
 			{
+				lora_stat.hdr_err++;
 				printf("--> header error \r\n");
 				sx126x_clear_irq_status(&radio_drv, a);
 				goto restart_rx;
@@ -471,6 +501,8 @@ void lora_radio_rx_check(struct LORA_PACKET_RX *lp)
 						lp->raw_rx_size = len;
 						lp->avail = 1;
 
+						lora_stat.rx_done++;
+
 						sx126x_clear_irq_status(&radio_drv, a);
 						goto restart_rx;
 					}
@@ -489,7 +521,14 @@ void lora_radio_rx_check(struct LORA_PACKET_RX *lp)
 	}
 
 restart_rx:
+
+	// Continuous mode carries straight on to the next packet, so the
+	// receiver is left exactly as it is - clearing the interrupt was
+	// all it needed. Re-issuing SetRx here is what used to cost us the
+	// packet whose preamble had already started
+	#ifndef LORA_RX_CONTINUOUS
 	rx_state = 0;	// restart
+	#endif
 }
 
 //*----------------------------------------------------------------------------
@@ -512,6 +551,20 @@ uchar lora_radio_transmit(const uchar *data, uchar len)
 
 	if((data == NULL) || (len == 0))
 		return 1;
+
+	// Take the modem off whatever it was doing first. A receive that is
+	// still running owns the buffer and the packet parameters, and a
+	// SetTx issued on top of it is not guaranteed to be honoured
+	sx126x_set_op_mode_standby(&radio_drv, false);
+
+	// Then start from a clean interrupt state: the status register, and
+	// any token the receive path left standing in the semaphore. Without
+	// the flush the wait below returns immediately on that stale token,
+	// reads an empty status and calls a perfectly good transmit failed -
+	// which is exactly what the direct message acknowledgements hit, as
+	// they are sent within milliseconds of the packet they answer
+	sx126x_clear_irq_status(&radio_drv, RADIOLIB_SX126X_IRQ_ALL);
+	sx126x_irq_flush(&radio_drv);
 
 	sx126x_set_pa_config(&radio_drv, 0x04, 0x07, false);
 	sx126x_set_tx_params(&radio_drv, 22, true, 200);
@@ -549,7 +602,13 @@ uchar lora_radio_transmit(const uchar *data, uchar len)
 
 tx_done:
 
-	// Re-arm the receiver
+	if(res)
+		lora_stat.tx_fail++;
+	else
+		lora_stat.tx_ok++;
+
+	// Re-arm the receiver - transmitting took the modem out of receive
+	// whichever mode it was listening in
 	rx_state = 0;
 
 	return res;

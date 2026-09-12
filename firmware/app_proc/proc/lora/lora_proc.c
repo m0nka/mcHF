@@ -280,6 +280,21 @@ lora_proc_loop:
 	#ifdef SPI_GPIO_TEST
 	lora_proc_gpio_test();
 	#else
+	{
+		// How long since we last looked at the modem. The delay below
+		// asks for 5 ms, but this task shares its priority with the
+		// gui, so a heavy repaint can hold it off for far longer - and
+		// every one of those milliseconds is time a finished packet
+		// sits unread. Worth knowing when the mesh looks lossy
+		static uint32_t	last_tick = 0;
+		uint32_t		now = HAL_GetTick();
+
+		if(last_tick != 0)
+			lora_radio_stats_gap(now - last_tick);
+
+		last_tick = now;
+	}
+
 	lora_proc_client_exec(RxQueue);
 	#endif
 

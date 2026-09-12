@@ -353,6 +353,7 @@ esp_err_t sx1262_reset(sx126x_handle_t* handle);
 esp_err_t sx126x_init(sx126x_handle_t* handle, int spi_host_id, int nss, int reset,
                       int dio1, int busy);
 bool      sx126x_is_busy(sx126x_handle_t* handle);
+void      sx126x_irq_flush(sx126x_handle_t* handle);
 esp_err_t sx126x_irq_wait(sx126x_handle_t* handle, TickType_t timeout);
 bool      sx126x_get_irq_state(sx126x_handle_t* handle);
 

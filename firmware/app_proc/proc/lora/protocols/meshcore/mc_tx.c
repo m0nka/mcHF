@@ -34,6 +34,7 @@
 #include "grp_txt.h"
 #include "request.h"
 
+#include "sha256.h"
 #include "mc_ec.h"
 #include "mc_identity.h"
 #include "mc_contacts.h"
@@ -48,7 +49,7 @@
 //* Context    			: CONTEXT_MESHCHAT
 //*----------------------------------------------------------------------------
 static uint8_t mc_tx_seal(uint8_t *out, uint8_t *mac,
-						  const uint8_t key[MC_CHANNEL_KEY_SIZE],
+						  const uint8_t *key, uint8_t mac_key_len,
 						  const char *body, uint32_t timestamp)
 {
 	struct AES_ctx	ctx;
@@ -88,7 +89,9 @@ static uint8_t mc_tx_seal(uint8_t *out, uint8_t *mac,
 
 	memcpy(out, plain, len);
 
-	hmac_sha256(key, MC_CHANNEL_KEY_SIZE, out, len, mac, MESHCORE_CIPHER_MAC_SIZE);
+	// 16 for a channel key, 32 for a direct message's shared secret -
+	// the cipher above always used the first 16
+	hmac_sha256(key, mac_key_len, out, len, mac, MESHCORE_CIPHER_MAC_SIZE);
 
 	memset(plain, 0, sizeof(plain));
 
@@ -130,7 +133,8 @@ uint8_t mc_tx_build_group_text(MC_TX_PACKET *pkt, const MC_CHANNEL *ch,
 	memset(&grp, 0, sizeof(grp));
 
 	grp.channel_hash = ch->hash;
-	grp.data_length  = mc_tx_seal(grp.data, grp.mac, ch->key, body, timestamp);
+	grp.data_length  = mc_tx_seal(grp.data, grp.mac, ch->key, MC_CHANNEL_KEY_SIZE,
+								  body, timestamp);
 
 	if(grp.data_length == 0)
 		return 2;
@@ -152,7 +156,8 @@ uint8_t mc_tx_build_group_text(MC_TX_PACKET *pkt, const MC_CHANNEL *ch,
 }
 
 uint8_t mc_tx_build_direct_text(MC_TX_PACKET *pkt, const MC_CONTACT *to,
-								const char *text, uint32_t timestamp)
+								const char *text, uint32_t timestamp,
+								uint8_t ack_out[4])
 {
 	meshcore_message_t	msg;
 	meshcore_request_t	req;
@@ -168,10 +173,35 @@ uint8_t mc_tx_build_direct_text(MC_TX_PACKET *pkt, const MC_CONTACT *to,
 	req.destination_hash	= to->pub_key[0];
 	req.source_hash			= mc_identity_hash();
 	req.ciphertext_length	= mc_tx_seal(req.ciphertext, req.ciphher_mac,
-										 to->shared, text, timestamp);
+										 to->shared, MC_DM_MAC_KEY_SIZE,
+										 text, timestamp);
 
 	if(req.ciphertext_length == 0)
 		return 3;
+
+	// What the far end will answer with, computed the same way it will
+	// compute it: over the unpadded plaintext and OUR public key
+	if(ack_out != NULL)
+	{
+		Sha256Context	sha;
+		SHA256_HASH		dg;
+		uint8_t			plain[5 + MC_TX_TEXT_MAX];
+		uint16_t		n = (uint16_t)strlen(text);
+
+		if(n > MC_TX_TEXT_MAX)
+			n = MC_TX_TEXT_MAX;
+
+		memcpy(plain, &timestamp, sizeof(uint32_t));
+		plain[4] = MC_TEXT_TYPE_PLAIN;
+		memcpy(plain + 5, text, n);
+
+		Sha256Initialise(&sha);
+		Sha256Update(&sha, plain, (uint32_t)(5 + n));
+		Sha256Update(&sha, (void *)mc_identity_get()->pub, MC_EC_KEY_SIZE);
+		Sha256Finalise(&sha, &dg);
+
+		memcpy(ack_out, dg.bytes, 4);
+	}
 
 	memset(&msg, 0, sizeof(msg));
 
@@ -197,6 +227,66 @@ uint8_t mc_tx_build_direct_text(MC_TX_PACKET *pkt, const MC_CONTACT *to,
 
 	if(meshcore_serialize(&msg, pkt->data, &pkt->len) < 0)
 		return 5;
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_tx_build_path_ack
+//* Object              : answer a direct message with a PATH carrying the
+//*						: acknowledgement the sender is waiting for
+//* Notes    			: the returned path is empty - we send back the
+//*						: route we know, and a node that reached us by
+//*						: flood learns the direct one from the reply
+//* Context    			: CONTEXT_MESHCHAT
+//*----------------------------------------------------------------------------
+uint8_t mc_tx_build_path_ack(MC_TX_PACKET *pkt, const MC_CONTACT *to, const uint8_t ack[4])
+{
+	struct AES_ctx		ctx;
+	meshcore_message_t	msg;
+	meshcore_request_t	req;
+	uint8_t				plain[MESHCORE_CIPHER_BLOCK_SIZE];
+
+	if((pkt == NULL) || (to == NULL) || (ack == NULL))
+		return 1;
+
+	if(!to->have_shared)
+		return 2;
+
+	// path_len | extra type | ack, zero padded to one AES block
+	memset(plain, 0, sizeof(plain));
+
+	plain[0] = 0;									// no path of our own to offer
+	plain[1] = MESHCORE_PAYLOAD_TYPE_ACK;
+
+	memcpy(plain + 2, ack, 4);
+
+	AES_init_ctx(&ctx, to->shared);
+	AES_ECB_encrypt(&ctx, plain);
+
+	memset(&req, 0, sizeof(req));
+
+	req.destination_hash	= to->pub_key[0];
+	req.source_hash			= mc_identity_hash();
+	req.ciphertext_length	= sizeof(plain);
+
+	memcpy(req.ciphertext, plain, sizeof(plain));
+
+	hmac_sha256(to->shared, MC_DM_MAC_KEY_SIZE, req.ciphertext, req.ciphertext_length,
+				req.ciphher_mac, MESHCORE_CIPHER_MAC_SIZE);
+
+	memset(&msg, 0, sizeof(msg));
+
+	msg.type		= MESHCORE_PAYLOAD_TYPE_PATH;
+	msg.route		= MESHCORE_ROUTE_TYPE_FLOOD;
+	msg.version		= 0;
+	msg.path_length	= 0;
+
+	if(meshcore_request_serialize(&req, msg.payload, &msg.payload_length) < 0)
+		return 3;
+
+	if(meshcore_serialize(&msg, pkt->data, &pkt->len) < 0)
+		return 4;
 
 	return 0;
 }

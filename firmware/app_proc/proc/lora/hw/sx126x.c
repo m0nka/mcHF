@@ -802,6 +802,23 @@ bool sx126x_is_busy(sx126x_handle_t* handle)
     return LL_GPIO_IsInputPinSet(LORA_BUSY_PORT, LORA_BUSY);
 }
 
+// Throw away an interrupt token left over from an earlier operation.
+//
+// sx126x_irq_wait below returns on the DIO1 pin level without taking
+// the semaphore, so a completed receive can leave the ISR's give
+// standing. The next caller would then be handed that stale token the
+// moment it waits, read an empty interrupt status and conclude its own
+// operation had failed. Anything that arms the modem afresh must flush
+// first
+void sx126x_irq_flush(sx126x_handle_t* handle)
+{
+    if ((handle == NULL) || (handle->interrupt_semaphore == NULL))
+    	return;
+
+    while (xSemaphoreTake(handle->interrupt_semaphore, 0) == pdTRUE)
+    	;
+}
+
 esp_err_t sx126x_irq_wait(sx126x_handle_t* handle, TickType_t timeout)
 {
     if (handle == NULL)

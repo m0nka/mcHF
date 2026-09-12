@@ -56,8 +56,29 @@ uint8_t	mc_tx_build_group_text(MC_TX_PACKET *pkt, const MC_CHANNEL *ch,
 // cached (mc_contacts_derive_shared)
 //
 // Returns 0 on success
+// ack_out, when given, comes back with the acknowledgement this message
+// will be answered with - store it and a matching PATH reply confirms
+// the message was delivered
 uint8_t	mc_tx_build_direct_text(MC_TX_PACKET *pkt, const MC_CONTACT *to,
-								const char *text, uint32_t timestamp);
+								const char *text, uint32_t timestamp,
+								uint8_t ack_out[4]);
+
+//*----------------------------------------------------------------------------
+// Acknowledge a direct message, the way MeshCore actually does it.
+//
+// A flooded direct message is answered with a PATH packet, not an ACK
+// packet: it returns the route home AND carries the acknowledgement
+// nested inside. Its payload is encrypted with the same pairwise key as
+// the message, and the plaintext is
+//
+//     path_len | 0x03 (ACK) | ack[4] | zero padding
+//
+// Without this the sender retransmits the same message indefinitely.
+// Established from a phone's own replies, see solve notes in mc_rx.c
+//
+// Returns 0 on success
+uint8_t	mc_tx_build_path_ack(MC_TX_PACKET *pkt, const MC_CONTACT *to,
+							 const uint8_t ack[4]);
 
 //*----------------------------------------------------------------------------
 // Our own advertisement - this is what puts the radio on other people's

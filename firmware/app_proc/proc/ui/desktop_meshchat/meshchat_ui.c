@@ -30,6 +30,7 @@
 #include "ui_proc.h"
 #include "gui.h"
 #include "dialog.h"
+#include "SCROLLBAR.h"
 #include "desktop\ui_controls_layout.h"
 
 #include "rtc.h"
@@ -54,11 +55,49 @@ static WM_HWIN	hMxTimer;
 static WM_HWIN	hMxConvList;
 static WM_HWIN	hMxMsgList;
 
-// Title strip colours. GUI_USE_ARGB is 1 in this build, so a custom
-// colour has to go through GUI_MAKE_COLOR or it draws fully transparent.
-// The value is 0x00BBGGRR, not RGB
+// ---------------------------------------------------------------------
+// Palette
+//
+// GUI_USE_ARGB is 1 in this build, so every custom colour has to go
+// through GUI_MAKE_COLOR or it draws fully transparent, and the value is
+// 0x00BBGGRR rather than RGB.
+//
+// Deliberately low contrast: black on white is punishing on a backlit
+// panel you are staring at in the dark. Text is a dark slate rather than
+// black, panels are a soft off-white rather than white, and the screen
+// behind them is a shade darker again so the panels read as panels
 #define MX_TITLE_BK				GUI_MAKE_COLOR(0x00B48246)	// steel blue
 #define MX_TITLE_EDGE			GUI_MAKE_COLOR(0x008C6432)	// a shade darker, for the rule
+
+#define MX_PANE_BK				GUI_MAKE_COLOR(0x00F2EEE9)	// off-white, very slightly blue
+#define MX_PANE_TX				GUI_MAKE_COLOR(0x003E3226)	// dark slate, not black
+#define MX_PANE_DIM				GUI_MAKE_COLOR(0x00908070)	// secondary text
+#define MX_SCREEN_BK			GUI_MAKE_COLOR(0x00D8D0C6)	// behind the panels
+#define MX_EDGE					GUI_MAKE_COLOR(0x00ACA296)	// panel borders
+
+// Selection picks up the title colour, so the screen has one accent
+#define MX_SEL_BK				MX_TITLE_BK
+#define MX_SEL_TX				GUI_WHITE
+
+// Muted enough to sit in the same picture as the rest
+#define MX_WARN_TX				GUI_MAKE_COLOR(0x003030B0)	// soft red
+#define MX_GOOD_TX				GUI_MAKE_COLOR(0x003C6E1E)	// soft green
+
+// Per line colours in the message pane, so the state of an outgoing
+// direct message is readable at a glance rather than from a two
+// character marker
+#define MX_LINE_NORMAL			0					// received, or a channel message
+#define MX_LINE_WAIT			1					// sent, not acknowledged yet
+#define MX_LINE_OK				2					// acknowledged by the far end
+#define MX_LINE_INFO			3					// local notice
+
+static const GUI_COLOR	mx_line_colour[] =
+{
+	MX_PANE_TX,											// normal
+	GUI_MAKE_COLOR(0x002020B4),							// waiting - red
+	GUI_MAKE_COLOR(0x00287818),							// delivered - green
+	MX_PANE_DIM											// notice
+};
 
 // Which pair of panes we are showing
 #define MX_VIEW_CHAT			0
@@ -81,10 +120,43 @@ static uint8_t	mx_seen_view	 = 0xFF;
 static int		mx_seen_conv	 = -1;
 static int		mx_seen_compose	 = -1;
 
+// Which half of the conversation list the left pane is showing. Mixing
+// channels and people in one list made it hard to read once more than a
+// couple of each had accumulated, so the pane shows one kind at a time
+// and the third button under it swaps them over
+#define MX_FILT_CHAN			0
+#define MX_FILT_DM				1
+
+static uint8_t	mx_filter = MX_FILT_CHAN;
+
 // The conversation currently selected in the chat view. Held by value,
 // not by index - the list can be rebuilt underneath us
 static MESHCHAT_CONV	mx_conv;
 static uint8_t			mx_conv_valid = 0;
+
+// Which conversation each row of the filtered left pane came from. Row
+// number and conversation number are no longer the same thing once half
+// the conversations are being left out
+#define MX_CONV_ROW_MAX			48
+
+static uint8_t			mx_conv_row[MX_CONV_ROW_MAX];
+static uint8_t			mx_conv_rows = 0;
+
+// Which message each row of the right pane came from. A long message
+// folds over several rows, so a tapped row has to be mapped back before
+// REPLY can tell whose message it was
+static uint8_t			mx_row_msg[MX_MSG_ROW_MAX];
+static uint8_t			mx_row_count = 0;
+
+// Colour class of each row, filled while the pane is built and read back
+// by the owner draw callback - emWin has no per item colour of its own
+static uint8_t			mx_row_class[MX_MSG_ROW_MAX];
+
+// The row the user picked, kept across rebuilds so a repaint does not
+// snatch the selection back. A new message still jumps to the bottom,
+// which is what a chat should do
+static int				mx_msg_sel = -1;
+static uint8_t			mx_msg_seen = 0;		// messages at the last rebuild
 
 // ---------------------------------------------------------------------
 // Collapsible keyboard, same behaviour as the MarsChat one: the key grid
@@ -347,6 +419,9 @@ static void mx_layout_action_row(int kb_shown)
 	WM_HWIN	hAdd	 = WM_GetDialogItem(hMxDialog, ID_MX_ADD);
 	WM_HWIN	hForget	 = WM_GetDialogItem(hMxDialog, ID_MX_FORGET);
 	WM_HWIN	hAddChan = WM_GetDialogItem(hMxDialog, ID_MX_ADDCHAN);
+	WM_HWIN	hReply	 = WM_GetDialogItem(hMxDialog, ID_MX_REPLY);
+	WM_HWIN	hDelChan = WM_GetDialogItem(hMxDialog, ID_MX_DELCHAN);
+	WM_HWIN	hFilt	 = WM_GetDialogItem(hMxDialog, ID_MX_CONVFILT);
 
 	// Everything off, then only what this state needs back on
 	WM_HideWindow(hType);
@@ -356,7 +431,31 @@ static void mx_layout_action_row(int kb_shown)
 	WM_HideWindow(hAdvert);
 	WM_HideWindow(hAdd);
 	WM_HideWindow(hForget);
-	WM_HideWindow(hAddChan);
+	WM_HideWindow(hReply);
+
+	// The list buttons live under the conversation list, not in this
+	// row - they follow the view, not the keyboard. What the first two
+	// do depends on which list the pane is showing, so they are
+	// relabelled rather than duplicated
+	if(mx_view == MX_VIEW_CHAT)
+	{
+		// Add and Del read the same either way - what they add and
+		// delete is whatever the pane is listing. The third button
+		// names the list you get by pressing it
+		BUTTON_SetText(hAddChan, "Add");
+		BUTTON_SetText(hDelChan, "Del");
+		BUTTON_SetText(hFilt, (mx_filter == MX_FILT_DM) ? "CH" : "DM");
+
+		WM_ShowWindow(hAddChan);
+		WM_ShowWindow(hDelChan);
+		WM_ShowWindow(hFilt);
+	}
+	else
+	{
+		WM_HideWindow(hAddChan);
+		WM_HideWindow(hDelChan);
+		WM_HideWindow(hFilt);
+	}
 
 	if(mx_view == MX_VIEW_CONTACTS)
 	{
@@ -394,25 +493,82 @@ static void mx_layout_action_row(int kb_shown)
 		return;
 	}
 
-	// [TYPE] [SEND] [+CHAN] [CONTACTS] [ADVERT]
+	// [TYPE] [REPLY] [SEND] [CONTACTS] [ADVERT] - the channel buttons
+	// sit under the conversation list instead
 	// No EXIT - F3 closes the screen, the same key that opens it
 	BUTTON_SetText(hType, "TYPE");
 
-	WM_SetWindowPos(hType,		6,   MX_ACT_Y, 150, MX_ACT_H);
-	WM_SetWindowPos(hSend,		162, MX_ACT_Y, 150, MX_ACT_H);
-	WM_SetWindowPos(hAddChan,	318, MX_ACT_Y, 150, MX_ACT_H);
-	WM_SetWindowPos(hContact,	474, MX_ACT_Y, 160, MX_ACT_H);
-	WM_SetWindowPos(hAdvert,	640, MX_ACT_Y, 154, MX_ACT_H);
+	WM_SetWindowPos(hType,		6,   MX_ACT_Y, 154, MX_ACT_H);
+	WM_SetWindowPos(hReply,		164, MX_ACT_Y, 154, MX_ACT_H);
+	WM_SetWindowPos(hSend,		322, MX_ACT_Y, 154, MX_ACT_H);
+	WM_SetWindowPos(hContact,	480, MX_ACT_Y, 154, MX_ACT_H);
+	WM_SetWindowPos(hAdvert,	638, MX_ACT_Y, 154, MX_ACT_H);
 
 	WM_ShowWindow(hType);
+	WM_ShowWindow(hReply);
 	WM_ShowWindow(hSend);
-	WM_ShowWindow(hAddChan);
 	WM_ShowWindow(hContact);
 	WM_ShowWindow(hAdvert);
 }
 
 // ---------------------------------------------------------------------
 // List building
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_msg_owner_draw
+//* Object              : paint one row of the message pane
+//* Notes    			: emWin colours a listbox as a whole, not per
+//*						: item, so the only way to give a single line its
+//*						: own colour is to take over the drawing. The
+//*						: default handler still does the work for
+//*						: everything except the text colour
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static int mx_msg_owner_draw(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo)
+{
+	char		text[96];
+	uint8_t		cls;
+
+	switch(pDrawItemInfo->Cmd)
+	{
+		// A listbox asks for the whole row in one go. WIDGET_ITEM_DRAW_TEXT
+		// is what the table style widgets send and is handled as well, so
+		// this works whichever way round the library dispatches
+		case WIDGET_ITEM_DRAW:
+		case WIDGET_ITEM_DRAW_TEXT:
+		{
+			int	ret = LISTBOX_OwnerDraw(pDrawItemInfo);
+			int	sel = LISTBOX_GetSel(pDrawItemInfo->hWin);
+
+			cls = (pDrawItemInfo->ItemIndex < (int)MX_MSG_ROW_MAX)
+					? mx_row_class[pDrawItemInfo->ItemIndex] : MX_LINE_NORMAL;
+
+			// The selected row keeps its white-on-blue, or the colour
+			// would fight the highlight and read as unselected. A plain
+			// row is already the right colour and is left alone
+			if((pDrawItemInfo->ItemIndex == sel) || (cls == MX_LINE_NORMAL))
+				return ret;
+
+			// Let the default draw the background, the highlight and the
+			// text, then put the text back over itself in the colour this
+			// row wants. Same font and same origin means the same pixels,
+			// so nothing of the first pass shows through
+			LISTBOX_GetItemText(pDrawItemInfo->hWin, pDrawItemInfo->ItemIndex,
+								text, sizeof(text));
+
+			GUI_SetColor(mx_line_colour[cls]);
+			GUI_SetFont(LISTBOX_GetFont(pDrawItemInfo->hWin));
+			GUI_SetTextMode(GUI_TM_TRANS);
+			GUI_DispStringAt(text, pDrawItemInfo->x0, pDrawItemInfo->y0);
+
+			return ret;
+		}
+
+		default:
+			// Sizing and everything else stays default
+			return LISTBOX_OwnerDraw(pDrawItemInfo);
+	}
+}
 
 static void mx_list_clear(WM_HWIN hLb)
 {
@@ -430,11 +586,12 @@ static void mx_list_clear(WM_HWIN hLb)
 //*						: message is routinely longer than the pane
 //* Context    			: CONTEXT_VIDEO (gui task)
 //*----------------------------------------------------------------------------
-static void mx_list_add_wrapped(WM_HWIN hLb, const char *text, int width)
+static int mx_list_add_wrapped(WM_HWIN hLb, const char *text, int width)
 {
 	char	line[96];
 	int		len = (int)strlen(text);
 	int		pos = 0;
+	int		rows = 0;
 
 	if(width > (int)(sizeof(line) - 1))
 		width = (int)(sizeof(line) - 1);
@@ -442,7 +599,7 @@ static void mx_list_add_wrapped(WM_HWIN hLb, const char *text, int width)
 	if(len == 0)
 	{
 		LISTBOX_AddString(hLb, "");
-		return;
+		return 1;
 	}
 
 	while(pos < len)
@@ -469,6 +626,7 @@ static void mx_list_add_wrapped(WM_HWIN hLb, const char *text, int width)
 		line[take] = 0;
 
 		LISTBOX_AddString(hLb, line);
+		rows++;
 
 		pos += take;
 
@@ -476,6 +634,8 @@ static void mx_list_add_wrapped(WM_HWIN hLb, const char *text, int width)
 		while((pos < len) && (text[pos] == ' '))
 			pos++;
 	}
+
+	return rows;
 }
 
 //*----------------------------------------------------------------------------
@@ -488,14 +648,25 @@ static void mx_build_conv_list(void)
 	MESHCHAT_CONV	conv;
 	char			label[48];
 	uint8_t			i, n = meshchat_conv_count();
+	uint8_t			want = (mx_filter == MX_FILT_DM)
+							? MESHCHAT_CONV_DIRECT : MESHCHAT_CONV_CHANNEL;
 	int				sel = -1;
 
 	mx_list_clear(hMxConvList);
+
+	mx_conv_rows = 0;
 
 	for(i = 0; i < n; i++)
 	{
 		if(meshchat_conv_at(i, &conv))
 			continue;
+
+		// Only the kind this pane is showing
+		if(conv.kind != want)
+			continue;
+
+		if(mx_conv_rows >= MX_CONV_ROW_MAX)
+			break;
 
 		meshchat_conv_label(&conv, label, sizeof(label));
 
@@ -506,14 +677,17 @@ static void mx_build_conv_list(void)
 		   (conv.kind == mx_conv.kind) &&
 		   (((conv.kind == MESHCHAT_CONV_CHANNEL) && (conv.chan_hash == mx_conv.chan_hash)) ||
 		    ((conv.kind == MESHCHAT_CONV_DIRECT)  && (memcmp(conv.peer, mx_conv.peer, sizeof(conv.peer)) == 0))))
-			sel = i;
+			sel = mx_conv_rows;
+
+		mx_conv_row[mx_conv_rows++] = i;
 	}
 
-	// Nothing selected yet, or the selection has gone away - fall back
-	// to the first conversation, which is always a channel
-	if((sel < 0) && (n > 0))
+	// Nothing selected yet, or what was selected is not in this list -
+	// fall back to its first row. An empty list leaves the previous
+	// conversation open on the right, which is better than blanking it
+	if((sel < 0) && (mx_conv_rows > 0))
 	{
-		if(meshchat_conv_at(0, &mx_conv) == 0)
+		if(meshchat_conv_at(mx_conv_row[0], &mx_conv) == 0)
 		{
 			mx_conv_valid = 1;
 			sel = 0;
@@ -532,9 +706,12 @@ static void mx_build_conv_list(void)
 static void mx_build_msg_list(void)
 {
 	char	line[160];
-	uint8_t	i, n;
+	uint8_t	i, n, cls;
+	int		rows;
 
 	mx_list_clear(hMxMsgList);
+
+	mx_row_count = 0;
 
 	if(!mx_conv_valid)
 		return;
@@ -553,9 +730,22 @@ static void mx_build_msg_list(void)
 		if(m == NULL)
 			continue;
 
+		// Colour class for every row this message produces
+		cls = MX_LINE_NORMAL;
+
+		if(m->dir == MESHCHAT_DIR_INFO)
+			cls = MX_LINE_INFO;
+		else if(m->dir == MESHCHAT_DIR_TX)
+			cls = m->delivered ? MX_LINE_OK : (m->ack_wait ? MX_LINE_WAIT : MX_LINE_NORMAL);
+
 		switch(m->dir)
 		{
 			case MESHCHAT_DIR_TX:
+				// Every outgoing line reads the same. Whether it has been
+				// acknowledged is carried by the colour alone - a marker
+				// in front of the text pushes the message about as the
+				// state changes and is harder to read than the text it
+				// is meant to annotate
 				snprintf(line, sizeof(line), "%s  >> %s", m->time, m->text);
 				break;
 
@@ -571,14 +761,37 @@ static void mx_build_msg_list(void)
 				break;
 		}
 
-		mx_list_add_wrapped(hMxMsgList, line, MX_MSG_WRAP);
+		rows = mx_list_add_wrapped(hMxMsgList, line, MX_MSG_WRAP);
+
+		// Remember which message these rows belong to, so a tap on any
+		// line of a folded message still finds its sender, and give
+		// every one of them the message's colour
+		while((rows--) && (mx_row_count < MX_MSG_ROW_MAX))
+		{
+			mx_row_class[mx_row_count] = cls;
+			mx_row_msg[mx_row_count++] = i;
+		}
 	}
 
-	// Park on the newest line
-	n = (uint8_t)LISTBOX_GetNumItems(hMxMsgList);
+	rows = LISTBOX_GetNumItems(hMxMsgList);
 
-	if(n)
-		LISTBOX_SetSel(hMxMsgList, n - 1);
+	if(rows <= 0)
+		return;
+
+	// A new message parks the view on the newest line, the way a chat
+	// should. Otherwise the row the user picked is put back - this runs
+	// on every repaint, and stealing the selection would make REPLY
+	// impossible to aim
+	if(n != mx_msg_seen)
+	{
+		mx_msg_seen	= n;
+		mx_msg_sel	= rows - 1;
+	}
+
+	if((mx_msg_sel < 0) || (mx_msg_sel >= rows))
+		mx_msg_sel = rows - 1;
+
+	LISTBOX_SetSel(hMxMsgList, mx_msg_sel);
 }
 
 //*----------------------------------------------------------------------------
@@ -629,6 +842,11 @@ static void mx_build_contact_detail(void)
 	int			i;
 
 	mx_list_clear(hMxMsgList);
+
+	// The contacts view shares this listbox, so its rows need a class
+	// too or they would inherit whatever the chat view last set
+	memset(mx_row_class, MX_LINE_NORMAL, sizeof(mx_row_class));
+	mx_row_count = 0;
 
 	// Explain the empty list rather than just showing nothing - a node
 	// only lands here when it advertises, which can be a long wait
@@ -792,10 +1010,10 @@ static void mx_paint_compose(void)
 {
 	char	buf[MX_COMPOSE_MAX + 8];
 
-	GUI_SetColor(GUI_WHITE);
+	GUI_SetColor(MX_PANE_BK);
 	GUI_FillRect(MX_COMP_X, MX_COMP_Y, MX_COMP_X + MX_COMP_W - 1, MX_COMP_Y + MX_COMP_H - 1);
 
-	GUI_SetColor(GUI_GRAY);
+	GUI_SetColor(MX_EDGE);
 	GUI_DrawRect(MX_COMP_X, MX_COMP_Y, MX_COMP_X + MX_COMP_W - 1, MX_COMP_Y + MX_COMP_H - 1);
 
 	GUI_SetTextMode(GUI_TM_TRANS);
@@ -803,12 +1021,12 @@ static void mx_paint_compose(void)
 
 	if(mx_compose_len)
 	{
-		GUI_SetColor(GUI_BLACK);
+		GUI_SetColor(MX_PANE_TX);
 		snprintf(buf, sizeof(buf), "%s_", mx_compose);
 	}
 	else
 	{
-		GUI_SetColor(GUI_GRAY);
+		GUI_SetColor(MX_PANE_DIM);
 		snprintf(buf, sizeof(buf), "type a message...");
 	}
 
@@ -828,15 +1046,15 @@ static void mx_paint_status(void)
 	int					y = MX_STAT_Y + 8;
 	uint8_t				i, heard = 0, saved = 0;
 
-	GUI_SetColor(GUI_WHITE);
+	GUI_SetColor(MX_PANE_BK);
 	GUI_FillRect(MX_STAT_X, MX_STAT_Y, MX_STAT_X + MX_STAT_W - 1, MX_STAT_Y + MX_STAT_H - 1);
 
-	GUI_SetColor(GUI_GRAY);
+	GUI_SetColor(MX_EDGE);
 	GUI_DrawRect(MX_STAT_X, MX_STAT_Y, MX_STAT_X + MX_STAT_W - 1, MX_STAT_Y + MX_STAT_H - 1);
 
 	GUI_SetTextMode(GUI_TM_TRANS);
 	GUI_SetFont(&GUI_Font20B_1);
-	GUI_SetColor(GUI_BLACK);
+	GUI_SetColor(MX_PANE_TX);
 
 	if(!meshchat_ready())
 	{
@@ -849,7 +1067,7 @@ static void mx_paint_status(void)
 			GUI_DispStringAt(buf, MX_STAT_X + 12, y);
 
 			GUI_SetFont(&GUI_Font16B_1);
-			GUI_SetColor(GUI_DARKGRAY);
+			GUI_SetColor(MX_PANE_DIM);
 			GUI_DispStringAt("the radio will run without one, but nothing will be saved",
 							 MX_STAT_X + 12, y + 26);
 		}
@@ -900,7 +1118,7 @@ static void mx_paint_status(void)
 
 		if(meshchat_tx_pending())
 		{
-			GUI_SetColor(GUI_BLACK);
+			GUI_SetColor(MX_PANE_TX);
 			snprintf(buf, sizeof(buf), "tx: %d packet(s) waiting for the modem",
 					 (int)meshchat_tx_pending());
 		}
@@ -911,7 +1129,7 @@ static void mx_paint_status(void)
 
 			if(echo.repeats)
 			{
-				GUI_SetColor(GUI_DARKGREEN);
+				GUI_SetColor(MX_GOOD_TX);
 				snprintf(buf, sizeof(buf),
 						 "sent %us ago - repeated %u time(s), %u hop(s), snr %d",
 						 age, (unsigned int)echo.repeats,
@@ -919,25 +1137,25 @@ static void mx_paint_status(void)
 			}
 			else
 			{
-				GUI_SetColor(GUI_BLACK);
+				GUI_SetColor(MX_PANE_TX);
 				snprintf(buf, sizeof(buf), "sent %us ago - no repeat heard yet", age);
 			}
 		}
 		else
 		{
-			GUI_SetColor(GUI_BLACK);
+			GUI_SetColor(MX_PANE_TX);
 			snprintf(buf, sizeof(buf), "tx: idle - nothing sent yet");
 		}
 
 		GUI_DispStringAt(buf, MX_STAT_X + 12, y);
-		GUI_SetColor(GUI_BLACK);
+		GUI_SetColor(MX_PANE_TX);
 	}
 
 	y += 26;
 
 	if(!mc_store_is_writable())
 	{
-		GUI_SetColor(GUI_RED);
+		GUI_SetColor(MX_WARN_TX);
 
 		// Card in the slot but no filesystem means its init failed at
 		// boot, and nothing re-runs that until the card is reseated.
@@ -952,13 +1170,19 @@ static void mx_paint_status(void)
 	}
 	else if(id->weak_entropy)
 	{
-		GUI_SetColor(GUI_RED);
+		GUI_SetColor(MX_WARN_TX);
 		GUI_DispStringAt("identity key was seeded without the TRNG", MX_STAT_X + 12, y);
 	}
 	else
 	{
-		GUI_SetColor(GUI_DARKGRAY);
-		GUI_DispStringAt("type a name then +CHAN to add a channel", MX_STAT_X + 12, y);
+		GUI_SetColor(MX_PANE_DIM);
+
+		if(mx_filter == MX_FILT_DM)
+			GUI_DispStringAt("Add picks someone the radio has heard",
+							 MX_STAT_X + 12, y);
+		else
+			GUI_DispStringAt("type a name then Add to join a channel",
+							 MX_STAT_X + 12, y);
 	}
 }
 
@@ -1050,6 +1274,16 @@ static void mx_on_button(int id, int ncode)
 			// Doubles as BACK - the button is relabelled by the layout
 			mx_view = (mx_view == MX_VIEW_CHAT) ? MX_VIEW_CONTACTS : MX_VIEW_CHAT;
 
+			// Coming back from the node browser, the one thing that can
+			// have changed is who is in the contact list - so land on
+			// the list that shows them
+			if(mx_view == MX_VIEW_CHAT)
+			{
+				mx_filter		 = MX_FILT_DM;
+				mx_conv_valid	 = 0;
+				mx_seen_revision = 0xFFFFFFFF;
+			}
+
 			mx_hide_keyboard();
 			mx_layout_action_row(mx_kb_shown);
 
@@ -1062,14 +1296,139 @@ static void mx_on_button(int id, int ncode)
 			meshchat_send_advert();
 			break;
 
+		case ID_MX_DELCHAN:
+		{
+			// Removes the channel picked in the left pane. Deliberately
+			// not guarded by a confirmation: the key derives from the
+			// name, so getting it back is a matter of typing the name
+			// in and pressing Add again
+			if((mx_view != MX_VIEW_CHAT) || (!mx_conv_valid))
+				break;
+
+			// Same button, the other list: forget the person instead.
+			// The conversation holds the leading bytes of their key, so
+			// the contact it names has to be looked back up by them
+			if(mx_conv.kind == MESHCHAT_CONV_DIRECT)
+			{
+				uint8_t	i;
+
+				for(i = 0; i < mc_contacts_count(); i++)
+				{
+					MC_CONTACT	*c = mc_contacts_at(i);
+
+					if((c == NULL) || (!c->saved))
+						continue;
+
+					if(memcmp(c->pub_key, mx_conv.peer, sizeof(mx_conv.peer)) != 0)
+						continue;
+
+					meshchat_forget_contact(i);
+
+					mx_conv_valid	 = 0;	// it is going away, pick another
+					mx_seen_revision = 0xFFFFFFFF;
+					break;
+				}
+
+				break;
+			}
+
+			if(mx_conv.kind != MESHCHAT_CONV_CHANNEL)
+			{
+				printf("meshchat: Del - pick a channel, not a contact \r\n");
+				break;
+			}
+
+			// The default channel is refused by the store, and the
+			// service says so in the conversation itself. Post it
+			// either way so that notice appears, but only give up the
+			// selection when the channel really is going away
+			{
+				MC_CHANNEL	*ch = mc_channels_find_by_hash(mx_conv.chan_hash);
+				uint8_t		keep = mc_channel_is_default(ch);
+
+				if(meshchat_remove_channel(&mx_conv) == 0)
+				{
+					if(!keep)
+						mx_conv_valid = 0;	// it is going away, pick another
+
+					mx_seen_revision = 0xFFFFFFFF;
+				}
+			}
+			break;
+		}
+
+		//*------------------------------------------------------------
+		// Reply to whichever message is picked in the right pane.
+		//
+		// MeshCore has no reply field on the wire - a reply is simply a
+		// message whose text begins "@[name] ", and that is what every
+		// client renders as a quote. Confirmed from this radio's own
+		// logs, where the bots answer us with "ack @[mcHF-0BA1] ..."
+		// and stations answer each other with "@[jonnyboy] 22 hops"
+		//*------------------------------------------------------------
+		case ID_MX_REPLY:
+		{
+			const MESHCHAT_MSG	*m;
+			int					row = LISTBOX_GetSel(hMxMsgList);
+			int					i;
+
+			if((mx_view != MX_VIEW_CHAT) || (!mx_conv_valid))
+				break;
+
+			if((row < 0) || (row >= (int)mx_row_count))
+				break;
+
+			m = meshchat_msg_at(&mx_conv, mx_row_msg[row]);
+
+			// Only an incoming message from a named sender is worth
+			// quoting - replying to our own, or to a local notice, is
+			// not a thing
+			if((m == NULL) || (m->dir != MESHCHAT_DIR_RX) || (m->sender[0] == 0))
+				break;
+
+			mx_compose_len	= 0;
+			mx_compose[0]	= 0;
+
+			// Direct messages already have exactly one other party, so
+			// the quote would be noise - just open the keyboard
+			if(mx_conv.kind == MESHCHAT_CONV_CHANNEL)
+			{
+				mx_compose_append('@');
+				mx_compose_append('[');
+
+				for(i = 0; m->sender[i]; i++)
+					mx_compose_append(m->sender[i]);
+
+				mx_compose_append(']');
+				mx_compose_append(' ');
+			}
+
+			mx_show_keyboard();
+			break;
+		}
+
 		case ID_MX_ADDCHAN:
 		{
+			// Showing people rather than channels: there is nothing to
+			// type, a contact can only come from an advert we have
+			// heard. Hand over to the browser of heard nodes, which is
+			// where ADD lives
+			if(mx_filter == MX_FILT_DM)
+			{
+				mx_view			 = MX_VIEW_CONTACTS;
+				mx_seen_revision = 0xFFFFFFFF;
+
+				mx_hide_keyboard();
+				mx_layout_action_row(0);
+				break;
+			}
+
 			// The compose bar doubles as the entry field - type the
 			// channel name, then press this. Everything the radio needs
 			// follows from the name, so there is no key to type in
 			if(mx_compose_len == 0)
 			{
-				printf("meshchat: +CHAN - type a channel name first, e.g. #uk \r\n");
+				printf("meshchat: Add - type a channel name first, e.g. #uk \r\n");
 				break;
 			}
 
@@ -1081,6 +1440,25 @@ static void mx_on_button(int id, int ncode)
 
 				mx_hide_keyboard();
 			}
+			break;
+		}
+
+		//*------------------------------------------------------------
+		// Swap the left pane between the channels and the people. Both
+		// are conversations and both draw in the same listbox - only
+		// one kind is listed at a time, which is the whole point
+		//*------------------------------------------------------------
+		case ID_MX_CONVFILT:
+		{
+			mx_filter = (mx_filter == MX_FILT_CHAN) ? MX_FILT_DM : MX_FILT_CHAN;
+
+			// Whatever was open belongs to the list we just left, so
+			// the rebuild picks the first row of the new one
+			mx_conv_valid	 = 0;
+			mx_msg_sel		 = -1;
+			mx_seen_revision = 0xFFFFFFFF;
+
+			mx_layout_action_row(mx_kb_shown);
 			break;
 		}
 
@@ -1151,9 +1529,18 @@ static void mx_on_select(void)
 		return;
 	}
 
-	if(meshchat_conv_at((uint8_t)sel, &mx_conv) == 0)
+	if(sel >= (int)mx_conv_rows)
+		return;
+
+	if(meshchat_conv_at(mx_conv_row[sel], &mx_conv) == 0)
 	{
 		mx_conv_valid = 1;
+
+		// A different conversation starts at its newest line, not at
+		// whatever row happened to be picked in the previous one
+		mx_msg_sel	= -1;
+		mx_msg_seen	= 0xFF;
+
 		mx_build_msg_list();
 	}
 }
@@ -1165,7 +1552,7 @@ static void _cbKeyboard(WM_MESSAGE *pMsg)
 	switch(pMsg->MsgId)
 	{
 		case WM_PAINT:
-			GUI_SetColor(GUI_LIGHTGRAY);
+			GUI_SetColor(MX_SCREEN_BK);
 			GUI_FillRect(0, 0, MX_KB_W - 1, MX_KB_H - 1);
 			break;
 
@@ -1200,12 +1587,16 @@ static void mx_create_widgets(WM_HWIN hWin)
 		{ ID_MX_ADVERT,		"ADVERT"	},
 		{ ID_MX_ADD,		"ADD"		},
 		{ ID_MX_FORGET,		"FORGET"	},
-		{ ID_MX_ADDCHAN,	"+CHAN"		}
+		{ ID_MX_ADDCHAN,	"Add"		},
+		{ ID_MX_REPLY,		"REPLY"		},
+		{ ID_MX_DELCHAN,	"Del"		},
+		{ ID_MX_CONVFILT,	"DM"		}
 	};
 
 	int	i;
 
-	hMxConvList = LISTBOX_CreateEx(MX_CONV_X, MX_LIST_Y, MX_CONV_W, MX_LIST_H,
+	// Shorter than the right pane - the channel buttons take the rest
+	hMxConvList = LISTBOX_CreateEx(MX_CONV_X, MX_LIST_Y, MX_CONV_W, MX_CONV_H,
 								   hWin, WM_CF_SHOW, 0, ID_MX_LIST_LEFT, NULL);
 
 	hMxMsgList  = LISTBOX_CreateEx(MX_MSG_X, MX_LIST_Y, MX_MSG_W, MX_LIST_H,
@@ -1214,20 +1605,53 @@ static void mx_create_widgets(WM_HWIN hWin)
 	LISTBOX_SetFont(hMxConvList, &GUI_Font24B_1);
 	LISTBOX_SetFont(hMxMsgList,  &GUI_Font24_1);
 
-	// Auto scrollbars are deliberately OFF.
+	// Off the stock white/black. SELFOCUS matters as much as SEL - the
+	// panes lose focus to each other, and without it the highlighted row
+	// changes colour depending on which list was touched last
+	for(i = 0; i < 2; i++)
+	{
+		WM_HWIN	hLb = i ? hMxMsgList : hMxConvList;
+
+		LISTBOX_SetBkColor  (hLb, LISTBOX_CI_UNSEL,     MX_PANE_BK);
+		LISTBOX_SetTextColor(hLb, LISTBOX_CI_UNSEL,     MX_PANE_TX);
+
+		LISTBOX_SetBkColor  (hLb, LISTBOX_CI_SEL,       MX_SEL_BK);
+		LISTBOX_SetTextColor(hLb, LISTBOX_CI_SEL,       MX_SEL_TX);
+
+		LISTBOX_SetBkColor  (hLb, LISTBOX_CI_SELFOCUS,  MX_SEL_BK);
+		LISTBOX_SetTextColor(hLb, LISTBOX_CI_SELFOCUS,  MX_SEL_TX);
+
+		LISTBOX_SetBkColor  (hLb, LISTBOX_CI_DISABLED,  MX_PANE_BK);
+		LISTBOX_SetTextColor(hLb, LISTBOX_CI_DISABLED,  MX_PANE_DIM);
+	}
+
+	// Scrollbars are attached once here rather than left to
+	// LISTBOX_SetAutoScrollV.
 	//
-	// With them on, emWin creates and destroys a SCROLLBAR child window
-	// as the item count crosses what fits - and this screen empties and
-	// refills both lists every time a message lands. That is a window
-	// being created and freed several times a second underneath the
-	// window manager, which is the best explanation for the fault seen
-	// inside WM__Paint: it locked handle 7 and got a pointer of 7 back,
-	// i.e. it was walking a window that no longer exists.
-	//
-	// Nothing is lost by turning them off: the view is kept on the
-	// newest line by selecting it, which scrolls it in
-	LISTBOX_SetAutoScrollV(hMxMsgList,  0);
-	LISTBOX_SetAutoScrollV(hMxConvList, 0);
+	// Auto scroll works, but it CREATES AND DESTROYS the scrollbar
+	// window as the item count crosses what fits - and these lists are
+	// emptied and refilled every time a message lands, so that would be
+	// a window churning under the window manager several times a second.
+	// The WM__Paint fault is still unexplained and looks like a window
+	// being painted after its block went invalid, so until that is
+	// understood the scrollbars stay permanent: created once, never
+	// freed. The lists drive them the same either way
+	{
+		SCROLLBAR_Handle	hSb;
+
+		LISTBOX_SetAutoScrollV(hMxMsgList,  0);
+		LISTBOX_SetAutoScrollV(hMxConvList, 0);
+
+		hSb = SCROLLBAR_CreateAttached(hMxMsgList, SCROLLBAR_CF_VERTICAL);
+		SCROLLBAR_SetWidth(hSb, MX_SCROLL_W);
+
+		// Per line colour needs the drawing taken over - see
+		// mx_msg_owner_draw
+		LISTBOX_SetOwnerDraw(hMxMsgList, mx_msg_owner_draw);
+
+		hSb = SCROLLBAR_CreateAttached(hMxConvList, SCROLLBAR_CF_VERTICAL);
+		SCROLLBAR_SetWidth(hSb, MX_SCROLL_W);
+	}
 
 	for(i = 0; i < (int)GUI_COUNTOF(buttons); i++)
 	{
@@ -1236,6 +1660,23 @@ static void mx_create_widgets(WM_HWIN hWin)
 
 		BUTTON_SetText(hBtn, buttons[i].text);
 		BUTTON_SetFont(hBtn, &GUI_Font20B_1);
+	}
+
+	// The two channel buttons are not part of the action row - they are
+	// parked under the conversation list, share its width and are short
+	// enough to read as a footer to it. Positioned once here, since
+	// unlike the action row they never move
+	{
+		WM_HWIN	hAdd  = WM_GetDialogItem(hWin, ID_MX_ADDCHAN);
+		WM_HWIN	hDel  = WM_GetDialogItem(hWin, ID_MX_DELCHAN);
+		WM_HWIN	hFilt = WM_GetDialogItem(hWin, ID_MX_CONVFILT);
+
+		WM_SetWindowPos(hAdd,  MX_CONV_X,     MX_CHANBTN_Y, MX_CHANBTN_W, MX_CHANBTN_H);
+		WM_SetWindowPos(hDel,  MX_CHANBTN_X2, MX_CHANBTN_Y, MX_CHANBTN_W, MX_CHANBTN_H);
+		WM_SetWindowPos(hFilt, MX_CHANBTN_X3, MX_CHANBTN_Y, MX_CHANBTN_W, MX_CHANBTN_H);
+
+		BUTTON_SetFont(hAdd, &GUI_Font16B_1);
+		BUTTON_SetFont(hDel, &GUI_Font16B_1);
 	}
 }
 
@@ -1281,12 +1722,28 @@ static void _cbDialog(WM_MESSAGE *pMsg)
 			mx_rebuild();
 
 			hMxTimer = WM_CreateTimer(pMsg->hWin, 0, 500, 0);
+
+			#ifdef MX_DEBUG_GUI_MEM
+			// Every window this screen owns, so the handle in a fault
+			// dump can be named instead of guessed at
+			printf("meshchat ui: dlg %d kb %d conv %d msg %d shift %d key0 %d \r\n",
+					(int)hMxDialog, (int)hMxKeyboard, (int)hMxConvList,
+					(int)hMxMsgList, (int)hMxShiftKey, (int)hMxCharKeys[0]);
+
+			printf("meshchat ui: type %d reply %d send %d chan %d cont %d adv %d \r\n",
+					(int)WM_GetDialogItem(pMsg->hWin, ID_MX_TYPE),
+					(int)WM_GetDialogItem(pMsg->hWin, ID_MX_REPLY),
+					(int)WM_GetDialogItem(pMsg->hWin, ID_MX_SEND),
+					(int)WM_GetDialogItem(pMsg->hWin, ID_MX_ADDCHAN),
+					(int)WM_GetDialogItem(pMsg->hWin, ID_MX_CONTACTS),
+					(int)WM_GetDialogItem(pMsg->hWin, ID_MX_ADVERT));
+			#endif
 			break;
 		}
 
 		case WM_PAINT:
 		{
-			GUI_SetColor(GUI_LIGHTGRAY);
+			GUI_SetColor(MX_SCREEN_BK);
 			GUI_FillRect(0, MX_TITLE_H, MX_UI_W - 1, MX_UI_H - 1);
 
 			mx_paint_title();
@@ -1380,6 +1837,17 @@ static void _cbDialog(WM_MESSAGE *pMsg)
 				break;
 			}
 
+			// The user picked a message row - remember it so the next
+			// repaint puts it back rather than jumping to the newest,
+			// and so REPLY knows what was tapped
+			if((Id == ID_MX_LIST_RIGHT) && (NCode == WM_NOTIFICATION_SEL_CHANGED))
+			{
+				if(!mx_rebuilding)
+					mx_msg_sel = LISTBOX_GetSel(hMxMsgList);
+
+				break;
+			}
+
 			mx_on_button(Id, NCode);
 			break;
 		}
@@ -1416,7 +1884,7 @@ static void _cbBkWindow(WM_MESSAGE *pMsg)
 		case WM_PAINT:
 			// Not GUI_Clear() - the driver runs in LCD_DRAWMODE_TRANS
 			// where a clear does nothing
-			GUI_SetColor(GUI_LIGHTGRAY);
+			GUI_SetColor(MX_SCREEN_BK);
 			GUI_FillRect(0, 0, MX_UI_W - 1, MX_UI_H - 1);
 			break;
 
@@ -1436,7 +1904,7 @@ void meshchat_ui_create(void)
 {
 	// The menu leaves the default window background at GUI_WHITE and it
 	// is a sticky global, so set what this screen wants every time
-	WINDOW_SetDefaultBkColor(GUI_LIGHTGRAY);
+	WINDOW_SetDefaultBkColor(MX_SCREEN_BK);
 
 	WM_SetCallback(WM_HBKWIN, &_cbBkWindow);
 

@@ -40,6 +40,9 @@
 #define ID_MX_ADD				(GUI_ID_USER + 0x68)
 #define ID_MX_FORGET			(GUI_ID_USER + 0x69)
 #define ID_MX_ADDCHAN			(GUI_ID_USER + 0x6A)
+#define ID_MX_REPLY				(GUI_ID_USER + 0x6B)
+#define ID_MX_DELCHAN			(GUI_ID_USER + 0x6C)
+#define ID_MX_CONVFILT			(GUI_ID_USER + 0x6D)	// left pane: channels or contacts
 // No EXIT button - F3 closes the screen, the same key that opens it
 
 // ---------------------------------------------------------------------
@@ -67,6 +70,21 @@
 #define MX_CONV_X				5					// left pane
 #define MX_CONV_W				210
 
+// The list buttons sit directly under the conversation list and span
+// exactly its width, so they read as part of it rather than as three
+// more entries in the action row - they only ever act on what is
+// selected there. The list gives up the height they take
+//
+// Three slots: add, remove, and the one that says which of the two
+// lists - channels or contacts - the pane is showing
+#define MX_CHANBTN_H			26
+#define MX_CHANBTN_GAP			2
+#define MX_CONV_H				(MX_LIST_H - MX_CHANBTN_H - (MX_CHANBTN_GAP * 2))
+#define MX_CHANBTN_Y			(MX_LIST_Y + MX_CONV_H + MX_CHANBTN_GAP)
+#define MX_CHANBTN_W			((MX_CONV_W - (MX_CHANBTN_GAP * 2)) / 3)
+#define MX_CHANBTN_X2			(MX_CONV_X + MX_CHANBTN_W + MX_CHANBTN_GAP)
+#define MX_CHANBTN_X3			(MX_CONV_X + ((MX_CHANBTN_W + MX_CHANBTN_GAP) * 2))
+
 #define MX_MSG_X				222					// right pane
 #define MX_MSG_W				573
 
@@ -75,11 +93,16 @@
 #define MX_COMP_W				790
 #define MX_COMP_H				32
 
+// Vertical scrollbar on both panes. Wider than the emWin default - this
+// is a resistive panel poked with a finger, not a mouse pointer
+#define MX_SCROLL_W				26
+
 // Roughly how many characters of the message font fit across the right
 // pane - used to fold long messages over several listbox rows. Retune
 // this whenever the message font changes, or long lines get clipped
-// instead of wrapping (Font24_1 across 573 px is about 46)
-#define MX_MSG_WRAP				46
+// instead of wrapping. The scrollbar eats into the width too
+// (Font24_1 across 573 px less the bar is about 43)
+#define MX_MSG_WRAP				43
 
 // On screen keyboard - ten columns by three rows, laid out QWERTY. Ten
 // columns is what the top row needs (q..p is ten keys); an alphabetical
@@ -136,6 +159,11 @@
 
 // Compose buffer
 #define MX_COMPOSE_MAX			110
+
+// Rows the message pane can hold. A message wraps over several rows, so
+// this is not the message count - it maps each row back to the message
+// it came from, which is how REPLY knows what was tapped
+#define MX_MSG_ROW_MAX			192
 
 // Log emWin free memory and the listbox row counts to the debug UART
 // every few seconds while this screen is up. On until the fault inside

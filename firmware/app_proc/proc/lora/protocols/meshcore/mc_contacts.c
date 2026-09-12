@@ -68,6 +68,30 @@ static const uint8_t	mc_key_public[MC_CHANNEL_KEY_SIZE] =
 };
 
 //*----------------------------------------------------------------------------
+//* Function Name       : mc_name_is_public
+//* Object              : does this name mean the default channel ?
+//* Notes    			: "public" is the one name that must NOT be
+//*						: hashed. Typing it in and deriving a key the
+//*						: way every other channel derives one produces a
+//*						: private channel of one, which looks exactly
+//*						: like the real thing until nobody answers -
+//*						: accepted with or without the leading hash,
+//*						: since the list shows the others with one
+//* Context    			: any
+//*----------------------------------------------------------------------------
+static uint8_t mc_name_is_public(const char *name)
+{
+	if(name == NULL)
+		return 0;
+
+	if(*name == '#')
+		name++;
+
+	// Already folded to lower case by the caller
+	return (strcmp(name, "public") == 0) ? 1 : 0;
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : mc_channel_hash_of
 //* Object              : the one byte channel id that travels on air
 //* Notes    			: derived, not configured - checked against two
@@ -170,6 +194,11 @@ uint8_t mc_channels_add_by_name(const char *name)
 
 	lower[i] = 0;
 
+	// The default channel is fixed, not derived. Store it under the
+	// plain name so it reads the same as it did when it was seeded
+	if(mc_name_is_public(lower))
+		return mc_channels_add("public", mc_key_public);
+
 	mc_channel_key_of(lower, key);
 
 	// Stored lower case too, so what the screen shows is the name the
@@ -219,12 +248,57 @@ uint8_t mc_channels_add(const char *name, const uint8_t key[MC_CHANNEL_KEY_SIZE]
 	return 2;									// keyring full
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_channels_remove_by_hash
+//* Object              : drop a channel, addressed the way the UI knows
+//*						: it - by its on-air hash rather than a list
+//*						: position that shifts as things are removed
+//* Context    			: CONTEXT_MESHCHAT
+//*----------------------------------------------------------------------------
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_channel_is_default
+//* Object              : is this the channel every node is on ?
+//* Notes    			: matched on the key, not the name - the name can
+//*						: be anything, the key is what puts the radio on
+//*						: the channel
+//* Context    			: any
+//*----------------------------------------------------------------------------
+uint8_t mc_channel_is_default(const MC_CHANNEL *ch)
+{
+	if(ch == NULL)
+		return 0;
+
+	return (memcmp(ch->key, mc_key_public, MC_CHANNEL_KEY_SIZE) == 0) ? 1 : 0;
+}
+
+uint8_t mc_channels_remove_by_hash(uint8_t hash)
+{
+	MC_CHANNEL	*ch = mc_channels_find_by_hash(hash);
+
+	if(ch == NULL)
+		return 1;
+
+	// The default channel is not the user's to delete. Every other one
+	// can be typed back in from its name; this one cannot, and a radio
+	// that has lost it is off the channel the whole mesh shares while
+	// still looking perfectly normal
+	if(mc_channel_is_default(ch))
+		return MC_CHANNEL_PROTECTED;
+
+	memset(ch, 0, sizeof(MC_CHANNEL));
+
+	return mc_channels_save();
+}
+
 uint8_t mc_channels_remove(uint8_t idx)
 {
 	MC_CHANNEL	*ch = mc_channels_at(idx);
 
 	if(ch == NULL)
 		return 1;
+
+	if(mc_channel_is_default(ch))
+		return MC_CHANNEL_PROTECTED;
 
 	memset(ch, 0, sizeof(MC_CHANNEL));
 
@@ -394,9 +468,9 @@ uint8_t mc_contacts_derive_shared(MC_CONTACT *c)
 	if(mc_ec_shared_secret(secret, mc_identity_get()->seed, c->pub_key))
 		return 2;
 
-	// MeshCore's ciphers are AES-128, so the message key is the leading
-	// half of the X25519 output
-	memcpy(c->shared, secret, MC_CHANNEL_KEY_SIZE);
+	// The whole secret is kept: the cipher is AES-128 and uses only the
+	// first half, but the MAC is an HMAC over all 32 bytes
+	memcpy(c->shared, secret, MC_EC_KEY_SIZE);
 	c->have_shared = 1;
 
 	memset(secret, 0, sizeof(secret));
@@ -663,7 +737,19 @@ static uint8_t mc_channels_load(void)
 		// key is fixed and must be left alone
 		mc_channel_key_of(rec.name, from_name);
 
-		if((mixed_case) && (memcmp(from_name, rec.key, MC_CHANNEL_KEY_SIZE) == 0))
+		// A "public" that carries a derived key was typed in by hand
+		// rather than seeded, and is a channel nobody else is on. Put
+		// the real key back rather than leaving it looking joined
+		if((mc_name_is_public(rec.name)) &&
+		   (memcmp(rec.key, mc_key_public, MC_CHANNEL_KEY_SIZE) != 0))
+		{
+			printf("meshchat: channel '%s' had a derived key - default key restored \r\n",
+					rec.name);
+
+			mc_channels_add("public", mc_key_public);
+			mc_chan_migrated = 1;
+		}
+		else if((mixed_case) && (memcmp(from_name, rec.key, MC_CHANNEL_KEY_SIZE) == 0))
 		{
 			printf("meshchat: channel '%s' re-keyed to lower case \r\n", rec.name);
 

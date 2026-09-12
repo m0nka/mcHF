@@ -57,6 +57,21 @@
 // mesh is actually sending us
 #define MESHCHAT_DEBUG_RX
 
+// Dump what is needed to work out MeshCore's direct-message key schedule
+// offline: the raw packet, both public keys and the X25519 shared secret
+// we derived from them. With a real DM from a node whose key we hold,
+// the right derivation can be found by trying candidates against the
+// captured MAC rather than guessing at the radio.
+//
+// The long term private key is deliberately NOT dumped - the shared
+// secret is enough to test every candidate that post-processes it.
+//
+// OFF: it did its job. The key schedule and the acknowledgement format
+// were both solved from the dumps it produced, and every PATH packet on
+// the air was filling the UART with hex. Turn it back on only to chase
+// another unknown in the direct message flow
+//#define MESHCHAT_DEBUG_DM_KEY
+
 // Queue depths
 #define MESHCHAT_RX_QUEUE_LEN		6
 #define MESHCHAT_TX_QUEUE_LEN		4
@@ -116,7 +131,40 @@ typedef struct
 	char			text[MESHCHAT_TEXT_MAX];
 	int8_t			snr;
 
+	// Delivery state of an outgoing direct message. ack holds what the
+	// far end will answer with; a matching PATH reply sets delivered
+	uint8_t			ack[4];
+	uint8_t			ack_wait;
+	uint8_t			delivered;
+
 } MESHCHAT_MSG;
+
+// ---------------------------------------------------------------------
+// Where every packet the modem hands over ends up.
+//
+// A mesh that looks lossy next to another client is either really
+// losing packets on the air, or being thrown away somewhere inside this
+// radio - and nothing about the chat screen tells the two apart. These
+// counters do: queued against dropped says whether this task kept up,
+// decoded against unreadable says whether the packet was for us at all,
+// and the radio layer's own counters (lora_radio_stats) say what the
+// modem saw before any of it
+typedef struct
+{
+	uint32_t	queued;							// handed over by the lora task
+	uint32_t	q_drop;							// queue was full - our own loss
+	uint32_t	decoded;						// understood, whoever it was for
+	uint32_t	unreadable;						// not ours to read, or malformed
+	uint32_t	dup;							// already seen, another route
+	uint32_t	echo;							// one of ours, repeated back
+
+} MESHCHAT_STAT;
+
+// How often the service prints what it has seen. Long enough not to
+// clutter the log, short enough to bracket a conversation
+#define MESHCHAT_STAT_PERIOD_MS		60000
+
+const MESHCHAT_STAT *meshchat_stats(void);
 
 // ---------------------------------------------------------------------
 // Task
@@ -168,6 +216,11 @@ uint8_t		meshchat_forget_contact(uint8_t contact_idx);
 // it (see mc_channels_add_by_name). A leading '#' is added when missing,
 // since the name is hashed verbatim and the mesh convention includes it
 uint8_t		meshchat_add_channel(const char *name);
+
+// Drop a channel. Addressed by conversation rather than list position,
+// which shifts as things are added and removed. Cheap to undo - the key
+// derives from the name, so re-adding it by name gets the same channel
+uint8_t		meshchat_remove_channel(const MESHCHAT_CONV *conv);
 
 // Messages that have arrived in a conversation since it was last read.
 // Shown as a count against each row in the conversation list

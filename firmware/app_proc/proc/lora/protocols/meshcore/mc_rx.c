@@ -22,7 +22,9 @@
 #include "advert.h"
 #include "grp_txt.h"
 #include "request.h"
+#include "ack.h"
 
+#include "sha256.h"
 #include "mc_ec.h"
 #include "mc_identity.h"
 #include "mc_contacts.h"
@@ -98,8 +100,9 @@ const char *mc_rx_role_name(uint8_t role)
 //* Context    			: CONTEXT_LORA
 //*----------------------------------------------------------------------------
 static uint8_t mc_rx_open(const uint8_t *cipher, uint8_t cipher_len,
-						  const uint8_t *mac, const uint8_t key[MC_CHANNEL_KEY_SIZE],
-						  uint32_t *timestamp, char *out, uint16_t out_len)
+						  const uint8_t *mac, const uint8_t *key, uint8_t mac_key_len,
+						  uint32_t *timestamp, char *out, uint16_t out_len,
+						  uint8_t *raw, uint8_t *raw_len)
 {
 	struct AES_ctx	ctx;
 	uint8_t			plain[MESHCORE_MAX_PAYLOAD_SIZE];
@@ -114,7 +117,10 @@ static uint8_t mc_rx_open(const uint8_t *cipher, uint8_t cipher_len,
 	if(cipher_len % MESHCORE_CIPHER_BLOCK_SIZE)
 		return 2;
 
-	hmac_sha256(key, MC_CHANNEL_KEY_SIZE, cipher, cipher_len, check, MESHCORE_CIPHER_MAC_SIZE);
+	// The MAC key length is the caller's business - 16 for a channel,
+	// the full 32 byte shared secret for a direct message. The cipher
+	// key is always the first 16 bytes either way
+	hmac_sha256(key, mac_key_len, cipher, cipher_len, check, MESHCORE_CIPHER_MAC_SIZE);
 
 	if(memcmp(check, mac, MESHCORE_CIPHER_MAC_SIZE) != 0)
 		return 3;								// not this key
@@ -136,6 +142,24 @@ static uint8_t mc_rx_open(const uint8_t *cipher, uint8_t cipher_len,
 		memcpy(timestamp, plain, sizeof(uint32_t));
 
 	text_len = (uint16_t)(cipher_len - 5);
+
+	// The unpadded plaintext, for whoever needs the exact bytes the
+	// sender hashed - the acknowledgement is taken over those, so the
+	// zero padding must not be included
+	if((raw != NULL) && (raw_len != NULL))
+	{
+		uint16_t	n = 5;
+
+		while((n < cipher_len) && (plain[n] != 0))
+			n++;
+
+		// The whole block is copied, but the length reported is the
+		// unpadded one - a caller hashing it must not include padding,
+		// while a caller reading fixed fields (a path reply) may need
+		// bytes that happen to sit past the first zero
+		memcpy(raw, plain, cipher_len);
+		*raw_len = (uint8_t)n;
+	}
 
 	if(text_len >= out_len)
 		text_len = (uint16_t)(out_len - 1);
@@ -265,8 +289,8 @@ static void mc_rx_do_group(MC_RX_EVENT *ev, meshcore_message_t *msg)
 	strncpy(ev->channel_name, ch->name, MC_CHANNEL_NAME_MAX);
 	ev->channel_name[MC_CHANNEL_NAME_MAX] = 0;
 
-	if(mc_rx_open(grp.data, grp.data_length, grp.mac, ch->key,
-				  &ev->timestamp, ev->text, sizeof(ev->text)) != 0)
+	if(mc_rx_open(grp.data, grp.data_length, grp.mac, ch->key, MC_CHANNEL_KEY_SIZE,
+				  &ev->timestamp, ev->text, sizeof(ev->text), NULL, NULL) != 0)
 		return;
 
 	ev->mac_ok	= 1;
@@ -286,6 +310,8 @@ static void mc_rx_do_direct(MC_RX_EVENT *ev, meshcore_message_t *msg)
 {
 	meshcore_request_t	req;
 	MC_CONTACT			*c;
+	uint8_t				raw[MESHCORE_MAX_PAYLOAD_SIZE];
+	uint8_t				raw_len = 0;
 	uint8_t				i;
 
 	if(meshcore_request_deserialize(msg->payload, msg->payload_length, &req) < 0)
@@ -298,6 +324,8 @@ static void mc_rx_do_direct(MC_RX_EVENT *ev, meshcore_message_t *msg)
 	// Addressed to someone else - we still saw it, we just relay-ignore it
 	if(req.destination_hash != mc_identity_hash())
 		return;
+
+	ev->addressed_to_us = 1;
 
 	// The source hash is 8 bits, so more than one contact can answer to
 	// it. Try each candidate and let the MAC decide
@@ -315,8 +343,26 @@ static void mc_rx_do_direct(MC_RX_EVENT *ev, meshcore_message_t *msg)
 			continue;							// key not derived yet, cannot read it
 
 		if(mc_rx_open(req.ciphertext, req.ciphertext_length, req.ciphher_mac,
-					  c->shared, &ev->timestamp, ev->text, sizeof(ev->text)) != 0)
+					  c->shared, MC_DM_MAC_KEY_SIZE,
+					  &ev->timestamp, ev->text, sizeof(ev->text),
+					  raw, &raw_len) != 0)
 			continue;
+
+		// Work out what the sender is waiting to hear back. Without it
+		// they retransmit the same message over and over - which is
+		// exactly what a phone does at a radio that never answers
+		{
+			Sha256Context	sha;
+			SHA256_HASH		dg;
+
+			Sha256Initialise(&sha);
+			Sha256Update(&sha, raw, raw_len);
+			Sha256Update(&sha, (void *)c->pub_key, MC_EC_KEY_SIZE);
+			Sha256Finalise(&sha, &dg);
+
+			memcpy(ev->ack_reply, dg.bytes, sizeof(ev->ack_reply));
+			ev->needs_ack = 1;
+		}
 
 		memcpy(ev->pub_key, c->pub_key, MC_EC_KEY_SIZE);
 
@@ -332,6 +378,75 @@ static void mc_rx_do_direct(MC_RX_EVENT *ev, meshcore_message_t *msg)
 	// For us by address but we could not open it - an unknown sender, or
 	// one we have not added as a contact yet
 	snprintf(ev->sender, sizeof(ev->sender), "node %02X", req.source_hash);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_rx_do_path
+//* Object              : a returned path addressed to us - which is how
+//*						: MeshCore acknowledges a flooded direct message
+//* Notes    			: same envelope as a direct message and the same
+//*						: pairwise key. The plaintext is
+//*						:   path_len | extra type | extra...
+//*						: and an extra type of ACK carries the four byte
+//*						: acknowledgement for a message we sent
+//* Context    			: CONTEXT_MESHCHAT
+//*----------------------------------------------------------------------------
+static void mc_rx_do_path(MC_RX_EVENT *ev, meshcore_message_t *msg)
+{
+	meshcore_request_t	req;
+	MC_CONTACT			*c;
+	uint8_t				raw[MESHCORE_MAX_PAYLOAD_SIZE];
+	uint8_t				raw_len = 0;
+	char				dummy[8];
+	uint8_t				i;
+
+	if(meshcore_request_deserialize(msg->payload, msg->payload_length, &req) < 0)
+		return;
+
+	ev->dst_hash = req.destination_hash;
+	ev->src_hash = req.source_hash;
+
+	if(req.destination_hash != mc_identity_hash())
+		return;
+
+	ev->addressed_to_us = 1;
+
+	for(i = 0; i < mc_contacts_count(); i++)
+	{
+		c = mc_contacts_at(i);
+
+		if((c == NULL) || (c->pub_key[0] != req.source_hash) || (!c->have_shared))
+			continue;
+
+		// mc_rx_open wants somewhere to put text; a path reply has none,
+		// so it goes in a scratch buffer and the raw plaintext is what
+		// actually matters here
+		if(mc_rx_open(req.ciphertext, req.ciphertext_length, req.ciphher_mac,
+					  c->shared, MC_DM_MAC_KEY_SIZE,
+					  NULL, dummy, sizeof(dummy), raw, &raw_len) != 0)
+			continue;
+
+		memcpy(ev->pub_key, c->pub_key, MC_EC_KEY_SIZE);
+
+		strncpy(ev->sender, c->name, MC_NAME_MAX);
+		ev->sender[MC_NAME_MAX] = 0;
+
+		ev->mac_ok = 1;
+
+		// path_len, then the nested payload. Only an ACK interests us
+		if(req.ciphertext_length >= 6)
+		{
+			uint8_t	path_len = raw[0];
+
+			if((path_len == 0) && (raw[1] == MESHCORE_PAYLOAD_TYPE_ACK))
+			{
+				memcpy(ev->path_ack, &raw[2], 4);
+				ev->has_path_ack = 1;
+			}
+		}
+
+		return;
+	}
 }
 
 uint8_t mc_rx_decode(const uint8_t *data, uint16_t size, int8_t snr, MC_RX_EVENT *ev)
@@ -379,9 +494,21 @@ uint8_t mc_rx_decode(const uint8_t *data, uint16_t size, int8_t snr, MC_RX_EVENT
 			mc_rx_do_direct(ev, &msg);
 			break;
 
-		case MESHCORE_PAYLOAD_TYPE_ACK:
-			ev->kind = MC_RX_ACK;
+		case MESHCORE_PAYLOAD_TYPE_PATH:
+			mc_rx_do_path(ev, &msg);
 			break;
+
+		case MESHCORE_PAYLOAD_TYPE_ACK:
+		{
+			meshcore_ack_t	ack;
+
+			ev->kind = MC_RX_ACK;
+
+			if(meshcore_ack_deserialize(msg.payload, msg.payload_length, &ack) >= 0)
+				ev->ack_crc = ack.crc;
+
+			break;
+		}
 
 		default:
 			break;

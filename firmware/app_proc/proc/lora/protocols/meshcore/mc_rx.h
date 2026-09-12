@@ -57,6 +57,32 @@ typedef struct
 	char		text[MC_RX_TEXT_MAX];
 	uint8_t		mac_ok;							// key matched, payload authentic
 
+	// A direct message whose destination hash is ours. Set even when it
+	// could not be decrypted, which is the distinction that matters when
+	// testing: "nobody is sending to us" and "somebody is, and our key
+	// schedule is wrong" otherwise look identical
+	uint8_t		addressed_to_us;
+
+	// ACK payload of an incoming ACK packet
+	uint32_t	ack_crc;
+
+	// For a direct message we could read: the acknowledgement the
+	// sender is waiting for, already computed. MeshCore defines it as
+	//
+	//    SHA-256(plaintext without padding || sender public key)[0..4]
+	//
+	// where the plaintext is timestamp|flags|text. Established by
+	// brute forcing four real phone messages against the acks it sent
+	// back - see the note in mc_rx_do_direct
+	uint8_t		ack_reply[4];
+	uint8_t		needs_ack;
+
+	// An acknowledgement addressed to us, carried in a PATH reply -
+	// this is how the radio learns one of its own direct messages
+	// actually arrived
+	uint8_t		path_ack[4];
+	uint8_t		has_path_ack;
+
 	// Radio side
 	int8_t		snr;
 	uint8_t		path_len;						// repeaters that have touched it

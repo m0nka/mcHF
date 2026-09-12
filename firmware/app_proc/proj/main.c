@@ -78,6 +78,22 @@ void HardFault_Handler(void)
 			(unsigned int)sp[2], (unsigned int)sp[3], (unsigned int)sp[4]);
 	printf( "psr  %08x \r\n", (unsigned int)sp[7]);
 
+	// The faulting function's own frame sits directly above the
+	// exception frame the core just pushed. Dumping it recovers the
+	// arguments and locals the fault took with it - for the emWin
+	// WM__Paint fault that is the window handle it was given, stored at
+	// its sp+12, which names the window that no longer exists
+	{
+		int	i;
+
+		printf( "frame ");
+
+		for(i = 8; i < 24; i++)
+			printf("%08x ", (unsigned int)sp[i]);
+
+		printf(" \r\n");
+	}
+
 	// Give the UART time to drain before the reset cuts it off
 	for(volatile int i = 0; i < 4000000; i++)
 		__asm("nop");
