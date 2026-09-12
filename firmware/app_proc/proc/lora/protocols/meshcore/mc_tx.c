@@ -100,7 +100,13 @@ uint8_t mc_tx_build_group_text(MC_TX_PACKET *pkt, const MC_CHANNEL *ch,
 {
 	meshcore_message_t	msg;
 	meshcore_grp_txt_t	grp;
-	char				body[MC_TX_TEXT_MAX + MC_NAME_MAX + 4];
+
+	// Sized for the worst case both parts can actually be, not for what
+	// they usually are. snprintf in this tree does NOT bound a %s - see
+	// PutString in common/print_f.c - so the buffer has to be big enough
+	// on its own, and the copies below are length limited by hand
+	char				body[MC_NAME_MAX + 2 + MC_TX_TEXT_MAX + 1];
+	uint16_t			n = 0;
 
 	if((pkt == NULL) || (ch == NULL) || (text == NULL))
 		return 1;
@@ -108,9 +114,18 @@ uint8_t mc_tx_build_group_text(MC_TX_PACKET *pkt, const MC_CHANNEL *ch,
 	// MeshCore carries the sender inside the encrypted text, as
 	// "name: message" - there is no sender field in a group header
 	if((sender != NULL) && (sender[0] != 0))
-		snprintf(body, sizeof(body), "%s: %s", sender, text);
-	else
-		snprintf(body, sizeof(body), "%s", text);
+	{
+		strncpy(body, sender, MC_NAME_MAX);
+		body[MC_NAME_MAX] = 0;
+
+		n = (uint16_t)strlen(body);
+
+		body[n++] = ':';
+		body[n++] = ' ';
+	}
+
+	strncpy(body + n, text, MC_TX_TEXT_MAX);
+	body[n + MC_TX_TEXT_MAX] = 0;
 
 	memset(&grp, 0, sizeof(grp));
 

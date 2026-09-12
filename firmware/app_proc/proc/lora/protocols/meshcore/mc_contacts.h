@@ -98,6 +98,11 @@ void		mc_contacts_init(void);
 // those defaults cannot overwrite good files
 uint8_t		mc_store_is_writable(void);
 
+// Look again for a card that was not there at startup. Loads the stores
+// and makes saving possible when one has appeared. Returns nonzero on
+// the call that takes a newly found card into use
+uint8_t		mc_store_recheck(void);
+
 // ---------------------------------------------------------------------
 // Contacts
 

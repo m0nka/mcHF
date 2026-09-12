@@ -52,6 +52,12 @@
 
 #define MX_TITLE_H				34
 
+// Title strip runs: MESHCORE | node [hash] | radio settings | clock.
+// The node name is clipped so a long one cannot push the rest off
+#define MX_TITLE_NAME_X			150
+#define MX_TITLE_NAME_MAX		12					// characters, not pixels
+#define MX_TITLE_LORA_X			340
+
 // The panes give up some height to the bigger keyboard and the larger
 // text - this is a 4" panel at arm's length, legibility wins over how
 // many lines fit
@@ -70,25 +76,46 @@
 #define MX_COMP_H				32
 
 // Roughly how many characters of the message font fit across the right
-// pane - used to fold long messages over several listbox rows
-#define MX_MSG_WRAP				54
+// pane - used to fold long messages over several listbox rows. Retune
+// this whenever the message font changes, or long lines get clipped
+// instead of wrapping (Font24_1 across 573 px is about 46)
+#define MX_MSG_WRAP				46
 
-// On screen keyboard - nine columns by three rows. The last of the 27
-// slots is the shift key that pages between letters and symbols, the
-// other 26 are characters
-#define MX_KEY_COLS				9
+// On screen keyboard - ten columns by three rows, laid out QWERTY. Ten
+// columns is what the top row needs (q..p is ten keys); an alphabetical
+// grid needs only nine but is far harder to scan, because the eye has
+// nowhere learned to look
+//
+// That gives 30 slots for 26 characters. The four left over carry the
+// page key, backspace and a double width space, so the action row does
+// not have to:
+//
+//    q w e r t y u i o p
+//    a s d f g h j k l DEL
+//  abc z x c v b n m [ SPACE ]
+//
+#define MX_KEY_COLS				10
 #define MX_KEY_ROWS				3
-#define MX_KEY_SLOTS			(MX_KEY_COLS * MX_KEY_ROWS)		// 27
-#define MX_KEY_CHARS			(MX_KEY_SLOTS - 1)				// 26
+#define MX_KEY_SLOTS			(MX_KEY_COLS * MX_KEY_ROWS)		// 30
+#define MX_KEY_CHARS			26
+
+// Slots that are not characters
+#define MX_SLOT_DEL				19
+#define MX_SLOT_SHIFT			20
+#define MX_SLOT_SPACE			28					// spans 28 and 29
 
 #define MX_KEY_X				6
 #define MX_KEY_Y1				286					// absolute y when the keyboard is open
-#define MX_KEY_W				85
+#define MX_KEY_W				76
 #define MX_KEY_H				46
 #define MX_KEY_GAP				3
 #define MX_KEY_VGAP				4
 
 #define MX_KEY_COL_X(c)			(MX_KEY_X + (c) * (MX_KEY_W + MX_KEY_GAP))
+#define MX_KEY_ROW_Y(r)			((r) * (MX_KEY_H + MX_KEY_VGAP))
+
+#define MX_SLOT_X(s)			MX_KEY_COL_X((s) % MX_KEY_COLS)
+#define MX_SLOT_Y(s)			MX_KEY_ROW_Y((s) / MX_KEY_COLS)
 
 // Keyboard container - holds the key grid and slides as one window
 #define MX_KB_Y					MX_KEY_Y1
@@ -109,6 +136,12 @@
 
 // Compose buffer
 #define MX_COMPOSE_MAX			110
+
+// Log emWin free memory and the listbox row counts to the debug UART
+// every few seconds while this screen is up. On until the fault inside
+// WM__Paint is understood - the trail before a crash says whether the
+// allocator was being drained by the rebuilds
+#define MX_DEBUG_GUI_MEM
 
 // Screen create / destroy, called from the UI mode switch
 void	meshchat_ui_create(void);

@@ -40,6 +40,13 @@ static FIL			mc_store_fil;
 // has proved the filesystem is there
 static uint8_t		mc_store_ok = 0;
 
+// Set when loading had to re-key a channel whose name was stored before
+// names were folded to lower case - the corrected table is written back
+// once the file is closed
+static uint8_t		mc_chan_migrated = 0;
+
+static uint8_t		mc_store_probe(void);
+
 uint8_t mc_store_is_writable(void)
 {
 	return mc_store_ok;
@@ -137,16 +144,37 @@ void mc_channel_key_of(const char *name, uint8_t key[MC_CHANNEL_KEY_SIZE])
 	memcpy(key, hash.bytes, MC_CHANNEL_KEY_SIZE);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_channels_add_by_name
+//* Object              : add a channel knowing only its name
+//* Notes    			: the name is folded to lower case first, because
+//*						: the key is a hash OF the name - so "#mcHF" and
+//*						: "#mchf" are not two spellings of one channel,
+//*						: they are two different keys that cannot read
+//*						: each other. The phone apps normalise the same
+//*						: way, so this is what makes them interoperate
+//* Context    			: CONTEXT_MESHCHAT
+//*----------------------------------------------------------------------------
 uint8_t mc_channels_add_by_name(const char *name)
 {
+	char	lower[MC_CHANNEL_NAME_MAX + 1];
 	uint8_t	key[MC_CHANNEL_KEY_SIZE];
+	uint8_t	i;
 
 	if((name == NULL) || (name[0] == 0))
 		return 1;
 
-	mc_channel_key_of(name, key);
+	for(i = 0; (i < MC_CHANNEL_NAME_MAX) && (name[i] != 0); i++)
+		lower[i] = ((name[i] >= 'A') && (name[i] <= 'Z')) ? (char)(name[i] + ('a' - 'A'))
+														 : name[i];
 
-	return mc_channels_add(name, key);
+	lower[i] = 0;
+
+	mc_channel_key_of(lower, key);
+
+	// Stored lower case too, so what the screen shows is the name the
+	// rest of the mesh is actually using
+	return mc_channels_add(lower, key);
 }
 
 uint8_t mc_channels_add(const char *name, const uint8_t key[MC_CHANNEL_KEY_SIZE])
@@ -495,8 +523,13 @@ static void mc_contacts_load(void)
 		return;
 	}
 
+	// Merged rather than written by index - this can run after the radio
+	// has already heard nodes on air (a card inserted mid session), and
+	// those entries must survive
 	for(i = 0; (i < hdr.count) && (i < MC_CONTACT_MAX); i++)
 	{
+		MC_CONTACT	*slot;
+
 		if((f_read(&mc_store_fil, &rec, sizeof(rec), &got) != FR_OK) || (got != sizeof(rec)))
 			break;
 
@@ -509,7 +542,22 @@ static void mc_contacts_load(void)
 		rec.have_shared = 0;
 		rec.unread		= 0;				// activity badge is per session
 
-		mc_contacts[i] = rec;
+		slot = mc_contacts_find(rec.pub_key);
+
+		if(slot != NULL)
+		{
+			// Already heard this node - keep the live entry, just adopt
+			// the fact that the user had added it
+			slot->saved = rec.saved;
+			continue;
+		}
+
+		slot = mc_contacts_evict();
+
+		if(slot == NULL)
+			break;
+
+		*slot = rec;
 	}
 
 	f_close(&mc_store_fil);
@@ -598,15 +646,38 @@ static uint8_t mc_channels_load(void)
 
 	for(i = 0; (i < hdr.count) && (i < MC_CHANNEL_MAX); i++)
 	{
+		uint8_t	from_name[MC_CHANNEL_KEY_SIZE];
+		uint8_t	mixed_case = 0, c;
+
 		if((f_read(&mc_store_fil, &rec, sizeof(rec), &got) != FR_OK) || (got != sizeof(rec)))
 			break;
 
-		// Re-derive rather than trust the stored hash
-		rec.hash	= mc_channel_hash_of(rec.key);
-		rec.in_use	= 1;
-		rec.unread	= 0;					// activity badge is per session
+		for(c = 0; rec.name[c] != 0; c++)
+			if((rec.name[c] >= 'A') && (rec.name[c] <= 'Z'))
+				mixed_case = 1;
 
-		mc_channels[i] = rec;
+		// A channel added before names were folded to lower case carries
+		// a key hashed from the mixed case spelling, which no other node
+		// shares. Spotted by the key still matching its own name; that
+		// is what distinguishes a derived channel from "public", whose
+		// key is fixed and must be left alone
+		mc_channel_key_of(rec.name, from_name);
+
+		if((mixed_case) && (memcmp(from_name, rec.key, MC_CHANNEL_KEY_SIZE) == 0))
+		{
+			printf("meshchat: channel '%s' re-keyed to lower case \r\n", rec.name);
+
+			mc_channels_add_by_name(rec.name);		// lowercases and re-derives
+			mc_chan_migrated = 1;
+		}
+		else
+		{
+			// Added rather than written by index - the table may already
+			// hold the seeded defaults when a card turns up mid session,
+			// and mc_channels_add dedups by key and picks a free slot
+			mc_channels_add(rec.name, rec.key);
+		}
+
 		n++;
 	}
 
@@ -631,6 +702,44 @@ static uint8_t mc_store_probe(void)
 	DWORD	clusters;
 
 	return (f_getfree("0://", &clusters, &fs) == FR_OK) ? 1 : 0;
+}
+
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_store_recheck
+//* Object              : has a card turned up since we last looked ?
+//* Notes    			: the store starts read-only on a boot with no
+//*						: card, and stays that way until this says
+//*						: otherwise - which is what makes insert-card-
+//*						: later work instead of needing a restart.
+//*						: Returns nonzero when the card has just been
+//*						: taken into use
+//* Context    			: CONTEXT_MESHCHAT
+//*----------------------------------------------------------------------------
+uint8_t mc_store_recheck(void)
+{
+	if(mc_store_ok)
+		return 0;
+
+	if(!mc_store_probe())
+		return 0;
+
+	mc_store_ok = 1;
+
+	printf("meshchat: card detected, loading stores \r\n");
+
+	// Whatever the card holds wins for channels; if it holds none, the
+	// set we have been running on is written out
+	if(mc_channels_load())
+		mc_channels_save();
+	else if(mc_chan_migrated)
+		mc_channels_save();
+
+	// Contacts merge - anything heard while there was no card is kept
+	mc_contacts_load();
+	mc_contacts_save();
+
+	return 1;
 }
 
 void mc_contacts_init(void)
@@ -663,6 +772,12 @@ void mc_contacts_init(void)
 		mc_channels_add_by_name("#test");
 		mc_channels_add_by_name("#jokes");
 
+		mc_channels_save();
+	}
+	else if(mc_chan_migrated)
+	{
+		// A channel was re-keyed on the way in - put the corrected
+		// keyring back on the card
 		mc_channels_save();
 	}
 

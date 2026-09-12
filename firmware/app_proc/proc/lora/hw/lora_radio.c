@@ -42,6 +42,27 @@ unsigned char tx_data[38] = {
 };
 #endif
 
+//*----------------------------------------------------------------------------
+//* Function Name       : lora_radio_config_text
+//* Object              : the modem's settings as one line of text
+//* Notes    			: the frequency is split into whole MHz and kHz
+//*						: by hand - printf here has no %f, and ftoa would
+//*						: need a second buffer for no benefit
+//* Context    			: any
+//*----------------------------------------------------------------------------
+void lora_radio_config_text(char *buf, ushort len)
+{
+	ulong	khz;
+
+	if((buf == NULL) || (len == 0))
+		return;
+
+	khz = (ulong)((LORA_FR * 1000.0f) + 0.5f);
+
+	snprintf(buf, len, "%u.%03u MHz  %s",
+			 (unsigned int)(khz / 1000), (unsigned int)(khz % 1000), LORA_CFG_TXT);
+}
+
 static uchar lora_radio_find_chip(void)
 {
 	char version[100];

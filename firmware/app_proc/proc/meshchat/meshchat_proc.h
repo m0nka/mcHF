@@ -44,6 +44,14 @@
 #define MESHCHAT_SD_WAIT_TRIES		20
 #define MESHCHAT_SD_WAIT_MS			500
 
+// How often to look again for a card, when running without one
+#define MESHCHAT_STORE_POLL_MS		3000
+
+// What the service is doing, for the dialog's status line
+#define MESHCHAT_STATE_BOOT			0			// queues not up yet
+#define MESHCHAT_STATE_WAIT_SD		1			// waiting for the card at startup
+#define MESHCHAT_STATE_READY		2
+
 // Log every decoded packet on the debug UART. The chat screen is the
 // real interface, but on the bench this is the only way to see what the
 // mesh is actually sending us
@@ -58,6 +66,24 @@
 #define MESHCHAT_MSG_MAX			64
 #define MESHCHAT_TEXT_MAX			120
 #define MESHCHAT_SENDER_MAX			16
+
+// Transmissions whose repeats we are still listening for, and how many
+// recently seen payloads are remembered for duplicate suppression
+#define MESHCHAT_ECHO_MAX			4
+#define MESHCHAT_SEEN_MAX			16
+
+// What came back after a transmission - the confirmation that our signal
+// reached a repeater at all
+typedef struct
+{
+	uint32_t	fp;								// payload fingerprint
+	uint8_t		in_use;
+	uint8_t		repeats;						// times heard rebroadcast
+	uint8_t		min_hops;						// fewest repeaters in a returning copy
+	int8_t		best_snr;
+	uint32_t	tick;							// when it was sent
+
+} MESHCHAT_ECHO;
 
 // ---------------------------------------------------------------------
 // Conversations. Identified by what they address rather than by a list
@@ -116,6 +142,12 @@ uint32_t	meshchat_revision(void);
 uint8_t		meshchat_ready(void);
 uint8_t		meshchat_tx_pending(void);
 
+// MESHCHAT_STATE_xxx, and how many seconds of the startup card wait are
+// left - so a radio with no card in it shows a countdown rather than
+// looking like it has hung
+uint8_t		meshchat_state(void);
+uint8_t		meshchat_sd_wait_left(void);
+
 // Conversation list - channels first, then saved contacts
 uint8_t		meshchat_conv_count(void);
 uint8_t		meshchat_conv_at(uint8_t idx, MESHCHAT_CONV *out);
@@ -148,5 +180,9 @@ void		meshchat_mark_read(const MESHCHAT_CONV *conv);
 // Our own node, for the title bar
 const char	*meshchat_node_name(void);
 uint8_t		meshchat_node_hash(void);
+
+// The most recent transmission and whatever has been heard back of it.
+// Returns 0 when nothing has been sent yet
+uint8_t		meshchat_last_echo(MESHCHAT_ECHO *out);
 
 #endif

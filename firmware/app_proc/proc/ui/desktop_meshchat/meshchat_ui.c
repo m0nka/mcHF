@@ -34,6 +34,9 @@
 
 #include "rtc.h"
 
+#include "sd_card.h"						// is a card even in the slot ?
+#include "lora_radio.h"						// modem settings for the title strip
+
 #include "advert.h"							// meshcore_device_role_t names
 #include "mc_identity.h"
 #include "mc_contacts.h"
@@ -51,11 +54,21 @@ static WM_HWIN	hMxTimer;
 static WM_HWIN	hMxConvList;
 static WM_HWIN	hMxMsgList;
 
+// Title strip colours. GUI_USE_ARGB is 1 in this build, so a custom
+// colour has to go through GUI_MAKE_COLOR or it draws fully transparent.
+// The value is 0x00BBGGRR, not RGB
+#define MX_TITLE_BK				GUI_MAKE_COLOR(0x00B48246)	// steel blue
+#define MX_TITLE_EDGE			GUI_MAKE_COLOR(0x008C6432)	// a shade darker, for the rule
+
 // Which pair of panes we are showing
 #define MX_VIEW_CHAT			0
 #define MX_VIEW_CONTACTS		1
 
 static uint8_t	mx_view = MX_VIEW_CHAT;
+
+// Set while both panes are being refilled, so the selection notifications
+// emWin sends synchronously from LISTBOX_SetSel do not re-enter
+static uint8_t	mx_rebuilding = 0;
 
 // Compose buffer - the local draft, handed to the service on SEND
 static char		mx_compose[MX_COMPOSE_MAX + 1];
@@ -104,14 +117,29 @@ static MX_KB_ANIM		mx_kb_anim;
 #define MX_PAGE_SYMBOL		2
 #define MX_PAGE_COUNT		3
 
-static const char	mx_page_lower[MX_KEY_CHARS + 1]   = "abcdefghijklmnopqrstuvwxyz";
-static const char	mx_page_upper[MX_KEY_CHARS + 1]   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+// Character order is the reading order of the QWERTY grid, not the
+// alphabet - key i of a page sits at slot mx_char_slot[i]
+static const char	mx_page_lower[MX_KEY_CHARS + 1]   = "qwertyuiopasdfghjklzxcvbnm";
+static const char	mx_page_upper[MX_KEY_CHARS + 1]   = "QWERTYUIOPASDFGHJKLZXCVBNM";
+
+// The symbols page rides the same grid, which puts the digits along the
+// top row where a real keyboard has them
 static const char	mx_page_symbols[MX_KEY_CHARS + 1] = "0123456789.,?!-/@:'()\"+=&;";
+
+// Where each character lands. Slots 19, 20 and 28/29 are the function
+// keys, so the last seven characters skip over slot 20
+static const uint8_t	mx_char_slot[MX_KEY_CHARS] =
+{
+	 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,		// q w e r t y u i o p
+	10, 11, 12, 13, 14, 15, 16, 17, 18,			// a s d f g h j k l
+	21, 22, 23, 24, 25, 26, 27					// z x c v b n m
+};
 
 static uint8_t		mx_page_id = MX_PAGE_LOWER;
 
 static void mx_rebuild(void);
 static void mx_layout_action_row(int kb_shown);
+static void mx_apply_page(void);
 
 static const char *mx_page(void)
 {
@@ -152,6 +180,13 @@ static void mx_anim_step(GUI_ANIM_INFO *pInfo, void *pVoid)
 	MX_KB_ANIM	*p = (MX_KB_ANIM *)pVoid;
 	int			y;
 
+	// The animation outlives the dialog if the screen is closed mid
+	// slide - F3 deletes the window while emWin is still stepping this.
+	// Moving a window that has been freed corrupts the window list, and
+	// the damage only shows up later as a fault inside WM__Paint
+	if((hMxDialog == 0) || (p->hWin == 0))
+		return;
+
 	if(p->dir)
 		y = MX_KB_Y + (((MX_UI_H - MX_KB_Y) * pInfo->Pos) / GUI_ANIM_RANGE);
 	else
@@ -166,7 +201,8 @@ static void mx_anim_done(void *pVoid)
 
 	hMxAnim = 0;
 
-	WM_InvalidateWindow(hMxDialog);
+	if(hMxDialog)
+		WM_InvalidateWindow(hMxDialog);
 }
 
 static void mx_anim_start(int dir)
@@ -199,6 +235,12 @@ static void mx_hide_keyboard(void)
 		return;
 
 	mx_kb_shown = 0;
+
+	// Back to lower case for next time, the way a phone keyboard does.
+	// Leaving it on the symbols or capitals page means the next message
+	// starts in whatever mode the last one happened to end in
+	mx_page_id = MX_PAGE_LOWER;
+	mx_apply_page();
 
 	mx_layout_action_row(0);
 
@@ -238,15 +280,14 @@ static void mx_apply_page(void)
 //*----------------------------------------------------------------------------
 static void mx_create_keys(void)
 {
-	int	i, col, row;
+	WM_HWIN	hBtn;
+	int		i, slot;
 
 	for(i = 0; i < MX_KEY_CHARS; i++)
 	{
-		col = i % MX_KEY_COLS;
-		row = i / MX_KEY_COLS;
+		slot = mx_char_slot[i];
 
-		hMxCharKeys[i] = BUTTON_CreateEx(MX_KEY_COL_X(col),
-										 row * (MX_KEY_H + MX_KEY_VGAP),
+		hMxCharKeys[i] = BUTTON_CreateEx(MX_SLOT_X(slot), MX_SLOT_Y(slot),
 										 MX_KEY_W, MX_KEY_H,
 										 hMxKeyboard, WM_CF_SHOW, 0,
 										 ID_MX_CHAR_0 + i);
@@ -254,16 +295,31 @@ static void mx_create_keys(void)
 		BUTTON_SetFont(hMxCharKeys[i], &GUI_Font24B_1);
 	}
 
-	col = MX_KEY_CHARS % MX_KEY_COLS;
-	row = MX_KEY_CHARS / MX_KEY_COLS;
-
-	hMxShiftKey = BUTTON_CreateEx(MX_KEY_COL_X(col),
-								  row * (MX_KEY_H + MX_KEY_VGAP),
+	// Page key - abc / ABC / 123
+	hMxShiftKey = BUTTON_CreateEx(MX_SLOT_X(MX_SLOT_SHIFT), MX_SLOT_Y(MX_SLOT_SHIFT),
 								  MX_KEY_W, MX_KEY_H,
 								  hMxKeyboard, WM_CF_SHOW, 0,
 								  ID_MX_SHIFT);
 
-	BUTTON_SetFont(hMxShiftKey, &GUI_Font24B_1);
+	BUTTON_SetFont(hMxShiftKey, &GUI_Font20B_1);
+
+	// Backspace, where a phone keyboard puts it - end of the home row
+	hBtn = BUTTON_CreateEx(MX_SLOT_X(MX_SLOT_DEL), MX_SLOT_Y(MX_SLOT_DEL),
+						   MX_KEY_W, MX_KEY_H,
+						   hMxKeyboard, WM_CF_SHOW, 0,
+						   ID_MX_BACKSPACE);
+
+	BUTTON_SetText(hBtn, "DEL");
+	BUTTON_SetFont(hBtn, &GUI_Font20B_1);
+
+	// Space bar - two slots wide, so it reads as a space bar
+	hBtn = BUTTON_CreateEx(MX_SLOT_X(MX_SLOT_SPACE), MX_SLOT_Y(MX_SLOT_SPACE),
+						   (MX_KEY_W * 2) + MX_KEY_GAP, MX_KEY_H,
+						   hMxKeyboard, WM_CF_SHOW, 0,
+						   ID_MX_SPACE);
+
+	BUTTON_SetText(hBtn, "SPACE");
+	BUTTON_SetFont(hBtn, &GUI_Font20B_1);
 
 	mx_apply_page();
 }
@@ -280,10 +336,11 @@ static void mx_create_keys(void)
 //*----------------------------------------------------------------------------
 static void mx_layout_action_row(int kb_shown)
 {
+	// SPACE and DEL are keys on the keyboard itself now, not buttons
+	// down here - so this row only carries what is useful with the
+	// keyboard closed, plus the few things that go with typing
 	WM_HWIN	hType	 = WM_GetDialogItem(hMxDialog, ID_MX_TYPE);
 	WM_HWIN	hSend	 = WM_GetDialogItem(hMxDialog, ID_MX_SEND);
-	WM_HWIN	hSpace	 = WM_GetDialogItem(hMxDialog, ID_MX_SPACE);
-	WM_HWIN	hDel	 = WM_GetDialogItem(hMxDialog, ID_MX_BACKSPACE);
 	WM_HWIN	hClear	 = WM_GetDialogItem(hMxDialog, ID_MX_CLEAR);
 	WM_HWIN	hContact = WM_GetDialogItem(hMxDialog, ID_MX_CONTACTS);
 	WM_HWIN	hAdvert	 = WM_GetDialogItem(hMxDialog, ID_MX_ADVERT);
@@ -294,8 +351,6 @@ static void mx_layout_action_row(int kb_shown)
 	// Everything off, then only what this state needs back on
 	WM_HideWindow(hType);
 	WM_HideWindow(hSend);
-	WM_HideWindow(hSpace);
-	WM_HideWindow(hDel);
 	WM_HideWindow(hClear);
 	WM_HideWindow(hContact);
 	WM_HideWindow(hAdvert);
@@ -325,18 +380,14 @@ static void mx_layout_action_row(int kb_shown)
 
 	if(kb_shown)
 	{
-		// [HIDE] [SPACE] [DEL] [CLEAR] [SEND]
+		// [HIDE] [CLEAR] [SEND] - space and backspace are on the keys
 		BUTTON_SetText(hType, "HIDE");
 
-		WM_SetWindowPos(hType,	6,   MX_ACT_Y, 110, MX_ACT_H);
-		WM_SetWindowPos(hSpace,	120, MX_ACT_Y, 204, MX_ACT_H);
-		WM_SetWindowPos(hDel,	328, MX_ACT_Y, 120, MX_ACT_H);
-		WM_SetWindowPos(hClear,	452, MX_ACT_Y, 130, MX_ACT_H);
-		WM_SetWindowPos(hSend,	586, MX_ACT_Y, 208, MX_ACT_H);
+		WM_SetWindowPos(hType,	6,   MX_ACT_Y, 200, MX_ACT_H);
+		WM_SetWindowPos(hClear,	212, MX_ACT_Y, 200, MX_ACT_H);
+		WM_SetWindowPos(hSend,	418, MX_ACT_Y, 376, MX_ACT_H);
 
 		WM_ShowWindow(hType);
-		WM_ShowWindow(hSpace);
-		WM_ShowWindow(hDel);
 		WM_ShowWindow(hClear);
 		WM_ShowWindow(hSend);
 
@@ -646,6 +697,11 @@ static void mx_build_contact_detail(void)
 //*----------------------------------------------------------------------------
 static void mx_rebuild(void)
 {
+	if((hMxConvList == 0) || (hMxMsgList == 0))
+		return;
+
+	mx_rebuilding = 1;
+
 	if(mx_view == MX_VIEW_CONTACTS)
 	{
 		mx_build_heard_list();
@@ -661,6 +717,8 @@ static void mx_rebuild(void)
 		mx_build_conv_list();
 		mx_build_msg_list();
 	}
+
+	mx_rebuilding = 0;
 
 	WM_InvalidateWindow(hMxDialog);
 }
@@ -683,26 +741,44 @@ static void mx_paint_title(void)
 	k_GetTime(&tm);
 	k_GetDate(&dt);
 
-	GUI_SetBkColor(GUI_BLACK);
-	GUI_SetColor(GUI_BLACK);
+	GUI_SetBkColor(MX_TITLE_BK);
+	GUI_SetColor(MX_TITLE_BK);
 	GUI_FillRect(0, 0, MX_UI_W - 1, MX_TITLE_H - 1);
 
 	GUI_SetTextMode(GUI_TM_TRANS);
 	GUI_SetFont(&GUI_Font24B_1);
 
+	// The screen is named for the protocol it is speaking, even though
+	// the app and its sources stay MeshChat - that name has to cover
+	// Meshtastic later
 	GUI_SetColor(GUI_WHITE);
-	GUI_DispStringAt("MESHCHAT", 8, 4);
+	GUI_DispStringAt("MESHCORE", 8, 4);
 
 	GUI_SetFont(&GUI_Font20B_1);
-	GUI_SetColor(GUI_LIGHTGRAY);
+	GUI_SetColor(GUI_WHITE);
 
-	snprintf(buf, sizeof(buf), "%s  [%02X]", meshchat_node_name(), meshchat_node_hash());
-	GUI_DispStringAt(buf, 180, 7);
+	// Node name, clipped - it can be 32 characters and the strip has to
+	// hold the radio settings and the clock as well
+	{
+		char	name[MX_TITLE_NAME_MAX + 1];
+
+		strncpy(name, meshchat_node_name(), MX_TITLE_NAME_MAX);
+		name[MX_TITLE_NAME_MAX] = 0;
+
+		snprintf(buf, sizeof(buf), "%s [%02X]", name, meshchat_node_hash());
+		GUI_DispStringAt(buf, MX_TITLE_NAME_X, 7);
+	}
+
+	// What the modem is actually tuned to and running - the settings are
+	// compile time, but they are the first thing to check when nothing
+	// is being heard
+	lora_radio_config_text(buf, sizeof(buf));
+	GUI_DispStringAt(buf, MX_TITLE_LORA_X, 7);
 
 	snprintf(buf, sizeof(buf), "%02d:%02d:%02d", tm.Hours, tm.Minutes, tm.Seconds);
 	GUI_DispStringAt(buf, MX_UI_W - 100, 7);
 
-	GUI_SetColor(GUI_GRAY);
+	GUI_SetColor(MX_TITLE_EDGE);
 	GUI_DrawHLine(MX_TITLE_H - 1, 0, MX_UI_W - 1);
 }
 
@@ -764,7 +840,22 @@ static void mx_paint_status(void)
 
 	if(!meshchat_ready())
 	{
-		GUI_DispStringAt("meshchat service starting...", MX_STAT_X + 12, y);
+		if(meshchat_state() == MESHCHAT_STATE_WAIT_SD)
+		{
+			// Say what it is waiting for and for how much longer - this
+			// is ten seconds on a radio with no card in it
+			snprintf(buf, sizeof(buf), "looking for the SD card... %us",
+					 (unsigned int)meshchat_sd_wait_left());
+			GUI_DispStringAt(buf, MX_STAT_X + 12, y);
+
+			GUI_SetFont(&GUI_Font16B_1);
+			GUI_SetColor(GUI_DARKGRAY);
+			GUI_DispStringAt("the radio will run without one, but nothing will be saved",
+							 MX_STAT_X + 12, y + 26);
+		}
+		else
+			GUI_DispStringAt("meshchat service starting...", MX_STAT_X + 12, y);
+
 		return;
 	}
 
@@ -782,34 +873,82 @@ static void mx_paint_status(void)
 			heard++;
 	}
 
-	snprintf(buf, sizeof(buf), "node %s   hash %02X   channels %d",
-			 id->name, id->pub[0], (int)mc_channels_count());
+	snprintf(buf, sizeof(buf), "node %s   hash %02X   channels %d   key %s",
+			 id->name, id->pub[0], (int)mc_channels_count(),
+			 (id->source == MC_ID_SRC_CARD)   ? "card"   :
+			 (id->source == MC_ID_SRC_BACKUP) ? "backup" :
+			 (id->source == MC_ID_SRC_NEW)    ? "NEW"    : "?");
 	GUI_DispStringAt(buf, MX_STAT_X + 12, y);
 
 	y += 26;
 
-	snprintf(buf, sizeof(buf), "contacts %d saved, %d heard this session", (int)saved, (int)heard);
+	// emWin free memory is here on purpose: the screen rebuilds its two
+	// listboxes every time a message lands, and if any of that leaked,
+	// this number would walk downwards until the allocator failed and
+	// handed out a bad handle. Watching it is how that gets ruled in or
+	// out after the WM__Paint fault on 2026-09-12
+	snprintf(buf, sizeof(buf), "contacts %d saved, %d heard   gui free %dk",
+			 (int)saved, (int)heard, (int)(GUI_ALLOC_GetNumFreeBytes() / 1024));
 	GUI_DispStringAt(buf, MX_STAT_X + 12, y);
 
 	y += 26;
 
-	if(meshchat_tx_pending())
-		snprintf(buf, sizeof(buf), "tx: %d packet(s) waiting for the modem",
-				 (int)meshchat_tx_pending());
-	else
-		snprintf(buf, sizeof(buf), "tx: idle");
+	// What came back of the last transmission. On a quiet mesh this is
+	// the only thing that tells you the signal is getting out at all
+	{
+		MESHCHAT_ECHO	echo;
 
-	GUI_DispStringAt(buf, MX_STAT_X + 12, y);
+		if(meshchat_tx_pending())
+		{
+			GUI_SetColor(GUI_BLACK);
+			snprintf(buf, sizeof(buf), "tx: %d packet(s) waiting for the modem",
+					 (int)meshchat_tx_pending());
+		}
+		else if(meshchat_last_echo(&echo))
+		{
+			unsigned int	age = (unsigned int)((xTaskGetTickCount() - echo.tick) /
+												 configTICK_RATE_HZ);
+
+			if(echo.repeats)
+			{
+				GUI_SetColor(GUI_DARKGREEN);
+				snprintf(buf, sizeof(buf),
+						 "sent %us ago - repeated %u time(s), %u hop(s), snr %d",
+						 age, (unsigned int)echo.repeats,
+						 (unsigned int)echo.min_hops, (int)echo.best_snr);
+			}
+			else
+			{
+				GUI_SetColor(GUI_BLACK);
+				snprintf(buf, sizeof(buf), "sent %us ago - no repeat heard yet", age);
+			}
+		}
+		else
+		{
+			GUI_SetColor(GUI_BLACK);
+			snprintf(buf, sizeof(buf), "tx: idle - nothing sent yet");
+		}
+
+		GUI_DispStringAt(buf, MX_STAT_X + 12, y);
+		GUI_SetColor(GUI_BLACK);
+	}
 
 	y += 26;
 
 	if(!mc_store_is_writable())
 	{
-		// The card did not come up this boot, so the identity is a
-		// throwaway and nothing added now will survive a restart
 		GUI_SetColor(GUI_RED);
-		GUI_DispStringAt("no SD card - channels and contacts will not be saved",
-						 MX_STAT_X + 12, y);
+
+		// Card in the slot but no filesystem means its init failed at
+		// boot, and nothing re-runs that until the card is reseated.
+		// Say so rather than just reporting "no card", which sends the
+		// user looking for a card that is already there
+		if(sd_card_is_detected() == SD_PRESENT)
+			GUI_DispStringAt("SD card present but did not mount - reseat it to retry",
+							 MX_STAT_X + 12, y);
+		else
+			GUI_DispStringAt("no SD card - channels and contacts will not be saved",
+							 MX_STAT_X + 12, y);
 	}
 	else if(id->weak_entropy)
 	{
@@ -989,7 +1128,19 @@ static void mx_on_button(int id, int ncode)
 //*----------------------------------------------------------------------------
 static void mx_on_select(void)
 {
-	int	sel = LISTBOX_GetSel(hMxConvList);
+	int	sel;
+
+	// LISTBOX_SetSel inside a rebuild notifies synchronously, so this
+	// lands in the middle of mx_build_conv_list and would start editing
+	// the other listbox while emWin is still working through this one.
+	// The rebuild refreshes both panes anyway
+	if(mx_rebuilding)
+		return;
+
+	if(hMxConvList == 0)
+		return;
+
+	sel = LISTBOX_GetSel(hMxConvList);
 
 	if(sel < 0)
 		return;
@@ -1044,8 +1195,6 @@ static void mx_create_widgets(WM_HWIN hWin)
 	{
 		{ ID_MX_TYPE,		"TYPE"		},
 		{ ID_MX_SEND,		"SEND"		},
-		{ ID_MX_SPACE,		"SPACE"		},
-		{ ID_MX_BACKSPACE,	"DEL"		},
 		{ ID_MX_CLEAR,		"CLEAR"		},
 		{ ID_MX_CONTACTS,	"CONTACTS"	},
 		{ ID_MX_ADVERT,		"ADVERT"	},
@@ -1062,13 +1211,23 @@ static void mx_create_widgets(WM_HWIN hWin)
 	hMxMsgList  = LISTBOX_CreateEx(MX_MSG_X, MX_LIST_Y, MX_MSG_W, MX_LIST_H,
 								   hWin, WM_CF_SHOW, 0, ID_MX_LIST_RIGHT, NULL);
 
-	LISTBOX_SetFont(hMxConvList, &GUI_Font20B_1);
-	LISTBOX_SetFont(hMxMsgList,  &GUI_Font20_1);
+	LISTBOX_SetFont(hMxConvList, &GUI_Font24B_1);
+	LISTBOX_SetFont(hMxMsgList,  &GUI_Font24_1);
 
-	// The right pane is a transcript, not a chooser - let it scroll but
-	// keep the selection bar quiet
-	LISTBOX_SetAutoScrollV(hMxMsgList,  1);
-	LISTBOX_SetAutoScrollV(hMxConvList, 1);
+	// Auto scrollbars are deliberately OFF.
+	//
+	// With them on, emWin creates and destroys a SCROLLBAR child window
+	// as the item count crosses what fits - and this screen empties and
+	// refills both lists every time a message lands. That is a window
+	// being created and freed several times a second underneath the
+	// window manager, which is the best explanation for the fault seen
+	// inside WM__Paint: it locked handle 7 and got a pointer of 7 back,
+	// i.e. it was walking a window that no longer exists.
+	//
+	// Nothing is lost by turning them off: the view is kept on the
+	// newest line by selecting it, which scrolls it in
+	LISTBOX_SetAutoScrollV(hMxMsgList,  0);
+	LISTBOX_SetAutoScrollV(hMxConvList, 0);
 
 	for(i = 0; i < (int)GUI_COUNTOF(buttons); i++)
 	{
@@ -1098,6 +1257,11 @@ static void _cbDialog(WM_MESSAGE *pMsg)
 												 pMsg->hWin, WM_CF_SHOW, _cbKeyboard, 0);
 
 			mx_create_widgets(pMsg->hWin);
+
+			// Always open on the lower case page, however the screen was
+			// left last time
+			mx_page_id = MX_PAGE_LOWER;
+
 			mx_create_keys();
 
 			mx_kb_shown = 0;
@@ -1160,6 +1324,26 @@ static void _cbDialog(WM_MESSAGE *pMsg)
 				WM_InvalidateWindow(hMxDialog);
 			}
 
+			// Trail of emWin free memory and how many rows are live, so
+			// the log around a fault shows whether the allocator was
+			// being drained by the per-message rebuilds. Cheap, and it
+			// only runs while this screen is up
+			#ifdef MX_DEBUG_GUI_MEM
+			{
+				static uint8_t	tick;
+
+				if((++tick) >= 10)					// every 5 s
+				{
+					tick = 0;
+
+					printf("meshchat ui: gui free %d, conv %d, msg %d \r\n",
+							(int)GUI_ALLOC_GetNumFreeBytes(),
+							(int)LISTBOX_GetNumItems(hMxConvList),
+							(int)LISTBOX_GetNumItems(hMxMsgList));
+				}
+			}
+			#endif
+
 			WM_RestartTimer(pMsg->Data.v, 500);
 			break;
 		}
@@ -1169,12 +1353,17 @@ static void _cbDialog(WM_MESSAGE *pMsg)
 			WM_DeleteTimer(hMxTimer);
 
 			// The children go with the dialog - drop the handles so a
-			// stray repaint cannot reach a dead window
-			hMxKeyboard	= 0;
-			hMxConvList	= 0;
-			hMxMsgList	= 0;
-			hMxShiftKey	= 0;
-			hMxAnim		= 0;
+			// stray repaint cannot reach a dead window. hMxDialog and
+			// the animation's copy of the keyboard handle go too: a
+			// slide still in flight steps again after this, and moving
+			// a freed window is what corrupts emWin's window list
+			hMxDialog		= 0;
+			hMxKeyboard		= 0;
+			hMxConvList		= 0;
+			hMxMsgList		= 0;
+			hMxShiftKey		= 0;
+			hMxAnim			= 0;
+			mx_kb_anim.hWin	= 0;
 
 			memset(hMxCharKeys, 0, sizeof(hMxCharKeys));
 			break;

@@ -69,11 +69,133 @@ static uint8_t			mc_msg_used;
 
 static volatile uint32_t	mc_revision;
 static volatile uint8_t		mc_started;
+static volatile uint8_t		mc_state;			// MESHCHAT_STATE_xxx
+static volatile uint8_t		mc_sd_waited;		// half seconds spent waiting for a card
+
+// When the card was last looked for again, while running without one
+static uint32_t				mc_store_poll_tick;
 
 // Scratch owned by this task - none of it is touched anywhere else
 static MESHCHAT_RX_RAW	mc_raw;
 static MC_RX_EVENT		mc_ev;
 static MC_TX_PACKET		mc_pkt;
+
+// ---------------------------------------------------------------------
+// Hearing ourselves come back
+//
+// A flood packet is rebroadcast by every repeater in range, each adding
+// itself to the path while the payload stays untouched. So when one of
+// our own transmissions comes back we can recognise it by its payload
+// fingerprint - and that is the only confirmation a transmitting station
+// gets that its signal actually reached anything. It is what the phone
+// apps show, and on a quiet mesh it is the difference between "nobody is
+// talking" and "my antenna is disconnected"
+//
+// The same fingerprints are what lets us drop the duplicate copies of
+// other people's messages that arrive via different repeaters
+
+static MESHCHAT_ECHO	mc_echo[MESHCHAT_ECHO_MAX];
+static uint8_t			mc_echo_head;
+static uint8_t			mc_echo_last = 0xFF;	// most recent transmission
+
+// Payloads we have already dealt with, so a message repeated by three
+// repeaters is shown once
+static uint32_t			mc_seen_fp[MESHCHAT_SEEN_MAX];
+static uint8_t			mc_seen_head;
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_echo_track
+//* Object              : remember a payload we have just sent
+//* Context    			: CONTEXT_MESHCHAT
+//*----------------------------------------------------------------------------
+static void mc_echo_track(uint32_t fp)
+{
+	MESHCHAT_ECHO	*e = &mc_echo[mc_echo_head];
+
+	memset(e, 0, sizeof(MESHCHAT_ECHO));
+
+	e->fp		= fp;
+	e->in_use	= 1;
+	e->min_hops	= 0xFF;
+	e->tick		= (uint32_t)xTaskGetTickCount();
+
+	mc_echo_last = mc_echo_head;
+	mc_echo_head = (uint8_t)((mc_echo_head + 1) % MESHCHAT_ECHO_MAX);
+
+	mc_revision++;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_echo_match
+//* Object              : is this one of ours coming back ?
+//* Notes    			: returns nonzero when it was, having counted it
+//* Context    			: CONTEXT_MESHCHAT
+//*----------------------------------------------------------------------------
+static uint8_t mc_echo_match(const MC_RX_EVENT *ev)
+{
+	uint8_t	i;
+
+	for(i = 0; i < MESHCHAT_ECHO_MAX; i++)
+	{
+		MESHCHAT_ECHO	*e = &mc_echo[i];
+
+		if((!e->in_use) || (e->fp != ev->payload_fp))
+			continue;
+
+		e->repeats++;
+
+		if(ev->path_len < e->min_hops)
+			e->min_hops = ev->path_len;
+
+		if((e->repeats == 1) || (ev->snr > e->best_snr))
+			e->best_snr = ev->snr;
+
+		mc_revision++;
+
+		printf("meshchat: heard own message repeated, %d hop(s), snr %d, %d total \r\n",
+				(int)ev->path_len, (int)ev->snr, (int)e->repeats);
+
+		return 1;
+	}
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_seen_check
+//* Object              : have we already handled this payload ?
+//* Notes    			: records it either way
+//* Context    			: CONTEXT_MESHCHAT
+//*----------------------------------------------------------------------------
+static uint8_t mc_seen_check(uint32_t fp)
+{
+	uint8_t	i;
+
+	if(fp == 0)
+		return 0;
+
+	for(i = 0; i < MESHCHAT_SEEN_MAX; i++)
+		if(mc_seen_fp[i] == fp)
+			return 1;
+
+	mc_seen_fp[mc_seen_head] = fp;
+	mc_seen_head = (uint8_t)((mc_seen_head + 1) % MESHCHAT_SEEN_MAX);
+
+	return 0;
+}
+
+uint8_t meshchat_last_echo(MESHCHAT_ECHO *out)
+{
+	if((out == NULL) || (mc_echo_last >= MESHCHAT_ECHO_MAX))
+		return 0;
+
+	if(!mc_echo[mc_echo_last].in_use)
+		return 0;
+
+	*out = mc_echo[mc_echo_last];
+
+	return 1;
+}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : mc_now_epoch
@@ -120,6 +242,23 @@ uint32_t meshchat_revision(void)
 uint8_t meshchat_ready(void)
 {
 	return mc_started;
+}
+
+uint8_t meshchat_state(void)
+{
+	return mc_state;
+}
+
+// Seconds still to go on the startup card wait, 0 once it is over
+uint8_t meshchat_sd_wait_left(void)
+{
+	if(mc_state != MESHCHAT_STATE_WAIT_SD)
+		return 0;
+
+	if(mc_sd_waited >= MESHCHAT_SD_WAIT_TRIES)
+		return 0;
+
+	return (uint8_t)(((MESHCHAT_SD_WAIT_TRIES - mc_sd_waited) * MESHCHAT_SD_WAIT_MS) / 1000);
 }
 
 uint8_t meshchat_tx_pending(void)
@@ -593,7 +732,7 @@ uint8_t meshchat_add_channel(const char *name)
 //*----------------------------------------------------------------------------
 static void mc_notify_ui(const MC_RX_EVENT *ev)
 {
-	static char				notif[160];
+	static char				notif[MC_RX_FORMAT_MIN];
 	static LORA_PACKET_RX	lprx;
 	ulong					ulData[10];
 	ulong					ulDummy;
@@ -649,6 +788,24 @@ static void mc_handle_rx(void)
 	printf("meshchat: rx %d bytes, %s, snr %d, kind %d \r\n",
 			(int)mc_raw.size, mc_ev.type_short, (int)mc_ev.snr, (int)mc_ev.kind);
 	#endif
+
+	// One of ours coming back off a repeater. Counted as proof the
+	// signal got out, and deliberately not filed as an incoming message
+	// - it is the message we already showed as sent
+	if(mc_echo_match(&mc_ev))
+		return;
+
+	// A copy of something already handled, arriving by another route.
+	// Adverts are exempt: a repeated advert is still a live sighting of
+	// that node and should refresh its entry
+	if((mc_ev.kind != MC_RX_ADVERT) && (mc_seen_check(mc_ev.payload_fp)))
+	{
+		#ifdef MESHCHAT_DEBUG_RX
+		printf("meshchat:   duplicate, ignored \r\n");
+		#endif
+
+		return;
+	}
 
 	switch(mc_ev.kind)
 	{
@@ -748,11 +905,20 @@ static void mc_handle_rx(void)
 //*----------------------------------------------------------------------------
 static uint8_t mc_queue_tx(const MC_TX_PACKET *pkt)
 {
+	meshcore_message_t	msg;
+
 	if(mc_tx_q == NULL)
 		return 1;
 
 	if(xQueueSend(mc_tx_q, pkt, 0) != pdPASS)
 		return 2;
+
+	// Fingerprint what we are about to put on the air, so the repeats
+	// can be recognised when they come back. Taken from the payload
+	// after deserialising rather than from the raw packet - a repeater
+	// grows the path, which would change any hash over the whole frame
+	if(meshcore_deserialize((uint8_t *)pkt->data, pkt->len, &msg) >= 0)
+		mc_echo_track(mc_rx_fingerprint(msg.payload, msg.payload_length));
 
 	mc_revision++;
 
@@ -932,20 +1098,27 @@ void meshchat_proc_task(void const *arg)
 	// down cannot be saved, so the radio would come up as a different
 	// node to everyone who has added it. Seen on the bench: "card init
 	// failed" then "new identity ... key save open err(12)"
+	//
+	// The wait is visible to the dialog rather than silent, so a radio
+	// with no card in it does not look like it has hung for ten seconds
 	{
 		FATFS	*fs;
 		DWORD	clusters;
-		int		tries;
 
-		for(tries = 0; tries < MESHCHAT_SD_WAIT_TRIES; tries++)
+		mc_state = MESHCHAT_STATE_WAIT_SD;
+		mc_revision++;
+
+		for(mc_sd_waited = 0; mc_sd_waited < MESHCHAT_SD_WAIT_TRIES; mc_sd_waited++)
 		{
 			if(f_getfree("0://", &clusters, &fs) == FR_OK)
 				break;
 
 			vTaskDelay(MESHCHAT_SD_WAIT_MS);
+
+			mc_revision++;						// so the countdown redraws
 		}
 
-		if(tries >= MESHCHAT_SD_WAIT_TRIES)
+		if(mc_sd_waited >= MESHCHAT_SD_WAIT_TRIES)
 			printf("meshchat: no filesystem - identity will not persist this boot \r\n");
 	}
 
@@ -978,12 +1151,17 @@ void meshchat_proc_task(void const *arg)
 			printf("meshchat: %d contact key(s) derived \r\n", (int)n);
 	}
 
-	mc_started = 1;
+	mc_started	= 1;
+	mc_state	= MESHCHAT_STATE_READY;
 	mc_revision++;
 
 meshchat_proc_loop:
 
-	xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, MESHCHAT_PROC_SLEEP_TIME);
+	// Normally notification driven, but while there is no card we have
+	// to come round on our own to look for one
+	xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue,
+					mc_store_is_writable() ? MESHCHAT_PROC_SLEEP_TIME
+										   : MESHCHAT_STORE_POLL_MS);
 
 	// Received packets first - decoding is what feeds the rest
 	while((mc_rx_q != NULL) && (xQueueReceive(mc_rx_q, &mc_raw, 0) == pdPASS))
@@ -991,6 +1169,40 @@ meshchat_proc_loop:
 
 	while((mc_req_q != NULL) && (xQueueReceive(mc_req_q, &req, 0) == pdPASS))
 		mc_handle_req(&req);
+
+	// Running without a card ? Look again every few seconds, so putting
+	// one in is enough - no restart, and no leaving the screen
+	if(!mc_store_is_writable())
+	{
+		uint32_t	now = (uint32_t)xTaskGetTickCount();
+
+		if((now - mc_store_poll_tick) >= MESHCHAT_STORE_POLL_MS)
+		{
+			mc_store_poll_tick = now;
+
+			if(mc_store_recheck())
+			{
+				// Card is in use now - reconcile the identity with it
+				// and re-derive the message keys, which depend on it
+				uint8_t	i;
+
+				mc_identity_recheck_card();
+
+				for(i = 0; i < mc_contacts_count(); i++)
+				{
+					MC_CONTACT	*c = mc_contacts_at(i);
+
+					if((c != NULL) && (c->saved))
+					{
+						c->have_shared = 0;
+						mc_contacts_derive_shared(c);
+					}
+				}
+
+				mc_revision++;
+			}
+		}
+	}
 
 	goto meshchat_proc_loop;
 }

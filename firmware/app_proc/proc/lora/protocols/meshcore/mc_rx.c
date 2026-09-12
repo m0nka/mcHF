@@ -32,6 +32,31 @@
 // Fixed part of an advert payload: pub_key | timestamp | signature
 #define MC_ADVERT_FIXED_LEN		(MESHCORE_PUB_KEY_SIZE + 4 + MESHCORE_SIGNATURE_SIZE)
 
+//*----------------------------------------------------------------------------
+//* Function Name       : mc_rx_fingerprint
+//* Object              : FNV-1a over a payload - cheap, and only ever
+//*						: compared against other fingerprints, so the
+//*						: collision odds are what matter and 32 bits is
+//*						: ample for the handful of packets we track
+//* Context    			: any
+//*----------------------------------------------------------------------------
+uint32_t mc_rx_fingerprint(const uint8_t *data, uint16_t len)
+{
+	uint32_t	h = 2166136261UL;
+	uint16_t	i;
+
+	if((data == NULL) || (len == 0))
+		return 0;
+
+	for(i = 0; i < len; i++)
+	{
+		h ^= (uint32_t)data[i];
+		h *= 16777619UL;
+	}
+
+	return h;
+}
+
 const char *mc_rx_type_short(uint8_t type)
 {
 	switch(type)
@@ -327,9 +352,10 @@ uint8_t mc_rx_decode(const uint8_t *data, uint16_t size, int8_t snr, MC_RX_EVENT
 	if(meshcore_deserialize((uint8_t *)data, (uint8_t)size, &msg) < 0)
 		return MC_RX_NONE;
 
-	ev->type	= (uint8_t)msg.type;
-	ev->route	= (uint8_t)msg.route;
-	ev->kind	= MC_RX_OTHER;
+	ev->type		= (uint8_t)msg.type;
+	ev->route		= (uint8_t)msg.route;
+	ev->kind		= MC_RX_OTHER;
+	ev->payload_fp	= mc_rx_fingerprint(msg.payload, msg.payload_length);
 
 	strncpy(ev->type_short, mc_rx_type_short(ev->type), sizeof(ev->type_short) - 1);
 

@@ -59,17 +59,32 @@ typedef struct
 
 	// Radio side
 	int8_t		snr;
-	uint8_t		path_len;
+	uint8_t		path_len;						// repeaters that have touched it
 	uint8_t		path[MESHCORE_MAX_PATH_SIZE];
 
+	// Hash of the payload alone. A flood packet keeps its payload while
+	// repeaters append themselves to the path, so this is the same value
+	// every time the same message comes round - which is what lets us
+	// recognise a repeat of our own transmission, and drop the copies
+	// that arrive by other routes
+	uint32_t	payload_fp;
+
 } MC_RX_EVENT;
+
+// The same hash, for a payload we built ourselves
+uint32_t	mc_rx_fingerprint(const uint8_t *data, uint16_t len);
 
 // Decode one received packet. ev is always cleared first; the return is
 // ev->kind for convenience
 uint8_t	mc_rx_decode(const uint8_t *data, uint16_t size, int8_t snr, MC_RX_EVENT *ev);
 
-// Render the one line summary the spectrum display shows. buf should be
-// at least 128 bytes
+// Render the one line summary the spectrum display shows. The buffer
+// must be at least MC_RX_FORMAT_MIN bytes: snprintf in this tree does
+// not bound a %s (PutString in common/print_f.c just copies), so the
+// caller's buffer has to fit the worst case rather than rely on the
+// length argument
+#define MC_RX_FORMAT_MIN	(MC_CHANNEL_NAME_MAX + MC_NAME_MAX + MC_RX_TEXT_MAX + 16)
+
 void	mc_rx_format(const MC_RX_EVENT *ev, char *buf, uint16_t buf_len);
 
 #endif
