@@ -72,11 +72,7 @@ int test_sd_card(void)
 	HAL_GPIO_Init(SD_PWR_CNTR_PORT, &GPIO_InitStruct);
 
 	// Power on
-	#ifndef SD_PWR_SWAP_POLARITY
-	HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
-	#else
 	HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
-	#endif
 
 	// Wait for SD card power to stabilize
 	HAL_Delay(100);
@@ -226,11 +222,7 @@ void fs_cleanup(void)
 	FATFS_UnLinkDriverEx(SDPath, 0);
 	BSP_SD_DeInit(0);
 
-	#ifndef SD_PWR_SWAP_POLARITY
-	HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
-	#else
 	HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
-	#endif
 }
 
 ulong is_firmware_valid(void)

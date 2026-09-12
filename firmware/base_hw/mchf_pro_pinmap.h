@@ -1077,10 +1077,9 @@
 #define GPS_RX_PIN                   	LL_GPIO_PIN_9
 #define GPS_RX_PORT              		GPIOG
 
-// PG10		SD_PWR_CNTR
+// PG10		SD_PWR_CNTR (support only AP22811A active high switch)
 #define SD_PWR_CNTR                   	GPIO_PIN_10
 #define SD_PWR_CNTR_PORT              	GPIOG
-//#define SD_PWR_SWAP_POLARITY
 
 // PG11		POWER_BUTTON
 #define POWER_BUTTON					GPIO_PIN_11

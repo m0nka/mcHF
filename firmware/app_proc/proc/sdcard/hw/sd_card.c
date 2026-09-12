@@ -159,20 +159,12 @@ static void SD_MspInit(SD_HandleTypeDef *hsd)
 	if(HAL_GPIO_ReadPin(SD_DET_PORT, SD_DET) != GPIO_PIN_RESET)
 	{
 		// Power off
-		#ifdef SD_PWR_SWAP_POLARITY
 		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
-		#else
-		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
-		#endif
 	}
 	else
 	{
 		// Power on
-		#ifndef SD_PWR_SWAP_POLARITY
-		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
-		#else
 		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
-		#endif
 	}
 
 	__HAL_RCC_SDMMC1_FORCE_RESET();
@@ -191,11 +183,7 @@ static void SD_MspDeInit(SD_HandleTypeDef *hsd)
 	if(hsd == &hsd_sdmmc)
 	{
 		// Power off
-		#ifdef SD_PWR_SWAP_POLARITY
 		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
-		#else
-		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
-		#endif
 
 		HAL_NVIC_DisableIRQ(SDMMC1_IRQn);
 
@@ -521,20 +509,12 @@ void sd_card_power(uchar state)
 	if(state)
 	{
 		// Power on
-		#ifndef SD_PWR_SWAP_POLARITY
-		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
-		#else
 		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
-		#endif
 	}
 	else
 	{
 		// Power off
-		#ifdef SD_PWR_SWAP_POLARITY
 		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_RESET);
-		#else
-		HAL_GPIO_WritePin(SD_PWR_CNTR_PORT, SD_PWR_CNTR, GPIO_PIN_SET);
-		#endif
 	}
 }
 
