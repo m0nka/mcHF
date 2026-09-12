@@ -612,6 +612,51 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/marschat_proc.c</locationURI>
 		</link>
 		<link>
+			<name>proc/lora/protocols/meshcore/crypto/sha512.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/crypto/sha512.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshcore/crypto/mc_ec.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/crypto/mc_ec.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshcore/crypto/mc_rand.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/crypto/mc_rand.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshcore/mc_identity.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/mc_identity.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshcore/mc_contacts.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/mc_contacts.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshcore/mc_tx.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/mc_tx.c</locationURI>
+		</link>
+		<link>
+			<name>proc/lora/protocols/meshcore/mc_rx.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/mc_rx.c</locationURI>
+		</link>
+		<link>
+			<name>proc/meshchat/meshchat_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/meshchat/meshchat_proc.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ui/desktop_meshchat/meshchat_ui.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop_meshchat/meshchat_ui.c</locationURI>
+		</link>
+		<link>
 			<name>proc/marschat/mc_frame.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/marschat/mc_frame.c</locationURI>

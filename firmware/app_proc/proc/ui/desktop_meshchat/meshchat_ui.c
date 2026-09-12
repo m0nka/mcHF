@@ -1,0 +1,1274 @@
+/************************************************************************************
+**                                                                                 **
+**                                 mcHF QRP Transceiver                            **
+**                         Krassi Atanassov - M0NKA, 2013-2026                     **
+**                                                                                 **
+**---------------------------------------------------------------------------------**
+**                                                                                 **
+**  File name:		meshchat_ui.c                                                  **
+**  Description:	MeshCore chat dialog - channels, direct messages, contacts     **
+**  Licence:		https://github.com/m0nka/mcHF/blob/main/LICENSE                **
+************************************************************************************/
+//
+// A top level screen (MODE_DESKTOP_MESHCHAT), built the same way as the
+// FT8 and MarsChat desktops: the dialog is a child of the desktop window
+// with nothing else on screen, so nothing repaints over it.
+//
+// Two panes and two views. In the chat view the left pane lists the
+// conversations - every channel we hold a key for, then every saved
+// contact - and the right pane the selected conversation's history. The
+// contacts view reuses both panes: everyone heard advertising on the
+// left, the selected node's detail on the right, with ADD promoting it
+// to a real contact.
+//
+// The dialog owns no protocol state. It polls meshchat_revision() twice
+// a second and rebuilds only when the service says something moved
+//
+#include "mchf_pro_board.h"
+#include "main.h"
+
+#include "ui_proc.h"
+#include "gui.h"
+#include "dialog.h"
+#include "desktop\ui_controls_layout.h"
+
+#include "rtc.h"
+
+#include "advert.h"							// meshcore_device_role_t names
+#include "mc_identity.h"
+#include "mc_contacts.h"
+#include "meshchat_proc.h"
+
+#include "meshchat_ui.h"
+
+// UI driver public state
+extern struct	UI_DRIVER_STATE			ui_s;
+extern struct	PROC_STATE				ps;
+
+static WM_HWIN	hMxDialog;
+static WM_HWIN	hMxTimer;
+
+static WM_HWIN	hMxConvList;
+static WM_HWIN	hMxMsgList;
+
+// Which pair of panes we are showing
+#define MX_VIEW_CHAT			0
+#define MX_VIEW_CONTACTS		1
+
+static uint8_t	mx_view = MX_VIEW_CHAT;
+
+// Compose buffer - the local draft, handed to the service on SEND
+static char		mx_compose[MX_COMPOSE_MAX + 1];
+static int		mx_compose_len = 0;
+
+// What the panes were built from, so a poll that finds nothing new does
+// not blow the listbox selection away
+static uint32_t	mx_seen_revision = 0xFFFFFFFF;
+static uint8_t	mx_seen_view	 = 0xFF;
+static int		mx_seen_conv	 = -1;
+static int		mx_seen_compose	 = -1;
+
+// The conversation currently selected in the chat view. Held by value,
+// not by index - the list can be rebuilt underneath us
+static MESHCHAT_CONV	mx_conv;
+static uint8_t			mx_conv_valid = 0;
+
+// ---------------------------------------------------------------------
+// Collapsible keyboard, same behaviour as the MarsChat one: the key grid
+// lives in a child window that slides up from below the screen and back
+// down again, while the action row stays put
+
+static WM_HWIN			hMxKeyboard;
+static WM_HWIN			hMxCharKeys[MX_KEY_CHARS];
+static WM_HWIN			hMxShiftKey;
+static uint8_t			mx_kb_shown = 0;
+
+static GUI_ANIM_HANDLE	hMxAnim;
+
+typedef struct
+{
+	WM_HWIN	hWin;
+	int		dir;								// 0 = show (up), 1 = hide (down)
+
+} MX_KB_ANIM;
+
+static MX_KB_ANIM		mx_kb_anim;
+
+// Keyboard pages. Unlike MarsChat - whose charset is a 6 bit code with
+// no notion of case - MeshCore text is plain ASCII and case carries
+// meaning in a chat, so lower and upper are separate pages and lower is
+// the default. One key cycles the three; its face names the page it
+// takes you to, so the next tap is always predictable
+#define MX_PAGE_LOWER		0
+#define MX_PAGE_UPPER		1
+#define MX_PAGE_SYMBOL		2
+#define MX_PAGE_COUNT		3
+
+static const char	mx_page_lower[MX_KEY_CHARS + 1]   = "abcdefghijklmnopqrstuvwxyz";
+static const char	mx_page_upper[MX_KEY_CHARS + 1]   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+static const char	mx_page_symbols[MX_KEY_CHARS + 1] = "0123456789.,?!-/@:'()\"+=&;";
+
+static uint8_t		mx_page_id = MX_PAGE_LOWER;
+
+static void mx_rebuild(void);
+static void mx_layout_action_row(int kb_shown);
+
+static const char *mx_page(void)
+{
+	switch(mx_page_id)
+	{
+		case MX_PAGE_UPPER:		return mx_page_upper;
+		case MX_PAGE_SYMBOL:	return mx_page_symbols;
+		default:				return mx_page_lower;
+	}
+}
+
+// What the cycle key should say - the page one more tap gets you to
+static const char *mx_page_next_label(void)
+{
+	switch(mx_page_id)
+	{
+		case MX_PAGE_LOWER:		return "ABC";
+		case MX_PAGE_UPPER:		return "123";
+		default:				return "abc";
+	}
+}
+
+// Only the window is in the static template - everything else is created
+// in WM_INIT_DIALOG so it can be shown, hidden and moved
+static const GUI_WIDGET_CREATE_INFO _aDialog[] =
+{
+	// -----------------------------------------------------------------------------------------------------------
+	//							name				id				x	y	xsize		ysize
+	// -----------------------------------------------------------------------------------------------------------
+	{ WINDOW_CreateIndirect,	"",					ID_MX_WINDOW,	0,	0,	MX_UI_W,	MX_UI_H,	0,	0x64,	0 },
+};
+
+// ---------------------------------------------------------------------
+// Keyboard slide
+
+static void mx_anim_step(GUI_ANIM_INFO *pInfo, void *pVoid)
+{
+	MX_KB_ANIM	*p = (MX_KB_ANIM *)pVoid;
+	int			y;
+
+	if(p->dir)
+		y = MX_KB_Y + (((MX_UI_H - MX_KB_Y) * pInfo->Pos) / GUI_ANIM_RANGE);
+	else
+		y = MX_UI_H - (((MX_UI_H - MX_KB_Y) * pInfo->Pos) / GUI_ANIM_RANGE);
+
+	WM_MoveTo(p->hWin, 0, y);
+}
+
+static void mx_anim_done(void *pVoid)
+{
+	(void)pVoid;
+
+	hMxAnim = 0;
+
+	WM_InvalidateWindow(hMxDialog);
+}
+
+static void mx_anim_start(int dir)
+{
+	mx_kb_anim.hWin = hMxKeyboard;
+	mx_kb_anim.dir	= dir;
+
+	hMxAnim = GUI_ANIM_Create(MX_ANIM_TIME, 10, &mx_kb_anim, 0);
+
+	GUI_ANIM_AddItem(hMxAnim, 0, MX_ANIM_TIME, ANIM_ACCELDECEL, &mx_kb_anim, mx_anim_step);
+	GUI_ANIM_StartEx(hMxAnim, 1, mx_anim_done);
+}
+
+static void mx_show_keyboard(void)
+{
+	if(mx_kb_shown || hMxAnim)
+		return;
+
+	mx_kb_shown = 1;
+
+	mx_layout_action_row(1);
+
+	WM_InvalidateWindow(hMxDialog);
+	mx_anim_start(0);
+}
+
+static void mx_hide_keyboard(void)
+{
+	if((!mx_kb_shown) || hMxAnim)
+		return;
+
+	mx_kb_shown = 0;
+
+	mx_layout_action_row(0);
+
+	WM_InvalidateWindow(hMxDialog);
+	mx_anim_start(1);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_apply_page
+//* Object              : relabel the character keys for the active page
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void mx_apply_page(void)
+{
+	const char	*page = mx_page();
+	int			i;
+
+	for(i = 0; i < MX_KEY_CHARS; i++)
+	{
+		char	label[2];
+
+		label[0] = page[i];
+		label[1] = 0;
+
+		BUTTON_SetText(hMxCharKeys[i], label);
+		WM_InvalidateWindow(hMxCharKeys[i]);
+	}
+
+	BUTTON_SetText(hMxShiftKey, mx_page_next_label());
+	WM_InvalidateWindow(hMxShiftKey);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_create_keys
+//* Object              : the key grid, children of the sliding container
+//* Context    			: CONTEXT_VIDEO (gui task, WM_INIT_DIALOG)
+//*----------------------------------------------------------------------------
+static void mx_create_keys(void)
+{
+	int	i, col, row;
+
+	for(i = 0; i < MX_KEY_CHARS; i++)
+	{
+		col = i % MX_KEY_COLS;
+		row = i / MX_KEY_COLS;
+
+		hMxCharKeys[i] = BUTTON_CreateEx(MX_KEY_COL_X(col),
+										 row * (MX_KEY_H + MX_KEY_VGAP),
+										 MX_KEY_W, MX_KEY_H,
+										 hMxKeyboard, WM_CF_SHOW, 0,
+										 ID_MX_CHAR_0 + i);
+
+		BUTTON_SetFont(hMxCharKeys[i], &GUI_Font24B_1);
+	}
+
+	col = MX_KEY_CHARS % MX_KEY_COLS;
+	row = MX_KEY_CHARS / MX_KEY_COLS;
+
+	hMxShiftKey = BUTTON_CreateEx(MX_KEY_COL_X(col),
+								  row * (MX_KEY_H + MX_KEY_VGAP),
+								  MX_KEY_W, MX_KEY_H,
+								  hMxKeyboard, WM_CF_SHOW, 0,
+								  ID_MX_SHIFT);
+
+	BUTTON_SetFont(hMxShiftKey, &GUI_Font24B_1);
+
+	mx_apply_page();
+}
+
+// ---------------------------------------------------------------------
+// Action row
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_layout_action_row
+//* Object              : five slots across the bottom, their meaning
+//*						: depending on the view and whether the keyboard
+//*						: is up
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void mx_layout_action_row(int kb_shown)
+{
+	WM_HWIN	hType	 = WM_GetDialogItem(hMxDialog, ID_MX_TYPE);
+	WM_HWIN	hSend	 = WM_GetDialogItem(hMxDialog, ID_MX_SEND);
+	WM_HWIN	hSpace	 = WM_GetDialogItem(hMxDialog, ID_MX_SPACE);
+	WM_HWIN	hDel	 = WM_GetDialogItem(hMxDialog, ID_MX_BACKSPACE);
+	WM_HWIN	hClear	 = WM_GetDialogItem(hMxDialog, ID_MX_CLEAR);
+	WM_HWIN	hContact = WM_GetDialogItem(hMxDialog, ID_MX_CONTACTS);
+	WM_HWIN	hAdvert	 = WM_GetDialogItem(hMxDialog, ID_MX_ADVERT);
+	WM_HWIN	hAdd	 = WM_GetDialogItem(hMxDialog, ID_MX_ADD);
+	WM_HWIN	hForget	 = WM_GetDialogItem(hMxDialog, ID_MX_FORGET);
+	WM_HWIN	hAddChan = WM_GetDialogItem(hMxDialog, ID_MX_ADDCHAN);
+
+	// Everything off, then only what this state needs back on
+	WM_HideWindow(hType);
+	WM_HideWindow(hSend);
+	WM_HideWindow(hSpace);
+	WM_HideWindow(hDel);
+	WM_HideWindow(hClear);
+	WM_HideWindow(hContact);
+	WM_HideWindow(hAdvert);
+	WM_HideWindow(hAdd);
+	WM_HideWindow(hForget);
+	WM_HideWindow(hAddChan);
+
+	if(mx_view == MX_VIEW_CONTACTS)
+	{
+		// [ADD] [FORGET] [BACK] [ADVERT]
+		WM_SetWindowPos(hAdd,		6,   MX_ACT_Y, 190, MX_ACT_H);
+		WM_SetWindowPos(hForget,	202, MX_ACT_Y, 190, MX_ACT_H);
+		WM_SetWindowPos(hContact,	398, MX_ACT_Y, 190, MX_ACT_H);
+		WM_SetWindowPos(hAdvert,	594, MX_ACT_Y, 200, MX_ACT_H);
+
+		BUTTON_SetText(hContact, "BACK");
+
+		WM_ShowWindow(hAdd);
+		WM_ShowWindow(hForget);
+		WM_ShowWindow(hContact);
+		WM_ShowWindow(hAdvert);
+
+		return;
+	}
+
+	BUTTON_SetText(hContact, "CONTACTS");
+
+	if(kb_shown)
+	{
+		// [HIDE] [SPACE] [DEL] [CLEAR] [SEND]
+		BUTTON_SetText(hType, "HIDE");
+
+		WM_SetWindowPos(hType,	6,   MX_ACT_Y, 110, MX_ACT_H);
+		WM_SetWindowPos(hSpace,	120, MX_ACT_Y, 204, MX_ACT_H);
+		WM_SetWindowPos(hDel,	328, MX_ACT_Y, 120, MX_ACT_H);
+		WM_SetWindowPos(hClear,	452, MX_ACT_Y, 130, MX_ACT_H);
+		WM_SetWindowPos(hSend,	586, MX_ACT_Y, 208, MX_ACT_H);
+
+		WM_ShowWindow(hType);
+		WM_ShowWindow(hSpace);
+		WM_ShowWindow(hDel);
+		WM_ShowWindow(hClear);
+		WM_ShowWindow(hSend);
+
+		return;
+	}
+
+	// [TYPE] [SEND] [+CHAN] [CONTACTS] [ADVERT]
+	// No EXIT - F3 closes the screen, the same key that opens it
+	BUTTON_SetText(hType, "TYPE");
+
+	WM_SetWindowPos(hType,		6,   MX_ACT_Y, 150, MX_ACT_H);
+	WM_SetWindowPos(hSend,		162, MX_ACT_Y, 150, MX_ACT_H);
+	WM_SetWindowPos(hAddChan,	318, MX_ACT_Y, 150, MX_ACT_H);
+	WM_SetWindowPos(hContact,	474, MX_ACT_Y, 160, MX_ACT_H);
+	WM_SetWindowPos(hAdvert,	640, MX_ACT_Y, 154, MX_ACT_H);
+
+	WM_ShowWindow(hType);
+	WM_ShowWindow(hSend);
+	WM_ShowWindow(hAddChan);
+	WM_ShowWindow(hContact);
+	WM_ShowWindow(hAdvert);
+}
+
+// ---------------------------------------------------------------------
+// List building
+
+static void mx_list_clear(WM_HWIN hLb)
+{
+	int	n = LISTBOX_GetNumItems(hLb);
+
+	while(n--)
+		LISTBOX_DeleteItem(hLb, 0);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_list_add_wrapped
+//* Object              : add a line, folding it over several listbox rows
+//*						: when it is too wide for the pane
+//* Notes    			: a listbox row cannot wrap by itself and a chat
+//*						: message is routinely longer than the pane
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void mx_list_add_wrapped(WM_HWIN hLb, const char *text, int width)
+{
+	char	line[96];
+	int		len = (int)strlen(text);
+	int		pos = 0;
+
+	if(width > (int)(sizeof(line) - 1))
+		width = (int)(sizeof(line) - 1);
+
+	if(len == 0)
+	{
+		LISTBOX_AddString(hLb, "");
+		return;
+	}
+
+	while(pos < len)
+	{
+		int	take = len - pos;
+		int	brk;
+
+		if(take > width)
+		{
+			take = width;
+
+			// Prefer to break on a space rather than mid word
+			for(brk = take; brk > (width / 2); brk--)
+			{
+				if(text[pos + brk] == ' ')
+				{
+					take = brk;
+					break;
+				}
+			}
+		}
+
+		memcpy(line, text + pos, take);
+		line[take] = 0;
+
+		LISTBOX_AddString(hLb, line);
+
+		pos += take;
+
+		// Swallow the space we broke on
+		while((pos < len) && (text[pos] == ' '))
+			pos++;
+	}
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_build_conv_list
+//* Object              : left pane, chat view
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void mx_build_conv_list(void)
+{
+	MESHCHAT_CONV	conv;
+	char			label[48];
+	uint8_t			i, n = meshchat_conv_count();
+	int				sel = -1;
+
+	mx_list_clear(hMxConvList);
+
+	for(i = 0; i < n; i++)
+	{
+		if(meshchat_conv_at(i, &conv))
+			continue;
+
+		meshchat_conv_label(&conv, label, sizeof(label));
+
+		LISTBOX_AddString(hMxConvList, label);
+
+		// Keep the highlight on whatever was selected before the rebuild
+		if((mx_conv_valid) &&
+		   (conv.kind == mx_conv.kind) &&
+		   (((conv.kind == MESHCHAT_CONV_CHANNEL) && (conv.chan_hash == mx_conv.chan_hash)) ||
+		    ((conv.kind == MESHCHAT_CONV_DIRECT)  && (memcmp(conv.peer, mx_conv.peer, sizeof(conv.peer)) == 0))))
+			sel = i;
+	}
+
+	// Nothing selected yet, or the selection has gone away - fall back
+	// to the first conversation, which is always a channel
+	if((sel < 0) && (n > 0))
+	{
+		if(meshchat_conv_at(0, &mx_conv) == 0)
+		{
+			mx_conv_valid = 1;
+			sel = 0;
+		}
+	}
+
+	if(sel >= 0)
+		LISTBOX_SetSel(hMxConvList, sel);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_build_msg_list
+//* Object              : right pane, chat view
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void mx_build_msg_list(void)
+{
+	char	line[160];
+	uint8_t	i, n;
+
+	mx_list_clear(hMxMsgList);
+
+	if(!mx_conv_valid)
+		return;
+
+	// Whatever is on screen has been seen - drop its activity badge.
+	// Done before the rows are built so the count the conversation list
+	// draws in the same pass is already clear
+	meshchat_mark_read(&mx_conv);
+
+	n = meshchat_msg_count(&mx_conv);
+
+	for(i = 0; i < n; i++)
+	{
+		const MESHCHAT_MSG	*m = meshchat_msg_at(&mx_conv, i);
+
+		if(m == NULL)
+			continue;
+
+		switch(m->dir)
+		{
+			case MESHCHAT_DIR_TX:
+				snprintf(line, sizeof(line), "%s  >> %s", m->time, m->text);
+				break;
+
+			case MESHCHAT_DIR_INFO:
+				snprintf(line, sizeof(line), "%s  -- %s", m->time, m->text);
+				break;
+
+			default:
+				if(mx_conv.kind == MESHCHAT_CONV_CHANNEL)
+					snprintf(line, sizeof(line), "%s  %s: %s", m->time, m->sender, m->text);
+				else
+					snprintf(line, sizeof(line), "%s  << %s", m->time, m->text);
+				break;
+		}
+
+		mx_list_add_wrapped(hMxMsgList, line, MX_MSG_WRAP);
+	}
+
+	// Park on the newest line
+	n = (uint8_t)LISTBOX_GetNumItems(hMxMsgList);
+
+	if(n)
+		LISTBOX_SetSel(hMxMsgList, n - 1);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_build_heard_list
+//* Object              : left pane, contacts view - everyone we have
+//*						: heard advertise, saved ones marked
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void mx_build_heard_list(void)
+{
+	char	label[48];
+	uint8_t	i, n = mc_contacts_count();
+	int		sel = LISTBOX_GetSel(hMxConvList);
+
+	mx_list_clear(hMxConvList);
+
+	for(i = 0; i < n; i++)
+	{
+		MC_CONTACT	*c = mc_contacts_at(i);
+
+		if(c == NULL)
+			continue;
+
+		snprintf(label, sizeof(label), "%s %s", c->saved ? "*" : " ", c->name);
+
+		LISTBOX_AddString(hMxConvList, label);
+	}
+
+	if(n == 0)
+		LISTBOX_AddString(hMxConvList, "(nothing heard yet)");
+
+	if((sel >= 0) && (sel < (int)n))
+		LISTBOX_SetSel(hMxConvList, sel);
+	else if(n)
+		LISTBOX_SetSel(hMxConvList, 0);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_build_contact_detail
+//* Object              : right pane, contacts view
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void mx_build_contact_detail(void)
+{
+	char		line[96];
+	MC_CONTACT	*c;
+	int			sel = LISTBOX_GetSel(hMxConvList);
+	int			i;
+
+	mx_list_clear(hMxMsgList);
+
+	// Explain the empty list rather than just showing nothing - a node
+	// only lands here when it advertises, which can be a long wait
+	if(mc_contacts_count() == 0)
+	{
+		LISTBOX_AddString(hMxMsgList, "No nodes heard yet.");
+		LISTBOX_AddString(hMxMsgList, "");
+		LISTBOX_AddString(hMxMsgList, "A node appears here only when it");
+		LISTBOX_AddString(hMxMsgList, "advertises - that is the only packet");
+		LISTBOX_AddString(hMxMsgList, "carrying a public key, and it is what");
+		LISTBOX_AddString(hMxMsgList, "ADD needs to store a contact.");
+		LISTBOX_AddString(hMxMsgList, "");
+		LISTBOX_AddString(hMxMsgList, "Press ADVERT to announce this radio -");
+		LISTBOX_AddString(hMxMsgList, "nodes in range usually answer with");
+		LISTBOX_AddString(hMxMsgList, "their own advert.");
+		return;
+	}
+
+	if(sel < 0)
+		return;
+
+	c = mc_contacts_at((uint8_t)sel);
+
+	if(c == NULL)
+		return;
+
+	snprintf(line, sizeof(line), "name   %s", c->name);
+	LISTBOX_AddString(hMxMsgList, line);
+
+	snprintf(line, sizeof(line), "role   %s",
+			(c->role == MESHCORE_DEVICE_ROLE_CHAT_NODE)   ? "chat node" :
+			(c->role == MESHCORE_DEVICE_ROLE_REPEATER)    ? "repeater"  :
+			(c->role == MESHCORE_DEVICE_ROLE_ROOM_SERVER) ? "room server" :
+			(c->role == MESHCORE_DEVICE_ROLE_SENSOR)      ? "sensor" : "unknown");
+	LISTBOX_AddString(hMxMsgList, line);
+
+	snprintf(line, sizeof(line), "status %s%s",
+			c->saved ? "saved contact" : "heard only",
+			c->have_shared ? ", key ready" : "");
+	LISTBOX_AddString(hMxMsgList, line);
+
+	snprintf(line, sizeof(line), "snr    %d dB", (int)c->snr);
+	LISTBOX_AddString(hMxMsgList, line);
+
+	snprintf(line, sizeof(line), "hops   %d", (int)c->path_len);
+	LISTBOX_AddString(hMxMsgList, line);
+
+	LISTBOX_AddString(hMxMsgList, "");
+	LISTBOX_AddString(hMxMsgList, "public key");
+
+	// 32 bytes, eight per row
+	for(i = 0; i < MC_EC_KEY_SIZE; i += 8)
+	{
+		snprintf(line, sizeof(line), "  %02X %02X %02X %02X %02X %02X %02X %02X",
+				 c->pub_key[i + 0], c->pub_key[i + 1], c->pub_key[i + 2], c->pub_key[i + 3],
+				 c->pub_key[i + 4], c->pub_key[i + 5], c->pub_key[i + 6], c->pub_key[i + 7]);
+
+		LISTBOX_AddString(hMxMsgList, line);
+	}
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_rebuild
+//* Object              : refill both panes for the current view
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void mx_rebuild(void)
+{
+	if(mx_view == MX_VIEW_CONTACTS)
+	{
+		mx_build_heard_list();
+		mx_build_contact_detail();
+	}
+	else
+	{
+		// Clear the open conversation's badge before the list is drawn,
+		// or the row would show a count for messages already on screen
+		if(mx_conv_valid)
+			meshchat_mark_read(&mx_conv);
+
+		mx_build_conv_list();
+		mx_build_msg_list();
+	}
+
+	WM_InvalidateWindow(hMxDialog);
+}
+
+// ---------------------------------------------------------------------
+// Painting - only the title strip, the compose bar and the status block
+// are drawn by hand, the rest is stock widgets
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_paint_title
+//* Object              : name, node hash, clock
+//* Context    			: CONTEXT_VIDEO (gui task, WM_PAINT)
+//*----------------------------------------------------------------------------
+static void mx_paint_title(void)
+{
+	RTC_TimeTypeDef	tm = {0};
+	RTC_DateTypeDef	dt = {0};
+	char			buf[64];
+
+	k_GetTime(&tm);
+	k_GetDate(&dt);
+
+	GUI_SetBkColor(GUI_BLACK);
+	GUI_SetColor(GUI_BLACK);
+	GUI_FillRect(0, 0, MX_UI_W - 1, MX_TITLE_H - 1);
+
+	GUI_SetTextMode(GUI_TM_TRANS);
+	GUI_SetFont(&GUI_Font24B_1);
+
+	GUI_SetColor(GUI_WHITE);
+	GUI_DispStringAt("MESHCHAT", 8, 4);
+
+	GUI_SetFont(&GUI_Font20B_1);
+	GUI_SetColor(GUI_LIGHTGRAY);
+
+	snprintf(buf, sizeof(buf), "%s  [%02X]", meshchat_node_name(), meshchat_node_hash());
+	GUI_DispStringAt(buf, 180, 7);
+
+	snprintf(buf, sizeof(buf), "%02d:%02d:%02d", tm.Hours, tm.Minutes, tm.Seconds);
+	GUI_DispStringAt(buf, MX_UI_W - 100, 7);
+
+	GUI_SetColor(GUI_GRAY);
+	GUI_DrawHLine(MX_TITLE_H - 1, 0, MX_UI_W - 1);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_paint_compose
+//* Object              : the draft, with a caret so an empty one still
+//*						: looks like an input
+//* Context    			: CONTEXT_VIDEO (gui task, WM_PAINT)
+//*----------------------------------------------------------------------------
+static void mx_paint_compose(void)
+{
+	char	buf[MX_COMPOSE_MAX + 8];
+
+	GUI_SetColor(GUI_WHITE);
+	GUI_FillRect(MX_COMP_X, MX_COMP_Y, MX_COMP_X + MX_COMP_W - 1, MX_COMP_Y + MX_COMP_H - 1);
+
+	GUI_SetColor(GUI_GRAY);
+	GUI_DrawRect(MX_COMP_X, MX_COMP_Y, MX_COMP_X + MX_COMP_W - 1, MX_COMP_Y + MX_COMP_H - 1);
+
+	GUI_SetTextMode(GUI_TM_TRANS);
+	GUI_SetFont(&GUI_Font20B_1);
+
+	if(mx_compose_len)
+	{
+		GUI_SetColor(GUI_BLACK);
+		snprintf(buf, sizeof(buf), "%s_", mx_compose);
+	}
+	else
+	{
+		GUI_SetColor(GUI_GRAY);
+		snprintf(buf, sizeof(buf), "type a message...");
+	}
+
+	GUI_DispStringAt(buf, MX_COMP_X + 6, MX_COMP_Y + 6);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_paint_status
+//* Object              : the block the collapsed keyboard leaves free -
+//*						: what the service is doing and what it knows
+//* Context    			: CONTEXT_VIDEO (gui task, WM_PAINT, keyboard down)
+//*----------------------------------------------------------------------------
+static void mx_paint_status(void)
+{
+	const MC_IDENTITY	*id = mc_identity_get();
+	char				buf[96];
+	int					y = MX_STAT_Y + 8;
+	uint8_t				i, heard = 0, saved = 0;
+
+	GUI_SetColor(GUI_WHITE);
+	GUI_FillRect(MX_STAT_X, MX_STAT_Y, MX_STAT_X + MX_STAT_W - 1, MX_STAT_Y + MX_STAT_H - 1);
+
+	GUI_SetColor(GUI_GRAY);
+	GUI_DrawRect(MX_STAT_X, MX_STAT_Y, MX_STAT_X + MX_STAT_W - 1, MX_STAT_Y + MX_STAT_H - 1);
+
+	GUI_SetTextMode(GUI_TM_TRANS);
+	GUI_SetFont(&GUI_Font20B_1);
+	GUI_SetColor(GUI_BLACK);
+
+	if(!meshchat_ready())
+	{
+		GUI_DispStringAt("meshchat service starting...", MX_STAT_X + 12, y);
+		return;
+	}
+
+	for(i = 0; i < mc_contacts_count(); i++)
+	{
+		MC_CONTACT	*c = mc_contacts_at(i);
+
+		if(c == NULL)
+			continue;
+
+		if(c->saved)
+			saved++;
+
+		if(c->heard)
+			heard++;
+	}
+
+	snprintf(buf, sizeof(buf), "node %s   hash %02X   channels %d",
+			 id->name, id->pub[0], (int)mc_channels_count());
+	GUI_DispStringAt(buf, MX_STAT_X + 12, y);
+
+	y += 26;
+
+	snprintf(buf, sizeof(buf), "contacts %d saved, %d heard this session", (int)saved, (int)heard);
+	GUI_DispStringAt(buf, MX_STAT_X + 12, y);
+
+	y += 26;
+
+	if(meshchat_tx_pending())
+		snprintf(buf, sizeof(buf), "tx: %d packet(s) waiting for the modem",
+				 (int)meshchat_tx_pending());
+	else
+		snprintf(buf, sizeof(buf), "tx: idle");
+
+	GUI_DispStringAt(buf, MX_STAT_X + 12, y);
+
+	y += 26;
+
+	if(!mc_store_is_writable())
+	{
+		// The card did not come up this boot, so the identity is a
+		// throwaway and nothing added now will survive a restart
+		GUI_SetColor(GUI_RED);
+		GUI_DispStringAt("no SD card - channels and contacts will not be saved",
+						 MX_STAT_X + 12, y);
+	}
+	else if(id->weak_entropy)
+	{
+		GUI_SetColor(GUI_RED);
+		GUI_DispStringAt("identity key was seeded without the TRNG", MX_STAT_X + 12, y);
+	}
+	else
+	{
+		GUI_SetColor(GUI_DARKGRAY);
+		GUI_DispStringAt("type a name then +CHAN to add a channel", MX_STAT_X + 12, y);
+	}
+}
+
+// ---------------------------------------------------------------------
+// Input
+
+static void mx_compose_append(char c)
+{
+	if(mx_compose_len >= MX_COMPOSE_MAX)
+		return;
+
+	mx_compose[mx_compose_len++] = c;
+	mx_compose[mx_compose_len]	 = 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_do_send
+//* Object              : hand the draft to the service
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void mx_do_send(void)
+{
+	if((mx_compose_len == 0) || (!mx_conv_valid))
+		return;
+
+	if(meshchat_send_text(&mx_conv, mx_compose) != 0)
+		return;									// queue full, keep the draft
+
+	mx_compose_len	= 0;
+	mx_compose[0]	= 0;
+
+	mx_hide_keyboard();
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_on_button
+//* Object              : one place for presses from either the dialog or
+//*						: the keyboard container
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void mx_on_button(int id, int ncode)
+{
+	if(ncode != WM_NOTIFICATION_RELEASED)
+		return;
+
+	if((id >= ID_MX_CHAR_0) && (id < (ID_MX_CHAR_0 + MX_KEY_CHARS)))
+	{
+		mx_compose_append(mx_page()[id - ID_MX_CHAR_0]);
+		WM_InvalidateWindow(hMxDialog);
+		return;
+	}
+
+	if(id == ID_MX_SHIFT)
+	{
+		mx_page_id = (uint8_t)((mx_page_id + 1) % MX_PAGE_COUNT);
+		mx_apply_page();
+		return;
+	}
+
+	switch(id)
+	{
+		case ID_MX_SPACE:
+			mx_compose_append(' ');
+			break;
+
+		case ID_MX_BACKSPACE:
+			if(mx_compose_len > 0)
+				mx_compose[--mx_compose_len] = 0;
+			break;
+
+		case ID_MX_CLEAR:
+			mx_compose_len	= 0;
+			mx_compose[0]	= 0;
+			break;
+
+		case ID_MX_SEND:
+			mx_do_send();
+			break;
+
+		case ID_MX_TYPE:
+			if(mx_kb_shown)
+				mx_hide_keyboard();
+			else
+				mx_show_keyboard();
+			break;
+
+		case ID_MX_CONTACTS:
+		{
+			// Doubles as BACK - the button is relabelled by the layout
+			mx_view = (mx_view == MX_VIEW_CHAT) ? MX_VIEW_CONTACTS : MX_VIEW_CHAT;
+
+			mx_hide_keyboard();
+			mx_layout_action_row(mx_kb_shown);
+
+			// Force a rebuild, the panes now mean something else
+			mx_seen_view = 0xFF;
+			break;
+		}
+
+		case ID_MX_ADVERT:
+			meshchat_send_advert();
+			break;
+
+		case ID_MX_ADDCHAN:
+		{
+			// The compose bar doubles as the entry field - type the
+			// channel name, then press this. Everything the radio needs
+			// follows from the name, so there is no key to type in
+			if(mx_compose_len == 0)
+			{
+				printf("meshchat: +CHAN - type a channel name first, e.g. #uk \r\n");
+				break;
+			}
+
+			if(meshchat_add_channel(mx_compose) == 0)
+			{
+				mx_compose_len	 = 0;
+				mx_compose[0]	 = 0;
+				mx_seen_revision = 0xFFFFFFFF;
+
+				mx_hide_keyboard();
+			}
+			break;
+		}
+
+		case ID_MX_ADD:
+		{
+			int	sel = LISTBOX_GetSel(hMxConvList);
+
+			// Nothing to add until a node has advertised - the list is
+			// built from adverts, which is the only packet that carries
+			// a public key
+			if((mx_view != MX_VIEW_CONTACTS) || (sel < 0) || (mc_contacts_count() == 0))
+			{
+				printf("meshchat: ADD - nothing heard yet, press ADVERT and wait \r\n");
+				break;
+			}
+
+			meshchat_add_contact((uint8_t)sel);
+			mx_seen_revision = 0xFFFFFFFF;
+			break;
+		}
+
+		case ID_MX_FORGET:
+		{
+			int	sel = LISTBOX_GetSel(hMxConvList);
+
+			if((mx_view == MX_VIEW_CONTACTS) && (sel >= 0) && (mc_contacts_count() > 0))
+			{
+				meshchat_forget_contact((uint8_t)sel);
+				mx_seen_revision = 0xFFFFFFFF;
+			}
+			break;
+		}
+
+		default:
+			return;
+	}
+
+	WM_InvalidateWindow(hMxDialog);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_on_select
+//* Object              : the left pane selection moved
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void mx_on_select(void)
+{
+	int	sel = LISTBOX_GetSel(hMxConvList);
+
+	if(sel < 0)
+		return;
+
+	if(mx_view == MX_VIEW_CONTACTS)
+	{
+		mx_build_contact_detail();
+		return;
+	}
+
+	if(meshchat_conv_at((uint8_t)sel, &mx_conv) == 0)
+	{
+		mx_conv_valid = 1;
+		mx_build_msg_list();
+	}
+}
+
+// ---------------------------------------------------------------------
+
+static void _cbKeyboard(WM_MESSAGE *pMsg)
+{
+	switch(pMsg->MsgId)
+	{
+		case WM_PAINT:
+			GUI_SetColor(GUI_LIGHTGRAY);
+			GUI_FillRect(0, 0, MX_KB_W - 1, MX_KB_H - 1);
+			break;
+
+		case WM_NOTIFY_PARENT:
+			mx_on_button(WM_GetId(pMsg->hWinSrc), pMsg->Data.v);
+			break;
+
+		default:
+			WM_DefaultProc(pMsg);
+			break;
+	}
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : mx_create_widgets
+//* Object              : the two listboxes and the action row
+//* Context    			: CONTEXT_VIDEO (gui task, WM_INIT_DIALOG)
+//*----------------------------------------------------------------------------
+static void mx_create_widgets(WM_HWIN hWin)
+{
+	static const struct
+	{
+		int			id;
+		const char	*text;
+
+	} buttons[] =
+	{
+		{ ID_MX_TYPE,		"TYPE"		},
+		{ ID_MX_SEND,		"SEND"		},
+		{ ID_MX_SPACE,		"SPACE"		},
+		{ ID_MX_BACKSPACE,	"DEL"		},
+		{ ID_MX_CLEAR,		"CLEAR"		},
+		{ ID_MX_CONTACTS,	"CONTACTS"	},
+		{ ID_MX_ADVERT,		"ADVERT"	},
+		{ ID_MX_ADD,		"ADD"		},
+		{ ID_MX_FORGET,		"FORGET"	},
+		{ ID_MX_ADDCHAN,	"+CHAN"		}
+	};
+
+	int	i;
+
+	hMxConvList = LISTBOX_CreateEx(MX_CONV_X, MX_LIST_Y, MX_CONV_W, MX_LIST_H,
+								   hWin, WM_CF_SHOW, 0, ID_MX_LIST_LEFT, NULL);
+
+	hMxMsgList  = LISTBOX_CreateEx(MX_MSG_X, MX_LIST_Y, MX_MSG_W, MX_LIST_H,
+								   hWin, WM_CF_SHOW, 0, ID_MX_LIST_RIGHT, NULL);
+
+	LISTBOX_SetFont(hMxConvList, &GUI_Font20B_1);
+	LISTBOX_SetFont(hMxMsgList,  &GUI_Font20_1);
+
+	// The right pane is a transcript, not a chooser - let it scroll but
+	// keep the selection bar quiet
+	LISTBOX_SetAutoScrollV(hMxMsgList,  1);
+	LISTBOX_SetAutoScrollV(hMxConvList, 1);
+
+	for(i = 0; i < (int)GUI_COUNTOF(buttons); i++)
+	{
+		WM_HWIN	hBtn = BUTTON_CreateEx(6, MX_ACT_Y, 190, MX_ACT_H,
+									   hWin, WM_CF_SHOW, 0, buttons[i].id);
+
+		BUTTON_SetText(hBtn, buttons[i].text);
+		BUTTON_SetFont(hBtn, &GUI_Font20B_1);
+	}
+}
+
+static void _cbDialog(WM_MESSAGE *pMsg)
+{
+	int	Id, NCode;
+
+	switch(pMsg->MsgId)
+	{
+		case WM_INIT_DIALOG:
+		{
+			// GUI_CreateDialogBox has not returned yet, so latch the
+			// handle here - the helpers below need it
+			hMxDialog = pMsg->hWin;
+
+			// Created before the keys so it can parent them. Starts off
+			// the bottom of the screen
+			hMxKeyboard = WM_CreateWindowAsChild(0, MX_UI_H, MX_KB_W, MX_KB_H,
+												 pMsg->hWin, WM_CF_SHOW, _cbKeyboard, 0);
+
+			mx_create_widgets(pMsg->hWin);
+			mx_create_keys();
+
+			mx_kb_shown = 0;
+			hMxAnim		= 0;
+
+			mx_layout_action_row(0);
+
+			// The widgets are rebuilt on every entry, the conversation
+			// is not - F3 toggles this screen away and back while the
+			// service keeps running, so the draft and the selected
+			// conversation live in statics that survive it
+			mx_seen_revision	= 0xFFFFFFFF;
+			mx_seen_view		= 0xFF;
+			mx_seen_conv		= -1;
+			mx_seen_compose		= -1;
+
+			mx_rebuild();
+
+			hMxTimer = WM_CreateTimer(pMsg->hWin, 0, 500, 0);
+			break;
+		}
+
+		case WM_PAINT:
+		{
+			GUI_SetColor(GUI_LIGHTGRAY);
+			GUI_FillRect(0, MX_TITLE_H, MX_UI_W - 1, MX_UI_H - 1);
+
+			mx_paint_title();
+			mx_paint_compose();
+
+			// Painted underneath the keyboard container - revealed when
+			// it slides away
+			if(!mx_kb_shown)
+				mx_paint_status();
+
+			break;
+		}
+
+		case WM_TIMER:
+		{
+			uint32_t	rev = meshchat_revision();
+			int			sel = LISTBOX_GetSel(hMxConvList);
+
+			if((rev != mx_seen_revision) || (mx_view != mx_seen_view) || (sel != mx_seen_conv))
+			{
+				mx_seen_revision	= rev;
+				mx_seen_view		= mx_view;
+				mx_seen_conv		= sel;
+
+				mx_rebuild();
+			}
+			else if(mx_compose_len != mx_seen_compose)
+			{
+				mx_seen_compose = mx_compose_len;
+				WM_InvalidateWindow(hMxDialog);
+			}
+			else
+			{
+				// The clock always moves
+				WM_InvalidateWindow(hMxDialog);
+			}
+
+			WM_RestartTimer(pMsg->Data.v, 500);
+			break;
+		}
+
+		case WM_DELETE:
+		{
+			WM_DeleteTimer(hMxTimer);
+
+			// The children go with the dialog - drop the handles so a
+			// stray repaint cannot reach a dead window
+			hMxKeyboard	= 0;
+			hMxConvList	= 0;
+			hMxMsgList	= 0;
+			hMxShiftKey	= 0;
+			hMxAnim		= 0;
+
+			memset(hMxCharKeys, 0, sizeof(hMxCharKeys));
+			break;
+		}
+
+		case WM_NOTIFY_PARENT:
+		{
+			Id	  = WM_GetId(pMsg->hWinSrc);
+			NCode = pMsg->Data.v;
+
+			if((Id == ID_MX_LIST_LEFT) && (NCode == WM_NOTIFICATION_SEL_CHANGED))
+			{
+				mx_on_select();
+				break;
+			}
+
+			mx_on_button(Id, NCode);
+			break;
+		}
+
+		case WM_KEY:
+		{
+			switch(((WM_KEY_INFO *)(pMsg->Data.p))->Key)
+			{
+				// Back to the radio. Scheduled rather than done here -
+				// the mode switch is what deletes this dialog
+				case GUI_KEY_HOME:
+					ui_s.req_state = MODE_DESKTOP;
+					xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
+					break;
+			}
+			break;
+		}
+
+		default:
+			WM_DefaultProc(pMsg);
+			break;
+	}
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : _cbBkWindow
+//* Object              : desktop window behind the dialog
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void _cbBkWindow(WM_MESSAGE *pMsg)
+{
+	switch(pMsg->MsgId)
+	{
+		case WM_PAINT:
+			// Not GUI_Clear() - the driver runs in LCD_DRAWMODE_TRANS
+			// where a clear does nothing
+			GUI_SetColor(GUI_LIGHTGRAY);
+			GUI_FillRect(0, 0, MX_UI_W - 1, MX_UI_H - 1);
+			break;
+
+		default:
+			WM_DefaultProc(pMsg);
+			break;
+	}
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : meshchat_ui_create
+//* Object              : bring the screen up, called by the UI mode
+//*						: switch on entry to MODE_DESKTOP_MESHCHAT
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+void meshchat_ui_create(void)
+{
+	// The menu leaves the default window background at GUI_WHITE and it
+	// is a sticky global, so set what this screen wants every time
+	WINDOW_SetDefaultBkColor(GUI_LIGHTGRAY);
+
+	WM_SetCallback(WM_HBKWIN, &_cbBkWindow);
+
+	hMxDialog = GUI_CreateDialogBox(_aDialog, GUI_COUNTOF(_aDialog), _cbDialog, 0, 0, 0);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : meshchat_ui_destroy
+//* Object              : tear it down on the way back to the desktop.
+//*						: Safe to call when it was never up
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+void meshchat_ui_destroy(void)
+{
+	if(hMxDialog)
+	{
+		WM_SetCallback		(WM_HBKWIN, 0);
+		WM_InvalidateWindow	(WM_HBKWIN);
+
+		WM_DeleteWindow(hMxDialog);
+
+		hMxDialog = 0;
+	}
+}

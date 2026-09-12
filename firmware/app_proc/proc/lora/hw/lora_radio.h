@@ -46,4 +46,7 @@ uchar lora_radio_init(void);
 void  lora_radio_rx_check(struct LORA_PACKET_RX *lp);
 void lora_radio_schedule_tx(void);
 
+// Send one packet, then re-arm the receiver. Returns 0 on success
+uchar lora_radio_transmit(const uchar *data, uchar len);
+
 #endif

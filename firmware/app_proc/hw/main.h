@@ -132,6 +132,11 @@ typedef struct LORA_PACKET_RX
 	char	sig_snr[16];
 	char	sig_rssi[16];
 
+	// Same two values as integers - the strings are for display, the
+	// chat app wants to store and compare them
+	int8_t	snr_db;
+	int8_t	rssi_db;
+
 	char	msg_type[8];
 
 	char	decoded_text[300];
@@ -158,6 +163,7 @@ __attribute__((__common__)) struct PROC_STATE {
 	TaskHandle_t 	hGpsTask;
 	TaskHandle_t 	hWsprTask;
 	TaskHandle_t 	hMarschatTask;
+	TaskHandle_t 	hMeshchatTask;
 
 	// Task messaging
 	xQueueHandle 	xBmsRxQueue;

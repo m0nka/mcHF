@@ -13,6 +13,12 @@
 #include "mchf_pro_board.h"
 #include "main.h"
 
+#ifdef CONTEXT_MESHCHAT
+// Not pulled in by main.h - the meshcore headers carry <stdbool.h>,
+// which would collide with the project's own bool typedef everywhere
+#include "meshchat_proc.h"
+#endif
+
 // Reserved FreeRTOS heap memory
 #if configAPPLICATION_ALLOCATED_HEAP == 1
 __attribute__((section(".axi_mem"))) uint8_t ucHeap[configTOTAL_HEAP_SIZE];
@@ -53,10 +59,28 @@ void NMI_Handler(void)
 //*----------------------------------------------------------------------------
 void HardFault_Handler(void)
 {
+	// Exception frame of the faulting context. Tasks run on the process
+	// stack, so for anything faulting inside a task this is the frame
+	// the core pushed on entry - sp[6] is the instruction that faulted,
+	// which is what to feed to arm-none-eabi-addr2line
+	uint32_t	*sp = (uint32_t *)__get_PSP();
+
 	printf( "====================\r\n");
 	printf( "=    HARD FAULT    =\r\n");
 	printf( "=       [%s]      =\r\n", pcTaskGetName(NULL));
 	printf( "====================\r\n");
+
+	printf( "hfsr %08x cfsr %08x \r\n", (unsigned int)SCB->HFSR, (unsigned int)SCB->CFSR);
+	printf( "bfar %08x mmfar %08x \r\n", (unsigned int)SCB->BFAR, (unsigned int)SCB->MMFAR);
+	printf( "pc   %08x lr    %08x \r\n", (unsigned int)sp[6], (unsigned int)sp[5]);
+	printf( "r0   %08x r1    %08x \r\n", (unsigned int)sp[0], (unsigned int)sp[1]);
+	printf( "r2   %08x r3    %08x r12 %08x \r\n",
+			(unsigned int)sp[2], (unsigned int)sp[3], (unsigned int)sp[4]);
+	printf( "psr  %08x \r\n", (unsigned int)sp[7]);
+
+	// Give the UART time to drain before the reset cuts it off
+	for(volatile int i = 0; i < 4000000; i++)
+		__asm("nop");
 
 	#if 1
 	NVIC_SystemReset();
@@ -718,6 +742,21 @@ static int start_proc(void)
     {
     	printf("unable to create marschat process\r\n");
     	return 17;
+    }
+	#endif
+
+	#ifdef CONTEXT_MESHCHAT
+    res = xTaskCreate(	(TaskFunction_t)meshchat_proc_task,\
+    					MESHCHAT_PROC_START_NAME,\
+						MESHCHAT_PROC_STACK_SIZE,\
+						NULL,\
+						MESHCHAT_PROC_PRIORITY,\
+						&(ps.hMeshchatTask));
+
+    if(res != pdPASS)
+    {
+    	printf("unable to create meshchat process\r\n");
+    	return 18;
     }
 	#endif
 

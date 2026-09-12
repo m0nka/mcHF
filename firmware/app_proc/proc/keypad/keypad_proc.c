@@ -559,6 +559,7 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		if(!hold)
 		{
 			printf("DSP\r\n");
+			GUI_StoreKeyMsg('A', 1);
 
 		}
 		else
@@ -611,8 +612,19 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
+			#if defined(CONTEXT_VIDEO) && defined(CONTEXT_MESHCHAT)
+			// Toggle the MeshChat screen, as F4 does for MarsChat. The
+			// audio dialog that used to live here needs a new home
+			if(ui_s.cur_state != MODE_DESKTOP_MESHCHAT)
+				ui_s.req_state = MODE_DESKTOP_MESHCHAT;
+			else
+				ui_s.req_state = MODE_DESKTOP;
+
+			xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
+			#else
 			printf("F3->Audio\r\n");
 			GUI_StoreKeyMsg('A', 1);
+			#endif
 		}
 		else
 		{
@@ -1458,6 +1470,9 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 		case MODE_DESKTOP_FT8:			// so can exit via button
 		#ifdef CONTEXT_MARSCHAT
 		case MODE_DESKTOP_MARSCHAT:		// ditto
+		#endif
+		#ifdef CONTEXT_MESHCHAT
+		case MODE_DESKTOP_MESHCHAT:		// ditto
 		#endif
 			keypad_cmd_processor_desktop(x,y,hold,release);
 			break;
