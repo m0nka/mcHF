@@ -65,9 +65,18 @@
 
 // On-screen keyboard - big keys for a 4" touch panel, so only half the
 // charset shows at once and a shift key pages between them: page 0 is the
-// 26 letters, page 1 is 0-9 plus the everyday punctuation. Nine columns by
-// three rows = 27 slots; the last slot (bottom right) is the shift key, the
-// other 26 are the character keys of the current page.
+// 26 letters, page 1 is 0-9 plus the everyday punctuation.
+//
+// The keys are laid out QWERTY, same as the MeshChat screen - an
+// alphabetical grid packs tighter but is far slower to use, because the
+// eye has nowhere learned to look. QWERTY needs ten keys across the top
+// row (Q..P), so the three rows are 10, 9 and 7 characters wide and each
+// row down is indented half a key pitch, the way a phone keyboard
+// staggers them. The page key takes the leading slot of the bottom row:
+//
+//     Q W E R T Y U I O P
+//      A S D F G H J K L
+//   123 Z X C V B N M
 //
 // The keyboard lives in its own child window that slides up from below the
 // screen when the user taps the compose bar and slides back down after
@@ -77,19 +86,28 @@
 // (SPACE, DEL, CLEAR, SEND, CALLER, PEER) stays on the main dialog at a
 // fixed y so the session buttons are always reachable; SPACE/DEL/CLEAR
 // are hidden when the keyboard is off-screen
-#define MC_KEY_COLS				9
+#define MC_KEY_COLS				10					// widest row (the top one)
 #define MC_KEY_ROWS				3
-#define MC_KEY_SLOTS			(MC_KEY_COLS * MC_KEY_ROWS)		// 27
-#define MC_KEY_CHARS			(MC_KEY_SLOTS - 1)				// 26, shift takes the last
+#define MC_KEY_CHARS			26					// shift sits beside them, not among them
 
-#define MC_KEY_X				10
+// Characters per row, top to bottom - 10 + 9 + 7 = 26
+#define MC_KEY_ROW0				10
+#define MC_KEY_ROW1				9
+#define MC_KEY_ROW2				7
+
 #define MC_KEY_Y1				322					// absolute y when keyboard is open
-#define MC_KEY_W				83
+#define MC_KEY_W				74
 #define MC_KEY_H				36
 #define MC_KEY_GAP				4					// between columns
 #define MC_KEY_VGAP				3					// between rows
 
-#define MC_KEY_COL_X(c)			(MC_KEY_X  + (c) * (MC_KEY_W + MC_KEY_GAP))
+#define MC_KEY_PITCH			(MC_KEY_W + MC_KEY_GAP)				// 78
+#define MC_KEY_X				12					// left edge of the ten key top row
+
+// Half a pitch of indent per row down centres the 9 and 8 key rows under
+// the 10 key one, and leaves the bottom row's first slot for the page key
+#define MC_KEY_ROW_X(r)			(MC_KEY_X + (((r) * MC_KEY_PITCH) / 2))
+#define MC_KEY_COL_X(r, c)		(MC_KEY_ROW_X(r) + (c) * MC_KEY_PITCH)
 #define MC_KEY_ROW_Y(r)			(MC_KEY_Y1 + (r) * (MC_KEY_H + MC_KEY_VGAP))
 
 #define MC_ACT_Y				MC_KEY_ROW_Y(MC_KEY_ROWS)	// action row below the keys

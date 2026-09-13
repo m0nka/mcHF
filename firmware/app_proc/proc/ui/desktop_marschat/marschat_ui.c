@@ -137,7 +137,15 @@ static MC_UI_MODEL	mc_ui_model;
 // between them; a char key's face and the character a press appends both
 // come from the active page at the key's index (id offset from CHAR_0).
 // Every glyph here must exist in mc_charset_latin so it can be encoded
-static const char	mc_ui_page_letters[MC_KEY_CHARS + 1] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+//
+// The order is the reading order of the QWERTY grid, not the alphabet -
+// key i sits at row/column mc_ui_key_pos() works out. MarsChat's charset
+// is a 6 bit code with no notion of case, so there is no lower page: the
+// letters page is the only one, and the shift key pages to the symbols
+static const char	mc_ui_page_letters[MC_KEY_CHARS + 1] = "QWERTYUIOPASDFGHJKLZXCVBNM";
+
+// The symbols page rides the same grid, which puts the digits along the
+// top row where a real keyboard has them
 static const char	mc_ui_page_symbols[MC_KEY_CHARS + 1] = "0123456789.,?!-/@:'()\"+=&;";
 
 static uint8_t		mc_ui_shift = 0;			// 0 letters page, 1 symbols page
@@ -911,9 +919,42 @@ static void mc_ui_apply_page(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : mc_ui_key_pos
+//* Object              : where character key i sits in the staggered QWERTY
+//*						: grid - x relative to the keyboard container, y relative
+//*						: to its top. The rows hold 10, 9 and 7 characters, and
+//*						: the bottom row starts one column in because the page
+//*						: key has that slot
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void mc_ui_key_pos(int i, int *x, int *y)
+{
+	int	row, col;
+
+	if(i < MC_KEY_ROW0)
+	{
+		row = 0;
+		col = i;
+	}
+	else if(i < (MC_KEY_ROW0 + MC_KEY_ROW1))
+	{
+		row = 1;
+		col = i - MC_KEY_ROW0;
+	}
+	else
+	{
+		row = 2;
+		col = (i - (MC_KEY_ROW0 + MC_KEY_ROW1)) + 1;	// past the page key
+	}
+
+	*x = MC_KEY_COL_X(row, col);
+	*y = row * (MC_KEY_H + MC_KEY_VGAP);
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : mc_ui_create_keys
 //* Object              : build the 26 character keys plus the shift key as a
-//*						: grid of skinned buttons, children of hMcKeyboard
+//*						: QWERTY grid of skinned buttons, children of hMcKeyboard
 //*						: (the sliding container, not the dialog). Coordinates
 //*						: are relative to the container - column x is the same
 //*						: because the container starts at x=0, row y is just
@@ -922,15 +963,13 @@ static void mc_ui_apply_page(void)
 //*----------------------------------------------------------------------------
 static void mc_ui_create_keys(void)
 {
-	int	i;
+	int	i, x, y;
 
 	for(i = 0; i < MC_KEY_CHARS; i++)
 	{
-		int		col = i % MC_KEY_COLS;
-		int		row = i / MC_KEY_COLS;
+		mc_ui_key_pos(i, &x, &y);
 
-		hMcCharKeys[i] = BUTTON_CreateEx(MC_KEY_COL_X(col),
-										 row * (MC_KEY_H + MC_KEY_VGAP),
+		hMcCharKeys[i] = BUTTON_CreateEx(x, y,
 										 MC_KEY_W, MC_KEY_H,
 										 hMcKeyboard, WM_CF_SHOW, 0,
 										 ID_BUTTON_CHAR_0 + i);
@@ -938,13 +977,10 @@ static void mc_ui_create_keys(void)
 		BUTTON_SetSkin(hMcCharKeys[i], mc_ui_button_skin);
 	}
 
-	// Shift in the last slot
+	// The page key leads the bottom row, where a phone puts its shift
 	{
-		int		col = MC_KEY_CHARS % MC_KEY_COLS;
-		int		row = MC_KEY_CHARS / MC_KEY_COLS;
-
-		hMcShiftKey = BUTTON_CreateEx(MC_KEY_COL_X(col),
-									  row * (MC_KEY_H + MC_KEY_VGAP),
+		hMcShiftKey = BUTTON_CreateEx(MC_KEY_COL_X(2, 0),
+									  2 * (MC_KEY_H + MC_KEY_VGAP),
 									  MC_KEY_W, MC_KEY_H,
 									  hMcKeyboard, WM_CF_SHOW, 0,
 									  ID_BUTTON_SHIFT);
