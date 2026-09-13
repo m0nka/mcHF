@@ -620,29 +620,36 @@ static void ui_proc_change_mode(void)
 		return;
 
 	// Don't enter Menu if we have virtual dialog shown
-	if((ui_s.active_control_shown)&&((ui_s.req_state == MODE_MENU)||(ui_s.req_state == MODE_DESKTOP_MARSCHAT)||(ui_s.req_state == MODE_DESKTOP_MESHCHAT)))
+	if((ui_s.active_control_shown)&&\
+	  ((ui_s.req_state == MODE_MENU)||\
+	   (ui_s.req_state == MODE_DESKTOP_MARSCHAT)||\
+	   (ui_s.req_state == MODE_DESKTOP_MESHCHAT)||\
+	   (ui_s.req_state == MODE_DESKTOP_FT8)))
 		return;
 
-	// Don't toggle between MarsChat and Menu
+	// ToDo: Those checks work, but suck donkey balls, fix at some point ;(
 	if((ui_s.req_state == MODE_MENU)&&(ui_s.cur_state == MODE_DESKTOP_MARSCHAT))
 		return;
-
-	// Don't toggle between MarsChat and Menu
+	if((ui_s.req_state == MODE_MENU)&&(ui_s.cur_state == MODE_DESKTOP_FT8))
+		return;
 	if((ui_s.req_state == MODE_DESKTOP_MARSCHAT)&&(ui_s.cur_state == MODE_MENU))
 		return;
-
-	// Ditto for MeshChat - the two top level screens each own the whole
-	// display, so going straight from one to the other would leave the
-	// first one's widgets behind
+	if((ui_s.req_state == MODE_DESKTOP_FT8)&&(ui_s.cur_state == MODE_MENU))
+		return;
+	if((ui_s.req_state == MODE_DESKTOP_FT8)&&(ui_s.cur_state == MODE_DESKTOP_MARSCHAT))
+		return;
+	if((ui_s.req_state == MODE_DESKTOP_FT8)&&(ui_s.cur_state == MODE_DESKTOP_MESHCHAT))
+		return;
+	if((ui_s.req_state == MODE_DESKTOP_MESHCHAT)&&(ui_s.cur_state == MODE_DESKTOP_FT8))
+		return;
+	if((ui_s.req_state == MODE_DESKTOP_MARSCHAT)&&(ui_s.cur_state == MODE_DESKTOP_FT8))
+		return;
 	if((ui_s.req_state == MODE_MENU)&&(ui_s.cur_state == MODE_DESKTOP_MESHCHAT))
 		return;
-
 	if((ui_s.req_state == MODE_DESKTOP_MESHCHAT)&&(ui_s.cur_state == MODE_MENU))
 		return;
-
 	if((ui_s.req_state == MODE_DESKTOP_MESHCHAT)&&(ui_s.cur_state == MODE_DESKTOP_MARSCHAT))
 		return;
-
 	if((ui_s.req_state == MODE_DESKTOP_MARSCHAT)&&(ui_s.cur_state == MODE_DESKTOP_MESHCHAT))
 		return;
 
