@@ -142,6 +142,8 @@ static void ui_proc_cb_sm(void)
 //*----------------------------------------------------------------------------
 static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 {
+	static uchar on_screen_dsp_screen_id = 0;
+
 	// Need always to give back focus to background
 	// windows, so we can receive keyboard events from
 	// the IPC driver
@@ -340,27 +342,48 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 
 		        case 'A':
 		        {
-		        	//printf("A release\r\n");
-					if(!ui_s.active_control_shown)
+					// Toggle between DSP screens
+					switch(on_screen_dsp_screen_id)
 					{
-						on_screen_audio_init(WM_HBKWIN);
-						ui_s.active_control_shown = 1;
-					}
-					else
-						on_screen_audio_quit();
-		        	break;
-		        }
+						// Audio gain/volume/filters
+						case 0:
+						{
+							if(!ui_s.active_control_shown)
+							{
+								on_screen_audio_init(WM_HBKWIN);
+								ui_s.active_control_shown = 1;
+							}
+							else
+							{
+								on_screen_audio_quit();
+								on_screen_dsp_screen_id++;
+							}
 
-		        case 'G':
-		        {
-		        	//printf("G release\r\n");
-					if(!ui_s.active_control_shown)
-					{
-						on_screen_agc_att_init(WM_HBKWIN);
-						ui_s.active_control_shown = 1;
+							break;
+						}
+
+						// AGC/Attenuator
+						case 1:
+						{
+							if(!ui_s.active_control_shown)
+							{
+								on_screen_agc_att_init(WM_HBKWIN);
+								ui_s.active_control_shown = 1;
+							}
+							else
+							{
+								on_screen_agc_att_quit();
+								on_screen_dsp_screen_id = 0;	// Restore to first screen
+							}
+
+							break;
+						}
+
+						default:
+							on_screen_dsp_screen_id = 0;
+							break;
 					}
-					else
-						on_screen_agc_att_quit();
+
 		        	break;
 		        }
 

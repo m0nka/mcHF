@@ -597,8 +597,20 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			printf("F2->AGC\r\n");
-			GUI_StoreKeyMsg('G', 1);
+			//printf("F2->AGC\r\n");
+			//GUI_StoreKeyMsg('G', 1);
+
+			if(ui_s.cur_state != MODE_DESKTOP_FT8)
+						{
+							printf("enter FT8\r\n");
+							ui_s.req_state = MODE_DESKTOP_FT8;
+						}
+						else
+						{
+							printf("exit FT8\r\n");
+							ui_s.req_state = MODE_DESKTOP;
+						}
+						xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
 		}
 		else
 		{
