@@ -18,10 +18,33 @@
 
 #include "hw_lcd.h"
 
+#include "hw_sd.h"
+#include "ff.h"
+#include "ff_gen_drv.h"
+#include "sd_diskio.h"
+#include "usbh_diskio.h"
+#include "hw_flash.h"
+
+#include "selftest_proc.h"
+#include "usb_host.h"
+
 CRC_HandleTypeDef   CrcHandle;
 RTC_HandleTypeDef 	RtcHandle;
 
 extern const unsigned char dsp_idle[816];
+
+// FatFS objects defined in selftest_proc.c
+extern FATFS SDFatFs;
+extern FIL  MyFile;
+extern char SDPath[4];
+
+// USB FatFS objects
+static FATFS USBFatFs;
+static char  USBPath[4];
+static uchar usb_linked = 0;
+
+// Flash source: 0 = SD card, 1 = USB stick (set by menu toggle)
+uchar flash_source = 0;
 
 extern ulong reset_reason;
 extern uchar gen_boot_reason_err;
@@ -221,7 +244,92 @@ void jump_to_fw(uint32_t SubDemoAddress)
 	HAL_NVIC_SystemReset();
 }
 
-#if 0
+// -----------------------------------------------------------------------
+// Flash source helpers — mount SD or USB depending on flash_source
+// -----------------------------------------------------------------------
+static uchar mount_flash_source(void)
+{
+	if(flash_source == 0)
+	{
+		// SD card path
+		if(test_sd_card() != 0)
+		{
+			printf("sd card init err\r\n");
+			return 16;
+		}
+
+		if(FATFS_LinkDriver(&SD_Driver, SDPath) != 0)
+		{
+			printf("fs link err\r\n");
+			return 17;
+		}
+
+		FRESULT fr = f_mount(&SDFatFs, (TCHAR const*)SDPath, 1);
+		if(fr != FR_OK)
+		{
+			printf("fs mount err (fr=%d)\r\n", fr);
+			return 18;
+		}
+
+		printf("source: SD card\r\n");
+	}
+	else
+	{
+		// USB stick path
+		if(usb_host_init() != 0)
+		{
+			printf("usb host init err\r\n");
+			return 16;
+		}
+
+		// Wait up to 5 seconds for USB device
+		if(usb_host_wait_ready(5000) != 0)
+		{
+			printf("no usb device\r\n");
+			usb_host_deinit();
+			return 16;
+		}
+
+		if(FATFS_LinkDriver(&USBH_Driver, USBPath) != 0)
+		{
+			printf("usb fs link err\r\n");
+			usb_host_deinit();
+			return 17;
+		}
+		usb_linked = 1;
+
+		FRESULT fr = f_mount(&USBFatFs, (TCHAR const*)USBPath, 1);
+		if(fr != FR_OK)
+		{
+			printf("usb fs mount err (fr=%d)\r\n", fr);
+			usb_host_deinit();
+			return 18;
+		}
+
+		printf("source: USB stick\r\n");
+	}
+
+	return 0;
+}
+
+static void unmount_flash_source(void)
+{
+	if(flash_source == 0)
+	{
+		fs_cleanup();
+	}
+	else
+	{
+		f_mount(NULL, (TCHAR const*)USBPath, 0);
+		if(usb_linked)
+		{
+			FATFS_UnLinkDriver(USBPath);
+			usb_linked = 0;
+		}
+		usb_host_deinit();
+	}
+}
+
 uchar update_radio(void)
 {
 	uchar res = 0;
@@ -229,7 +337,7 @@ uchar update_radio(void)
 	__HAL_RCC_CRC_CLK_ENABLE();
 
 	CrcHandle.Instance = CRC;
-	CrcHandle.Init.DefaultPolynomialUse    = DEFAULT_POLYNOMIAL_DISABLE;
+	CrcHandle.Init.DefaultPolynomialUse    = DEFAULT_POLYNOMIAL_ENABLE;
 	CrcHandle.Init.DefaultInitValueUse     = DEFAULT_INIT_VALUE_ENABLE;
 	CrcHandle.Init.InputDataInversionMode  = CRC_INPUTDATA_INVERSION_NONE;
 	CrcHandle.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_DISABLE;
@@ -238,26 +346,47 @@ uchar update_radio(void)
 	// Init CRC unit
 	if(HAL_CRC_Init(&CrcHandle) != HAL_OK)
 	{
-		//printf("error crc unit!\r\n");
+		printf("crc init err\r\n");
 		return 1;
 	}
 
-	// Open flash file from SD card
-	if(f_open(&MyFile, "radio.bin", FA_READ) != FR_OK)
+	// Mount source (SD or USB)
+	res = mount_flash_source();
+	if(res != 0)
+		return res;
+
+	// Build file path using the actual driver-assigned path
+	char fpath[20];
+	const char *prefix = (flash_source == 0) ? SDPath : USBPath;
+	strcpy(fpath, prefix);
+	strcat(fpath, "radio.bin");
+
+	printf("file: %s \r\n", fpath);
+
+	// Open flash file
+	FRESULT fres = f_open(&MyFile, fpath, FA_READ);
+	if(fres != FR_OK)
 	{
-		//printf("error open file!\r\n");
-		return 2;
+		printf("open radio.bin err (fr=%d)\r\n", fres);
+		res = 2;
+		goto fw_upd_clean_up;
 	}
 
 	ulong fs = f_size(&MyFile);
-	//printf("file size: %d bytes\r\n", (int)fs);
+	printf("radio.bin size: %d bytes\r\n", (int)fs);
+
+	if(fs < 512)
+	{
+		printf("file too small\r\n");
+		res = 19;
+		goto fw_upd_clean_up;
+	}
 
 	// Remove checksum
 	fs -= 4;
 
 	if(f_lseek(&MyFile, fs) != FR_OK)
 	{
-		//printf("error chksum location!\r\n");
 		res = 3;
 		goto fw_upd_clean_up;
 	}
@@ -267,23 +396,20 @@ uchar update_radio(void)
 
 	if(f_read(&MyFile, &chk, 4, (void *)&read) != FR_OK)
 	{
-		//printf("error chksum read!\r\n");
 		res = 4;
 		goto fw_upd_clean_up;
 	}
 
 	if(read != 4)
 	{
-		//printf("error chksum size!\r\n");
 		res = 5;
 		goto fw_upd_clean_up;
 	}
-	//printf("file crc: 0x%x\r\n", chk);
+	printf("file crc: 0x%x\r\n", (int)chk);
 
 	// Roll back
 	if(f_lseek(&MyFile, 0) != FR_OK)
 	{
-		//printf("error rollback!\r\n");
 		res = 6;
 		goto fw_upd_clean_up;
 	}
@@ -292,30 +418,17 @@ uchar update_radio(void)
 	ulong leftov = fs%512;
 	ulong calc_crc = 0;
 
-	//printf("chunks count: %d\r\n", blocks);
-	//printf("extra bytes: %d\r\n", leftov);
-
-	uchar *temp = malloc(512);
-	if(temp == NULL)
-	{
-		//printf("error alloc temp block!\r\n");
-		res = 7;
-		goto fw_upd_clean_up;
-	}
+	uchar temp[512];
 
 	// First
 	if(f_read(&MyFile, temp, 512, (void *)&read) != FR_OK)
 	{
-		//printf("error chunk read!\r\n");
-		free(temp);
 		res = 8;
 		goto fw_upd_clean_up;
 	}
 
 	if(read != 512)
 	{
-		//printf("error first chunk size!\r\n");
-		free(temp);
 		res = 9;
 		goto fw_upd_clean_up;
 	}
@@ -328,16 +441,12 @@ uchar update_radio(void)
 	{
 		if(f_read(&MyFile, temp, 512, (void *)&read) != FR_OK)
 		{
-			//printf("error chunk read!\r\n");
-			free(temp);
 			res = 10;
 			goto fw_upd_clean_up;
 		}
 
 		if(read != 512)
 		{
-			//printf("error next(%d) chunk size!\r\n", i);
-			free(temp);
 			res = 11;
 			goto fw_upd_clean_up;
 		}
@@ -350,45 +459,230 @@ uchar update_radio(void)
 	{
 		if(f_read(&MyFile, temp, leftov, (void *)&read) != FR_OK)
 		{
-			//printf("error leftover read!\r\n");
-			free(temp);
 			res = 12;
 			goto fw_upd_clean_up;
 		}
 
 		if(read != leftov)
 		{
-			//printf("error last chunk size!\r\n");
-			free(temp);
 			res = 13;
 			goto fw_upd_clean_up;
 		}
 
 		calc_crc = HAL_CRC_Accumulate(&CrcHandle, (uint32_t *)temp, leftov/4);
 	}
-	free(temp);
-	//printf("calc checksum: 0x%x\r\n", calc_crc);
+	printf("calc crc: 0x%x\r\n", (int)calc_crc);
 
 	// Test CRC
 	if(chk != calc_crc)
 	{
-		//printf("crc mismatch!\r\n");
+		printf("crc mismatch!\r\n");
 		res = 14;
 		goto fw_upd_clean_up;
 	}
 
+	printf("flashing to 0x%08x...\r\n", (int)RADIO_FIRM_ADDR);
+
 	// Flash the file
 	if(hw_flash_program_file(&MyFile, RADIO_FIRM_ADDR) != 0)
 	{
-		//printf("error writing file!\r\n");
+		printf("flash write err\r\n");
 		res = 15;
 	}
+	else
+		printf("flash complete\r\n");
 
 fw_upd_clean_up:
 	f_close(&MyFile);
+	unmount_flash_source();
 	return res;
 }
-#endif
+
+// -----------------------------------------------------------------------
+// Update baseband DSP core from baseband.bin on SD card
+//
+// V9: the CM4 baseband runs from Flash Bank 2 at 0x08100000 (960KB max).
+// Uses the same flash programming path as update_radio().
+// -----------------------------------------------------------------------
+uchar update_baseband(void)
+{
+	uchar	res = 0;
+
+	// Init CRC for file verification
+	__HAL_RCC_CRC_CLK_ENABLE();
+
+	CrcHandle.Instance = CRC;
+	CrcHandle.Init.DefaultPolynomialUse    = DEFAULT_POLYNOMIAL_ENABLE;
+	CrcHandle.Init.DefaultInitValueUse     = DEFAULT_INIT_VALUE_ENABLE;
+	CrcHandle.Init.InputDataInversionMode  = CRC_INPUTDATA_INVERSION_NONE;
+	CrcHandle.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_DISABLE;
+	CrcHandle.InputDataFormat              = CRC_INPUTDATA_FORMAT_WORDS;
+
+	if(HAL_CRC_Init(&CrcHandle) != HAL_OK)
+	{
+		printf("crc init err\r\n");
+		return 1;
+	}
+
+	// Mount source (SD or USB)
+	res = mount_flash_source();
+	if(res != 0)
+		return res;
+
+	// Build file path using the actual driver-assigned path
+	char fpath[24];
+	const char *prefix = (flash_source == 0) ? SDPath : USBPath;
+	strcpy(fpath, prefix);
+	strcat(fpath, "baseband.bin");
+
+	// Open the file
+	FRESULT fres = f_open(&MyFile, fpath, FA_READ);
+	if(fres != FR_OK)
+	{
+		printf("open baseband.bin err (fr=%d)\r\n", fres);
+		res = 2;
+		goto bb_upd_clean_up;
+	}
+
+	// Get size
+	ulong fs = f_size(&MyFile);
+	printf("baseband.bin size: %d bytes\r\n", (int)fs);
+
+	if(fs < 512)
+	{
+		printf("file too small\r\n");
+		res = 19;
+		goto bb_upd_clean_up;
+	}
+
+	// Flash Bank 2 is 1MB, minus 64KB reserved = 960KB max
+	if(fs > (960*1024))
+	{
+		printf("file too large for flash bank 2\r\n");
+		res = 6;
+		goto bb_upd_clean_up;
+	}
+
+	// Read appended CRC (last 4 bytes)
+	fs -= 4;
+
+	if(f_lseek(&MyFile, fs) != FR_OK)
+	{
+		res = 3;
+		goto bb_upd_clean_up;
+	}
+
+	ulong chk  = 0;
+	ulong read = 0;
+
+	if(f_read(&MyFile, &chk, 4, (void *)&read) != FR_OK)
+	{
+		res = 4;
+		goto bb_upd_clean_up;
+	}
+
+	if(read != 4)
+	{
+		res = 5;
+		goto bb_upd_clean_up;
+	}
+	printf("file crc: 0x%x\r\n", (int)chk);
+
+	// Roll back to start
+	if(f_lseek(&MyFile, 0) != FR_OK)
+	{
+		res = 7;
+		goto bb_upd_clean_up;
+	}
+
+	ulong blocks = fs/512;
+	ulong leftov = fs%512;
+	ulong calc_crc = 0;
+
+	uchar temp[512];
+
+	// First block
+	if(f_read(&MyFile, temp, 512, (void *)&read) != FR_OK)
+	{
+		res = 9;
+		goto bb_upd_clean_up;
+	}
+
+	if(read != 512)
+	{
+		res = 10;
+		goto bb_upd_clean_up;
+	}
+
+	calc_crc = HAL_CRC_Calculate(&CrcHandle, (uint32_t*)temp, 512/4);
+	blocks--;
+
+	// Remaining full blocks
+	for(ulong i = 0; i < blocks; i++)
+	{
+		if(f_read(&MyFile, temp, 512, (void *)&read) != FR_OK)
+		{
+			res = 11;
+			goto bb_upd_clean_up;
+		}
+
+		if(read != 512)
+		{
+			res = 12;
+			goto bb_upd_clean_up;
+		}
+
+		calc_crc = HAL_CRC_Accumulate(&CrcHandle, (uint32_t *)temp, 512/4);
+	}
+
+	// Leftovers
+	if(leftov)
+	{
+		if(f_read(&MyFile, temp, leftov, (void *)&read) != FR_OK)
+		{
+			res = 13;
+			goto bb_upd_clean_up;
+		}
+
+		if(read != leftov)
+		{
+			res = 14;
+			goto bb_upd_clean_up;
+		}
+
+		calc_crc = HAL_CRC_Accumulate(&CrcHandle, (uint32_t *)temp, leftov/4);
+	}
+	printf("calc crc: 0x%x\r\n", (int)calc_crc);
+
+	// Verify CRC
+	if(chk != calc_crc)
+	{
+		printf("crc mismatch!\r\n");
+		res = 15;
+		goto bb_upd_clean_up;
+	}
+
+	printf("flashing to 0x%08x...\r\n", (int)BASEBAND_FIRM_ADDR);
+
+	// Flash the file to Bank 2
+	if(hw_flash_program_file(&MyFile, BASEBAND_FIRM_ADDR) != 0)
+	{
+		printf("flash write err\r\n");
+		res = 20;
+	}
+	else
+	{
+		printf("baseband flash complete\r\n");
+
+		// Mark DSP firmware in backup register
+		WRITE_REG(BKP_REG_DSP_ID, DSP_LOADED_UHSDR);
+	}
+
+bb_upd_clean_up:
+	f_close(&MyFile);
+	unmount_flash_source();
+	return res;
+}
 
 #if 0
 static int boot_dsp_core(ulong *checksum)

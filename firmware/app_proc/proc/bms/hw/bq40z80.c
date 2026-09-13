@@ -625,6 +625,115 @@ ushort bq40z80_read_status(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_read_cal_data
+//* Object              : read and dump the calibration DF row for diagnostics
+//* Notes    			: prints hex dump + interprets known fields to UART
+//* Notes   			: compares against expected gold file bytes
+//* Notes    			: gauge must be unsealed before calling
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_read_cal_data(void)
+{
+	uchar buf[32];
+	uchar i;
+	uchar mismatch;
+	ushort val;
+	float cc_gain;
+	int cc_whole, cc_frac;
+
+	if(!bms_loc_init)
+		return 1;
+
+	// Expected first DF row from the gold file (lychen_gold_1mOhm_PRES.fs)
+	static const uchar gold_row[32] = {
+		0x45, 0x2F, 0xFD, 0xA4, 0xCE, 0x92, 0x0C, 0x78,
+		0x65, 0x40, 0xD5, 0x8A, 0x82, 0x49, 0x00, 0x00,
+		0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0xBC, 0xA2, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+	};
+
+	printf("== cal check ==\r\n");
+
+	// Read first calibration DF row
+	if(bq40z80_df_read_row(0x4000, buf, 32) != 0)
+	{
+		printf("df read err\r\n");
+		return 2;
+	}
+
+	// Print raw hex dump
+	printf("chip: ");
+	for(i = 0; i < 32; i++)
+		printf("%02x ", buf[i]);
+	printf("\r\n");
+
+	printf("gold: ");
+	for(i = 0; i < 32; i++)
+		printf("%02x ", gold_row[i]);
+	printf("\r\n");
+
+	// Compare byte by byte
+	mismatch = 0;
+	for(i = 0; i < 32; i++)
+	{
+		if(buf[i] != gold_row[i])
+		{
+			printf("DIFF @%d: %02x vs %02x\r\n", i, buf[i], gold_row[i]);
+			mismatch = 1;
+		}
+	}
+
+	if(!mismatch)
+		printf("cal row OK (match)\r\n");
+
+	// Interpret known voltage calibration fields
+	val = (buf[1] << 8) | buf[0];
+	printf("cell gain: %u\r\n", val);
+	val = (buf[3] << 8) | buf[2];
+	printf("pack gain: %u\r\n", val);
+	val = (buf[5] << 8) | buf[4];
+	printf("vc6 gain: %u\r\n", val);
+
+	// Interpret IEEE 754 float at offset 6 (likely CC Gain raw)
+	memcpy(&cc_gain, &buf[6], 4);
+	cc_whole = (int)cc_gain;
+	cc_frac  = (int)(cc_gain * 1000) - (cc_whole * 1000);
+	if(cc_frac < 0)
+		cc_frac = -cc_frac;
+	printf("raw float @6: %d.%03d\r\n", cc_whole, cc_frac);
+
+	// Also read and print current from both chips for ratio check
+	printf("== curr check ==\r\n");
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : bq40z80_read_cc_gain
+//* Object              : read CC Gain raw float from DF 0x4000 offset 6
+//* Notes    			: gauge must be unsealed before calling
+//* Notes   			: returns IEEE 754 float (raw internal value, NOT mOhm)
+//* Notes    			:
+//* Context    			: CONTEXT_BMS
+//*----------------------------------------------------------------------------
+uchar bq40z80_read_cc_gain(float *cc_gain)
+{
+	uchar buf[32];
+
+	if(!bms_loc_init)
+		return 1;
+
+	if(cc_gain == NULL)
+		return 2;
+
+	if(bq40z80_df_read_row(0x4000, buf, 32) != 0)
+		return 3;
+
+	memcpy(cc_gain, &buf[6], 4);
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : bq40z80_read_current
 //* Object              :
 //* Notes    			:

@@ -98,7 +98,7 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate0[] =
 static const GUI_WIDGET_CREATE_INFO _aDialogCreate1[] =
 {
 	// -----------------------------------------------------------------------------------------------------------------------------
-	//							name					id						x		y		xsize	ysize	?		?		?
+	//							name		id					x		y		xsize	ysize	?		?		?
 	// -----------------------------------------------------------------------------------------------------------------------------
 	// Self
  	{ WINDOW_CreateIndirect,   	"", 		0,              	0,   	0, 		TBL1X, 	430, 		FRAMEWIN_CF_MOVEABLE 		  },
@@ -124,9 +124,17 @@ static const GUI_WIDGET_CREATE_INFO _aDialogCreate1[] =
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT7,		370,	160,	170, 			30,  				0, 		0x0,	0 },
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT8,		550,	160,	170, 			30,  				0, 		0x0,	0 },
 
+	// CC Gain calibration info display
+	{ TEXT_CreateIndirect, 		"",			ID_TEXT_CC_INFO,	10,		210,	230,			35,					0,		0x0,	0 },
+	{ TEXT_CreateIndirect, 		"",			ID_TEXT_CC_RATIO,	260,	210,	230,			35,					0,		0x0,	0 },
+	// CC Gain new value entry
+	{ EDIT_CreateIndirect,		"",			ID_EDIT_CC_GAIN,	10,		268,	200,			35,					0,		8,		0 },
+	{ BUTTON_CreateIndirect,	"Write CC",	ID_BUTTON_CAL_WRITE,230,	265,	120,			45,					0,		0x0,	0 },
+	{ BUTTON_CreateIndirect, 	"Read  CC",	ID_BUTTON_CAL_CHECK,370, 	265, 	120, 			45, 				0, 		0x0, 	0 },
+
 	{ BUTTON_CreateIndirect, 	"Shutdown",	ID_BUTTON_SHUTDOWN,	20, 	350, 	120, 			45, 				0, 		0x0, 	0 },
 
-	// Gold file backup/flash
+	// Gold file backup/flash + calibration read
 	{ BUTTON_CreateIndirect, 	"DF Backup",ID_BUTTON_DF_BACKUP,160, 	350, 	120, 			45, 				0, 		0x0, 	0 },
 	{ BUTTON_CreateIndirect, 	"DF Flash",	ID_BUTTON_DF_FLASH,	300, 	350, 	120, 			45, 				0, 		0x0, 	0 },
 	{ TEXT_CreateIndirect, 		"",			GUI_ID_TEXT9,		440,	355,	280, 			35,  				0, 		0x0,	0 },
@@ -404,6 +412,77 @@ static void UpdatePowerRouting(WM_HWIN hDlg)
 	#endif
 }
 
+static void update_cal_info(WM_HWIN hDlg)
+{
+	#ifdef CONTEXT_BMS
+	WM_HWIN hItem;
+	char buf[40];
+	int wh, fr;
+	short ca;
+
+	switch(bmss.cal_state)
+	{
+		// Read complete: fill CC info + ratio + pre-fill EDIT
+		case 1:
+		{
+			hItem = WM_GetDialogItem(hDlg, ID_TEXT_CC_INFO);
+			wh = (int)bmss.cal_cc_raw;
+			fr = (int)(bmss.cal_cc_raw * 1000) - (wh * 1000);
+			if(fr < 0) fr = -fr;
+			sprintf(buf, "CC: %d.%03d", wh, fr);
+			TEXT_SetText(hItem, buf);
+
+			hItem = WM_GetDialogItem(hDlg, ID_TEXT_CC_RATIO);
+			ca = bmss.curr;
+			if(ca < 0) ca = -ca;
+			if(bmss.ch_chv > 100 && ca > 100)
+				sprintf(buf, "Ratio: %d.%02dx", ca / bmss.ch_chv,
+					(int)(((long)ca * 100) / bmss.ch_chv) % 100);
+			else
+				sprintf(buf, "Ratio: n/a");
+			TEXT_SetText(hItem, buf);
+
+			hItem = WM_GetDialogItem(hDlg, ID_EDIT_CC_GAIN);
+			sprintf(buf, "%d", (int)(bmss.cal_cc_new * 1000));
+			EDIT_SetText(hItem, buf);
+
+			bmss.cal_state = 10;
+			break;
+		}
+
+		// Write complete
+		case 2:
+		{
+			hItem = WM_GetDialogItem(hDlg, ID_TEXT_CC_RATIO);
+			TEXT_SetText(hItem, "Write OK!");
+			bmss.cal_state = 10;
+			break;
+		}
+
+		// Read error
+		case 3:
+		{
+			hItem = WM_GetDialogItem(hDlg, ID_TEXT_CC_INFO);
+			TEXT_SetText(hItem, "CC read err");
+			bmss.cal_state = 0;
+			break;
+		}
+
+		// Write error
+		case 4:
+		{
+			hItem = WM_GetDialogItem(hDlg, ID_TEXT_CC_RATIO);
+			TEXT_SetText(hItem, "Write err!");
+			bmss.cal_state = 10;
+			break;
+		}
+
+		default:
+			break;
+	}
+	#endif
+}
+
 static void UpdateMonitorFrame(WM_HWIN hDlg)
 {
 	#ifdef CONTEXT_BMS
@@ -415,6 +494,9 @@ static void UpdateMonitorFrame(WM_HWIN hDlg)
 	// Gold file job progress, shown also while cell
 	// readings are stalled by a running backup/flash
 	UpdateGoldStatus(hDlg);
+
+	// CC Gain calibration state machine
+	update_cal_info(hDlg);
 
 	if(!bmss.rr)
 		return;
@@ -751,6 +833,66 @@ static void _cbMonitorControl(WM_MESSAGE * pMsg, int Id, int NCode)
 		}
 
 		// -------------------------------------------------------------
+		// Button - read CC Gain and compute proposed calibration
+		case ID_BUTTON_CAL_CHECK:
+		{
+			switch(NCode)
+			{
+				case WM_NOTIFICATION_RELEASED:
+				{
+					printf("...bms cal read \r\n");
+					ulData[0] = 0x33;
+					menu_batt_send_msg(ps.xBmsRxQueue, ulData, 1);
+					break;
+				}
+			}
+			break;
+		}
+
+		// -------------------------------------------------------------
+		// Button - write new CC Gain to BMS data flash
+		case ID_BUTTON_CAL_WRITE:
+		{
+			switch(NCode)
+			{
+				case WM_NOTIFICATION_RELEASED:
+				{
+					char edbuf[16];
+					char msg[60];
+					int val, ci;
+					WM_HWIN hEdit;
+
+					hEdit = WM_GetDialogItem(pMsg->hWin, ID_EDIT_CC_GAIN);
+					EDIT_GetText(hEdit, edbuf, sizeof(edbuf));
+
+					// Parse integer from EDIT text
+					val = 0;
+					for(ci = 0; edbuf[ci] >= '0' && edbuf[ci] <= '9' && ci < 6; ci++)
+						val = val * 10 + (edbuf[ci] - '0');
+
+					// Sanity check: CC Gain should be in range 0.1 to 100.0
+					if(val < 100 || val > 100000)
+						break;
+
+					sprintf(msg, "Write CC Gain %d.%03d?", val / 1000, val % 1000);
+
+					if(menu_batt_ShowMessageBox(pMsg->hWin,
+												"CC Calibration",
+												msg,
+												1))
+					{
+						bmss.cal_cc_new = (float)val / 1000.0f;
+						printf("...bms cc write %d\r\n", val);
+						ulData[0] = 0x34;
+						menu_batt_send_msg(ps.xBmsRxQueue, ulData, 1);
+					}
+					break;
+				}
+			}
+			break;
+		}
+
+		// -------------------------------------------------------------
 		default:
 			break;
 	}
@@ -997,6 +1139,14 @@ static void _cbDialog1(WM_MESSAGE * pMsg)
 				else
 					menu_bms_edit_look_a(hItem);
 			}
+
+			// CC Gain calibration controls
+			hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_CC_INFO);
+			menu_bms_edit_look_a(hItem);
+			hItem = WM_GetDialogItem(pMsg->hWin, ID_TEXT_CC_RATIO);
+			menu_bms_edit_look_a(hItem);
+			hItem = WM_GetDialogItem(pMsg->hWin, ID_EDIT_CC_GAIN);
+			EDIT_SetFont(hItem, &GUI_Font20_1);
 
 			UpdateMonitorFrame(hDlg);
 

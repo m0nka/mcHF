@@ -44,6 +44,63 @@ void atlas_background(int x, int y, int w, int h)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : atlas_grid
+//* Object              : faint overlay grid with edge labels - the sci-fi
+//*						: instrumentation texture from the Atlas reference
+//* Context    			: CONTEXT_VIDEO (gui task, inside WM_PAINT)
+//*----------------------------------------------------------------------------
+void atlas_grid(int x, int y, int w, int h, int pitch)
+{
+	int		i, n;
+	char	tag[8];
+
+	if(pitch < 8)
+		pitch = 8;
+
+	// Grid lines - ATLAS_LINE_OFF is dim enough to read as low-alpha
+	// but bright enough to actually show on the IPS panel (ATLAS_BAND
+	// was invisible)
+	GUI_SetColor(ATLAS_LINE_OFF);
+
+	for(i = x + pitch; i < (x + w); i += pitch)
+		GUI_DrawVLine(i, y, y + h - 1);
+
+	for(i = y + pitch; i < (y + h); i += pitch)
+		GUI_DrawHLine(i, x, x + w - 1);
+
+	// Small edge labels - decorative "instrument readout" texture
+	GUI_SetFont(&GUI_Font8_1);
+	GUI_SetColor(ATLAS_OFF);
+	GUI_SetTextMode(GUI_TM_TRANS);
+
+	// Left edge: "X:nn" at each horizontal grid line
+	n = 0;
+	for(i = y + pitch; i < (y + h - 8); i += pitch)
+	{
+		n++;
+		tag[0] = 'X';
+		tag[1] = ':';
+		tag[2] = '0' + (n / 10) % 10;
+		tag[3] = '0' + n % 10;
+		tag[4] = 0;
+		GUI_DispStringAt(tag, x + 2, i + 2);
+	}
+
+	// Bottom edge: "Y:nn" at each vertical grid line
+	n = 0;
+	for(i = x + pitch; i < (x + w - 20); i += pitch)
+	{
+		n++;
+		tag[0] = 'Y';
+		tag[1] = ':';
+		tag[2] = '0' + (n / 10) % 10;
+		tag[3] = '0' + n % 10;
+		tag[4] = 0;
+		GUI_DispStringAt(tag, i + 2, y + h - 10);
+	}
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : atlas_panel
 //* Object              : panel fill, hairline border and the amber corner
 //*						: brackets that frame content in the reference

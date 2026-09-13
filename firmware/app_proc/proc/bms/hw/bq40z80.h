@@ -53,6 +53,9 @@ uchar bq40z80_fet_en_toggle(void);
 uchar bq40z80_write_16bit_reg(uchar reg, ushort val);
 uchar bq40z80_read_16bit_reg(uchar reg, ushort *val);
 
+uchar bq40z80_read_cal_data(void);
+uchar bq40z80_read_cc_gain(float *cc_gain);
+
 uchar bq40z80_shutdown(void);
 
 uchar bq40z80_unseal(void);

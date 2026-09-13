@@ -23,6 +23,10 @@
 #include "mc_client.h"
 #endif
 
+#ifdef CONTEXT_MESHCHAT
+#include "meshchat_proc.h"
+#endif
+
 #include "lora_proc.h"
 
 sx126x_handle_t radio_drv;
@@ -145,7 +149,9 @@ static void lora_proc_client_exec(xQueueHandle *RxQueue)
 {
 	//uchar  msg[256];
 	//ushort siz = 0;
+	#ifndef CONTEXT_MESHCHAT
 	char   notif[300];	// enough size for description text added to message
+	#endif
 	ulong  ulData[10];
 
 	struct LORA_PACKET_RX lprx;
@@ -153,11 +159,41 @@ static void lora_proc_client_exec(xQueueHandle *RxQueue)
 	if(!radio_init_done)
 		return;
 
+	#ifdef CONTEXT_MESHCHAT
+	// Anything the chat app has built goes out before we listen again.
+	// One packet per pass, so a full queue cannot lock the receiver out
+	{
+		static MC_TX_PACKET	tx_pkt;
+
+		if(meshchat_tx_dequeue(&tx_pkt) == 0)
+		{
+			uchar err = lora_radio_transmit(tx_pkt.data, tx_pkt.len);
+
+			printf("meshchat: tx %d bytes, type %d -> %s \r\n",
+					(int)tx_pkt.len, (int)((tx_pkt.data[0] >> 2) & 0x0F),
+					err ? "FAILED" : "sent");
+		}
+	}
+	#endif
+
 	lprx.avail = 0;
 
 	// Wait RX packet (radio layer)
 	lora_radio_rx_check(&lprx);
 
+	#ifdef CONTEXT_MESHCHAT
+	// Hand the raw frame to the chat service and get straight back to
+	// listening. Decoding happens there - an Ed25519 advert check runs
+	// into the hundreds of ms and would cost us the next packet
+	if(lprx.raw_rx_size != 0)
+	{
+		meshchat_rx_packet(lprx.raw_rx_msg, lprx.raw_rx_size, lprx.snr_db);
+
+		// The chat task raises the on screen notification once it knows
+		// what the packet was
+		return;
+	}
+	#else
 	// Process message(meshcore stack)
 	if(lprx.raw_rx_size != 0)
 	{
@@ -185,6 +221,7 @@ static void lora_proc_client_exec(xQueueHandle *RxQueue)
 			return;
 		}
 	}
+	#endif
 
 	if((lprx.raw_rx_size != 0)||(lprx.avail))
 	{
@@ -243,6 +280,21 @@ lora_proc_loop:
 	#ifdef SPI_GPIO_TEST
 	lora_proc_gpio_test();
 	#else
+	{
+		// How long since we last looked at the modem. The delay below
+		// asks for 5 ms, but this task shares its priority with the
+		// gui, so a heavy repaint can hold it off for far longer - and
+		// every one of those milliseconds is time a finished packet
+		// sits unread. Worth knowing when the mesh looks lossy
+		static uint32_t	last_tick = 0;
+		uint32_t		now = HAL_GetTick();
+
+		if(last_tick != 0)
+			lora_radio_stats_gap(now - last_tick);
+
+		last_tick = now;
+	}
+
 	lora_proc_client_exec(RxQueue);
 	#endif
 

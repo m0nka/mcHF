@@ -101,6 +101,15 @@
 #define CONTEXT_LORA
 
 // -----------------------------------------------------------------------------------------------
+// MeshCore chat application (public channels, direct messages, contacts)
+// UI in proc/ui/desktop_meshchat, service in proc/meshchat. Needs the LoRa
+// radio running the MeshCore stack - it is that protocol's chat client
+//
+#if defined(CONTEXT_LORA) && defined(MESHCORE)
+#define CONTEXT_MESHCHAT
+#endif
+
+// -----------------------------------------------------------------------------------------------
 // GNSS driver
 //
 //
@@ -267,6 +276,15 @@
 #define MARSCHAT_PROC_SLEEP_TIME		portMAX_DELAY
 #define MARSCHAT_PROC_PRIORITY			tskIDLE_PRIORITY
 #define MARSCHAT_PROC_STACK_SIZE		(configMINIMAL_STACK_SIZE * 16)
+
+// MeshCore chat service parameters. Started after the lora task, which is
+// the only thing it talks to on the radio side. The stack has to carry the
+// Ed25519 scalar multiplications and a FatFS write, hence the size
+#define MESHCHAT_PROC_START_NAME		"msh"
+#define MESHCHAT_PROC_START_DELAY		4500
+#define MESHCHAT_PROC_SLEEP_TIME		portMAX_DELAY
+#define MESHCHAT_PROC_PRIORITY			osPriorityNormal
+#define MESHCHAT_PROC_STACK_SIZE		(configMINIMAL_STACK_SIZE * 24)
 
 // GNSS driver parameters
 #define GPS_PROC_START_NAME				"gps"

@@ -21,7 +21,7 @@
 //
 #define	MCHF_R_VER_MAJOR			0
 #define	MCHF_R_VER_MINOR			0
-#define	MCHF_R_VER_RELEASE			53
-#define	MCHF_R_VER_BUILD			86
+#define	MCHF_R_VER_RELEASE			54
+#define	MCHF_R_VER_BUILD			28
 // -----------------------------------------------------------------------------
 #endif

@@ -300,22 +300,12 @@ void bms_proc_init_charger(void)
 
 void bms_proc_charger_handler(void)
 {
-#if 0
-	static uchar skip_on_print = 0;
-
-	if(skip_on_print < 3)
-	{
-		skip_on_print++;
-		return;
-	}
-	skip_on_print = 0;
-#endif
-
 	bmss.ch_stat = bq25730_read_chg_stat(&chip_cfg);
 	bmss.ch_curr = bq25730_read_iin(&chip_cfg);
 	bmss.ch_vsys = bq25730_read_vsys(&chip_cfg);
 	bmss.ch_vbat = bq25730_read_vbat(&chip_cfg);
 	bmss.ch_vbus = bq25730_read_vbus(&chip_cfg);
+
 	bq25730_read_ibat(&chip_cfg, &bmss.ch_chv, &bmss.ch_dcv);
 
 	#if 0
@@ -394,6 +384,132 @@ static void bms_proc_worker(void const *param)
 			}
 			#endif
 
+			// Read calibration data for diagnostics
+			case 0x32:
+			{
+				uchar cal_res = bq40z80_read_cal_data();
+
+				// Print live current from both chips
+				printf("bq40z80 curr: %dmA\r\n", bmss.curr);
+				printf("bq25730 ichg: %dmA\r\n", bmss.ch_chv);
+				if(bmss.ch_chv > 0)
+					printf("ratio: %d.%02dx\r\n",
+						bmss.curr / bmss.ch_chv,
+						(int)(((long)bmss.curr * 100) / bmss.ch_chv) % 100);
+
+				if(cal_res)
+					printf("cal read err %d\r\n", cal_res);
+
+				break;
+			}
+
+			// Read CC Gain for calibration UI
+			case 0x33:
+			{
+				float cc;
+				short curr_abs;
+				int wh, fr;
+
+				if(bq40z80_read_cc_gain(&cc) != 0)
+				{
+					bmss.cal_state = 3;
+					printf("cc gain read err\r\n");
+					break;
+				}
+
+				bmss.cal_cc_raw = cc;
+
+				wh = (int)cc;
+				fr = (int)(cc * 1000) - (wh * 1000);
+				if(fr < 0) fr = -fr;
+				printf("cc gain: %d.%03d\r\n", wh, fr);
+
+				// Auto-compute proposed value from charger reference
+				curr_abs = bmss.curr;
+				if(curr_abs < 0) curr_abs = -curr_abs;
+
+				if(bmss.ch_chv > 100 && curr_abs > 100)
+				{
+					bmss.cal_cc_new = cc * (float)curr_abs / (float)bmss.ch_chv;
+					printf("ratio: %d.%02dx\r\n",
+						curr_abs / bmss.ch_chv,
+						(int)(((long)curr_abs * 100) / bmss.ch_chv) % 100);
+				}
+				else
+				{
+					bmss.cal_cc_new = cc;
+					printf("no charger ref\r\n");
+				}
+
+				wh = (int)bmss.cal_cc_new;
+				fr = (int)(bmss.cal_cc_new * 1000) - (wh * 1000);
+				if(fr < 0) fr = -fr;
+				printf("proposed: %d.%03d\r\n", wh, fr);
+
+				bmss.cal_state = 1;
+				break;
+			}
+
+			// Write CC Gain from cal_cc_new to data flash
+			case 0x34:
+			{
+				uchar buf[32];
+				uchar vbuf[32];
+				int wh, fr;
+
+				wh = (int)bmss.cal_cc_new;
+				fr = (int)(bmss.cal_cc_new * 1000) - (wh * 1000);
+				if(fr < 0) fr = -fr;
+				printf("writing cc: %d.%03d\r\n", wh, fr);
+
+				// Full access needed for DF writes
+				if(bq40z80_full_access() != 0)
+				{
+					bmss.cal_state = 4;
+					printf("full access err\r\n");
+					break;
+				}
+
+				// Read current row (read-modify-write)
+				if(bq40z80_df_read_row(0x4000, buf, 32) != 0)
+				{
+					bmss.cal_state = 4;
+					printf("df read err\r\n");
+					break;
+				}
+
+				// Patch CC Gain at offset 6 (4 bytes IEEE 754 float)
+				memcpy(&buf[6], &bmss.cal_cc_new, 4);
+
+				// Write row back
+				if(bq40z80_df_write_row(0x4000, buf, 32) != 0)
+				{
+					bmss.cal_state = 4;
+					printf("df write err\r\n");
+					break;
+				}
+
+				// Verify
+				if(bq40z80_df_read_row(0x4000, vbuf, 32) != 0)
+				{
+					bmss.cal_state = 4;
+					printf("verify read err\r\n");
+					break;
+				}
+
+				if(memcmp(&vbuf[6], &bmss.cal_cc_new, 4) != 0)
+				{
+					bmss.cal_state = 4;
+					printf("verify mismatch!\r\n");
+					break;
+				}
+
+				bmss.cal_state = 2;
+				printf("cc gain write ok\r\n");
+				printf("restart radio for new cal\r\n");
+				break;
+			}
+
 			default:
 				break;
 		}
@@ -402,6 +518,10 @@ static void bms_proc_worker(void const *param)
 	// How often do we need to handle it ?
 	if(ch224a_detect() == 0)
 	{
+		// Reset charger chip
+		bms_proc_init_charger();
+
+		// Read charging status
 		bms_proc_charger_handler();
 	}
 	else
@@ -499,10 +619,14 @@ void bms_proc_task(void const *arg)
 	bmss.ch_vbat			= 0;
 	bmss.ch_vbus			= 0;
 
+	bmss.cal_cc_raw			= 0.0f;
+	bmss.cal_cc_new			= 0.0f;
+	bmss.cal_state			= 0;
+
 	// Detect BMS chip
 	bq40z80_init();
 
-	// Charger chip init
+	// Charger chip init, moved to polling call!
 	bms_proc_init_charger();
 
 bms_proc_loop:

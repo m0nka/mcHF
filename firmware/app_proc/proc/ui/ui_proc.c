@@ -48,6 +48,11 @@
 #include "desktop_marschat\marschat_ui.h"
 #include "marschat_proc.h"
 #endif
+
+#ifdef CONTEXT_MESHCHAT
+#include "desktop_meshchat\meshchat_ui.h"
+#include "meshchat_proc.h"
+#endif
 // -----------------------------------------------------------------------------------------------
 // Menu Mode
 #include "menu\ui_menu_module.h"
@@ -137,6 +142,8 @@ static void ui_proc_cb_sm(void)
 //*----------------------------------------------------------------------------
 static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 {
+	static uchar on_screen_dsp_screen_id = 0;
+
 	// Need always to give back focus to background
 	// windows, so we can receive keyboard events from
 	// the IPC driver
@@ -335,27 +342,48 @@ static void ui_proc_bkg_wnd(WM_MESSAGE * pMsg)
 
 		        case 'A':
 		        {
-		        	//printf("A release\r\n");
-					if(!ui_s.active_control_shown)
+					// Toggle between DSP screens
+					switch(on_screen_dsp_screen_id)
 					{
-						on_screen_audio_init(WM_HBKWIN);
-						ui_s.active_control_shown = 1;
-					}
-					else
-						on_screen_audio_quit();
-		        	break;
-		        }
+						// Audio gain/volume/filters
+						case 0:
+						{
+							if(!ui_s.active_control_shown)
+							{
+								on_screen_audio_init(WM_HBKWIN);
+								ui_s.active_control_shown = 1;
+							}
+							else
+							{
+								on_screen_audio_quit();
+								on_screen_dsp_screen_id++;
+							}
 
-		        case 'G':
-		        {
-		        	//printf("G release\r\n");
-					if(!ui_s.active_control_shown)
-					{
-						on_screen_agc_att_init(WM_HBKWIN);
-						ui_s.active_control_shown = 1;
+							break;
+						}
+
+						// AGC/Attenuator
+						case 1:
+						{
+							if(!ui_s.active_control_shown)
+							{
+								on_screen_agc_att_init(WM_HBKWIN);
+								ui_s.active_control_shown = 1;
+							}
+							else
+							{
+								on_screen_agc_att_quit();
+								on_screen_dsp_screen_id = 0;	// Restore to first screen
+							}
+
+							break;
+						}
+
+						default:
+							on_screen_dsp_screen_id = 0;
+							break;
 					}
-					else
-						on_screen_agc_att_quit();
+
 		        	break;
 		        }
 
@@ -592,7 +620,37 @@ static void ui_proc_change_mode(void)
 		return;
 
 	// Don't enter Menu if we have virtual dialog shown
-	if((ui_s.active_control_shown)&&(ui_s.req_state == MODE_MENU))
+	if((ui_s.active_control_shown)&&\
+	  ((ui_s.req_state == MODE_MENU)||\
+	   (ui_s.req_state == MODE_DESKTOP_MARSCHAT)||\
+	   (ui_s.req_state == MODE_DESKTOP_MESHCHAT)||\
+	   (ui_s.req_state == MODE_DESKTOP_FT8)))
+		return;
+
+	// ToDo: Those checks work, but suck donkey balls, fix at some point ;(
+	if((ui_s.req_state == MODE_MENU)&&(ui_s.cur_state == MODE_DESKTOP_MARSCHAT))
+		return;
+	if((ui_s.req_state == MODE_MENU)&&(ui_s.cur_state == MODE_DESKTOP_FT8))
+		return;
+	if((ui_s.req_state == MODE_DESKTOP_MARSCHAT)&&(ui_s.cur_state == MODE_MENU))
+		return;
+	if((ui_s.req_state == MODE_DESKTOP_FT8)&&(ui_s.cur_state == MODE_MENU))
+		return;
+	if((ui_s.req_state == MODE_DESKTOP_FT8)&&(ui_s.cur_state == MODE_DESKTOP_MARSCHAT))
+		return;
+	if((ui_s.req_state == MODE_DESKTOP_FT8)&&(ui_s.cur_state == MODE_DESKTOP_MESHCHAT))
+		return;
+	if((ui_s.req_state == MODE_DESKTOP_MESHCHAT)&&(ui_s.cur_state == MODE_DESKTOP_FT8))
+		return;
+	if((ui_s.req_state == MODE_DESKTOP_MARSCHAT)&&(ui_s.cur_state == MODE_DESKTOP_FT8))
+		return;
+	if((ui_s.req_state == MODE_MENU)&&(ui_s.cur_state == MODE_DESKTOP_MESHCHAT))
+		return;
+	if((ui_s.req_state == MODE_DESKTOP_MESHCHAT)&&(ui_s.cur_state == MODE_MENU))
+		return;
+	if((ui_s.req_state == MODE_DESKTOP_MESHCHAT)&&(ui_s.cur_state == MODE_DESKTOP_MARSCHAT))
+		return;
+	if((ui_s.req_state == MODE_DESKTOP_MARSCHAT)&&(ui_s.cur_state == MODE_DESKTOP_MESHCHAT))
 		return;
 
 	// Backlight off
@@ -771,6 +829,52 @@ static void ui_proc_change_mode(void)
 			break;
 		}
 #endif
+#ifdef CONTEXT_MESHCHAT
+		// Switch to MeshChat mode
+		case MODE_DESKTOP_MESHCHAT:
+		{
+			printf("Entering MeshChat mode...\r\n");
+
+			// No VFO handling here, unlike MarsChat - this app lives on
+			// the LoRa modem and leaves the HF side alone
+
+			// Destroy desktop controls
+			#ifdef DESKTOP_SHOW_VOLUME
+			ui_controls_volume_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_CLOCK
+			ui_controls_clock_panel_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_SPECTRUM
+			ui_controls_spectrum_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_FREQUENCY
+			ui_controls_frequency_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_SMETER
+			ui_controls_smeter_quit();
+			#endif
+
+			WM_SetCallback		(WM_HBKWIN, 0);
+			WM_InvalidateWindow	(WM_HBKWIN);
+
+			// Clear screen
+			GUI_SetBkColor(GUI_BLACK);
+			GUI_Clear();
+
+			// Show the chat screen
+			meshchat_ui_create();
+
+			// Initial paint
+			GUI_Exec();
+
+			break;
+		}
+#endif
 #if 0
 		case MODE_QUICK_LOG:
 		{
@@ -803,6 +907,12 @@ static void ui_proc_change_mode(void)
 			//ui_side_enc_menu_destroy();
 			ui_desktop_ft8_destroy();
 			//ui_quick_log_destroy();
+			#ifdef CONTEXT_MESHCHAT
+			// Nothing to wind down on the radio side - the meshchat
+			// service keeps running with the screen closed, and the
+			// LoRa modem is not tied to the HF VFO
+			meshchat_ui_destroy();
+			#endif
 			#ifdef CONTEXT_MARSCHAT
 			marschat_ui_destroy();
 
@@ -1256,6 +1366,10 @@ ui_proc_loop:
 		del_ms = (UI_PROC_SLEEP_TIME*3);
 	#ifdef CONTEXT_MARSCHAT
 	else if(ui_s.cur_state == MODE_DESKTOP_MARSCHAT)
+		del_ms = (UI_PROC_SLEEP_TIME*2);
+	#endif
+	#ifdef CONTEXT_MESHCHAT
+	else if(ui_s.cur_state == MODE_DESKTOP_MESHCHAT)
 		del_ms = (UI_PROC_SLEEP_TIME*2);
 	#endif
 	else

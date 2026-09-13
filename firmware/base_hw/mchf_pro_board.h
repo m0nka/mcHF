@@ -54,6 +54,7 @@
 
 // ----------------------------------------
 #define RADIO_FIRM_ADDR		0x08020000
+#define BASEBAND_FIRM_ADDR	0x08100000
 
 // -----------------------------------------
 //
@@ -152,6 +153,7 @@
 #define MODE_DESKTOP_FT8		3
 #define MODE_QUICK_LOG			4
 #define MODE_DESKTOP_MARSCHAT	5
+#define MODE_DESKTOP_MESHCHAT	6
 //
 #define THEME_0					0
 #define THEME_1					1
