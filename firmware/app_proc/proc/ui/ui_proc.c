@@ -602,6 +602,28 @@ static void ui_proc_init_desktop(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : ui_proc_is_full_screen_mode
+//* Object              : modes that take over the whole display
+//* Input Parameters    : screen mode
+//* Output Parameters   : 1 if the mode owns the display, 0 for the Desktop
+//* Functions called    : CONTEXT_VIDEO
+//*----------------------------------------------------------------------------
+static uchar ui_proc_is_full_screen_mode(uchar mode)
+{
+	switch(mode)
+	{
+		case MODE_MENU:
+		case MODE_DESKTOP_FT8:
+		case MODE_DESKTOP_MARSCHAT:
+		case MODE_DESKTOP_MESHCHAT:
+			return 1;
+
+		default:
+			return 0;
+	}
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_change_mode
 //* Object              : change screen mode
 //* Input Parameters    :
@@ -619,38 +641,14 @@ static void ui_proc_change_mode(void)
 	if(ui_s.cur_state == state)
 		return;
 
-	// Don't enter Menu if we have virtual dialog shown
-	if((ui_s.active_control_shown)&&\
-	  ((ui_s.req_state == MODE_MENU)||\
-	   (ui_s.req_state == MODE_DESKTOP_MARSCHAT)||\
-	   (ui_s.req_state == MODE_DESKTOP_MESHCHAT)||\
-	   (ui_s.req_state == MODE_DESKTOP_FT8)))
+	// A virtual dialog is up - it owns the screen until it is closed
+	if((ui_s.active_control_shown)&&(ui_proc_is_full_screen_mode(state)))
 		return;
 
-	// ToDo: Those checks work, but suck donkey balls, fix at some point ;(
-	if((ui_s.req_state == MODE_MENU)&&(ui_s.cur_state == MODE_DESKTOP_MARSCHAT))
-		return;
-	if((ui_s.req_state == MODE_MENU)&&(ui_s.cur_state == MODE_DESKTOP_FT8))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_MARSCHAT)&&(ui_s.cur_state == MODE_MENU))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_FT8)&&(ui_s.cur_state == MODE_MENU))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_FT8)&&(ui_s.cur_state == MODE_DESKTOP_MARSCHAT))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_FT8)&&(ui_s.cur_state == MODE_DESKTOP_MESHCHAT))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_MESHCHAT)&&(ui_s.cur_state == MODE_DESKTOP_FT8))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_MARSCHAT)&&(ui_s.cur_state == MODE_DESKTOP_FT8))
-		return;
-	if((ui_s.req_state == MODE_MENU)&&(ui_s.cur_state == MODE_DESKTOP_MESHCHAT))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_MESHCHAT)&&(ui_s.cur_state == MODE_MENU))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_MESHCHAT)&&(ui_s.cur_state == MODE_DESKTOP_MARSCHAT))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_MARSCHAT)&&(ui_s.cur_state == MODE_DESKTOP_MESHCHAT))
+	// Menu and the apps all paint over the whole display and each one tears
+	// down the Desktop controls on entry, so the only legal move between them
+	// is via the Desktop - ignore any direct app to app switch
+	if((ui_proc_is_full_screen_mode(state))&&(ui_proc_is_full_screen_mode(ui_s.cur_state)))
 		return;
 
 	// Backlight off
