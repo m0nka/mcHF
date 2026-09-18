@@ -10,7 +10,7 @@
 **  Licence:		https://github.com/m0nka/mcHF/blob/main/LICENSE                **
 ************************************************************************************/
 //
-// A top level screen (MODE_DESKTOP_MESHCHAT), built the same way as the
+// A top level screen (MODE_DESKTOP_MESHCORE), built the same way as the
 // FT8 and MarsChat desktops: the dialog is a child of the desktop window
 // with nothing else on screen, so nothing repaints over it.
 //
@@ -1897,7 +1897,7 @@ static void _cbBkWindow(WM_MESSAGE *pMsg)
 //*----------------------------------------------------------------------------
 //* Function Name       : meshchat_ui_create
 //* Object              : bring the screen up, called by the UI mode
-//*						: switch on entry to MODE_DESKTOP_MESHCHAT
+//*						: switch on entry to MODE_DESKTOP_MESHCORE
 //* Context    			: CONTEXT_VIDEO (gui task)
 //*----------------------------------------------------------------------------
 void meshchat_ui_create(void)

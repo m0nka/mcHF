@@ -619,8 +619,8 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 			#if defined(CONTEXT_VIDEO) && defined(CONTEXT_MESHCHAT)
 			// Toggle the MeshChat screen, as F4 does for MarsChat. The
 			// audio dialog that used to live here needs a new home
-			if(ui_s.cur_state != MODE_DESKTOP_MESHCHAT)
-				ui_s.req_state = MODE_DESKTOP_MESHCHAT;
+			if(ui_s.cur_state != MODE_DESKTOP_MESHCORE)
+				ui_s.req_state = MODE_DESKTOP_MESHCORE;
 			else
 				ui_s.req_state = MODE_DESKTOP;
 
@@ -1476,7 +1476,7 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 		case MODE_DESKTOP_MARSCHAT:		// ditto
 		#endif
 		#ifdef CONTEXT_MESHCHAT
-		case MODE_DESKTOP_MESHCHAT:		// ditto
+		case MODE_DESKTOP_MESHCORE:		// ditto
 		#endif
 			keypad_cmd_processor_desktop(x,y,hold,release);
 			break;

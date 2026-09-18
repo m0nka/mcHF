@@ -615,7 +615,7 @@ static uchar ui_proc_is_full_screen_mode(uchar mode)
 		case MODE_MENU:
 		case MODE_DESKTOP_FT8:
 		case MODE_DESKTOP_MARSCHAT:
-		case MODE_DESKTOP_MESHCHAT:
+		case MODE_DESKTOP_MESHCORE:
 			return 1;
 
 		default:
@@ -829,7 +829,7 @@ static void ui_proc_change_mode(void)
 #endif
 #ifdef CONTEXT_MESHCHAT
 		// Switch to MeshChat mode
-		case MODE_DESKTOP_MESHCHAT:
+		case MODE_DESKTOP_MESHCORE:
 		{
 			printf("Entering MeshChat mode...\r\n");
 
@@ -1367,7 +1367,7 @@ ui_proc_loop:
 		del_ms = (UI_PROC_SLEEP_TIME*2);
 	#endif
 	#ifdef CONTEXT_MESHCHAT
-	else if(ui_s.cur_state == MODE_DESKTOP_MESHCHAT)
+	else if(ui_s.cur_state == MODE_DESKTOP_MESHCORE)
 		del_ms = (UI_PROC_SLEEP_TIME*2);
 	#endif
 	else
