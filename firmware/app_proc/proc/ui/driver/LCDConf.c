@@ -524,8 +524,17 @@ void LCD_LL_CopyRect(	int LayerIndex,
 	U32 BufferSize = 0;		// For unit testing
 	#endif
 
-	U32 addrSrc = layer_prop[LayerIndex].address + BufferSize + (U32)(fbSrcTop * yRes + y0) * 4U;
-	U32 addrDst = layer_prop[LayerIndex].address + BufferSize + (U32)(fbDstTop * yRes + y1) * 4U;
+	// Base address of the buffer emWin is drawing into right now. With multiple
+	// buffering enabled(NUM_BUFFERS = 3, WM_MULTIBUF_Enable) the drawing target
+	// rotates on every Window Manager repaint, so it is not always buffer 1 -
+	// it used to be hardcoded here as '+ BufferSize'. A rect copy done in a
+	// buffer that is not the current drawing buffer is never displayed: the
+	// waterfall then stops scrolling and only its top line keeps updating,
+	// which is what happens after returning from a menu or an app dialog
+	U32 addrBase = layer_prop[LayerIndex].address + BufferSize * (U32)layer_prop[LayerIndex].buffer_index;
+
+	U32 addrSrc = addrBase + (U32)(fbSrcTop * yRes + y0) * 4U;
+	U32 addrDst = addrBase + (U32)(fbDstTop * yRes + y1) * 4U;
 	int lineOff = yRes - ySize;    				// pixel gap at end of each line
 
     //   * Overlap detection (framebuffer coordinates)
