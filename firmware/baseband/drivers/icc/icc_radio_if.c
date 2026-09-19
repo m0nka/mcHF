@@ -22,6 +22,7 @@
 #include "audio_driver.h"
 #include "audio_filter.h"
 #include "audio_agc.h"
+#include "audio_management.h"
 #include "uhsdr_hw_i2s.h"
 #include "drivers/audio/cw/cw_gen.h"
 
@@ -65,6 +66,14 @@ static volatile uint8_t	virtual_dah_down = 0;
 static volatile uint8_t	tune_txrx_req = 0xFF;		// 0xFF = nothing pending
 //
 static uint8_t			audio_started = 0;
+
+// Bring-up probe: peak level of the mic block arriving from the codec while
+// transmitting, written by the SAI callback (uhsdr_hw_i2s.c), printed below
+volatile int32_t		icc_tx_audio_peak = 0;
+
+// CW generator TX on/off request counters (icc_uhsdr_stubs.c)
+extern volatile uint32_t icc_txon_requests;
+extern volatile uint32_t icc_txoff_requests;
 
 // ------------------------------------------------------------------
 // Wire protocol value mapping.
@@ -155,6 +164,13 @@ static void icc_radio_select_filter_path(uint8_t wire_filter_id)
 	if(found)
 	{
 		ts.filter_path = path;
+
+		// Commit the choice to the per-mode "last used" memory as well.
+		// AudioDriver_SetProcessingChain() re-reads the path from this slot
+		// (PATH_LAST_USED_IN_MODE) and overwrites ts.filter_path with it, so
+		// without this the selection above is silently discarded and the
+		// filter never changes - see AudioDriver_SetProcessingChain()
+		ts.filter_path_mem[filter_mode][0] = path;
 	}
 	else
 	{
@@ -206,8 +222,16 @@ static void icc_radio_switch_txrx(uint8_t tx_on)
 		HAL_GPIO_WritePin(ICC_PTT_PORT, ICC_PTT_PIN, GPIO_PIN_SET);			// TX exciter power on
 		HAL_GPIO_WritePin(ICC_TX_LED_PORT, ICC_TX_LED_PIN, GPIO_PIN_SET);	// Front panel TX LED on
 
+		// Re-arm the tone generator for this direction - CW sidetone on
+		// TX, the tune tone when tuning, silence on RX. UHSDR does this
+		// in RadioManagement_SwitchTxRx(), which is not built on the M4
+		AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode, ts.tune);
+
 		// Notify M7 core
 		icc_proc_notify_of_tx();
+
+		printf("txrx: 1 dmod %d tune %d keyer %d\r\n",
+				ts.dmod_mode, ts.tune, ts.cw_keyer_mode);
 	}
 	else
 	{
@@ -218,8 +242,16 @@ static void icc_radio_switch_txrx(uint8_t tx_on)
 		HAL_GPIO_WritePin(ICC_PTT_PORT, ICC_PTT_PIN, GPIO_PIN_RESET);		// TX exciter power off
 		HAL_GPIO_WritePin(ICC_TX_LED_PORT, ICC_TX_LED_PIN, GPIO_PIN_RESET);	// Front panel TX LED off
 
+		// Re-arm the tone generator for this direction - CW sidetone on
+		// TX, the tune tone when tuning, silence on RX. UHSDR does this
+		// in RadioManagement_SwitchTxRx(), which is not built on the M4
+		AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode, false);
+
 		// Notify M7 core
 		icc_proc_notify_of_rx();
+
+		printf("txrx: 0 dmod %d tune %d keyer %d\r\n",
+				ts.dmod_mode, ts.tune, ts.cw_keyer_mode);
 	}
 }
 
@@ -249,12 +281,34 @@ void icc_radio_apply_trx_state(const icc_radio_settings_t *st)
 	CwGen_SetSpeed();
 
 	// TX
-	// A zero power factor from the M7 means "not calibrated/not set" (no
-	// PA or power table on this radio yet) - keep the local bring-up
-	// default instead of silently muting the whole tx chain. Bench found
-	// 2026-07-19: this zero killed the MarsChat WP5 radiated test
-	if(st->tx_power_factor > 0.0f)
-		ts.tx_power_factor = st->tx_power_factor;
+	// TX power. The UI level is authoritative - it is what the operator sees
+	// and it used to be ignored entirely here, so every transmission ran at
+	// the hard coded 0.50 regardless of the front panel setting
+	icc_radio_set_power_level(st->power_level);
+
+	// Microphone gain. Codec_SwitchMicTxRxMode() is the only function that
+	// derives ts.tx_mic_gain_mult, and it is #ifndef H7_M4_CORE (it drives a
+	// WM8731; the Pro has a CS4245 on the M7), so on this core the multiplier
+	// stayed 0 and tx_processor.c multiplied every mic sample by zero - TX
+	// keyed but put out no modulation. Calculation copied from that function
+	ts.tx_audio_source = TX_AUDIO_MIC;
+	ts.tx_gain[TX_AUDIO_MIC] = st->tx_mic_gain;
+
+	if(ts.tx_gain[TX_AUDIO_MIC] > 50)
+		ts.tx_mic_gain_mult = (ts.tx_gain[TX_AUDIO_MIC] - 35) / 3;
+	else
+		ts.tx_mic_gain_mult = ts.tx_gain[TX_AUDIO_MIC];
+
+	// Speech compressor. AudioManagement_CalcTxCompLevel() derives the ALC
+	// post-filter gain and decay from this, and it is another value the M4
+	// never loads from config - left at 0 it picks alc_params[0], the least
+	// compression entry, whose post-filter gain works out as x1.0. With the
+	// ALC knee at 30000 the audio never reaches it, so speech kept its full
+	// dynamic range: quiet passages under-modulated, close/loud ones hit the
+	// limiter. Has to be followed by a recalc - TxProcessor_Init() only ran
+	// it once at boot, before the M7 uploaded anything
+	ts.tx_comp_level = st->tx_comp_level;
+	AudioManagement_CalcTxCompLevel();
 
 	// AGC
 	agc_wdsp_conf.mode	= icc_radio_map_agc(st->agc_mode);
@@ -268,8 +322,12 @@ void icc_radio_apply_trx_state(const icc_radio_settings_t *st)
 
 	AudioDriver_SetProcessingChain(ts.dmod_mode, true);
 
-	printf("trx state: mode %d filt %d nco %d agc %d\r\n",
-			ts.dmod_mode, st->filter_id, st->nco_freq, st->agc_mode);
+	// Tone generator follows the mode (CW sidetone frequency, silence
+	// otherwise) - see RadioManagement_SetDemodMode() in the UHSDR tree
+	AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode, false);
+
+	printf("trx state: mode %d filt %d nco %d agc %d mic %d\r\n",
+			ts.dmod_mode, st->filter_id, st->nco_freq, st->agc_mode, ts.tx_mic_gain_mult);
 }
 
 //*----------------------------------------------------------------------------
@@ -305,6 +363,15 @@ void icc_radio_change_demod_mode(uint8_t dmod_mode, uint8_t iamb_type)
 	ts.cw_keyer_mode = iamb_type;
 
 	AudioDriver_SetProcessingChain(ts.dmod_mode, false);
+
+	// Tone generator follows the mode (CW sidetone frequency, silence
+	// otherwise) - see RadioManagement_SetDemodMode() in the UHSDR tree
+	AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode, false);
+
+	// Bring-up trace: wire value in, and the mode/path that actually stuck
+	// after the processing chain re-selected them
+	printf("demod: wire %d -> dmod %d, path %d\r\n",
+			dmod_mode, ts.dmod_mode, ts.filter_path);
 }
 
 void icc_radio_change_agc_mode(uint8_t agc_mode, uint8_t rf_gain)
@@ -318,9 +385,11 @@ void icc_radio_change_agc_mode(uint8_t agc_mode, uint8_t rf_gain)
 void icc_radio_change_filter(uint8_t filter_id)
 {
 	icc_radio_select_filter_path(filter_id);
-	//printf("  filter path %d\r\n", ts.filter_path);
 	AudioDriver_SetProcessingChain(ts.dmod_mode, false);
-	//printf("  chain ok\r\n");
+
+	// Bring-up trace: wire id in, and the path that survived the chain
+	printf("filter: wire %d -> path %d (dmod %d)\r\n",
+			filter_id, ts.filter_path, ts.dmod_mode);
 }
 
 void icc_radio_change_stereo(uint8_t stereo_mode)
@@ -333,6 +402,40 @@ void icc_radio_set_nco_freq(int16_t nco_freq)
 {
 	icc_radio_map_nco(nco_freq);
 	AudioDriver_SetProcessingChain(ts.dmod_mode, false);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : icc_radio_set_power_level
+//* Object              : map the UI power level (PA_LEVEL_xxx) onto the TX
+//* Object              : IQ scaling factor used by tx_processor.c
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+void icc_radio_set_power_level(uint8_t level)
+{
+	// TX output power goes as the square of the IQ amplitude, so the factors
+	// are sqrt(P / 20W) referred to 0.50, which measured ~15-20 W on the bench
+	// (SN 0003, 20 m, 2026-09-19). These are NOMINAL - there is no per-band PA
+	// calibration yet, so the watt labels are indicative only
+	static const float pwr_tbl[] =
+	{
+		0.079f,		// 0.5 W
+		0.112f,		// 1 W
+		0.158f,		// 2 W
+		0.250f,		// 5 W
+		0.354f,		// 10 W
+		0.433f,		// 15 W
+		0.500f		// 20 W
+	};
+
+	// Unknown or disabled band (the M7 stores 0xFF for those) - fall back to
+	// the lowest setting rather than whatever was in force before
+	if(level >= (sizeof(pwr_tbl) / sizeof(pwr_tbl[0])))
+		level = 0;
+
+	ts.tx_power_factor = pwr_tbl[level];
+
+	printf("tx power: level %d factor %d/1000\r\n",
+			level, (int)(ts.tx_power_factor * 1000.0f));
 }
 
 void icc_radio_set_band_power_factor(uint8_t band)
@@ -366,13 +469,16 @@ void icc_radio_virtual_dah(uint8_t down)
 
 	if(down)
 	{
+		// Upstream (the uhsdr_main.c paddle handler) requests TX on EVERY DAH
+		// press, in every mode, and additionally runs the CW state machine when
+		// in CW. Making the two mutually exclusive left CW unable to key at all:
+		// the mic PTT shares this line, so in CW nothing ever requested TX, and
+		// in straight-key mode CwGen_DahIRQ() is a no-op on top of that
+		ts.ptt_req = true;
+
 		if(ts.dmod_mode == DEMOD_CW)
 		{
 			CwGen_DahIRQ();
-		}
-		else if(is_ssb(ts.dmod_mode) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM))
-		{
-			ts.ptt_req = true;
 		}
 	}
 }
@@ -383,6 +489,10 @@ void icc_radio_virtual_dit(uint8_t down)
 
 	if(down && (ts.dmod_mode == DEMOD_CW))
 	{
+		// Upstream requests TX on a DIT press too (straight key excepted)
+		if(ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
+			ts.ptt_req = true;
+
 		CwGen_DitIRQ();
 	}
 }
@@ -399,6 +509,10 @@ void EXTI2_IRQHandler(void)
 			{
 				if(ts.dmod_mode == DEMOD_CW)
 				{
+					// Upstream requests TX on a DIT press too (straight key excepted)
+					if(ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
+						ts.ptt_req = true;
+
 					CwGen_DitIRQ();
 				}
 			}
@@ -416,13 +530,16 @@ void EXTI3_IRQHandler(void)
 		{
 			if((HAL_GPIO_ReadPin(ICC_PADDLE_DAH_PORT, ICC_PADDLE_DAH_PIN) == GPIO_PIN_RESET) || virtual_dah_down)
 			{
+				// Upstream (the uhsdr_main.c paddle handler) requests TX on EVERY DAH
+				// press, in every mode, and additionally runs the CW state machine when
+				// in CW. Making the two mutually exclusive left CW unable to key at all:
+				// the mic PTT shares this line, so in CW nothing ever requested TX, and
+				// in straight-key mode CwGen_DahIRQ() is a no-op on top of that
+				ts.ptt_req = true;
+
 				if(ts.dmod_mode == DEMOD_CW)
 				{
 					CwGen_DahIRQ();
-				}
-				else if(is_ssb(ts.dmod_mode) || (ts.dmod_mode == DEMOD_AM) || (ts.dmod_mode == DEMOD_FM))
-				{
-					ts.ptt_req = true;
 				}
 			}
 		}
@@ -588,16 +705,26 @@ void icc_radio_idle_thread(void)
 		default:							break;
 	}
 
-	// Bring-up heartbeat - shows the superloop is alive and whether
-	// the SAI DMA stream is running
+	// While transmitting, dump what the TX chain is actually seeing: peak is
+	// the mic level arriving off the codec, dah/stop show the CW key state
 	{
-		extern volatile uint32_t sai_block_count;
-		static uint32_t next_beat = 10000;
+		static uint32_t next_tx_dump = 0;
 
-		if(HAL_GetTick() > next_beat)
+		if(ts.txrx_mode == TRX_MODE_TX)
 		{
-			next_beat = HAL_GetTick() + 5000;
-			//printf("hb: audio %d, sai blocks %u\r\n", audio_started, (unsigned)sai_block_count);
+			if(HAL_GetTick() > next_tx_dump)
+			{
+				next_tx_dump = HAL_GetTick() + 250;
+
+				printf("tx: peak %d alc %d comp %d mic %d dah %d\r\n",
+						(int)icc_tx_audio_peak, (int)(ads.alc_val * 100.0f),
+						ts.tx_comp_level, ts.tx_mic_gain_mult,
+						Board_PttDahLinePressed());
+			}
+		}
+		else
+		{
+			next_tx_dump = 0;
 		}
 	}
 }

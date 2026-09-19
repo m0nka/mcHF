@@ -51,6 +51,7 @@ typedef struct
 	uint8_t		power_level;
 	uint8_t		tx_audio_source;
 	uint8_t		tx_mic_gain;
+	uint8_t		tx_comp_level;
 	uint8_t		tx_line_gain;
 	float		tx_power_factor;
 
@@ -99,6 +100,7 @@ void	icc_radio_change_agc_mode(uint8_t agc_mode, uint8_t rf_gain);
 void	icc_radio_change_filter(uint8_t filter_id);
 void	icc_radio_change_stereo(uint8_t stereo_mode);
 void	icc_radio_set_nco_freq(int16_t nco_freq);
+void icc_radio_set_power_level(uint8_t level);
 void	icc_radio_set_band_power_factor(uint8_t band);
 void	icc_radio_set_tune_mode(uint8_t tune_on);
 //

@@ -691,7 +691,8 @@ static void icc_proc_dsp_command(ulong cmd)
 			data[3] = tsu.keyer_mode;
 			data[4] = tsu.band[tsu.curr_band].filter;
 			data[5] = tsu.curr_band;
-			icc_proc_cmd_xchange(ICC_CHANGE_BAND, data, 6);
+			data[6] = tsu.band[tsu.curr_band].tx_power;	// per band TX power level
+			icc_proc_cmd_xchange(ICC_CHANGE_BAND, data, 7);
 			break;
 		}
 
@@ -746,6 +747,14 @@ static void icc_proc_dsp_command(ulong cmd)
 		{
 			data[0] = tsu.tune;
 			icc_proc_cmd_xchange(ICC_SET_TUNE_MODE, data, 1);
+			break;
+		}
+
+		// Set TX power level
+		case UI_ICC_POWER_LEVEL:
+		{
+			data[0] = tsu.band[tsu.curr_band].tx_power;
+			icc_proc_cmd_xchange(ICC_SET_POWER_LEVEL, data, 1);
 			break;
 		}
 

@@ -111,6 +111,9 @@
 // exactly 32768 samples @ 48 kHz = 8192/12000 s
 #define ICC_MC_TX_START					16
 #define ICC_MC_TX_STOP					17
+
+// Set TX power level (PA_LEVEL_xxx), 1 byte payload
+#define ICC_SET_POWER_LEVEL				18
 //
 // ICC_MC_TX_START payload layout:
 // [0..1]  audio tone base in Hz, little endian (e.g. 1500); symbol

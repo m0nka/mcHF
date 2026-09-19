@@ -113,6 +113,28 @@ static void MchfHw_Codec_HandleBlock(uint16_t which)
         iq = &dma.iq_buf.out[offset];
     }
 
+#ifdef H7_M4_CORE
+    // Bring-up probe: peak level of the mic block the codec is feeding us
+    // while transmitting, published for icc_radio_idle_thread() to print
+    if (ts.txrx_mode == TRX_MODE_TX)
+    {
+        extern volatile int32_t icc_tx_audio_peak;
+        int32_t pk = 0;
+
+        for(size_t n = 0; n < sz; n++)
+        {
+            int32_t v = audio[n].l < 0 ? -audio[n].l : audio[n].l;
+            if(v > pk) pk = v;
+
+            v = audio[n].r < 0 ? -audio[n].r : audio[n].r;
+            if(v > pk) pk = v;
+        }
+
+        icc_tx_audio_peak = pk;
+    }
+#endif
+
+
     AudioSample_t *audioDst = &dma.audio_buf.out[offset];
 
     // Handle

@@ -231,6 +231,7 @@ static void icc_proc_extract_settings(icc_radio_settings_t *st)
 	st->power_level					= wire_ts.power_level;
 	st->tx_audio_source				= wire_ts.tx_audio_source;
 	st->tx_mic_gain					= wire_ts.tx_mic_gain;
+	st->tx_comp_level				= wire_ts.tx_comp_level;
 	st->tx_line_gain				= wire_ts.tx_line_gain;
 	st->tx_power_factor				= wire_ts.tx_power_factor;
 
@@ -367,6 +368,7 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 			icc_radio_change_demod_mode(icc_in_buffer[2], icc_in_buffer[3]);
 			icc_radio_change_filter(icc_in_buffer[4]);
 			icc_radio_set_band_power_factor(icc_in_buffer[5]);
+			icc_radio_set_power_level(icc_in_buffer[6]);
 			break;
 		}
 
@@ -408,6 +410,13 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 			// The TX LED follows the exciter keying in icc_radio_switch_txrx(),
 			// which the tune HSEM lines (20/21) reach on their own
 			icc_radio_set_tune_mode(icc_in_buffer[0]);
+			break;
+		}
+
+		// Set TX power level
+		case ICC_SET_POWER_LEVEL:
+		{
+			icc_radio_set_power_level(icc_in_buffer[0]);
 			break;
 		}
 

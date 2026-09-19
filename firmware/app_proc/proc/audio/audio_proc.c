@@ -42,6 +42,22 @@ static void audio_proc_worker(ulong ulCmd)
 	if(tsu.dsp_alive == 0)
 		return;
 
+	// Reconcile the codec path with the current TX/RX state on every wake.
+	// The ICC ISR posts UI_RXTX_SWITCH with eSetBits while the volume and
+	// PA paths use eSetValueWithOverwrite, so turning the encoder during a
+	// TX/RX transition can clobber the pending switch and strand the codec
+	// on the microphone input while receiving - audible as the mic coming
+	// out of the speaker. Driving it off tsu.rxtx cannot lose an edge.
+	{
+		static uchar last_route = 0xFF;
+
+		if(tsu.rxtx != last_route)
+		{
+			last_route = tsu.rxtx;
+			codec_hw_set_audio_route(last_route ? CODEC_ROUTE_TX : CODEC_ROUTE_RX);
+		}
+	}
+
 	switch(ulCmd)
 	{
 		// -------------------------
@@ -81,12 +97,8 @@ static void audio_proc_worker(ulong ulCmd)
 
 		case UI_RXTX_SWITCH:
 		{
-			//printf("audio proc, awaken to change RX/TX state...\r\n");
-
-			if(tsu.rxtx)
-				codec_hw_set_audio_route(CODEC_ROUTE_TX);
-			else
-				codec_hw_set_audio_route(CODEC_ROUTE_RX);
+			// Handled by the reconcile above - kept so the notification is
+			// still consumed explicitly rather than falling to default
 
 			break;
 		}

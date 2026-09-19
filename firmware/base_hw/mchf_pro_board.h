@@ -209,6 +209,7 @@ __attribute__((__common__)) struct UI_DRIVER_STATE {
 #define UI_ICC_WSPR_STOP			10
 #define UI_ICC_MC_TX_START			11
 #define UI_ICC_MC_TX_STOP			12
+#define UI_ICC_POWER_LEVEL		13
 
 #if 0
 // The 16 bit msg id is used in the DSP handler directly

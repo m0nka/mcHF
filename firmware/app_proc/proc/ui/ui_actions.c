@@ -692,8 +692,10 @@ void ui_actions_change_power_level(void)
 	if(tsu.band[tsu.curr_band].tx_power >= PA_LEVEL_MAX_ENTRY)
 		tsu.band[tsu.curr_band].tx_power = PA_LEVEL_0_5W;
 
-	// Notify DSP ?
-	// ...
+	// Notify ICC dispatcher - the baseband scales the TX IQ by
+	// ts.tx_power_factor, which it derives from this level
+	if(ps.hIccTask != NULL)
+		xTaskNotify(ps.hIccTask, UI_ICC_POWER_LEVEL, eSetValueWithOverwrite);
 
 	// UI repaint
 	ui_controls_tx_stat_refresh();

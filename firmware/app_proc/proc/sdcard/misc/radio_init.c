@@ -339,7 +339,7 @@ static void radio_init_load_dsp_values(void)
 	ts.alc_decay_var	= 10;//ALC_DECAY_DEFAULT;		// ALC Decay (release) default value
 	ts.alc_tx_postfilt_gain		= 1;//ALC_POSTFILT_GAIN_DEFAULT;	// Post-filter added gain default (used for speech processor/ALC)
 	ts.alc_tx_postfilt_gain_var		= 1;//ALC_POSTFILT_GAIN_DEFAULT;	// Post-filter added gain default (used for speech processor/ALC)
-	ts.tx_comp_level	= 0;		// 0=Release Time/Pre-ALC gain manually adjusted, >=1:  Value calculated by this parameter
+	ts.tx_comp_level	= 4;		// speech compressor: 0 = least, 12 = most, 13 = custom
 	//
 	ts.freq_step_config		= 0;			// disabled both marker line under frequency and swapping of STEP buttons
 	//
@@ -668,6 +668,10 @@ void radio_init_ui_to_dsp(void)
 
 	ts.dmod_mode 		= tsu.band[tsu.curr_band].demod_mode;
 	ts.filter_id 		= tsu.band[tsu.curr_band].filter;
+
+	// TX power level as shown on the front panel - the baseband derives its
+	// TX IQ scaling from this, so it has to match what the operator selected
+	ts.power_level		= tsu.band[tsu.curr_band].tx_power;
 
 	ts.audio_gain 		= tsu.band[tsu.curr_band].volume;
 

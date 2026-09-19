@@ -287,7 +287,7 @@ loc_err:
 
 static void codec_hw_set_pga_gain(uchar val)
 {
-	if(val > (sizeof(pga_gain_tbl) - 1))
+	if(val >= (sizeof(pga_gain_tbl) / sizeof(pga_gain_tbl[0])))
 		return;
 
 	// PGA gain: -12db, val = 40
@@ -375,7 +375,7 @@ void codec_hw_set_audio_route(uchar route_id)
 		// SAI IN -> DAC -> AUX OUT (TX Exciter power off)
 		case CODEC_ROUTE_RX:
 		{
-			//printf("codec path - rx\r\n");
+			printf("codec path - rx\r\n");
 
 			// ****** INPUT ROUTING *******
 			//
@@ -410,7 +410,7 @@ void codec_hw_set_audio_route(uchar route_id)
 		// CW mode, check docs
 		case CODEC_ROUTE_TX:
 		{
-			//printf("codec path - tx\r\n");
+			printf("codec path - tx\r\n");
 
 			// Mic or digitally generated signal for DAC (CW, DIGI)
 			//
@@ -438,7 +438,50 @@ void codec_hw_set_audio_route(uchar route_id)
 			else
 			{
 				// Mic to  ADC/PGA
+				// Electret on AIN4A/MICIN1 + AIN4B/MICIN2 (pins 21/22), biased from
+				// MICBIAS through R2. Datasheet Table 17: Sel[2:0] = 000 reads those pins
+				// as "Microphone-Level Inputs (+32 dB Gain Enabled)", 100 reads the same
+				// pins as "Line-Level Input Pair 4" with no preamp.
+				//
+				// The +32 dB is needed - without it the element has to be spoken into at
+				// point blank range. It was briefly bypassed while chasing distortion,
+				// but that turned out to be the speech compressor never being enabled on
+				// the M4 (ts.tx_comp_level), not the preamp overloading: at -12 dB on the
+				// PGA the preamp output measured ~61% of ADC full scale, hot but clean.
+				//
+				// PGA at minimum, since the gain in front of it is fixed. If this still
+				// runs the compressor too hard, trim ts.tx_mic_gain on the M7 instead.
+				// Table is 49 entries, 0.5 dB steps: 0 = -12 dB, 24 = 0 dB, 48 = +12 dB
 				codec_hw_update_register(CS4245_ANALOG_IN, true, CS4245_SEL_MIC);
+				codec_hw_set_pga_gain(0);
+
+				// The CW/tune branch above sets SIGNAL_SEL to A_OUT_SEL_PGA to tap the
+				// sidetone, which wires the PGA - the microphone - straight to AUXOUT
+				// (LINE OUT + SPEAKER) as an analog bypass. This branch never set it,
+				// so after any CW or tune transmission SSB TX inherited a direct mic
+				// to speaker path: an acoustic feedback loop. Mute AUXOUT instead.
+				codec_hw_update_register(CS4245_SIGNAL_SEL, true, CS4245_A_OUT_SEL_HIZ);
+
+				// While transmitting the DAC drives AOUT into the TX exciter, so its
+				// attenuator has to be opened right up. codec_hw_volume() only runs
+				// when tsu.rxtx == 0, so it leaves the attenuator at the RX speaker
+				// volume - which is why SSB TX drive used to follow the volume knob
+				// and was silent with the volume down. The CW/tune branch above has
+				// always done this; the mic branch never did.
+				codec_hw_update_register(CS4245_DAC_A_CTRL, true, 0);
+				codec_hw_update_register(CS4245_DAC_B_CTRL, true, 0);
+
+				// Bring-up: read back what the codec really ended up with - a failed
+				// i2c read inside codec_hw_update_register() aborts the write silently
+				{
+					uchar ain = 0xFF, pwr = 0xFF, pga = 0xFF;
+
+					shared_i2c_read_reg(0x98, CS4245_ANALOG_IN, &ain, 1);
+					shared_i2c_read_reg(0x98, CS4245_POWER_CTRL, &pwr, 1);
+					shared_i2c_read_reg(0x98, CS4245_PGA_A_CTRL, &pga, 1);
+
+					printf("codec mic route: ain %x pwr %x pga %x\r\n", ain, pwr, pga);
+				}
 			}
 
 			break;
