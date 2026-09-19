@@ -647,14 +647,14 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/lora/protocols/meshcore/mc_rx.c</locationURI>
 		</link>
 		<link>
-			<name>proc/meshchat/meshchat_proc.c</name>
+			<name>proc/meshcore/meshcore_proc.c</name>
 			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/meshchat/meshchat_proc.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/meshcore/meshcore_proc.c</locationURI>
 		</link>
 		<link>
-			<name>proc/ui/desktop_meshchat/meshchat_ui.c</name>
+			<name>proc/ui/desktop_meshcore/meshcore_ui.c</name>
 			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop_meshchat/meshchat_ui.c</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop_meshcore/meshcore_ui.c</locationURI>
 		</link>
 		<link>
 			<name>proc/marschat/mc_frame.c</name>

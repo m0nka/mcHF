@@ -177,7 +177,7 @@ void mc_channel_key_of(const char *name, uint8_t key[MC_CHANNEL_KEY_SIZE])
 //*						: they are two different keys that cannot read
 //*						: each other. The phone apps normalise the same
 //*						: way, so this is what makes them interoperate
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 uint8_t mc_channels_add_by_name(const char *name)
 {
@@ -253,7 +253,7 @@ uint8_t mc_channels_add(const char *name, const uint8_t key[MC_CHANNEL_KEY_SIZE]
 //* Object              : drop a channel, addressed the way the UI knows
 //*						: it - by its on-air hash rather than a list
 //*						: position that shifts as things are removed
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 //*----------------------------------------------------------------------------
 //* Function Name       : mc_channel_is_default
@@ -372,7 +372,7 @@ MC_CONTACT *mc_contacts_find_by_hash(uint8_t hash)
 //* Object              : make room by dropping the stalest unsaved entry
 //* Notes    			: saved contacts are never evicted - the table
 //*						: only recycles nodes we just overheard
-//* Context    			: CONTEXT_LORA / CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_LORA / CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static MC_CONTACT *mc_contacts_evict(void)
 {
@@ -528,7 +528,7 @@ typedef struct
 //*						: a long while after every boot and ADD has
 //*						: nothing to work with. The saved flag is stored,
 //*						: so the two kinds stay distinguishable
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 uint8_t mc_contacts_save(void)
 {
@@ -539,7 +539,7 @@ uint8_t mc_contacts_save(void)
 
 	if(!mc_store_ok)
 	{
-		printf("meshchat: card not readable, refusing to overwrite contacts \r\n");
+		printf("meshcore: card not readable, refusing to overwrite contacts \r\n");
 		return 1;
 	}
 
@@ -553,12 +553,12 @@ uint8_t mc_contacts_save(void)
 		if(mc_contacts[i].in_use)
 			hdr.count++;
 
-	f_mkdir("0://meshchat");
+	f_mkdir("0://meshcore");
 
 	res = f_open(&mc_store_fil, MC_CONTACTS_FILE, FA_WRITE | FA_CREATE_ALWAYS);
 	if(res != FR_OK)
 	{
-		printf("meshchat: contacts save err(%d) \r\n", res);
+		printf("meshcore: contacts save err(%d) \r\n", res);
 		return 1;
 	}
 
@@ -592,7 +592,7 @@ static void mc_contacts_load(void)
 	if((hdr.magic != MC_STORE_MAGIC) || (hdr.version != MC_STORE_VERSION) ||
 	   (hdr.entry_size != sizeof(MC_CONTACT)))
 	{
-		printf("meshchat: contacts file version mismatch, ignoring \r\n");
+		printf("meshcore: contacts file version mismatch, ignoring \r\n");
 		f_close(&mc_store_fil);
 		return;
 	}
@@ -643,7 +643,7 @@ static void mc_contacts_load(void)
 			if((mc_contacts[n].in_use) && (mc_contacts[n].saved))
 				saved++;
 
-		printf("meshchat: %d contacts loaded (%d added) \r\n", (int)i, (int)saved);
+		printf("meshcore: %d contacts loaded (%d added) \r\n", (int)i, (int)saved);
 	}
 }
 
@@ -656,7 +656,7 @@ uint8_t mc_channels_save(void)
 
 	if(!mc_store_ok)
 	{
-		printf("meshchat: card not readable, refusing to overwrite channels \r\n");
+		printf("meshcore: card not readable, refusing to overwrite channels \r\n");
 		return 1;
 	}
 
@@ -667,12 +667,12 @@ uint8_t mc_channels_save(void)
 	hdr.entry_size	= sizeof(MC_CHANNEL);
 	hdr.count		= mc_channels_count();
 
-	f_mkdir("0://meshchat");
+	f_mkdir("0://meshcore");
 
 	res = f_open(&mc_store_fil, MC_CHANNELS_FILE, FA_WRITE | FA_CREATE_ALWAYS);
 	if(res != FR_OK)
 	{
-		printf("meshchat: channels save err(%d) \r\n", res);
+		printf("meshcore: channels save err(%d) \r\n", res);
 		return 1;
 	}
 
@@ -692,7 +692,7 @@ uint8_t mc_channels_save(void)
 //* Object              : read the keyring, or seed the defaults
 //* Notes    			: returns nonzero when nothing was loaded and the
 //*						: caller should install the built in channels
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static uint8_t mc_channels_load(void)
 {
@@ -743,7 +743,7 @@ static uint8_t mc_channels_load(void)
 		if((mc_name_is_public(rec.name)) &&
 		   (memcmp(rec.key, mc_key_public, MC_CHANNEL_KEY_SIZE) != 0))
 		{
-			printf("meshchat: channel '%s' had a derived key - default key restored \r\n",
+			printf("meshcore: channel '%s' had a derived key - default key restored \r\n",
 					rec.name);
 
 			mc_channels_add("public", mc_key_public);
@@ -751,7 +751,7 @@ static uint8_t mc_channels_load(void)
 		}
 		else if((mixed_case) && (memcmp(from_name, rec.key, MC_CHANNEL_KEY_SIZE) == 0))
 		{
-			printf("meshchat: channel '%s' re-keyed to lower case \r\n", rec.name);
+			printf("meshcore: channel '%s' re-keyed to lower case \r\n", rec.name);
 
 			mc_channels_add_by_name(rec.name);		// lowercases and re-derives
 			mc_chan_migrated = 1;
@@ -769,7 +769,7 @@ static uint8_t mc_channels_load(void)
 
 	f_close(&mc_store_fil);
 
-	printf("meshchat: %d channels loaded \r\n", (int)n);
+	printf("meshcore: %d channels loaded \r\n", (int)n);
 
 	return (n == 0) ? 1 : 0;
 }
@@ -780,7 +780,7 @@ static uint8_t mc_channels_load(void)
 //* Notes    			: a file that is simply absent still counts as a
 //*						: working card - what we are ruling out is the
 //*						: card being down altogether
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static uint8_t mc_store_probe(void)
 {
@@ -800,7 +800,7 @@ static uint8_t mc_store_probe(void)
 //*						: later work instead of needing a restart.
 //*						: Returns nonzero when the card has just been
 //*						: taken into use
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 uint8_t mc_store_recheck(void)
 {
@@ -812,7 +812,7 @@ uint8_t mc_store_recheck(void)
 
 	mc_store_ok = 1;
 
-	printf("meshchat: card detected, loading stores \r\n");
+	printf("meshcore: card detected, loading stores \r\n");
 
 	// Whatever the card holds wins for channels; if it holds none, the
 	// set we have been running on is written out
@@ -840,7 +840,7 @@ void mc_contacts_init(void)
 		// Run from defaults this boot, but never write them back - the
 		// card may hold channels and contacts the user added, and this
 		// is a card that did not come up, not a card that is empty
-		printf("meshchat: no card - running on defaults, nothing will be saved \r\n");
+		printf("meshcore: no card - running on defaults, nothing will be saved \r\n");
 
 		mc_channels_add("public", mc_key_public);
 		mc_channels_add_by_name("#test");

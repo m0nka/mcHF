@@ -13,10 +13,10 @@
 #include "mchf_pro_board.h"
 #include "main.h"
 
-#ifdef CONTEXT_MESHCHAT
+#ifdef CONTEXT_MESHCORE
 // Not pulled in by main.h - the meshcore headers carry <stdbool.h>,
 // which would collide with the project's own bool typedef everywhere
-#include "meshchat_proc.h"
+#include "meshcore_proc.h"
 #endif
 
 // Reserved FreeRTOS heap memory
@@ -761,17 +761,17 @@ static int start_proc(void)
     }
 	#endif
 
-	#ifdef CONTEXT_MESHCHAT
-    res = xTaskCreate(	(TaskFunction_t)meshchat_proc_task,\
-    					MESHCHAT_PROC_START_NAME,\
-						MESHCHAT_PROC_STACK_SIZE,\
+	#ifdef CONTEXT_MESHCORE
+    res = xTaskCreate(	(TaskFunction_t)meshcore_proc_task,\
+    					MESHCORE_PROC_START_NAME,\
+						MESHCORE_PROC_STACK_SIZE,\
 						NULL,\
-						MESHCHAT_PROC_PRIORITY,\
-						&(ps.hMeshchatTask));
+						MESHCORE_PROC_PRIORITY,\
+						&(ps.hMeshcoreTask));
 
     if(res != pdPASS)
     {
-    	printf("unable to create meshchat process\r\n");
+    	printf("unable to create meshcore process\r\n");
     	return 18;
     }
 	#endif

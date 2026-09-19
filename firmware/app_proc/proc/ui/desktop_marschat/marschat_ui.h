@@ -67,7 +67,7 @@
 // charset shows at once and a shift key pages between them: page 0 is the
 // 26 letters, page 1 is 0-9 plus the everyday punctuation.
 //
-// The keys are laid out QWERTY, same as the MeshChat screen - an
+// The keys are laid out QWERTY, same as the MeshCore screen - an
 // alphabetical grid packs tighter but is far slower to use, because the
 // eye has nowhere learned to look. QWERTY needs ten keys across the top
 // row (Q..P), so the three rows are 10, 9 and 7 characters wide and each

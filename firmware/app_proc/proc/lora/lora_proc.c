@@ -23,8 +23,8 @@
 #include "mc_client.h"
 #endif
 
-#ifdef CONTEXT_MESHCHAT
-#include "meshchat_proc.h"
+#ifdef CONTEXT_MESHCORE
+#include "meshcore_proc.h"
 #endif
 
 #include "lora_proc.h"
@@ -149,7 +149,7 @@ static void lora_proc_client_exec(xQueueHandle *RxQueue)
 {
 	//uchar  msg[256];
 	//ushort siz = 0;
-	#ifndef CONTEXT_MESHCHAT
+	#ifndef CONTEXT_MESHCORE
 	char   notif[300];	// enough size for description text added to message
 	#endif
 	ulong  ulData[10];
@@ -159,17 +159,17 @@ static void lora_proc_client_exec(xQueueHandle *RxQueue)
 	if(!radio_init_done)
 		return;
 
-	#ifdef CONTEXT_MESHCHAT
+	#ifdef CONTEXT_MESHCORE
 	// Anything the chat app has built goes out before we listen again.
 	// One packet per pass, so a full queue cannot lock the receiver out
 	{
 		static MC_TX_PACKET	tx_pkt;
 
-		if(meshchat_tx_dequeue(&tx_pkt) == 0)
+		if(meshcore_tx_dequeue(&tx_pkt) == 0)
 		{
 			uchar err = lora_radio_transmit(tx_pkt.data, tx_pkt.len);
 
-			printf("meshchat: tx %d bytes, type %d -> %s \r\n",
+			printf("meshcore: tx %d bytes, type %d -> %s \r\n",
 					(int)tx_pkt.len, (int)((tx_pkt.data[0] >> 2) & 0x0F),
 					err ? "FAILED" : "sent");
 		}
@@ -181,13 +181,13 @@ static void lora_proc_client_exec(xQueueHandle *RxQueue)
 	// Wait RX packet (radio layer)
 	lora_radio_rx_check(&lprx);
 
-	#ifdef CONTEXT_MESHCHAT
+	#ifdef CONTEXT_MESHCORE
 	// Hand the raw frame to the chat service and get straight back to
 	// listening. Decoding happens there - an Ed25519 advert check runs
 	// into the hundreds of ms and would cost us the next packet
 	if(lprx.raw_rx_size != 0)
 	{
-		meshchat_rx_packet(lprx.raw_rx_msg, lprx.raw_rx_size, lprx.snr_db);
+		meshcore_rx_packet(lprx.raw_rx_msg, lprx.raw_rx_size, lprx.snr_db);
 
 		// The chat task raises the on screen notification once it knows
 		// what the packet was

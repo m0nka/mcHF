@@ -5,7 +5,7 @@
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
-**  File name:		meshchat_ui.c                                                  **
+**  File name:		meshcore_ui.c                                                  **
 **  Description:	MeshCore chat dialog - channels, direct messages, contacts     **
 **  Licence:		https://github.com/m0nka/mcHF/blob/main/LICENSE                **
 ************************************************************************************/
@@ -21,7 +21,7 @@
 // left, the selected node's detail on the right, with ADD promoting it
 // to a real contact.
 //
-// The dialog owns no protocol state. It polls meshchat_revision() twice
+// The dialog owns no protocol state. It polls meshcore_revision() twice
 // a second and rebuilds only when the service says something moved
 //
 #include "mchf_pro_board.h"
@@ -41,9 +41,9 @@
 #include "advert.h"							// meshcore_device_role_t names
 #include "mc_identity.h"
 #include "mc_contacts.h"
-#include "meshchat_proc.h"
+#include "meshcore_proc.h"
 
-#include "meshchat_ui.h"
+#include "meshcore_ui.h"
 
 // UI driver public state
 extern struct	UI_DRIVER_STATE			ui_s;
@@ -131,7 +131,7 @@ static uint8_t	mx_filter = MX_FILT_CHAN;
 
 // The conversation currently selected in the chat view. Held by value,
 // not by index - the list can be rebuilt underneath us
-static MESHCHAT_CONV	mx_conv;
+static MESHCORE_CONV	mx_conv;
 static uint8_t			mx_conv_valid = 0;
 
 // Which conversation each row of the filtered left pane came from. Row
@@ -645,11 +645,11 @@ static int mx_list_add_wrapped(WM_HWIN hLb, const char *text, int width)
 //*----------------------------------------------------------------------------
 static void mx_build_conv_list(void)
 {
-	MESHCHAT_CONV	conv;
+	MESHCORE_CONV	conv;
 	char			label[48];
-	uint8_t			i, n = meshchat_conv_count();
+	uint8_t			i, n = meshcore_conv_count();
 	uint8_t			want = (mx_filter == MX_FILT_DM)
-							? MESHCHAT_CONV_DIRECT : MESHCHAT_CONV_CHANNEL;
+							? MESHCORE_CONV_DIRECT : MESHCORE_CONV_CHANNEL;
 	int				sel = -1;
 
 	mx_list_clear(hMxConvList);
@@ -658,7 +658,7 @@ static void mx_build_conv_list(void)
 
 	for(i = 0; i < n; i++)
 	{
-		if(meshchat_conv_at(i, &conv))
+		if(meshcore_conv_at(i, &conv))
 			continue;
 
 		// Only the kind this pane is showing
@@ -668,15 +668,15 @@ static void mx_build_conv_list(void)
 		if(mx_conv_rows >= MX_CONV_ROW_MAX)
 			break;
 
-		meshchat_conv_label(&conv, label, sizeof(label));
+		meshcore_conv_label(&conv, label, sizeof(label));
 
 		LISTBOX_AddString(hMxConvList, label);
 
 		// Keep the highlight on whatever was selected before the rebuild
 		if((mx_conv_valid) &&
 		   (conv.kind == mx_conv.kind) &&
-		   (((conv.kind == MESHCHAT_CONV_CHANNEL) && (conv.chan_hash == mx_conv.chan_hash)) ||
-		    ((conv.kind == MESHCHAT_CONV_DIRECT)  && (memcmp(conv.peer, mx_conv.peer, sizeof(conv.peer)) == 0))))
+		   (((conv.kind == MESHCORE_CONV_CHANNEL) && (conv.chan_hash == mx_conv.chan_hash)) ||
+		    ((conv.kind == MESHCORE_CONV_DIRECT)  && (memcmp(conv.peer, mx_conv.peer, sizeof(conv.peer)) == 0))))
 			sel = mx_conv_rows;
 
 		mx_conv_row[mx_conv_rows++] = i;
@@ -687,7 +687,7 @@ static void mx_build_conv_list(void)
 	// conversation open on the right, which is better than blanking it
 	if((sel < 0) && (mx_conv_rows > 0))
 	{
-		if(meshchat_conv_at(mx_conv_row[0], &mx_conv) == 0)
+		if(meshcore_conv_at(mx_conv_row[0], &mx_conv) == 0)
 		{
 			mx_conv_valid = 1;
 			sel = 0;
@@ -719,13 +719,13 @@ static void mx_build_msg_list(void)
 	// Whatever is on screen has been seen - drop its activity badge.
 	// Done before the rows are built so the count the conversation list
 	// draws in the same pass is already clear
-	meshchat_mark_read(&mx_conv);
+	meshcore_mark_read(&mx_conv);
 
-	n = meshchat_msg_count(&mx_conv);
+	n = meshcore_msg_count(&mx_conv);
 
 	for(i = 0; i < n; i++)
 	{
-		const MESHCHAT_MSG	*m = meshchat_msg_at(&mx_conv, i);
+		const MESHCORE_MSG	*m = meshcore_msg_at(&mx_conv, i);
 
 		if(m == NULL)
 			continue;
@@ -733,14 +733,14 @@ static void mx_build_msg_list(void)
 		// Colour class for every row this message produces
 		cls = MX_LINE_NORMAL;
 
-		if(m->dir == MESHCHAT_DIR_INFO)
+		if(m->dir == MESHCORE_DIR_INFO)
 			cls = MX_LINE_INFO;
-		else if(m->dir == MESHCHAT_DIR_TX)
+		else if(m->dir == MESHCORE_DIR_TX)
 			cls = m->delivered ? MX_LINE_OK : (m->ack_wait ? MX_LINE_WAIT : MX_LINE_NORMAL);
 
 		switch(m->dir)
 		{
-			case MESHCHAT_DIR_TX:
+			case MESHCORE_DIR_TX:
 				// Every outgoing line reads the same. Whether it has been
 				// acknowledged is carried by the colour alone - a marker
 				// in front of the text pushes the message about as the
@@ -749,12 +749,12 @@ static void mx_build_msg_list(void)
 				snprintf(line, sizeof(line), "%s  >> %s", m->time, m->text);
 				break;
 
-			case MESHCHAT_DIR_INFO:
+			case MESHCORE_DIR_INFO:
 				snprintf(line, sizeof(line), "%s  -- %s", m->time, m->text);
 				break;
 
 			default:
-				if(mx_conv.kind == MESHCHAT_CONV_CHANNEL)
+				if(mx_conv.kind == MESHCORE_CONV_CHANNEL)
 					snprintf(line, sizeof(line), "%s  %s: %s", m->time, m->sender, m->text);
 				else
 					snprintf(line, sizeof(line), "%s  << %s", m->time, m->text);
@@ -930,7 +930,7 @@ static void mx_rebuild(void)
 		// Clear the open conversation's badge before the list is drawn,
 		// or the row would show a count for messages already on screen
 		if(mx_conv_valid)
-			meshchat_mark_read(&mx_conv);
+			meshcore_mark_read(&mx_conv);
 
 		mx_build_conv_list();
 		mx_build_msg_list();
@@ -967,7 +967,7 @@ static void mx_paint_title(void)
 	GUI_SetFont(&GUI_Font24B_1);
 
 	// The screen is named for the protocol it is speaking, even though
-	// the app and its sources stay MeshChat - that name has to cover
+	// the app and its sources stay MeshCore - that name has to cover
 	// Meshtastic later
 	GUI_SetColor(GUI_WHITE);
 	GUI_DispStringAt("MESHCORE", 8, 4);
@@ -980,10 +980,10 @@ static void mx_paint_title(void)
 	{
 		char	name[MX_TITLE_NAME_MAX + 1];
 
-		strncpy(name, meshchat_node_name(), MX_TITLE_NAME_MAX);
+		strncpy(name, meshcore_node_name(), MX_TITLE_NAME_MAX);
 		name[MX_TITLE_NAME_MAX] = 0;
 
-		snprintf(buf, sizeof(buf), "%s [%02X]", name, meshchat_node_hash());
+		snprintf(buf, sizeof(buf), "%s [%02X]", name, meshcore_node_hash());
 		GUI_DispStringAt(buf, MX_TITLE_NAME_X, 7);
 	}
 
@@ -1056,14 +1056,14 @@ static void mx_paint_status(void)
 	GUI_SetFont(&GUI_Font20B_1);
 	GUI_SetColor(MX_PANE_TX);
 
-	if(!meshchat_ready())
+	if(!meshcore_ready())
 	{
-		if(meshchat_state() == MESHCHAT_STATE_WAIT_SD)
+		if(meshcore_state() == MESHCORE_STATE_WAIT_SD)
 		{
 			// Say what it is waiting for and for how much longer - this
 			// is ten seconds on a radio with no card in it
 			snprintf(buf, sizeof(buf), "looking for the SD card... %us",
-					 (unsigned int)meshchat_sd_wait_left());
+					 (unsigned int)meshcore_sd_wait_left());
 			GUI_DispStringAt(buf, MX_STAT_X + 12, y);
 
 			GUI_SetFont(&GUI_Font16B_1);
@@ -1072,7 +1072,7 @@ static void mx_paint_status(void)
 							 MX_STAT_X + 12, y + 26);
 		}
 		else
-			GUI_DispStringAt("meshchat service starting...", MX_STAT_X + 12, y);
+			GUI_DispStringAt("meshcore service starting...", MX_STAT_X + 12, y);
 
 		return;
 	}
@@ -1114,15 +1114,15 @@ static void mx_paint_status(void)
 	// What came back of the last transmission. On a quiet mesh this is
 	// the only thing that tells you the signal is getting out at all
 	{
-		MESHCHAT_ECHO	echo;
+		MESHCORE_ECHO	echo;
 
-		if(meshchat_tx_pending())
+		if(meshcore_tx_pending())
 		{
 			GUI_SetColor(MX_PANE_TX);
 			snprintf(buf, sizeof(buf), "tx: %d packet(s) waiting for the modem",
-					 (int)meshchat_tx_pending());
+					 (int)meshcore_tx_pending());
 		}
-		else if(meshchat_last_echo(&echo))
+		else if(meshcore_last_echo(&echo))
 		{
 			unsigned int	age = (unsigned int)((xTaskGetTickCount() - echo.tick) /
 												 configTICK_RATE_HZ);
@@ -1208,7 +1208,7 @@ static void mx_do_send(void)
 	if((mx_compose_len == 0) || (!mx_conv_valid))
 		return;
 
-	if(meshchat_send_text(&mx_conv, mx_compose) != 0)
+	if(meshcore_send_text(&mx_conv, mx_compose) != 0)
 		return;									// queue full, keep the draft
 
 	mx_compose_len	= 0;
@@ -1293,7 +1293,7 @@ static void mx_on_button(int id, int ncode)
 		}
 
 		case ID_MX_ADVERT:
-			meshchat_send_advert();
+			meshcore_send_advert();
 			break;
 
 		case ID_MX_DELCHAN:
@@ -1308,7 +1308,7 @@ static void mx_on_button(int id, int ncode)
 			// Same button, the other list: forget the person instead.
 			// The conversation holds the leading bytes of their key, so
 			// the contact it names has to be looked back up by them
-			if(mx_conv.kind == MESHCHAT_CONV_DIRECT)
+			if(mx_conv.kind == MESHCORE_CONV_DIRECT)
 			{
 				uint8_t	i;
 
@@ -1322,7 +1322,7 @@ static void mx_on_button(int id, int ncode)
 					if(memcmp(c->pub_key, mx_conv.peer, sizeof(mx_conv.peer)) != 0)
 						continue;
 
-					meshchat_forget_contact(i);
+					meshcore_forget_contact(i);
 
 					mx_conv_valid	 = 0;	// it is going away, pick another
 					mx_seen_revision = 0xFFFFFFFF;
@@ -1332,9 +1332,9 @@ static void mx_on_button(int id, int ncode)
 				break;
 			}
 
-			if(mx_conv.kind != MESHCHAT_CONV_CHANNEL)
+			if(mx_conv.kind != MESHCORE_CONV_CHANNEL)
 			{
-				printf("meshchat: Del - pick a channel, not a contact \r\n");
+				printf("meshcore: Del - pick a channel, not a contact \r\n");
 				break;
 			}
 
@@ -1346,7 +1346,7 @@ static void mx_on_button(int id, int ncode)
 				MC_CHANNEL	*ch = mc_channels_find_by_hash(mx_conv.chan_hash);
 				uint8_t		keep = mc_channel_is_default(ch);
 
-				if(meshchat_remove_channel(&mx_conv) == 0)
+				if(meshcore_remove_channel(&mx_conv) == 0)
 				{
 					if(!keep)
 						mx_conv_valid = 0;	// it is going away, pick another
@@ -1368,7 +1368,7 @@ static void mx_on_button(int id, int ncode)
 		//*------------------------------------------------------------
 		case ID_MX_REPLY:
 		{
-			const MESHCHAT_MSG	*m;
+			const MESHCORE_MSG	*m;
 			int					row = LISTBOX_GetSel(hMxMsgList);
 			int					i;
 
@@ -1378,12 +1378,12 @@ static void mx_on_button(int id, int ncode)
 			if((row < 0) || (row >= (int)mx_row_count))
 				break;
 
-			m = meshchat_msg_at(&mx_conv, mx_row_msg[row]);
+			m = meshcore_msg_at(&mx_conv, mx_row_msg[row]);
 
 			// Only an incoming message from a named sender is worth
 			// quoting - replying to our own, or to a local notice, is
 			// not a thing
-			if((m == NULL) || (m->dir != MESHCHAT_DIR_RX) || (m->sender[0] == 0))
+			if((m == NULL) || (m->dir != MESHCORE_DIR_RX) || (m->sender[0] == 0))
 				break;
 
 			mx_compose_len	= 0;
@@ -1391,7 +1391,7 @@ static void mx_on_button(int id, int ncode)
 
 			// Direct messages already have exactly one other party, so
 			// the quote would be noise - just open the keyboard
-			if(mx_conv.kind == MESHCHAT_CONV_CHANNEL)
+			if(mx_conv.kind == MESHCORE_CONV_CHANNEL)
 			{
 				mx_compose_append('@');
 				mx_compose_append('[');
@@ -1428,11 +1428,11 @@ static void mx_on_button(int id, int ncode)
 			// follows from the name, so there is no key to type in
 			if(mx_compose_len == 0)
 			{
-				printf("meshchat: Add - type a channel name first, e.g. #uk \r\n");
+				printf("meshcore: Add - type a channel name first, e.g. #uk \r\n");
 				break;
 			}
 
-			if(meshchat_add_channel(mx_compose) == 0)
+			if(meshcore_add_channel(mx_compose) == 0)
 			{
 				mx_compose_len	 = 0;
 				mx_compose[0]	 = 0;
@@ -1471,11 +1471,11 @@ static void mx_on_button(int id, int ncode)
 			// a public key
 			if((mx_view != MX_VIEW_CONTACTS) || (sel < 0) || (mc_contacts_count() == 0))
 			{
-				printf("meshchat: ADD - nothing heard yet, press ADVERT and wait \r\n");
+				printf("meshcore: ADD - nothing heard yet, press ADVERT and wait \r\n");
 				break;
 			}
 
-			meshchat_add_contact((uint8_t)sel);
+			meshcore_add_contact((uint8_t)sel);
 			mx_seen_revision = 0xFFFFFFFF;
 			break;
 		}
@@ -1486,7 +1486,7 @@ static void mx_on_button(int id, int ncode)
 
 			if((mx_view == MX_VIEW_CONTACTS) && (sel >= 0) && (mc_contacts_count() > 0))
 			{
-				meshchat_forget_contact((uint8_t)sel);
+				meshcore_forget_contact((uint8_t)sel);
 				mx_seen_revision = 0xFFFFFFFF;
 			}
 			break;
@@ -1532,7 +1532,7 @@ static void mx_on_select(void)
 	if(sel >= (int)mx_conv_rows)
 		return;
 
-	if(meshchat_conv_at(mx_conv_row[sel], &mx_conv) == 0)
+	if(meshcore_conv_at(mx_conv_row[sel], &mx_conv) == 0)
 	{
 		mx_conv_valid = 1;
 
@@ -1726,11 +1726,11 @@ static void _cbDialog(WM_MESSAGE *pMsg)
 			#ifdef MX_DEBUG_GUI_MEM
 			// Every window this screen owns, so the handle in a fault
 			// dump can be named instead of guessed at
-			printf("meshchat ui: dlg %d kb %d conv %d msg %d shift %d key0 %d \r\n",
+			printf("meshcore ui: dlg %d kb %d conv %d msg %d shift %d key0 %d \r\n",
 					(int)hMxDialog, (int)hMxKeyboard, (int)hMxConvList,
 					(int)hMxMsgList, (int)hMxShiftKey, (int)hMxCharKeys[0]);
 
-			printf("meshchat ui: type %d reply %d send %d chan %d cont %d adv %d \r\n",
+			printf("meshcore ui: type %d reply %d send %d chan %d cont %d adv %d \r\n",
 					(int)WM_GetDialogItem(pMsg->hWin, ID_MX_TYPE),
 					(int)WM_GetDialogItem(pMsg->hWin, ID_MX_REPLY),
 					(int)WM_GetDialogItem(pMsg->hWin, ID_MX_SEND),
@@ -1759,7 +1759,7 @@ static void _cbDialog(WM_MESSAGE *pMsg)
 
 		case WM_TIMER:
 		{
-			uint32_t	rev = meshchat_revision();
+			uint32_t	rev = meshcore_revision();
 			int			sel = LISTBOX_GetSel(hMxConvList);
 
 			if((rev != mx_seen_revision) || (mx_view != mx_seen_view) || (sel != mx_seen_conv))
@@ -1793,7 +1793,7 @@ static void _cbDialog(WM_MESSAGE *pMsg)
 				{
 					tick = 0;
 
-					printf("meshchat ui: gui free %d, conv %d, msg %d \r\n",
+					printf("meshcore ui: gui free %d, conv %d, msg %d \r\n",
 							(int)GUI_ALLOC_GetNumFreeBytes(),
 							(int)LISTBOX_GetNumItems(hMxConvList),
 							(int)LISTBOX_GetNumItems(hMxMsgList));
@@ -1895,12 +1895,12 @@ static void _cbBkWindow(WM_MESSAGE *pMsg)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : meshchat_ui_create
+//* Function Name       : meshcore_ui_create
 //* Object              : bring the screen up, called by the UI mode
 //*						: switch on entry to MODE_DESKTOP_MESHCORE
 //* Context    			: CONTEXT_VIDEO (gui task)
 //*----------------------------------------------------------------------------
-void meshchat_ui_create(void)
+void meshcore_ui_create(void)
 {
 	// The menu leaves the default window background at GUI_WHITE and it
 	// is a sticky global, so set what this screen wants every time
@@ -1912,12 +1912,12 @@ void meshchat_ui_create(void)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : meshchat_ui_destroy
+//* Function Name       : meshcore_ui_destroy
 //* Object              : tear it down on the way back to the desktop.
 //*						: Safe to call when it was never up
 //* Context    			: CONTEXT_VIDEO (gui task)
 //*----------------------------------------------------------------------------
-void meshchat_ui_destroy(void)
+void meshcore_ui_destroy(void)
 {
 	if(hMxDialog)
 	{

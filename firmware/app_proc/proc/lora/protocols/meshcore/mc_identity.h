@@ -27,7 +27,7 @@
 
 #define MC_NAME_MAX				32
 
-#define MC_IDENTITY_FILE		"0://meshchat/node.key"
+#define MC_IDENTITY_FILE		"0://meshcore/node.key"
 
 // Mirror of the key in the RTC backup registers. The SD card is the
 // authoritative copy - portable, and what the user can back up - but the

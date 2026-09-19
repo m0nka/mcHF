@@ -49,9 +49,9 @@
 #include "marschat_proc.h"
 #endif
 
-#ifdef CONTEXT_MESHCHAT
-#include "desktop_meshchat\meshchat_ui.h"
-#include "meshchat_proc.h"
+#ifdef CONTEXT_MESHCORE
+#include "desktop_meshcore\meshcore_ui.h"
+#include "meshcore_proc.h"
 #endif
 // -----------------------------------------------------------------------------------------------
 // Menu Mode
@@ -827,11 +827,11 @@ static void ui_proc_change_mode(void)
 			break;
 		}
 #endif
-#ifdef CONTEXT_MESHCHAT
-		// Switch to MeshChat mode
+#ifdef CONTEXT_MESHCORE
+		// Switch to MeshCore mode
 		case MODE_DESKTOP_MESHCORE:
 		{
-			printf("Entering MeshChat mode...\r\n");
+			printf("Entering MeshCore mode...\r\n");
 
 			// No VFO handling here, unlike MarsChat - this app lives on
 			// the LoRa modem and leaves the HF side alone
@@ -865,7 +865,7 @@ static void ui_proc_change_mode(void)
 			GUI_Clear();
 
 			// Show the chat screen
-			meshchat_ui_create();
+			meshcore_ui_create();
 
 			// Initial paint
 			GUI_Exec();
@@ -905,11 +905,11 @@ static void ui_proc_change_mode(void)
 			//ui_side_enc_menu_destroy();
 			ui_desktop_ft8_destroy();
 			//ui_quick_log_destroy();
-			#ifdef CONTEXT_MESHCHAT
-			// Nothing to wind down on the radio side - the meshchat
+			#ifdef CONTEXT_MESHCORE
+			// Nothing to wind down on the radio side - the meshcore
 			// service keeps running with the screen closed, and the
 			// LoRa modem is not tied to the HF VFO
-			meshchat_ui_destroy();
+			meshcore_ui_destroy();
 			#endif
 			#ifdef CONTEXT_MARSCHAT
 			marschat_ui_destroy();
@@ -1366,7 +1366,7 @@ ui_proc_loop:
 	else if(ui_s.cur_state == MODE_DESKTOP_MARSCHAT)
 		del_ms = (UI_PROC_SLEEP_TIME*2);
 	#endif
-	#ifdef CONTEXT_MESHCHAT
+	#ifdef CONTEXT_MESHCORE
 	else if(ui_s.cur_state == MODE_DESKTOP_MESHCORE)
 		del_ms = (UI_PROC_SLEEP_TIME*2);
 	#endif

@@ -27,7 +27,7 @@
 // skin callback while the framework keeps the hit testing. In
 // particular the decode lists are NOT emWin LISTBOXes: the MarsChat
 // history pane established that hand painting is both faster and free
-// of the WM__Paint fault class the MeshChat listbox still suffers from.
+// of the WM__Paint fault class the MeshCore listbox still suffers from.
 //
 // Repaints are scoped: the clock and the slot countdown tick twice a
 // second and live in their own child windows, so the decode lists below

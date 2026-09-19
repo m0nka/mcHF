@@ -5,14 +5,14 @@
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
-**  File name:		meshchat_proc.c                                                **
+**  File name:		meshcore_proc.c                                                **
 **  Description:	MeshCore chat service - conversations, contacts, tx queue      **
 **  Licence:		https://github.com/m0nka/mcHF/blob/main/LICENSE                **
 ************************************************************************************/
 #include "main.h"
 #include "mchf_pro_board.h"
 
-#ifdef CONTEXT_MESHCHAT
+#ifdef CONTEXT_MESHCORE
 
 #include <string.h>
 
@@ -26,7 +26,7 @@
 #include "mc_tx.h"
 #include "lora_radio.h"
 
-#include "meshchat_proc.h"
+#include "meshcore_proc.h"
 
 // FreeRTOS process state
 extern struct PROC_STATE		ps;
@@ -43,36 +43,36 @@ typedef struct
 	uint16_t	size;
 	int8_t		snr;
 
-} MESHCHAT_RX_RAW;
+} MESHCORE_RX_RAW;
 
 // Work posted by the gui task
-#define MESHCHAT_REQ_SEND		1
-#define MESHCHAT_REQ_ADVERT		2
-#define MESHCHAT_REQ_ADD		3
-#define MESHCHAT_REQ_FORGET		4
-#define MESHCHAT_REQ_ADD_CHAN	5
-#define MESHCHAT_REQ_DEL_CHAN	6
+#define MESHCORE_REQ_SEND		1
+#define MESHCORE_REQ_ADVERT		2
+#define MESHCORE_REQ_ADD		3
+#define MESHCORE_REQ_FORGET		4
+#define MESHCORE_REQ_ADD_CHAN	5
+#define MESHCORE_REQ_DEL_CHAN	6
 
 typedef struct
 {
 	uint8_t			kind;
 	uint8_t			arg;						// contact index, for add/forget
-	MESHCHAT_CONV	conv;
-	char			text[MESHCHAT_TEXT_MAX];
+	MESHCORE_CONV	conv;
+	char			text[MESHCORE_TEXT_MAX];
 
-} MESHCHAT_REQ;
+} MESHCORE_REQ;
 
 static xQueueHandle		mc_rx_q;
 static xQueueHandle		mc_tx_q;
 static xQueueHandle		mc_req_q;
 
-static MESHCHAT_MSG		mc_msgs[MESHCHAT_MSG_MAX];
+static MESHCORE_MSG		mc_msgs[MESHCORE_MSG_MAX];
 static uint8_t			mc_msg_head;			// next slot to write
 static uint8_t			mc_msg_used;
 
 static volatile uint32_t	mc_revision;
 static volatile uint8_t		mc_started;
-static volatile uint8_t		mc_state;			// MESHCHAT_STATE_xxx
+static volatile uint8_t		mc_state;			// MESHCORE_STATE_xxx
 static volatile uint8_t		mc_sd_waited;		// half seconds spent waiting for a card
 
 // When the card was last looked for again, while running without one
@@ -81,7 +81,7 @@ static uint32_t				mc_store_poll_tick;
 static uint8_t			mc_queue_tx(const MC_TX_PACKET *pkt);
 
 // Scratch owned by this task - none of it is touched anywhere else
-static MESHCHAT_RX_RAW	mc_raw;
+static MESHCORE_RX_RAW	mc_raw;
 static MC_RX_EVENT		mc_ev;
 static MC_TX_PACKET		mc_pkt;
 
@@ -99,7 +99,7 @@ static MC_TX_PACKET		mc_pkt;
 // The same fingerprints are what lets us drop the duplicate copies of
 // other people's messages that arrive via different repeaters
 
-static MESHCHAT_ECHO	mc_echo[MESHCHAT_ECHO_MAX];
+static MESHCORE_ECHO	mc_echo[MESHCORE_ECHO_MAX];
 static uint8_t			mc_echo_head;
 static uint8_t			mc_echo_last = 0xFF;	// most recent transmission
 
@@ -108,21 +108,21 @@ static uint8_t			mc_echo_last = 0xFF;	// most recent transmission
 // Where packets go once the modem has handed them over. Counted so a
 // mesh that looks lossy can be told apart from one we are throwing away
 // ourselves - the two need completely different fixes
-static MESHCHAT_STAT	mc_stat;
+static MESHCORE_STAT	mc_stat;
 
-static uint32_t			mc_seen_fp[MESHCHAT_SEEN_MAX];
+static uint32_t			mc_seen_fp[MESHCORE_SEEN_MAX];
 static uint8_t			mc_seen_head;
 
 //*----------------------------------------------------------------------------
 //* Function Name       : mc_echo_track
 //* Object              : remember a payload we have just sent
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static void mc_echo_track(uint32_t fp)
 {
-	MESHCHAT_ECHO	*e = &mc_echo[mc_echo_head];
+	MESHCORE_ECHO	*e = &mc_echo[mc_echo_head];
 
-	memset(e, 0, sizeof(MESHCHAT_ECHO));
+	memset(e, 0, sizeof(MESHCORE_ECHO));
 
 	e->fp		= fp;
 	e->in_use	= 1;
@@ -130,7 +130,7 @@ static void mc_echo_track(uint32_t fp)
 	e->tick		= (uint32_t)xTaskGetTickCount();
 
 	mc_echo_last = mc_echo_head;
-	mc_echo_head = (uint8_t)((mc_echo_head + 1) % MESHCHAT_ECHO_MAX);
+	mc_echo_head = (uint8_t)((mc_echo_head + 1) % MESHCORE_ECHO_MAX);
 
 	mc_revision++;
 }
@@ -139,15 +139,15 @@ static void mc_echo_track(uint32_t fp)
 //* Function Name       : mc_echo_match
 //* Object              : is this one of ours coming back ?
 //* Notes    			: returns nonzero when it was, having counted it
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static uint8_t mc_echo_match(const MC_RX_EVENT *ev)
 {
 	uint8_t	i;
 
-	for(i = 0; i < MESHCHAT_ECHO_MAX; i++)
+	for(i = 0; i < MESHCORE_ECHO_MAX; i++)
 	{
-		MESHCHAT_ECHO	*e = &mc_echo[i];
+		MESHCORE_ECHO	*e = &mc_echo[i];
 
 		if((!e->in_use) || (e->fp != ev->payload_fp))
 			continue;
@@ -162,7 +162,7 @@ static uint8_t mc_echo_match(const MC_RX_EVENT *ev)
 
 		mc_revision++;
 
-		printf("meshchat: heard own message repeated, %d hop(s), snr %d, %d total \r\n",
+		printf("meshcore: heard own message repeated, %d hop(s), snr %d, %d total \r\n",
 				(int)ev->path_len, (int)ev->snr, (int)e->repeats);
 
 		return 1;
@@ -175,7 +175,7 @@ static uint8_t mc_echo_match(const MC_RX_EVENT *ev)
 //* Function Name       : mc_seen_check
 //* Object              : have we already handled this payload ?
 //* Notes    			: records it either way
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static uint8_t mc_seen_check(uint32_t fp)
 {
@@ -184,19 +184,19 @@ static uint8_t mc_seen_check(uint32_t fp)
 	if(fp == 0)
 		return 0;
 
-	for(i = 0; i < MESHCHAT_SEEN_MAX; i++)
+	for(i = 0; i < MESHCORE_SEEN_MAX; i++)
 		if(mc_seen_fp[i] == fp)
 			return 1;
 
 	mc_seen_fp[mc_seen_head] = fp;
-	mc_seen_head = (uint8_t)((mc_seen_head + 1) % MESHCHAT_SEEN_MAX);
+	mc_seen_head = (uint8_t)((mc_seen_head + 1) % MESHCORE_SEEN_MAX);
 
 	return 0;
 }
 
-uint8_t meshchat_last_echo(MESHCHAT_ECHO *out)
+uint8_t meshcore_last_echo(MESHCORE_ECHO *out)
 {
-	if((out == NULL) || (mc_echo_last >= MESHCHAT_ECHO_MAX))
+	if((out == NULL) || (mc_echo_last >= MESHCORE_ECHO_MAX))
 		return 0;
 
 	if(!mc_echo[mc_echo_last].in_use)
@@ -215,7 +215,7 @@ uint8_t meshchat_last_echo(MESHCHAT_ECHO *out)
 //*						: discard the message - so this is only as good
 //*						: as the clock. See the GPS calibration work for
 //*						: how the RTC is disciplined on this radio
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static uint32_t mc_now_epoch(void)
 {
@@ -244,34 +244,34 @@ static uint32_t mc_now_epoch(void)
 	return (uint32_t)(days * 86400 + tm.Hours * 3600 + tm.Minutes * 60 + tm.Seconds);
 }
 
-uint32_t meshchat_revision(void)
+uint32_t meshcore_revision(void)
 {
 	return mc_revision;
 }
 
-uint8_t meshchat_ready(void)
+uint8_t meshcore_ready(void)
 {
 	return mc_started;
 }
 
-uint8_t meshchat_state(void)
+uint8_t meshcore_state(void)
 {
 	return mc_state;
 }
 
 // Seconds still to go on the startup card wait, 0 once it is over
-uint8_t meshchat_sd_wait_left(void)
+uint8_t meshcore_sd_wait_left(void)
 {
-	if(mc_state != MESHCHAT_STATE_WAIT_SD)
+	if(mc_state != MESHCORE_STATE_WAIT_SD)
 		return 0;
 
-	if(mc_sd_waited >= MESHCHAT_SD_WAIT_TRIES)
+	if(mc_sd_waited >= MESHCORE_SD_WAIT_TRIES)
 		return 0;
 
-	return (uint8_t)(((MESHCHAT_SD_WAIT_TRIES - mc_sd_waited) * MESHCHAT_SD_WAIT_MS) / 1000);
+	return (uint8_t)(((MESHCORE_SD_WAIT_TRIES - mc_sd_waited) * MESHCORE_SD_WAIT_MS) / 1000);
 }
 
-uint8_t meshchat_tx_pending(void)
+uint8_t meshcore_tx_pending(void)
 {
 	if(mc_tx_q == NULL)
 		return 0;
@@ -279,12 +279,12 @@ uint8_t meshchat_tx_pending(void)
 	return (uint8_t)uxQueueMessagesWaiting(mc_tx_q);
 }
 
-const char *meshchat_node_name(void)
+const char *meshcore_node_name(void)
 {
 	return mc_identity_get()->name;
 }
 
-uint8_t meshchat_node_hash(void)
+uint8_t meshcore_node_hash(void)
 {
 	return mc_identity_hash();
 }
@@ -292,41 +292,41 @@ uint8_t meshchat_node_hash(void)
 // ---------------------------------------------------------------------
 // Conversation helpers
 
-static uint8_t mc_conv_same(const MESHCHAT_CONV *a, const MESHCHAT_CONV *b)
+static uint8_t mc_conv_same(const MESHCORE_CONV *a, const MESHCORE_CONV *b)
 {
 	if(a->kind != b->kind)
 		return 0;
 
-	if(a->kind == MESHCHAT_CONV_CHANNEL)
+	if(a->kind == MESHCORE_CONV_CHANNEL)
 		return (a->chan_hash == b->chan_hash) ? 1 : 0;
 
 	return (memcmp(a->peer, b->peer, sizeof(a->peer)) == 0) ? 1 : 0;
 }
 
-static void mc_conv_from_contact(MESHCHAT_CONV *out, const MC_CONTACT *c)
+static void mc_conv_from_contact(MESHCORE_CONV *out, const MC_CONTACT *c)
 {
 	memset(out, 0, sizeof(*out));
 
-	out->kind = MESHCHAT_CONV_DIRECT;
+	out->kind = MESHCORE_CONV_DIRECT;
 	memcpy(out->peer, c->pub_key, sizeof(out->peer));
 }
 
-static void mc_conv_from_channel(MESHCHAT_CONV *out, uint8_t hash)
+static void mc_conv_from_channel(MESHCORE_CONV *out, uint8_t hash)
 {
 	memset(out, 0, sizeof(*out));
 
-	out->kind		= MESHCHAT_CONV_CHANNEL;
+	out->kind		= MESHCORE_CONV_CHANNEL;
 	out->chan_hash	= hash;
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : meshchat_conv_count / _at
+//* Function Name       : meshcore_conv_count / _at
 //* Object              : the conversation list the dialog shows - every
 //*						: channel we hold a key for, then every saved
 //*						: contact
 //* Context    			: CONTEXT_VIDEO (gui task)
 //*----------------------------------------------------------------------------
-uint8_t meshchat_conv_count(void)
+uint8_t meshcore_conv_count(void)
 {
 	uint8_t	i, n = mc_channels_count();
 
@@ -341,7 +341,7 @@ uint8_t meshchat_conv_count(void)
 	return n;
 }
 
-uint8_t meshchat_conv_at(uint8_t idx, MESHCHAT_CONV *out)
+uint8_t meshcore_conv_at(uint8_t idx, MESHCORE_CONV *out)
 {
 	uint8_t	nch = mc_channels_count();
 	uint8_t	i, n;
@@ -387,11 +387,11 @@ uint8_t meshchat_conv_at(uint8_t idx, MESHCHAT_CONV *out)
 //* Object              : the contact a direct conversation points at
 //* Context    			: any
 //*----------------------------------------------------------------------------
-static MC_CONTACT *mc_conv_contact(const MESHCHAT_CONV *conv)
+static MC_CONTACT *mc_conv_contact(const MESHCORE_CONV *conv)
 {
 	uint8_t	i;
 
-	if(conv->kind != MESHCHAT_CONV_DIRECT)
+	if(conv->kind != MESHCORE_CONV_DIRECT)
 		return NULL;
 
 	for(i = 0; i < mc_contacts_count(); i++)
@@ -405,12 +405,12 @@ static MC_CONTACT *mc_conv_contact(const MESHCHAT_CONV *conv)
 	return NULL;
 }
 
-uint16_t meshchat_unread(const MESHCHAT_CONV *conv)
+uint16_t meshcore_unread(const MESHCORE_CONV *conv)
 {
 	if(conv == NULL)
 		return 0;
 
-	if(conv->kind == MESHCHAT_CONV_CHANNEL)
+	if(conv->kind == MESHCORE_CONV_CHANNEL)
 	{
 		MC_CHANNEL	*ch = mc_channels_find_by_hash(conv->chan_hash);
 
@@ -424,12 +424,12 @@ uint16_t meshchat_unread(const MESHCHAT_CONV *conv)
 	}
 }
 
-void meshchat_mark_read(const MESHCHAT_CONV *conv)
+void meshcore_mark_read(const MESHCORE_CONV *conv)
 {
 	if(conv == NULL)
 		return;
 
-	if(conv->kind == MESHCHAT_CONV_CHANNEL)
+	if(conv->kind == MESHCORE_CONV_CHANNEL)
 	{
 		MC_CHANNEL	*ch = mc_channels_find_by_hash(conv->chan_hash);
 
@@ -454,13 +454,13 @@ void meshchat_mark_read(const MESHCHAT_CONV *conv)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : meshchat_conv_label
+//* Function Name       : meshcore_conv_label
 //* Object              : one row of the conversation list, with the
 //*						: activity count when the conversation has
 //*						: anything unread
 //* Context    			: CONTEXT_VIDEO (gui task)
 //*----------------------------------------------------------------------------
-void meshchat_conv_label(const MESHCHAT_CONV *conv, char *buf, uint16_t len)
+void meshcore_conv_label(const MESHCORE_CONV *conv, char *buf, uint16_t len)
 {
 	uint16_t	unread;
 	char		tail[12];
@@ -470,14 +470,14 @@ void meshchat_conv_label(const MESHCHAT_CONV *conv, char *buf, uint16_t len)
 
 	*buf = 0;
 
-	unread = meshchat_unread(conv);
+	unread = meshcore_unread(conv);
 
 	if(unread)
 		snprintf(tail, sizeof(tail), "  (%u)", (unsigned int)unread);
 	else
 		tail[0] = 0;
 
-	if(conv->kind == MESHCHAT_CONV_CHANNEL)
+	if(conv->kind == MESHCORE_CONV_CHANNEL)
 	{
 		MC_CHANNEL	*ch = mc_channels_find_by_hash(conv->chan_hash);
 
@@ -507,19 +507,19 @@ void meshchat_conv_label(const MESHCHAT_CONV *conv, char *buf, uint16_t len)
 //*----------------------------------------------------------------------------
 //* Function Name       : mc_history_add
 //* Object              : append to the shared ring, oldest falls off
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
-static void mc_history_add(const MESHCHAT_CONV *conv, uint8_t dir,
+static void mc_history_add(const MESHCORE_CONV *conv, uint8_t dir,
 						   const char *sender, const char *text, int8_t snr)
 {
 	RTC_TimeTypeDef	tm = {0};
 	RTC_DateTypeDef	dt = {0};
-	MESHCHAT_MSG	*m = &mc_msgs[mc_msg_head];
+	MESHCORE_MSG	*m = &mc_msgs[mc_msg_head];
 
 	k_GetTime(&tm);
 	k_GetDate(&dt);
 
-	memset(m, 0, sizeof(MESHCHAT_MSG));
+	memset(m, 0, sizeof(MESHCORE_MSG));
 
 	m->conv		= *conv;
 	m->dir		= dir;
@@ -530,19 +530,19 @@ static void mc_history_add(const MESHCHAT_CONV *conv, uint8_t dir,
 
 	if(sender != NULL)
 	{
-		strncpy(m->sender, sender, MESHCHAT_SENDER_MAX);
-		m->sender[MESHCHAT_SENDER_MAX] = 0;
+		strncpy(m->sender, sender, MESHCORE_SENDER_MAX);
+		m->sender[MESHCORE_SENDER_MAX] = 0;
 	}
 
 	if(text != NULL)
 	{
-		strncpy(m->text, text, MESHCHAT_TEXT_MAX - 1);
-		m->text[MESHCHAT_TEXT_MAX - 1] = 0;
+		strncpy(m->text, text, MESHCORE_TEXT_MAX - 1);
+		m->text[MESHCORE_TEXT_MAX - 1] = 0;
 	}
 
-	mc_msg_head = (uint8_t)((mc_msg_head + 1) % MESHCHAT_MSG_MAX);
+	mc_msg_head = (uint8_t)((mc_msg_head + 1) % MESHCORE_MSG_MAX);
 
-	if(mc_msg_used < MESHCHAT_MSG_MAX)
+	if(mc_msg_used < MESHCORE_MSG_MAX)
 		mc_msg_used++;
 
 	mc_revision++;
@@ -553,15 +553,15 @@ static uint8_t mc_history_index(uint8_t n)
 {
 	uint8_t	start;
 
-	if(mc_msg_used < MESHCHAT_MSG_MAX)
+	if(mc_msg_used < MESHCORE_MSG_MAX)
 		start = 0;
 	else
 		start = mc_msg_head;
 
-	return (uint8_t)((start + n) % MESHCHAT_MSG_MAX);
+	return (uint8_t)((start + n) % MESHCORE_MSG_MAX);
 }
 
-uint8_t meshchat_msg_count(const MESHCHAT_CONV *conv)
+uint8_t meshcore_msg_count(const MESHCORE_CONV *conv)
 {
 	uint8_t	i, n = 0;
 
@@ -570,7 +570,7 @@ uint8_t meshchat_msg_count(const MESHCHAT_CONV *conv)
 
 	for(i = 0; i < mc_msg_used; i++)
 	{
-		MESHCHAT_MSG	*m = &mc_msgs[mc_history_index(i)];
+		MESHCORE_MSG	*m = &mc_msgs[mc_history_index(i)];
 
 		if((m->in_use) && (mc_conv_same(&m->conv, conv)))
 			n++;
@@ -579,7 +579,7 @@ uint8_t meshchat_msg_count(const MESHCHAT_CONV *conv)
 	return n;
 }
 
-const MESHCHAT_MSG *meshchat_msg_at(const MESHCHAT_CONV *conv, uint8_t idx)
+const MESHCORE_MSG *meshcore_msg_at(const MESHCORE_CONV *conv, uint8_t idx)
 {
 	uint8_t	i, n = 0;
 
@@ -588,7 +588,7 @@ const MESHCHAT_MSG *meshchat_msg_at(const MESHCHAT_CONV *conv, uint8_t idx)
 
 	for(i = 0; i < mc_msg_used; i++)
 	{
-		MESHCHAT_MSG	*m = &mc_msgs[mc_history_index(i)];
+		MESHCORE_MSG	*m = &mc_msgs[mc_history_index(i)];
 
 		if((!m->in_use) || (!mc_conv_same(&m->conv, conv)))
 			continue;
@@ -605,14 +605,14 @@ const MESHCHAT_MSG *meshchat_msg_at(const MESHCHAT_CONV *conv, uint8_t idx)
 // ---------------------------------------------------------------------
 // From the radio task
 
-const MESHCHAT_STAT *meshchat_stats(void)
+const MESHCORE_STAT *meshcore_stats(void)
 {
 	return &mc_stat;
 }
 
-void meshchat_rx_packet(const uint8_t *data, uint16_t size, int8_t snr)
+void meshcore_rx_packet(const uint8_t *data, uint16_t size, int8_t snr)
 {
-	MESHCHAT_RX_RAW	raw;
+	MESHCORE_RX_RAW	raw;
 
 	if((mc_rx_q == NULL) || (data == NULL) || (size == 0))
 		return;
@@ -632,18 +632,18 @@ void meshchat_rx_packet(const uint8_t *data, uint16_t size, int8_t snr)
 	if(xQueueSend(mc_rx_q, &raw, 0) != pdPASS)
 	{
 		mc_stat.q_drop++;
-		printf("meshchat: RX QUEUE FULL, packet dropped (%d so far) \r\n",
+		printf("meshcore: RX QUEUE FULL, packet dropped (%d so far) \r\n",
 				(int)mc_stat.q_drop);
 		return;
 	}
 
 	mc_stat.queued++;
 
-	if(ps.hMeshchatTask != NULL)
-		xTaskNotify(ps.hMeshchatTask, MESHCHAT_NOTIFY_WAKE, eSetBits);
+	if(ps.hMeshcoreTask != NULL)
+		xTaskNotify(ps.hMeshcoreTask, MESHCORE_NOTIFY_WAKE, eSetBits);
 }
 
-uint8_t meshchat_tx_dequeue(MC_TX_PACKET *pkt)
+uint8_t meshcore_tx_dequeue(MC_TX_PACKET *pkt)
 {
 	if((mc_tx_q == NULL) || (pkt == NULL))
 		return 1;
@@ -657,7 +657,7 @@ uint8_t meshchat_tx_dequeue(MC_TX_PACKET *pkt)
 // ---------------------------------------------------------------------
 // From the gui task
 
-static uint8_t mc_post_req(const MESHCHAT_REQ *req)
+static uint8_t mc_post_req(const MESHCORE_REQ *req)
 {
 	if(mc_req_q == NULL)
 		return 1;
@@ -665,88 +665,88 @@ static uint8_t mc_post_req(const MESHCHAT_REQ *req)
 	if(xQueueSend(mc_req_q, req, 0) != pdPASS)
 		return 2;
 
-	if(ps.hMeshchatTask != NULL)
-		xTaskNotify(ps.hMeshchatTask, MESHCHAT_NOTIFY_WAKE, eSetBits);
+	if(ps.hMeshcoreTask != NULL)
+		xTaskNotify(ps.hMeshcoreTask, MESHCORE_NOTIFY_WAKE, eSetBits);
 
 	return 0;
 }
 
-uint8_t meshchat_send_text(const MESHCHAT_CONV *conv, const char *text)
+uint8_t meshcore_send_text(const MESHCORE_CONV *conv, const char *text)
 {
-	MESHCHAT_REQ	req;
+	MESHCORE_REQ	req;
 
 	if((conv == NULL) || (text == NULL) || (text[0] == 0))
 		return 1;
 
 	memset(&req, 0, sizeof(req));
 
-	req.kind = MESHCHAT_REQ_SEND;
+	req.kind = MESHCORE_REQ_SEND;
 	req.conv = *conv;
 
-	strncpy(req.text, text, MESHCHAT_TEXT_MAX - 1);
+	strncpy(req.text, text, MESHCORE_TEXT_MAX - 1);
 
 	return mc_post_req(&req);
 }
 
-uint8_t meshchat_send_advert(void)
+uint8_t meshcore_send_advert(void)
 {
-	MESHCHAT_REQ	req;
+	MESHCORE_REQ	req;
 
 	memset(&req, 0, sizeof(req));
-	req.kind = MESHCHAT_REQ_ADVERT;
+	req.kind = MESHCORE_REQ_ADVERT;
 
 	return mc_post_req(&req);
 }
 
-uint8_t meshchat_add_contact(uint8_t contact_idx)
+uint8_t meshcore_add_contact(uint8_t contact_idx)
 {
-	MESHCHAT_REQ	req;
+	MESHCORE_REQ	req;
 
 	memset(&req, 0, sizeof(req));
 
-	req.kind	= MESHCHAT_REQ_ADD;
+	req.kind	= MESHCORE_REQ_ADD;
 	req.arg		= contact_idx;
 
 	return mc_post_req(&req);
 }
 
-uint8_t meshchat_forget_contact(uint8_t contact_idx)
+uint8_t meshcore_forget_contact(uint8_t contact_idx)
 {
-	MESHCHAT_REQ	req;
+	MESHCORE_REQ	req;
 
 	memset(&req, 0, sizeof(req));
 
-	req.kind	= MESHCHAT_REQ_FORGET;
+	req.kind	= MESHCORE_REQ_FORGET;
 	req.arg		= contact_idx;
 
 	return mc_post_req(&req);
 }
 
-uint8_t meshchat_remove_channel(const MESHCHAT_CONV *conv)
+uint8_t meshcore_remove_channel(const MESHCORE_CONV *conv)
 {
-	MESHCHAT_REQ	req;
+	MESHCORE_REQ	req;
 
-	if((conv == NULL) || (conv->kind != MESHCHAT_CONV_CHANNEL))
+	if((conv == NULL) || (conv->kind != MESHCORE_CONV_CHANNEL))
 		return 1;
 
 	memset(&req, 0, sizeof(req));
 
-	req.kind = MESHCHAT_REQ_DEL_CHAN;
+	req.kind = MESHCORE_REQ_DEL_CHAN;
 	req.conv = *conv;
 
 	return mc_post_req(&req);
 }
 
-uint8_t meshchat_add_channel(const char *name)
+uint8_t meshcore_add_channel(const char *name)
 {
-	MESHCHAT_REQ	req;
+	MESHCORE_REQ	req;
 
 	if((name == NULL) || (name[0] == 0))
 		return 1;
 
 	memset(&req, 0, sizeof(req));
 
-	req.kind = MESHCHAT_REQ_ADD_CHAN;
+	req.kind = MESHCORE_REQ_ADD_CHAN;
 
 	// The name is hashed verbatim to make the key, and the mesh writes
 	// these channels with the hash in front - so add it when the user
@@ -768,7 +768,7 @@ uint8_t meshchat_add_channel(const char *name)
 //*						: display, the way the lora task used to
 //* Notes    			: the text lives in a static here, not on a stack
 //*						: that is about to unwind
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static void mc_notify_ui(const MC_RX_EVENT *ev)
 {
@@ -813,18 +813,18 @@ static void mc_notify_ui(const MC_RX_EVENT *ev)
 	xTaskNotify(ps.hUiTask, UI_LORA_NOTIFICATION, eSetValueWithOverwrite);
 }
 
-#ifdef MESHCHAT_DEBUG_DM_KEY
+#ifdef MESHCORE_DEBUG_DM_KEY
 //*----------------------------------------------------------------------------
 //* Function Name       : mc_dump_hex
 //* Object              : hex for the debug UART, in chunks - the tiny
 //*						: printf is not happy with very long lines
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static void mc_dump_hex(const char *label, const uint8_t *p, uint16_t len)
 {
 	uint16_t	i;
 
-	printf("meshchat dm-debug: %s ", label);
+	printf("meshcore dm-debug: %s ", label);
 
 	for(i = 0; i < len; i++)
 	{
@@ -841,7 +841,7 @@ static void mc_dump_hex(const char *label, const uint8_t *p, uint16_t len)
 //* Function Name       : mc_dump_dm_attempt
 //* Object              : everything needed to solve the direct message
 //*						: key schedule offline against a real packet
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static void mc_dump_dm_attempt(void)
 {
@@ -854,7 +854,7 @@ static void mc_dump_dm_attempt(void)
 
 	if(c == NULL)
 	{
-		printf("meshchat dm-debug: sender %02X is not in the contact table \r\n",
+		printf("meshcore dm-debug: sender %02X is not in the contact table \r\n",
 				mc_ev.src_hash);
 		return;
 	}
@@ -874,11 +874,11 @@ static void mc_dump_dm_attempt(void)
 //*----------------------------------------------------------------------------
 //* Function Name       : mc_handle_rx
 //* Object              : decode one packet and file it
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static void mc_handle_rx(void)
 {
-	MESHCHAT_CONV	conv;
+	MESHCORE_CONV	conv;
 
 	mc_rx_decode(mc_raw.data, mc_raw.size, mc_raw.snr, &mc_ev);
 
@@ -892,8 +892,8 @@ static void mc_handle_rx(void)
 	else
 		mc_stat.unreadable++;
 
-	#ifdef MESHCHAT_DEBUG_RX
-	printf("meshchat: rx %d bytes, %s, snr %d, kind %d \r\n",
+	#ifdef MESHCORE_DEBUG_RX
+	printf("meshcore: rx %d bytes, %s, snr %d, kind %d \r\n",
 			(int)mc_raw.size, mc_ev.type_short, (int)mc_ev.snr, (int)mc_ev.kind);
 
 	// A direct message sent to us that would not open. Called out
@@ -901,13 +901,13 @@ static void mc_handle_rx(void)
 	// messaged this radio" from "the direct message key schedule is
 	// wrong" - the one part of the protocol never checked against
 	// another node
-	#ifdef MESHCHAT_DEBUG_DM_KEY
+	#ifdef MESHCORE_DEBUG_DM_KEY
 	// Every ACK on the air, with the value it carries. Paired with the
 	// dump of what we sent, this is what identifies the quantity an ACK
 	// is computed over - the last unknown in the direct message flow
 	if(mc_ev.kind == MC_RX_ACK)
 	{
-		printf("meshchat dm-debug: ACK crc %08X \r\n", (unsigned int)mc_ev.ack_crc);
+		printf("meshcore dm-debug: ACK crc %08X \r\n", (unsigned int)mc_ev.ack_crc);
 		mc_dump_hex("ack pkt ", mc_raw.data, mc_raw.size);
 	}
 
@@ -922,11 +922,11 @@ static void mc_handle_rx(void)
 
 	if((mc_ev.addressed_to_us) && (mc_ev.kind != MC_RX_DIRECT))
 	{
-		printf("meshchat:   DM addressed to us from %02X, could NOT decrypt "
+		printf("meshcore:   DM addressed to us from %02X, could NOT decrypt "
 			   "(sender not an added contact, or wrong key schedule) \r\n",
 			   mc_ev.src_hash);
 
-		#ifdef MESHCHAT_DEBUG_DM_KEY
+		#ifdef MESHCORE_DEBUG_DM_KEY
 		mc_dump_dm_attempt();
 		#endif
 	}
@@ -939,7 +939,7 @@ static void mc_handle_rx(void)
 
 		for(i = 0; i < mc_msg_used; i++)
 		{
-			MESHCHAT_MSG	*m = &mc_msgs[mc_history_index(i)];
+			MESHCORE_MSG	*m = &mc_msgs[mc_history_index(i)];
 
 			if((!m->in_use) || (!m->ack_wait))
 				continue;
@@ -952,7 +952,7 @@ static void mc_handle_rx(void)
 
 			mc_revision++;
 
-			printf("meshchat:   delivered: '%s' acked by %s \r\n", m->text, mc_ev.sender);
+			printf("meshcore:   delivered: '%s' acked by %s \r\n", m->text, mc_ev.sender);
 			break;
 		}
 	}
@@ -982,7 +982,7 @@ static void mc_handle_rx(void)
 			if((c != NULL) && (mc_tx_build_path_ack(&mc_pkt, c, mc_ev.ack_reply) == 0))
 			{
 				mc_queue_tx(&mc_pkt);
-				printf("meshchat:   repeat of a dm, ack re-sent \r\n");
+				printf("meshcore:   repeat of a dm, ack re-sent \r\n");
 			}
 
 			mc_stat.dup++;
@@ -992,8 +992,8 @@ static void mc_handle_rx(void)
 
 		mc_stat.dup++;
 
-		#ifdef MESHCHAT_DEBUG_RX
-		printf("meshchat:   duplicate, ignored \r\n");
+		#ifdef MESHCORE_DEBUG_RX
+		printf("meshcore:   duplicate, ignored \r\n");
 		#endif
 
 		return;
@@ -1011,7 +1011,7 @@ static void mc_handle_rx(void)
 			// must not reach the contact book
 			if(!mc_ev.sig_ok)
 			{
-				printf("meshchat: advert with bad signature from %02X, dropped \r\n",
+				printf("meshcore: advert with bad signature from %02X, dropped \r\n",
 						mc_ev.pub_key[0]);
 				break;
 			}
@@ -1020,8 +1020,8 @@ static void mc_handle_rx(void)
 									mc_ev.timestamp, mc_ev.snr,
 									mc_ev.path, mc_ev.path_len, &created);
 
-			#ifdef MESHCHAT_DEBUG_RX
-			printf("meshchat:   advert %02X '%s' sig ok%s \r\n",
+			#ifdef MESHCORE_DEBUG_RX
+			printf("meshcore:   advert %02X '%s' sig ok%s \r\n",
 					mc_ev.pub_key[0], mc_ev.name, (c == NULL) ? ", table full" : "");
 			#endif
 
@@ -1034,7 +1034,7 @@ static void mc_handle_rx(void)
 			if(created)
 			{
 				mc_contacts_save();
-				printf("meshchat: new node %02X '%s' stored \r\n",
+				printf("meshcore: new node %02X '%s' stored \r\n",
 						mc_ev.pub_key[0], mc_ev.name);
 			}
 
@@ -1047,12 +1047,12 @@ static void mc_handle_rx(void)
 
 			mc_conv_from_channel(&conv, mc_ev.channel_hash);
 
-			#ifdef MESHCHAT_DEBUG_RX
-			printf("meshchat:   [%s] %s: %s \r\n",
+			#ifdef MESHCORE_DEBUG_RX
+			printf("meshcore:   [%s] %s: %s \r\n",
 					mc_ev.channel_name, mc_ev.sender, mc_ev.text);
 			#endif
 
-			mc_history_add(&conv, MESHCHAT_DIR_RX,
+			mc_history_add(&conv, MESHCORE_DIR_RX,
 						   mc_ev.sender[0] ? mc_ev.sender : "?",
 						   mc_ev.text, mc_ev.snr);
 
@@ -1073,11 +1073,11 @@ static void mc_handle_rx(void)
 
 			mc_conv_from_contact(&conv, c);
 
-			#ifdef MESHCHAT_DEBUG_RX
-			printf("meshchat:   dm from %s: %s \r\n", c->name, mc_ev.text);
+			#ifdef MESHCORE_DEBUG_RX
+			printf("meshcore:   dm from %s: %s \r\n", c->name, mc_ev.text);
 			#endif
 
-			mc_history_add(&conv, MESHCHAT_DIR_RX, c->name, mc_ev.text, mc_ev.snr);
+			mc_history_add(&conv, MESHCORE_DIR_RX, c->name, mc_ev.text, mc_ev.snr);
 
 			c->unread++;
 
@@ -1090,7 +1090,7 @@ static void mc_handle_rx(void)
 				{
 					mc_queue_tx(&mc_pkt);
 
-					printf("meshchat:   ack %02X%02X%02X%02X sent to %s \r\n",
+					printf("meshcore:   ack %02X%02X%02X%02X sent to %s \r\n",
 							mc_ev.ack_reply[0], mc_ev.ack_reply[1],
 							mc_ev.ack_reply[2], mc_ev.ack_reply[3], c->name);
 				}
@@ -1109,7 +1109,7 @@ static void mc_handle_rx(void)
 //*----------------------------------------------------------------------------
 //* Function Name       : mc_queue_tx
 //* Object              : hand a built packet to the radio task
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static uint8_t mc_queue_tx(const MC_TX_PACKET *pkt)
 {
@@ -1136,22 +1136,22 @@ static uint8_t mc_queue_tx(const MC_TX_PACKET *pkt)
 //*----------------------------------------------------------------------------
 //* Function Name       : mc_handle_send
 //* Object              : build and queue an outgoing chat message
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
-static void mc_handle_send(const MESHCHAT_REQ *req)
+static void mc_handle_send(const MESHCORE_REQ *req)
 {
 	uint32_t	ts = mc_now_epoch();
 	uint8_t		expect_ack[4];
 	uint8_t		have_expect = 0;
 	uint8_t		err;
 
-	if(req->conv.kind == MESHCHAT_CONV_CHANNEL)
+	if(req->conv.kind == MESHCORE_CONV_CHANNEL)
 	{
 		MC_CHANNEL	*ch = mc_channels_find_by_hash(req->conv.chan_hash);
 
 		if(ch == NULL)
 		{
-			mc_history_add(&req->conv, MESHCHAT_DIR_INFO, NULL, "no key for channel", 0);
+			mc_history_add(&req->conv, MESHCORE_DIR_INFO, NULL, "no key for channel", 0);
 			return;
 		}
 
@@ -1159,8 +1159,8 @@ static void mc_handle_send(const MESHCHAT_REQ *req)
 
 		if(err)
 		{
-			printf("meshchat: group build err %d \r\n", err);
-			mc_history_add(&req->conv, MESHCHAT_DIR_INFO, NULL, "send failed", 0);
+			printf("meshcore: group build err %d \r\n", err);
+			mc_history_add(&req->conv, MESHCORE_DIR_INFO, NULL, "send failed", 0);
 			return;
 		}
 	}
@@ -1170,7 +1170,7 @@ static void mc_handle_send(const MESHCHAT_REQ *req)
 
 		if(c == NULL)
 		{
-			mc_history_add(&req->conv, MESHCHAT_DIR_INFO, NULL, "contact gone", 0);
+			mc_history_add(&req->conv, MESHCORE_DIR_INFO, NULL, "contact gone", 0);
 			return;
 		}
 
@@ -1178,7 +1178,7 @@ static void mc_handle_send(const MESHCHAT_REQ *req)
 		// the slow task and cached for the life of the contact
 		if(mc_contacts_derive_shared(c))
 		{
-			mc_history_add(&req->conv, MESHCHAT_DIR_INFO, NULL, "no key for contact", 0);
+			mc_history_add(&req->conv, MESHCORE_DIR_INFO, NULL, "no key for contact", 0);
 			return;
 		}
 
@@ -1187,7 +1187,7 @@ static void mc_handle_send(const MESHCHAT_REQ *req)
 		if(!err)
 			have_expect = 1;
 
-		#ifdef MESHCHAT_DEBUG_DM_KEY
+		#ifdef MESHCORE_DEBUG_DM_KEY
 		// What we put on the air, so the ACK that comes back can be
 		// matched against a message whose bytes we know exactly
 		if(!err)
@@ -1196,25 +1196,25 @@ static void mc_handle_send(const MESHCHAT_REQ *req)
 
 		if(err)
 		{
-			printf("meshchat: direct build err %d \r\n", err);
-			mc_history_add(&req->conv, MESHCHAT_DIR_INFO, NULL, "send failed", 0);
+			printf("meshcore: direct build err %d \r\n", err);
+			mc_history_add(&req->conv, MESHCORE_DIR_INFO, NULL, "send failed", 0);
 			return;
 		}
 	}
 
 	if(mc_queue_tx(&mc_pkt))
 	{
-		mc_history_add(&req->conv, MESHCHAT_DIR_INFO, NULL, "tx queue full", 0);
+		mc_history_add(&req->conv, MESHCORE_DIR_INFO, NULL, "tx queue full", 0);
 		return;
 	}
 
-	mc_history_add(&req->conv, MESHCHAT_DIR_TX, mc_identity_get()->name, req->text, 0);
+	mc_history_add(&req->conv, MESHCORE_DIR_TX, mc_identity_get()->name, req->text, 0);
 
 	// Remember what will acknowledge it, so the reply can be matched
 	// back to this line and shown as delivered
 	if(have_expect)
 	{
-		MESHCHAT_MSG	*m = &mc_msgs[(mc_msg_head + MESHCHAT_MSG_MAX - 1) % MESHCHAT_MSG_MAX];
+		MESHCORE_MSG	*m = &mc_msgs[(mc_msg_head + MESHCORE_MSG_MAX - 1) % MESHCORE_MSG_MAX];
 
 		memcpy(m->ack, expect_ack, sizeof(m->ack));
 		m->ack_wait = 1;
@@ -1224,54 +1224,54 @@ static void mc_handle_send(const MESHCHAT_REQ *req)
 //*----------------------------------------------------------------------------
 //* Function Name       : mc_handle_req
 //* Object              : run one request from the gui task
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
-static void mc_handle_req(const MESHCHAT_REQ *req)
+static void mc_handle_req(const MESHCORE_REQ *req)
 {
 	switch(req->kind)
 	{
-		case MESHCHAT_REQ_SEND:
+		case MESHCORE_REQ_SEND:
 			mc_handle_send(req);
 			break;
 
-		case MESHCHAT_REQ_ADVERT:
+		case MESHCORE_REQ_ADVERT:
 		{
 			uint8_t	err = mc_tx_build_advert(&mc_pkt, mc_now_epoch());
 
 			if(err)
 			{
-				printf("meshchat: advert build err %d \r\n", err);
+				printf("meshcore: advert build err %d \r\n", err);
 				break;
 			}
 
 			if(mc_queue_tx(&mc_pkt) == 0)
-				printf("meshchat: advert queued, %d bytes \r\n", (int)mc_pkt.len);
+				printf("meshcore: advert queued, %d bytes \r\n", (int)mc_pkt.len);
 
 			break;
 		}
 
-		case MESHCHAT_REQ_ADD:
+		case MESHCORE_REQ_ADD:
 		{
 			MC_CONTACT	*c = mc_contacts_at(req->arg);
 
 			if(c == NULL)
 				break;
 
-			printf("meshchat: add contact %s \r\n", c->name);
+			printf("meshcore: add contact %s \r\n", c->name);
 
 			mc_contacts_save_entry(req->arg);
 			mc_revision++;
 			break;
 		}
 
-		case MESHCHAT_REQ_FORGET:
+		case MESHCORE_REQ_FORGET:
 		{
 			mc_contacts_forget(req->arg);
 			mc_revision++;
 			break;
 		}
 
-		case MESHCHAT_REQ_DEL_CHAN:
+		case MESHCORE_REQ_DEL_CHAN:
 		{
 			MC_CHANNEL	*ch = mc_channels_find_by_hash(req->conv.chan_hash);
 			char		was[MC_CHANNEL_NAME_MAX + 1];
@@ -1291,28 +1291,28 @@ static void mc_handle_req(const MESHCHAT_REQ *req)
 			// pressed the button
 			if(err == MC_CHANNEL_PROTECTED)
 			{
-				printf("meshchat: channel '%s' is the default, not removed \r\n", was);
+				printf("meshcore: channel '%s' is the default, not removed \r\n", was);
 
-				mc_history_add(&req->conv, MESHCHAT_DIR_INFO, NULL,
+				mc_history_add(&req->conv, MESHCORE_DIR_INFO, NULL,
 							   "the default channel cannot be deleted", 0);
 
 				mc_revision++;
 				break;
 			}
 
-			printf("meshchat: channel '%s' removed \r\n", was);
+			printf("meshcore: channel '%s' removed \r\n", was);
 
 			mc_revision++;
 			break;
 		}
 
-		case MESHCHAT_REQ_ADD_CHAN:
+		case MESHCORE_REQ_ADD_CHAN:
 		{
 			uint8_t	err = mc_channels_add_by_name(req->text);
 
 			if(err)
 			{
-				printf("meshchat: add channel '%s' failed (%d) \r\n", req->text, (int)err);
+				printf("meshcore: add channel '%s' failed (%d) \r\n", req->text, (int)err);
 				break;
 			}
 
@@ -1322,7 +1322,7 @@ static void mc_handle_req(const MESHCHAT_REQ *req)
 			{
 				MC_CHANNEL	*ch = mc_channels_at(mc_channels_count() - 1);
 
-				printf("meshchat: channel '%s' added, hash 0x%02X \r\n",
+				printf("meshcore: channel '%s' added, hash 0x%02X \r\n",
 						req->text, (ch != NULL) ? ch->hash : 0);
 			}
 			break;
@@ -1334,26 +1334,26 @@ static void mc_handle_req(const MESHCHAT_REQ *req)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : meshchat_proc_task
+//* Function Name       : meshcore_proc_task
 //* Object              :
 //* Notes    			: notification driven - the radio task wakes us
 //*						: on receive, the gui task on a request
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
-void meshchat_proc_task(void const *arg)
+void meshcore_proc_task(void const *arg)
 {
 	ulong			ulNotificationValue = 0;
-	MESHCHAT_REQ	req;
+	MESHCORE_REQ	req;
 
-	vTaskDelay(MESHCHAT_PROC_START_DELAY);
+	vTaskDelay(MESHCORE_PROC_START_DELAY);
 
-	mc_rx_q		= xQueueCreate(MESHCHAT_RX_QUEUE_LEN,  sizeof(MESHCHAT_RX_RAW));
-	mc_tx_q		= xQueueCreate(MESHCHAT_TX_QUEUE_LEN,  sizeof(MC_TX_PACKET));
-	mc_req_q	= xQueueCreate(MESHCHAT_REQ_QUEUE_LEN, sizeof(MESHCHAT_REQ));
+	mc_rx_q		= xQueueCreate(MESHCORE_RX_QUEUE_LEN,  sizeof(MESHCORE_RX_RAW));
+	mc_tx_q		= xQueueCreate(MESHCORE_TX_QUEUE_LEN,  sizeof(MC_TX_PACKET));
+	mc_req_q	= xQueueCreate(MESHCORE_REQ_QUEUE_LEN, sizeof(MESHCORE_REQ));
 
 	if((mc_rx_q == NULL) || (mc_tx_q == NULL) || (mc_req_q == NULL))
 	{
-		printf("meshchat: queue alloc failed \r\n");
+		printf("meshcore: queue alloc failed \r\n");
 		vTaskSuspend(NULL);
 	}
 
@@ -1370,21 +1370,21 @@ void meshchat_proc_task(void const *arg)
 		FATFS	*fs;
 		DWORD	clusters;
 
-		mc_state = MESHCHAT_STATE_WAIT_SD;
+		mc_state = MESHCORE_STATE_WAIT_SD;
 		mc_revision++;
 
-		for(mc_sd_waited = 0; mc_sd_waited < MESHCHAT_SD_WAIT_TRIES; mc_sd_waited++)
+		for(mc_sd_waited = 0; mc_sd_waited < MESHCORE_SD_WAIT_TRIES; mc_sd_waited++)
 		{
 			if(f_getfree("0://", &clusters, &fs) == FR_OK)
 				break;
 
-			vTaskDelay(MESHCHAT_SD_WAIT_MS);
+			vTaskDelay(MESHCORE_SD_WAIT_MS);
 
 			mc_revision++;						// so the countdown redraws
 		}
 
-		if(mc_sd_waited >= MESHCHAT_SD_WAIT_TRIES)
-			printf("meshchat: no filesystem - identity will not persist this boot \r\n");
+		if(mc_sd_waited >= MESHCORE_SD_WAIT_TRIES)
+			printf("meshcore: no filesystem - identity will not persist this boot \r\n");
 	}
 
 	// The identity has to exist before anything can be signed or any
@@ -1413,14 +1413,14 @@ void meshchat_proc_task(void const *arg)
 		}
 
 		if(n)
-			printf("meshchat: %d contact key(s) derived \r\n", (int)n);
+			printf("meshcore: %d contact key(s) derived \r\n", (int)n);
 	}
 
 	mc_started	= 1;
-	mc_state	= MESHCHAT_STATE_READY;
+	mc_state	= MESHCORE_STATE_READY;
 	mc_revision++;
 
-meshchat_proc_loop:
+meshcore_proc_loop:
 
 	// Normally notification driven, but while there is no card we have
 	// to come round on our own to look for one
@@ -1429,8 +1429,8 @@ meshchat_proc_loop:
 	// report that only prints when traffic arrives cannot show that no
 	// traffic arrived, which is exactly the case being investigated
 	xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue,
-					mc_store_is_writable() ? MESHCHAT_STAT_PERIOD_MS
-										   : MESHCHAT_STORE_POLL_MS);
+					mc_store_is_writable() ? MESHCORE_STAT_PERIOD_MS
+										   : MESHCORE_STORE_POLL_MS);
 
 	// Received packets first - decoding is what feeds the rest
 	while((mc_rx_q != NULL) && (xQueueReceive(mc_rx_q, &mc_raw, 0) == pdPASS))
@@ -1445,7 +1445,7 @@ meshchat_proc_loop:
 	{
 		uint32_t	now = (uint32_t)xTaskGetTickCount();
 
-		if((now - mc_store_poll_tick) >= MESHCHAT_STORE_POLL_MS)
+		if((now - mc_store_poll_tick) >= MESHCORE_STORE_POLL_MS)
 		{
 			mc_store_poll_tick = now;
 
@@ -1484,18 +1484,18 @@ meshchat_proc_loop:
 		static uint32_t		stat_tick = 0;
 		uint32_t			now = (uint32_t)xTaskGetTickCount();
 
-		if((stat_tick == 0) || ((now - stat_tick) >= MESHCHAT_STAT_PERIOD_MS))
+		if((stat_tick == 0) || ((now - stat_tick) >= MESHCORE_STAT_PERIOD_MS))
 		{
 			const LORA_RX_STAT *r = lora_radio_stats();
 
 			stat_tick = now;
 
-			printf("meshchat rx stats: modem done %d, crc err %d, hdr err %d, "
+			printf("meshcore rx stats: modem done %d, crc err %d, hdr err %d, "
 				   "timeout %d, rearm %d, max poll gap %d ms \r\n",
 					(int)r->rx_done, (int)r->crc_err, (int)r->hdr_err,
 					(int)r->rx_timeout, (int)r->rearm, (int)r->max_gap_ms);
 
-			printf("meshchat rx stats: queued %d, QUEUE DROPS %d, decoded %d, "
+			printf("meshcore rx stats: queued %d, QUEUE DROPS %d, decoded %d, "
 				   "not ours %d, dup %d, echo %d; tx ok %d, tx fail %d \r\n",
 					(int)mc_stat.queued, (int)mc_stat.q_drop, (int)mc_stat.decoded,
 					(int)mc_stat.unreadable, (int)mc_stat.dup, (int)mc_stat.echo,
@@ -1503,7 +1503,7 @@ meshchat_proc_loop:
 		}
 	}
 
-	goto meshchat_proc_loop;
+	goto meshcore_proc_loop;
 }
 
 #endif

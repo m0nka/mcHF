@@ -46,7 +46,7 @@
 //* Object              : build and encrypt the common text body
 //* Notes    			: returns the ciphertext length, 0 on error. out
 //*						: must have room for MESHCORE_MAX_PAYLOAD_SIZE
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static uint8_t mc_tx_seal(uint8_t *out, uint8_t *mac,
 						  const uint8_t *key, uint8_t mac_key_len,
@@ -238,7 +238,7 @@ uint8_t mc_tx_build_direct_text(MC_TX_PACKET *pkt, const MC_CONTACT *to,
 //* Notes    			: the returned path is empty - we send back the
 //*						: route we know, and a node that reached us by
 //*						: flood learns the direct one from the reply
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 uint8_t mc_tx_build_path_ack(MC_TX_PACKET *pkt, const MC_CONTACT *to, const uint8_t ack[4])
 {
@@ -298,8 +298,8 @@ uint8_t mc_tx_build_path_ack(MC_TX_PACKET *pkt, const MC_CONTACT *to, const uint
 //*						: app_data. That convention is not guesswork - it
 //*						: is what verifies against the two real off-air
 //*						: adverts captured by this radio, see
-//*						: claude/meshchat_test/test_advert.c
-//* Context    			: CONTEXT_MESHCHAT
+//*						: claude/meshcore_test/test_advert.c
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 uint8_t mc_tx_build_advert(MC_TX_PACKET *pkt, uint32_t timestamp)
 {

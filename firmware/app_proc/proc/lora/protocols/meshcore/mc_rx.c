@@ -389,7 +389,7 @@ static void mc_rx_do_direct(MC_RX_EVENT *ev, meshcore_message_t *msg)
 //*						:   path_len | extra type | extra...
 //*						: and an extra type of ACK carries the four byte
 //*						: acknowledgement for a message we sent
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static void mc_rx_do_path(MC_RX_EVENT *ev, meshcore_message_t *msg)
 {
