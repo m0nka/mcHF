@@ -210,6 +210,7 @@ __attribute__((__common__)) struct UI_DRIVER_STATE {
 #define UI_ICC_MC_TX_START			11
 #define UI_ICC_MC_TX_STOP			12
 #define UI_ICC_POWER_LEVEL		13
+#define UI_ICC_AF_GAIN			14
 
 #if 0
 // The 16 bit msg id is used in the DSP handler directly
@@ -455,7 +456,13 @@ enum {
 #endif
 
 
-#define MAX_AUDIO_LEVEL			16
+// RX audio knob range. 0 - CODEC_VOL_HW_MAX is the codec DAC attenuator,
+// which is already wide open at the top of that range, so the steps above
+// it are made up in the DSP on the M4 core (see icc_radio_set_af_gain)
+#define MAX_AUDIO_LEVEL			20
+
+// CW side tone is a codec PGA gain, it has no software extension
+#define MAX_SIDETONE_LEVEL		16
 
 // -----------------------------------------------------------------------------
 // HAL compatibility

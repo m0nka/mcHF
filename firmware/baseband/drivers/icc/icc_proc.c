@@ -420,6 +420,13 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 			break;
 		}
 
+		// Set RX speaker AF gain
+		case ICC_SET_AF_GAIN:
+		{
+			icc_radio_set_af_gain(icc_in_buffer[0]);
+			break;
+		}
+
 		// WSPR capture control
 		case ICC_WSPR_START:
 			icc_wspr_start();

@@ -55,6 +55,10 @@ static void rotary_update_audio_publics(int pot_diff)
 {
 	uchar vol;
 
+	// RX volume runs past the codec attenuator range into DSP gain, the CW
+	// side tone is a codec PGA gain and stops where the hardware does
+	uchar vol_max = (tsu.rxtx == 0) ? MAX_AUDIO_LEVEL : MAX_SIDETONE_LEVEL;
+
 	if(tsu.curr_band > BAND_MODE_GEN)
 	{
 		printf("rotary_update_audio_publics, curr band: %d, CRITICAL ERROR!\r\n", tsu.curr_band);
@@ -64,9 +68,9 @@ static void rotary_update_audio_publics(int pot_diff)
 	if(tsu.rxtx == 0)
 	{
 		vol = tsu.band[tsu.curr_band].volume;				// load from public
-		if(vol > MAX_AUDIO_LEVEL)								// overflow check
+		if(vol > vol_max)										// overflow check
 		{
-			tsu.band[tsu.curr_band].volume = MAX_AUDIO_LEVEL;	// overwrite
+			tsu.band[tsu.curr_band].volume = vol_max;			// overwrite
 			vol = tsu.band[tsu.curr_band].volume;				// refresh
 			//save_band_info();									// Save band info to eeprom
 		}
@@ -75,9 +79,9 @@ static void rotary_update_audio_publics(int pot_diff)
 	else
 	{
 		vol = tsu.band[tsu.curr_band].st_volume;				// load from public
-		if(vol > MAX_AUDIO_LEVEL)								// overflow check
+		if(vol > vol_max)										// overflow check
 		{
-			tsu.band[tsu.curr_band].st_volume = MAX_AUDIO_LEVEL;	// overwrite
+			tsu.band[tsu.curr_band].st_volume = vol_max;			// overwrite
 			vol = tsu.band[tsu.curr_band].st_volume;				// refresh
 			//save_band_info();									// Save band info to eeprom
 		}
@@ -92,7 +96,7 @@ static void rotary_update_audio_publics(int pot_diff)
 	}
 	else
 	{
-		if(vol < MAX_AUDIO_LEVEL)
+		if(vol < vol_max)
 			vol += pot_diff;
 	}
 

@@ -661,6 +661,12 @@ void codec_hw_volume(void)
 		uchar bal = tsu.band[tsu.curr_band].audio_balance;	// current balance
 		int factor_l, factor_r;
 
+		// Anything above CODEC_VOL_HW_MAX is software gain in the M4 DSP - the
+		// attenuator is already at 0 dB there. Without the clamp the balance
+		// maths below drives the attenuation negative and wraps the uchar
+		if(vol > CODEC_VOL_HW_MAX)
+			vol = CODEC_VOL_HW_MAX;
+
 		//printf("-----------------\r\n");
 		//printf("vol = %d, bal = %d\r\n", vol, bal);
 

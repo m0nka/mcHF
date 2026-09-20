@@ -114,6 +114,9 @@
 
 // Set TX power level (PA_LEVEL_xxx), 1 byte payload
 #define ICC_SET_POWER_LEVEL				18
+
+// Set RX speaker AF gain (software gain above the codec attenuator range)
+#define ICC_SET_AF_GAIN					19
 //
 // ICC_MC_TX_START payload layout:
 // [0..1]  audio tone base in Hz, little endian (e.g. 1500); symbol

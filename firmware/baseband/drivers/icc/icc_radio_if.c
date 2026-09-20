@@ -25,6 +25,7 @@
 #include "audio_management.h"
 #include "uhsdr_hw_i2s.h"
 #include "drivers/audio/cw/cw_gen.h"
+#include "drivers/audio/codec/codec.h"
 
 #include "icc_radio_if.h"
 #include "icc_spectrum.h"
@@ -269,9 +270,11 @@ void icc_radio_apply_trx_state(const icc_radio_settings_t *st)
 		ts.samp_rate = st->samp_rate;
 	}
 
-	// Audio gains
-	ts.rx_gain[RX_AUDIO_SPKR].value = st->audio_gain;
+	// Audio gains. Through the setter, so the software gain that backs the top
+	// of the volume knob is derived here too - setting .value on its own leaves
+	// .active_value at whatever it was and the extra steps do nothing
 	ts.rx_gain[RX_AUDIO_SPKR].max   = 30;
+	icc_radio_set_af_gain(st->audio_gain);
 
 	// CW keyer
 	ts.cw_sidetone_freq	= st->sidetone_freq;
@@ -436,6 +439,49 @@ void icc_radio_set_power_level(uint8_t level)
 
 	printf("tx power: level %d factor %d/1000\r\n",
 			level, (int)(ts.tx_power_factor * 1000.0f));
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : icc_radio_set_af_gain
+//* Object              : RX speaker volume above the codec attenuator range
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+void icc_radio_set_af_gain(uint8_t gain)
+{
+	// The M7 drives the CS4245 DAC attenuator over 0 - CODEC_SPEAKER_MAX_VOLUME
+	// and the attenuator is already at 0 dB at the top of that range, so the
+	// knob steps above it have to be made up here. 3 dB per step, 12 dB total:
+	// the speaker channel leaves the AGC at ~4096 of 32767 full scale (-18 dBFS,
+	// only the line out copy gets LINE_OUT_SCALING_FACTOR), so this still keeps
+	// ~6 dB back for AGC attack overshoot
+	static const float32_t soft_gain_tbl[] =
+	{
+		1.00f,		//  +0 dB
+		1.41f,		//  +3 dB
+		2.00f,		//  +6 dB
+		2.83f,		//  +9 dB
+		4.00f		// +12 dB
+	};
+
+	uint8_t	idx;
+
+	ts.rx_gain[RX_AUDIO_SPKR].value = gain;
+
+	if(gain <= CODEC_SPEAKER_MAX_VOLUME)
+	{
+		// Hardware range - audio_driver.c leaves the speaker channel alone
+		ts.rx_gain[RX_AUDIO_SPKR].active_value = 1.0f;
+		return;
+	}
+
+	idx = gain - CODEC_SPEAKER_MAX_VOLUME;
+	if(idx >= (sizeof(soft_gain_tbl) / sizeof(soft_gain_tbl[0])))
+		idx = (sizeof(soft_gain_tbl) / sizeof(soft_gain_tbl[0])) - 1;
+
+	ts.rx_gain[RX_AUDIO_SPKR].active_value = soft_gain_tbl[idx];
+
+	printf("af gain: vol %d soft %d/100\r\n",
+			gain, (int)(ts.rx_gain[RX_AUDIO_SPKR].active_value * 100.0f));
 }
 
 void icc_radio_set_band_power_factor(uint8_t band)

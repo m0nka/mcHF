@@ -2893,6 +2893,22 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
         if(ts.rx_gain[RX_AUDIO_SPKR].value > CODEC_SPEAKER_MAX_VOLUME)    // is volume control above highest hardware setting?
         {
             arm_scale_f32(adb.a_buffer[1], (float32_t)ts.rx_gain[RX_AUDIO_SPKR].active_value, adb.a_buffer[1], blockSize);    // yes, do software volume control adjust on "b" buffer
+
+            // The speaker samples go into a 16 bit DMA word below with no
+            // saturation, so anything out of range wraps to the opposite rail
+            // instead of clipping. With gain in front of the AGC output that
+            // is reachable on attack overshoot
+            for(int i = 0; i < blockSize; i++)
+            {
+                if(adb.a_buffer[1][i] > 32767.0f)
+                {
+                    adb.a_buffer[1][i] = 32767.0f;
+                }
+                else if(adb.a_buffer[1][i] < -32767.0f)
+                {
+                    adb.a_buffer[1][i] = -32767.0f;
+                }
+            }
         }
 #endif
     }

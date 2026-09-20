@@ -758,6 +758,14 @@ static void icc_proc_dsp_command(ulong cmd)
 			break;
 		}
 
+		// Set RX speaker AF gain
+		case UI_ICC_AF_GAIN:
+		{
+			data[0] = tsu.band[tsu.curr_band].volume;
+			icc_proc_cmd_xchange(ICC_SET_AF_GAIN, data, 1);
+			break;
+		}
+
 	#ifdef CONTEXT_WSPR
 		// Start WSPR capture streaming on the M4 core
 		case UI_ICC_WSPR_START:

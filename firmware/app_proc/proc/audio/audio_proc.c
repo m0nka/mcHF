@@ -110,6 +110,13 @@ static void audio_proc_worker(ulong ulCmd)
 			// Update coded volume
 			codec_hw_volume();
 
+			// The knob goes past the point where the codec attenuator is fully
+			// open, and those top steps are software gain in the M4 DSP - so the
+			// baseband has to hear about every volume change, not just the
+			// state upload it gets at DSP init
+			if(ps.hIccTask != NULL)
+				xTaskNotify(ps.hIccTask, UI_ICC_AF_GAIN, eSetValueWithOverwrite);
+
 			// Notify UI
 			if(ps.hUiTask != NULL)
 				xTaskNotify(ps.hUiTask, UI_NEW_AUDIO_EVENT, eSetValueWithOverwrite);
