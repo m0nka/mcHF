@@ -17,7 +17,16 @@
 //#include "arm_math.h"
 
 // Definitions in pixels,not Hz!
-#define SPECTRUM_MID_POINT			427		//400
+//
+// Centre of the scope in scope pixel coordinates - the column the tuned
+// carrier (FFT bin 512, which is DC/the LO) actually lands on. The bin to
+// pixel mapping in ui_controls_spectrum_fft_process_big() drops the centre
+// bin at SCOPE_X_SIZE/2, so on this 800 px panel that is 398. It used to be
+// 427, which is the middle of the 854 px 5 inch panel (STARTEK_5INCH) - on
+// the 4.3 inch build that put the passband strip, the red centre line and
+// the centre frequency label 29 px (about 1.4 kHz) to the right of where
+// the signal really is
+#define SPECTRUM_MID_POINT			(SCOPE_X_SIZE/2)	// 398; was 427 = 854/2
 #define SPECTRUM_DEF_HALF_BW		20
 
 // This timeout min value is 11!

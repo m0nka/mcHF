@@ -31,6 +31,9 @@
 #include "icc_spectrum.h"
 #include "icc_mc_tx.h"
 
+// Recomputes the S-meter window whenever mode/filter/translate change
+static void icc_radio_update_passband(void);
+
 // ------------------------------------------------------------------
 // mcHF Pro board pins handled by the DSP core (V9 rev A, see
 // base_hw/mchf_pro_pinmap.h - names prefixed here to avoid clashing
@@ -329,6 +332,9 @@ void icc_radio_apply_trx_state(const icc_radio_settings_t *st)
 	// otherwise) - see RadioManagement_SetDemodMode() in the UHSDR tree
 	AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode, false);
 
+	// S-meter window follows the mode/filter/translate that just landed
+	icc_radio_update_passband();
+
 	printf("trx state: mode %d filt %d nco %d agc %d mic %d\r\n",
 			ts.dmod_mode, st->filter_id, st->nco_freq, st->agc_mode, ts.tx_mic_gain_mult);
 }
@@ -360,6 +366,58 @@ uint8_t icc_radio_start_audio(void)
 	return 0;
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : icc_radio_update_passband
+//* Object              : tell the spectrum processor where the RX passband is
+//* Notes    			: in Hz relative to the LO, which is FFT bin 0 - the
+//* Notes   			: scope FFT runs on the raw codec IQ, and UHSDR tunes at
+//* Notes    			: LO + translate (see the FFT_frequency line in
+//* Notes    			: audio_driver.c). Only used by the S-meter, which would
+//* Notes    			: otherwise pick the loudest bin in the whole 37 kHz
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+static void icc_radio_update_passband(void)
+{
+	int32_t		centre_hz = AudioDriver_GetTranslateFreq();
+	int32_t		lo_hz, hi_hz;
+	uint16_t	bw_hz = 2300;				// sane default
+
+	if(ts.filter_path < AUDIO_FILTER_PATH_NUM)
+		bw_hz = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+
+	switch(ts.dmod_mode)
+	{
+		case DEMOD_USB:
+			lo_hz = centre_hz;
+			hi_hz = centre_hz + bw_hz;
+			break;
+
+		case DEMOD_LSB:
+			lo_hz = centre_hz - bw_hz;
+			hi_hz = centre_hz;
+			break;
+
+		case DEMOD_CW:
+		{
+			// The filter sits on the sidetone offset, and which side of the
+			// carrier that lands depends on the CW offset mode - cover both
+			int32_t cw_off = (int32_t)ts.cw_sidetone_freq + (bw_hz/2);
+
+			lo_hz = centre_hz - cw_off;
+			hi_hz = centre_hz + cw_off;
+			break;
+		}
+
+		// AM/SAM/FM and anything else - symmetric about the carrier
+		default:
+			lo_hz = centre_hz - (bw_hz/2);
+			hi_hz = centre_hz + (bw_hz/2);
+			break;
+	}
+
+	icc_spectrum_set_passband(lo_hz, hi_hz, ts.samp_rate);
+}
+
 void icc_radio_change_demod_mode(uint8_t dmod_mode, uint8_t iamb_type)
 {
 	ts.dmod_mode = icc_radio_map_demod(dmod_mode);
@@ -375,6 +433,8 @@ void icc_radio_change_demod_mode(uint8_t dmod_mode, uint8_t iamb_type)
 	// after the processing chain re-selected them
 	printf("demod: wire %d -> dmod %d, path %d\r\n",
 			dmod_mode, ts.dmod_mode, ts.filter_path);
+
+	icc_radio_update_passband();
 }
 
 void icc_radio_change_agc_mode(uint8_t agc_mode, uint8_t rf_gain)
@@ -393,6 +453,8 @@ void icc_radio_change_filter(uint8_t filter_id)
 	// Bring-up trace: wire id in, and the path that survived the chain
 	printf("filter: wire %d -> path %d (dmod %d)\r\n",
 			filter_id, ts.filter_path, ts.dmod_mode);
+
+	icc_radio_update_passband();
 }
 
 void icc_radio_change_stereo(uint8_t stereo_mode)
@@ -405,6 +467,9 @@ void icc_radio_set_nco_freq(int16_t nco_freq)
 {
 	icc_radio_map_nco(nco_freq);
 	AudioDriver_SetProcessingChain(ts.dmod_mode, false);
+
+	// The translate offset moved, so the S-meter window moves with it
+	icc_radio_update_passband();
 }
 
 //*----------------------------------------------------------------------------

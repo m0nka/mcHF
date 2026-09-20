@@ -96,6 +96,12 @@ typedef struct
 	uint8_t		spectrum_scope_nosig_adjust;
 	uint8_t		rf_codec_gain;
 
+	// RX passband in Hz relative to the LO (bin 0), pushed in from the UHSDR
+	// side - used to keep the S-meter on the tuned signal
+	int32_t		pb_lo_hz;
+	int32_t		pb_hi_hz;
+	uint32_t	samp_rate;
+
 } icc_spectrum_state_t;
 
 static icc_spectrum_state_t		isd;
@@ -189,6 +195,16 @@ void icc_spectrum_init(void)
 	if(isd.fft_window_type == 0)
 		isd.fft_window_type = ICC_FFT_WINDOW_BLACKMAN;
 
+	if(isd.samp_rate == 0)
+		isd.samp_rate = 48000;
+
+	// Whole SSB window until the UHSDR side pushes the real passband
+	if((isd.pb_lo_hz == 0) && (isd.pb_hi_hz == 0))
+	{
+		isd.pb_lo_hz = -3000;
+		isd.pb_hi_hz =  3000;
+	}
+
 	// Init the FFT instances, same setup as the CLINT project
 	a = arm_rfft_init_f32((arm_rfft_instance_f32 *)&isd.S,
 						  (arm_cfft_radix4_instance_f32 *)&isd.S_CFFT,
@@ -219,17 +235,32 @@ void icc_spectrum_collect(volatile int16_t *src, uint32_t num_frames)
 	for(i = 0; i < num_frames; i++)
 	{
 		// get floating point data for FFT for spectrum scope/waterfall display.
-		// Channel order swapped vs the CLINT project - the UHSDR RX processor
-		// uses the opposite I/Q assignment, this keeps the display unmirrored
-		isd.FFT_Samples[isd.samp_ptr] = (float32_t)(*(src));
-		isd.samp_ptr++;
+		//
+		// Q first, then I. This buffer is the same DMA input the RX processor
+		// reads, and it assigns i = src.l, q = src.r (AudioDriver_I2SCallback),
+		// while UHSDR's own scope feed interleaves q_buffer before i_buffer
+		// (AudioDriver_SpectrumCopyIqBuffers). Handing the quadrature rfft
+		// (I,Q) instead of (Q,I) passes it j*conj(z), whose magnitude
+		// spectrum is reflected about DC: every signal lands the right
+		// distance from the carrier but on the wrong side, and tuning moves
+		// the display backwards. The audio path was never affected, which is
+		// why the sidebands always demodulated correctly
 		isd.FFT_Samples[isd.samp_ptr] = (float32_t)(*(src + 1));
+		isd.samp_ptr++;
+		isd.FFT_Samples[isd.samp_ptr] = (float32_t)(*(src));
 		isd.samp_ptr++;
 
 		src += 2;
 
-		// Obtain samples needed for FFT
-		if(isd.samp_ptr >= FFT_IQ_BUFF_LEN1*2)
+		// Obtain samples needed for FFT.
+		//
+		// The transform below consumes FFT_IQ_BUFF_LEN1 floats, which is 1024
+		// I/Q pairs; FFT_Samples is twice that size only because the rfft
+		// writes 2*N values back into it. Waiting for 2048 pairs collected a
+		// second block that nothing ever looked at and doubled the time
+		// between frames for nothing - the spectrum content is identical,
+		// there is just one every 21 ms of signal instead of every 43 ms
+		if(isd.samp_ptr >= FFT_IQ_BUFF_LEN1)
 		{
 			isd.samp_ptr = 0;
 			isd.state    = 1;
@@ -244,6 +275,23 @@ void icc_spectrum_set_smeter(uint8_t s_value)
 		s_value = 1;
 
 	ou_svalue = s_value;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : icc_spectrum_set_passband
+//* Object              : RX passband in Hz relative to the LO, for the S-meter
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+void icc_spectrum_set_passband(int32_t lo_hz, int32_t hi_hz, uint32_t samp_rate)
+{
+	if(hi_hz < lo_hz)
+		return;
+
+	isd.pb_lo_hz = lo_hz;
+	isd.pb_hi_hz = hi_hz;
+
+	if((samp_rate >= 8000) && (samp_rate <= 200000))
+		isd.samp_rate = samp_rate;
 }
 
 //*----------------------------------------------------------------------------
@@ -454,18 +502,47 @@ void icc_spectrum_thread(void)
 		isd.display_offset += isd.agc_rate*10;
 	}
 
-	// Crude S-meter estimate from the strongest bin of the averaged FFT data.
-	// ToDo: calibrate ICC_SMETER_CAL on real hardware and restrict the search
-	// to the actual filter passband around the RX carrier
+	// S-meter from the strongest bin inside the RX passband.
+	//
+	// This used to be arm_max_f32() over all 1024 bins, i.e. the loudest thing
+	// anywhere in the 37 kHz the scope covers, so the reading answered to
+	// whatever else was on the band rather than to the station being listened
+	// to. The FFT runs on the raw codec IQ, so bin 0 is DC (the LO); positive
+	// offsets are bins 1..511 and negative ones wrap to 1023..512, which is
+	// why the packer above swaps the halves for the display. The passband
+	// itself is worked out on the UHSDR side and pushed in through
+	// icc_spectrum_set_passband()
 	{
 		#define ICC_SMETER_CAL		(-110.0f)
 
-		float32_t	max_avg;
-		uint32_t	max_idx;
+		const uint32_t	n_bins  = FFT_IQ_BUFF_LEN1/2;			// 1024
+		const float32_t	bin_hz  = (float32_t)isd.samp_rate / (float32_t)n_bins;
+
+		float32_t	max_avg = 1.0f;
 		float32_t	dbm;
 		int32_t		s_val;
+		int32_t		lo_bin, hi_bin, b;
 
-		arm_max_f32((float32_t *)sd_FFT_AVGData, FFT_IQ_BUFF_LEN1/2, &max_avg, &max_idx);
+		lo_bin = (int32_t)floorf((float32_t)isd.pb_lo_hz / bin_hz);
+		hi_bin = (int32_t)ceilf ((float32_t)isd.pb_hi_hz / bin_hz);
+
+		// Only half the bins either way exist - beyond that is the other sideband
+		if(lo_bin < -((int32_t)n_bins/2 - 1))
+			lo_bin = -((int32_t)n_bins/2 - 1);
+		if(hi_bin > ((int32_t)n_bins/2 - 1))
+			hi_bin = ((int32_t)n_bins/2 - 1);
+		if(hi_bin < lo_bin)
+			hi_bin = lo_bin;
+
+		for(b = lo_bin; b <= hi_bin; b++)
+		{
+			// Negative offsets live at the top of the buffer
+			uint32_t idx = (uint32_t)((b + (int32_t)n_bins) & (n_bins - 1));
+
+			if(sd_FFT_AVGData[idx] > max_avg)
+				max_avg = sd_FFT_AVGData[idx];
+		}
+
 		dbm = 10.0f * log10f(max_avg) + ICC_SMETER_CAL;
 
 		if(dbm <= -121.0f)
