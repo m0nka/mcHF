@@ -518,26 +518,33 @@ static void ui_controls_smeter_panels_refresh(void)
 		GUI_SetFont(&GUI_Font8x16_1);
 
 		// RX panel
-		if(!tsu.rxtx)
-			GUI_SetColor(GUI_LIGHTGRAY);
-		else
-			GUI_SetColor(GUI_DARKGRAY);
-
+		GUI_SetColor(GUI_DARKCYAN);
 		GUI_DispStringAt(	"S  1   3   5   7   9   +20   +40  +60  dB",
 							S_METER_X + 12,
 							S_METER_Y + S_METER_SY - 10);
 
-		// TX panel
-		if(tsu.rxtx)
-			GUI_SetColor(GUI_LIGHTGRAY);
-		else
-			GUI_SetColor(GUI_DARKGRAY);
+		GUI_SetColor(GUI_LIGHTGRAY);
+		GUI_DispStringAt(	"S  1   3   5   7   9",
+							S_METER_X + 12,
+							S_METER_Y + S_METER_SY - 10);
 
+		// TX panel
+		GUI_SetColor(HOT_PINK);
 		GUI_DispStringAt(	"P  1   2   5       10         15   20   W",
 							S_METER_X + 12,
 							S_METER_Y + S_METER_SY + 30);
+		GUI_SetColor(GUI_LIGHTGRAY);
+		GUI_DispStringAt(	"P  1   2   5",
+							S_METER_X + 12,
+							S_METER_Y + S_METER_SY + 30);
 
+		GUI_SetColor(HOT_PINK);
 		GUI_DispStringAt(	"SWR 1  3   5       10         30         ",
+							S_METER_X + 12,
+							S_METER_Y + S_METER_SY + 85);
+
+		GUI_SetColor(GUI_LIGHTGRAY);
+		GUI_DispStringAt(	"SWR 1  3",
 							S_METER_X + 12,
 							S_METER_Y + S_METER_SY + 85);
 
@@ -678,7 +685,7 @@ static void ui_controls_smeter_digital_refresh(void)
 							2);
 
 		// Repaint new SWR progress
-		GUI_SetColor(GUI_LIGHTGREEN);
+		GUI_SetColor(GUI_LIGHTRED);
 		GUI_FillRoundedRect((S_METER_X + 10 + 0),
 							(S_METER_Y + S_METER_SY + 70),
 							(S_METER_X + (10 + t_val_p)),	// swapped! ToDo: need proper impl
@@ -727,6 +734,30 @@ static void ui_controls_smeter_digital_init(void)
 						(S_METER_Y + S_METER_SY + 70),
 						(S_METER_X + 10 + S_METER_MAX),
 						(S_METER_Y + S_METER_SY + 77), 2);
+
+#if 0
+	// S-meter bar frame
+	GUI_SetColor(GUI_WHITE);
+	GUI_FillRoundedRect((S_METER_X + 8),
+						(S_METER_Y + S_METER_SY + 8),
+						(S_METER_X + 12 + S_METER_MAX),
+						(S_METER_Y + S_METER_SY + 19),
+						2);
+
+	// Power meter frame
+	GUI_FillRoundedRect((S_METER_X + 8),
+						(S_METER_Y + S_METER_SY + 48),
+						(S_METER_X + 12 + S_METER_MAX),
+						(S_METER_Y + S_METER_SY + 59),
+						2);
+
+	// SWR meter progress
+	GUI_FillRoundedRect((S_METER_X + 8),
+						(S_METER_Y + S_METER_SY + 68),
+						(S_METER_X + 12 + S_METER_MAX),
+						(S_METER_Y + S_METER_SY + 79),
+						2);
+#endif
 
 	// Initial paint of actual values
 	ui_controls_smeter_panels_refresh();
