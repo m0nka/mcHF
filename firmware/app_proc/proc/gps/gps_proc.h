@@ -67,9 +67,10 @@ typedef struct {
     float    course_deg;
 
     /* Status */
-    bool     valid;          /* RMC status field = 'A'             */
-    bool	 time_valid;	// Seems the time is the first thing showing up, even with bad lock
-    bool     rtc_synced;     /* RTC was set at least once via PPS  */
+    uchar    valid;          /* RMC status field = 'A'             */
+    uchar	 time_valid;	// Seems the time is the first thing showing up, even with bad lock
+    uchar    rtc_synced;     /* RTC was set at least once via PPS  */
+    uchar	 time_synced;
     uint32_t last_pps_ms;    /* HAL_GetTick() at last PPS edge     */
 } GPS_Data_t;
 

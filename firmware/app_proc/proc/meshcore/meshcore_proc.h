@@ -55,7 +55,7 @@
 // Log every decoded packet on the debug UART. The chat screen is the
 // real interface, but on the bench this is the only way to see what the
 // mesh is actually sending us
-#define MESHCORE_DEBUG_RX
+//#define MESHCORE_DEBUG_RX
 
 // Dump what is needed to work out MeshCore's direct-message key schedule
 // offline: the raw packet, both public keys and the X25519 shared secret

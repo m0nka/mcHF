@@ -162,8 +162,10 @@ static uint8_t mc_echo_match(const MC_RX_EVENT *ev)
 
 		mc_revision++;
 
+#ifdef MESHCORE_DEBUG_RX
 		printf("meshcore: heard own message repeated, %d hop(s), snr %d, %d total \r\n",
 				(int)ev->path_len, (int)ev->snr, (int)e->repeats);
+#endif
 
 		return 1;
 	}
@@ -632,8 +634,10 @@ void meshcore_rx_packet(const uint8_t *data, uint16_t size, int8_t snr)
 	if(xQueueSend(mc_rx_q, &raw, 0) != pdPASS)
 	{
 		mc_stat.q_drop++;
+#ifdef MESHCORE_DEBUG_RX
 		printf("meshcore: RX QUEUE FULL, packet dropped (%d so far) \r\n",
 				(int)mc_stat.q_drop);
+#endif
 		return;
 	}
 
@@ -922,9 +926,11 @@ static void mc_handle_rx(void)
 
 	if((mc_ev.addressed_to_us) && (mc_ev.kind != MC_RX_DIRECT))
 	{
+#ifdef MESHCORE_DEBUG_RX
 		printf("meshcore:   DM addressed to us from %02X, could NOT decrypt "
 			   "(sender not an added contact, or wrong key schedule) \r\n",
 			   mc_ev.src_hash);
+#endif
 
 		#ifdef MESHCORE_DEBUG_DM_KEY
 		mc_dump_dm_attempt();
@@ -952,7 +958,9 @@ static void mc_handle_rx(void)
 
 			mc_revision++;
 
+#ifdef MESHCORE_DEBUG_RX
 			printf("meshcore:   delivered: '%s' acked by %s \r\n", m->text, mc_ev.sender);
+#endif
 			break;
 		}
 	}
@@ -1090,9 +1098,11 @@ static void mc_handle_rx(void)
 				{
 					mc_queue_tx(&mc_pkt);
 
+#ifdef MESHCORE_DEBUG_RX
 					printf("meshcore:   ack %02X%02X%02X%02X sent to %s \r\n",
 							mc_ev.ack_reply[0], mc_ev.ack_reply[1],
 							mc_ev.ack_reply[2], mc_ev.ack_reply[3], c->name);
+#endif
 				}
 			}
 
@@ -1159,7 +1169,9 @@ static void mc_handle_send(const MESHCORE_REQ *req)
 
 		if(err)
 		{
+#ifdef MESHCORE_DEBUG_RX
 			printf("meshcore: group build err %d \r\n", err);
+#endif
 			mc_history_add(&req->conv, MESHCORE_DIR_INFO, NULL, "send failed", 0);
 			return;
 		}
@@ -1196,7 +1208,9 @@ static void mc_handle_send(const MESHCORE_REQ *req)
 
 		if(err)
 		{
+#ifdef MESHCORE_DEBUG_RX
 			printf("meshcore: direct build err %d \r\n", err);
+#endif
 			mc_history_add(&req->conv, MESHCORE_DIR_INFO, NULL, "send failed", 0);
 			return;
 		}
@@ -1240,12 +1254,18 @@ static void mc_handle_req(const MESHCORE_REQ *req)
 
 			if(err)
 			{
+#ifdef MESHCORE_DEBUG_RX
 				printf("meshcore: advert build err %d \r\n", err);
+#endif
 				break;
 			}
 
 			if(mc_queue_tx(&mc_pkt) == 0)
+			{
+#ifdef MESHCORE_DEBUG_RX
 				printf("meshcore: advert queued, %d bytes \r\n", (int)mc_pkt.len);
+#endif
+			}
 
 			break;
 		}
@@ -1257,7 +1277,9 @@ static void mc_handle_req(const MESHCORE_REQ *req)
 			if(c == NULL)
 				break;
 
+#ifdef MESHCORE_DEBUG_RX
 			printf("meshcore: add contact %s \r\n", c->name);
+#endif
 
 			mc_contacts_save_entry(req->arg);
 			mc_revision++;
@@ -1291,7 +1313,9 @@ static void mc_handle_req(const MESHCORE_REQ *req)
 			// pressed the button
 			if(err == MC_CHANNEL_PROTECTED)
 			{
+#ifdef MESHCORE_DEBUG_RX
 				printf("meshcore: channel '%s' is the default, not removed \r\n", was);
+#endif
 
 				mc_history_add(&req->conv, MESHCORE_DIR_INFO, NULL,
 							   "the default channel cannot be deleted", 0);
@@ -1300,7 +1324,9 @@ static void mc_handle_req(const MESHCORE_REQ *req)
 				break;
 			}
 
+#ifdef MESHCORE_DEBUG_RX
 			printf("meshcore: channel '%s' removed \r\n", was);
+#endif
 
 			mc_revision++;
 			break;
@@ -1312,7 +1338,9 @@ static void mc_handle_req(const MESHCORE_REQ *req)
 
 			if(err)
 			{
+#ifdef MESHCORE_DEBUG_RX
 				printf("meshcore: add channel '%s' failed (%d) \r\n", req->text, (int)err);
+#endif
 				break;
 			}
 
@@ -1322,8 +1350,10 @@ static void mc_handle_req(const MESHCORE_REQ *req)
 			{
 				MC_CHANNEL	*ch = mc_channels_at(mc_channels_count() - 1);
 
+#ifdef MESHCORE_DEBUG_RX
 				printf("meshcore: channel '%s' added, hash 0x%02X \r\n",
 						req->text, (ch != NULL) ? ch->hash : 0);
+#endif
 			}
 			break;
 		}
@@ -1353,7 +1383,9 @@ void meshcore_proc_task(void const *arg)
 
 	if((mc_rx_q == NULL) || (mc_tx_q == NULL) || (mc_req_q == NULL))
 	{
+#ifdef MESHCORE_DEBUG_RX
 		printf("meshcore: queue alloc failed \r\n");
+#endif
 		vTaskSuspend(NULL);
 	}
 
@@ -1384,7 +1416,11 @@ void meshcore_proc_task(void const *arg)
 		}
 
 		if(mc_sd_waited >= MESHCORE_SD_WAIT_TRIES)
+		{
+#ifdef MESHCORE_DEBUG_RX
 			printf("meshcore: no filesystem - identity will not persist this boot \r\n");
+#endif
+		}
 	}
 
 	// The identity has to exist before anything can be signed or any
@@ -1412,8 +1448,10 @@ void meshcore_proc_task(void const *arg)
 				n++;
 		}
 
+#ifdef MESHCORE_DEBUG_RX
 		if(n)
 			printf("meshcore: %d contact key(s) derived \r\n", (int)n);
+#endif
 	}
 
 	mc_started	= 1;
@@ -1490,6 +1528,7 @@ meshcore_proc_loop:
 
 			stat_tick = now;
 
+#ifdef MESHCORE_DEBUG_RX
 			printf("meshcore rx stats: modem done %d, crc err %d, hdr err %d, "
 				   "timeout %d, rearm %d, max poll gap %d ms \r\n",
 					(int)r->rx_done, (int)r->crc_err, (int)r->hdr_err,
@@ -1500,6 +1539,7 @@ meshcore_proc_loop:
 					(int)mc_stat.queued, (int)mc_stat.q_drop, (int)mc_stat.decoded,
 					(int)mc_stat.unreadable, (int)mc_stat.dup, (int)mc_stat.echo,
 					(int)r->tx_ok, (int)r->tx_fail);
+#endif
 		}
 	}
 
