@@ -333,11 +333,35 @@ static void ui_controls_smeter_draw_via_rotate(uchar pos)
 		  );
 	#endif
 
-	// Repaint
+	// Repaint, clipped to the meter itself.
+	//
+	// The needle polygon carries a 45 px tail on the far side of the pivot
+	// (which sits at y 196, well below the scale), so the tail sweeps y 151 to
+	// 166 - through the 7 px gap under the scale AND through the top of the
+	// clock panel, which starts at y 148. That used to be handled by drawing
+	// it, wiping the band with the ClearRect in the fixed pass, and then
+	// repainting the whole clock panel (rect + time + date, 32 px font) after
+	// every single animation step. A fast needle move is a burst of those, and
+	// the panel is erased and redrawn straight into the live framebuffer - the
+	// LTDC catches it mid-way and the clock appears to blink at random.
+	//
+	// Clipping means the tail is never drawn below the scale in the first
+	// place, which is exactly what the ClearRect was faking, so nothing below
+	// needs repairing. The clip bottom is the scale bottom edge, which also
+	// carries the 3 px meter frame (S_METER_FRAME_BOTTOM is 0, the frame is
+	// drawn inside the rect), so the frame is not cut
+	GUI_RECT clip_r;
+
+	clip_r.x0 = 0;
+	clip_r.y0 = 0;
+	clip_r.x1 = (S_METER_X + bmscale.XSize);
+	clip_r.y1 = (S_METER_Y + bmscale.YSize);
+
+	GUI_SetClipRect(&clip_r);
+
 	GUI_MEMDEV_DrawAuto(&AutoDev, &Param.AutoDevInfo, &ui_controls_draw_needle, &Param);
 
-	// Recover Clock control
-	ui_controls_clock_panel_restore();
+	GUI_SetClipRect(NULL);
 }
 #endif
 
