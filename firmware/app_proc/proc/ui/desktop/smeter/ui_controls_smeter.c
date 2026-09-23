@@ -56,7 +56,7 @@ GUI_HSPRITE	s_needle;
 // --
 #endif
 
-static void ui_controls_smeter_draw_via_rotate(uchar pos);
+static void ui_controls_smeter_draw_via_rotate(float pos);
 
 #ifdef USE_SPRITE
 static void ui_controls_smeter_draw_via_sprite(PARAM Param)
@@ -304,20 +304,24 @@ static void ui_controls_draw_needle(void * p)
 	}
 }
 
-static void ui_controls_smeter_draw_via_rotate(uchar pos)
+static void ui_controls_smeter_draw_via_rotate(float pos)
 {
 	//short 		diff;
 	PARAM       Param;
 
 	// Limiter
-	if(pos > 90)
-		pos = 90;
+	if(pos > S_DEG_MAX)
+		pos = S_DEG_MAX;
+	if(pos < 0.0f)
+		pos = 0.0f;
 
-	Param.Angle = (225 - pos) * DEG2RAD;
+	// Fractional degrees - the polygon is anti-aliased at MAG sub-pixel
+	// resolution, whole degree steps make the needle visibly tick
+	Param.Angle = (225.0f - pos) * DEG2RAD;
 
 	//Param.Angle = ui_controls_get_angle(pos)* DEG2RAD;
 
-	Param.pos = pos;
+	Param.pos = (uchar)(pos + 0.5f);
 
 	// Rotate
 	GUI_RotatePolygon(Param.aPoints, NeedleBoundary, countof(NeedleBoundary), Param.Angle);
@@ -402,82 +406,108 @@ static void ui_controls_smeter_set_needle(uchar pos)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : ui_controls_smeter_target_deg
+//* Object              : signal level to needle position on the scale bitmap
+//* Input Parameters    :
+//* Output Parameters   : degrees from the left stop
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static float ui_controls_smeter_target_deg(void)
+{
+	float dbm, deg;
+
+	if(ui_sw.sm_dbm_valid)
+		dbm = (float)ui_sw.sm_dbm - (float)ICC_SMETER_DBM_OFS;
+	else if(ui_sw.sm_value <= 9)
+		dbm = S_DBM_S9 - 6.0f*(float)(9 - ui_sw.sm_value);		// older M4 image, S-units only
+	else
+		dbm = S_DBM_S9 + 10.0f*(float)(ui_sw.sm_value - 9);
+
+	if(dbm <= S_DBM_S9)
+		deg = S_DEG_S9 + (dbm - S_DBM_S9)*S_DEG_PER_DB_LO;
+	else
+		deg = S_DEG_S9 + (dbm - S_DBM_S9)*S_DEG_PER_DB_HI;
+
+	if(deg < 0.0f)
+		deg = 0.0f;
+	if(deg > S_DEG_MAX)
+		deg = S_DEG_MAX;
+
+	return deg;
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_smeter_analogue_refresh
-//* Object              :
+//* Object              : advance the needle physics, repaint if it moved
 //* Input Parameters    :
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void ui_controls_smeter_analogue_refresh(FAST_REFRESH *cb)
+static void ui_controls_smeter_analogue_refresh(void)
 {
-	ushort 		diff, step, some_val, expanded, curr;
-	uchar		is_up;
-
-	curr = ui_sw.sm_value;	// calc by DSP
+	const float	w = 2.0f*3.1415926f*S_NEEDLE_NAT_FREQ_HZ;
+	float		target, acc, h;
+	ulong		now, dt, t;
 
 	//
 	// ToDo: Implement TX mode...
 	//
 
-	// Expand scale
-	expanded = curr*SMETER_EXPAND_VALUE;
+	// Time based, so the needle moves at the same speed no matter how often
+	// the UI loop gets round to us (it only does on ticks without an FFT
+	// frame, and those come in irregular bursts)
+	now = xTaskGetTickCount()*portTICK_PERIOD_MS;
+	dt  = now - sm.last_ms;
+	sm.last_ms = now;
 
-	// Decide needle direction, based on old value
-	if(sm.old_value > curr)
-	{
-		is_up = 0;				// needle going down
-		diff = ((sm.old_value)*SMETER_EXPAND_VALUE) - expanded;
-	}
+	if(dt == 0)
+		return;
+	if(dt > S_NEEDLE_MAX_DT_MS)
+		dt = S_NEEDLE_MAX_DT_MS;
+
+	target = ui_controls_smeter_target_deg();
+
+	// Drive - instant attack, exponential release
+	if(target >= sm.drive_deg)
+		sm.drive_deg = target;
 	else
+		sm.drive_deg = target + (sm.drive_deg - target)*expf(-(float)dt/S_NEEDLE_RELEASE_MS);
+
+	// Movement - damped spring towards the drive
+	for(t = 0; t < dt; t += S_NEEDLE_SUBSTEP_MS)
 	{
-		is_up = 1;				// needle going up
-		diff  = expanded - ((sm.old_value)*SMETER_EXPAND_VALUE);
+		h = (float)(((dt - t) < S_NEEDLE_SUBSTEP_MS) ? (dt - t) : S_NEEDLE_SUBSTEP_MS)/1000.0f;
+
+		acc = w*w*(sm.drive_deg - sm.needle_deg) - 2.0f*S_NEEDLE_DAMPING*w*sm.needle_vel;
+
+		sm.needle_vel += acc*h;
+		sm.needle_deg += sm.needle_vel*h;
 	}
 
-	// IRL analogue meter emulation by variable step change
-	if(is_up)
-		step = S_NEEDLE_STEP_FAST;
-	else
-		step = S_NEEDLE_STEP_SLOW;
-
-	// Debug only
-	sm.repaints = diff/step;
-
-	#if 0
-	printf("--------------------------------------\r\n");
-	printf("curr = %d\r\n",curr);
-	printf("expanded = %d\r\n",expanded);
-	printf("step = %d\r\n",step);
-	printf("dif = %d\r\n",diff);
-	printf("repaints = %d\r\n",repaints);
-	printf("now loop...\r\n");
-	#endif
-
-	#if 0
-	// Repaint direct
-	ui_controls_smeter_draw_via_rotate(expanded);
-	#else
-	// Repaint in steps
-	for(int i = 0; i < diff; i += step)
+	// Mechanical stops
+	if(sm.needle_deg < 0.0f)
 	{
-		if(is_up)
-			some_val = ((sm.old_value)*SMETER_EXPAND_VALUE) + i;
-		else
-			some_val = ((sm.old_value)*SMETER_EXPAND_VALUE) - i;
-
-		// Collapse scale
-		some_val = some_val/2;
-
-		//printf("some_val = %d\r\n",some_val);
-		ui_controls_smeter_draw_via_rotate(some_val);
-
-		// Fast UI update callback
-		if(cb) cb();
+		sm.needle_deg = 0.0f;
+		if(sm.needle_vel < 0.0f)
+			sm.needle_vel = 0.0f;
 	}
-	#endif
+	if(sm.needle_deg > S_DEG_MAX)
+	{
+		sm.needle_deg = S_DEG_MAX;
+		if(sm.needle_vel > 0.0f)
+			sm.needle_vel = 0.0f;
+	}
 
-	// Save to public
-	sm.old_value = curr;
+	// Repaint only on visible movement, and at no more than the panel rate
+	if(fabsf(sm.needle_deg - sm.drawn_deg) < S_NEEDLE_MIN_MOVE)
+		return;
+	if((now - sm.drawn_ms) < S_NEEDLE_FRAME_MS)
+		return;
+
+	ui_controls_smeter_draw_via_rotate(sm.needle_deg);
+
+	sm.drawn_deg = sm.needle_deg;
+	sm.drawn_ms  = now;
 }
 
 //*----------------------------------------------------------------------------
@@ -505,6 +535,12 @@ static void ui_controls_smeter_analogue_init(void)
 	sm.is_peak			= 0;
 	sm.rotary_block		= 0;
 	sm.rotary_timer		= 0;
+	sm.drive_deg		= 0.0f;
+	sm.needle_deg		= 0.0f;
+	sm.needle_vel		= 0.0f;
+	sm.drawn_deg		= 0.0f;
+	sm.last_ms			= xTaskGetTickCount()*portTICK_PERIOD_MS;
+	sm.drawn_ms			= sm.last_ms;
 
 	// Enable high resolution for antialiasing
 	GUI_AA_EnableHiRes();
@@ -831,6 +867,10 @@ void ui_controls_smeter_quit(void)
 	sm.is_peak			= 0;
 	sm.rotary_block		= 0;
 	sm.rotary_timer		= 0;
+	sm.drive_deg		= 0.0f;
+	sm.needle_deg		= 0.0f;
+	sm.needle_vel		= 0.0f;
+	sm.drawn_deg		= 0.0f;
 	//
 	sm.loc_tx_state 	= UNDEF_TX_STATE;
 	//
@@ -865,18 +905,22 @@ void ui_controls_smeter_refresh(FAST_REFRESH *cb)
 		return;
 	}
 
+	// Analogue needle keeps moving after the value settles, so it runs
+	// every call and decides for itself whether to repaint
+	if(tsu.smet_type)
+	{
+		ui_controls_smeter_analogue_refresh();
+		return;
+	}
+
 	// Always repaint on RX/TX change
-	if(!tsu.smet_type)
-		ui_controls_smeter_panels_refresh();
+	ui_controls_smeter_panels_refresh();
 
 	// Nothing changed, skip repaint
 	if((sm.old_value == ui_sw.sm_value)&&(!tsu.rxtx))
 		return;
 
-	if(!tsu.smet_type)
-		ui_controls_smeter_digital_refresh();
-	else
-		ui_controls_smeter_analogue_refresh(cb);
+	ui_controls_smeter_digital_refresh();
 }
 
 #endif

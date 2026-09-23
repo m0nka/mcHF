@@ -48,6 +48,12 @@
 // Waterfall/spectrum FFT data to M7 core
 #define ICC_BROADCAST					0
 //
+// Broadcast header: [0] 0x9F sig, [1] S-units (digital meter), [2] passband
+// level in dBm + ICC_SMETER_DBM_OFS, [3] ICC_SMETER_DBM_MARK when [2] is valid
+// (an older M4 image leaves it unset, so the M7 falls back to [1])
+#define ICC_SMETER_DBM_OFS				150
+#define ICC_SMETER_DBM_MARK				0xA5
+//
 // Nothing, just init
 #define ICC_START_ICC_INIT				1
 //

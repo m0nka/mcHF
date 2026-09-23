@@ -222,6 +222,8 @@ static void api_ui_process_broadcast(void)
 
 		//printf("s=%d\r\n", aRxBuffer[1]);
 		ui_sw.sm_value = aRxBuffer[1];			// s-meter value
+		ui_sw.sm_dbm_valid = (aRxBuffer[3] == ICC_SMETER_DBM_MARK);
+		ui_sw.sm_dbm = aRxBuffer[2];			// s-meter, 1 dB resolution
 
 		ui_sw.updated = 1;
 	}

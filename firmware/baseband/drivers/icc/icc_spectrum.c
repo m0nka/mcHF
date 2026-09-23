@@ -46,6 +46,10 @@
 #define DB_SCALING_S2					26.3523
 #define DB_SCALING_S3					17.5682
 
+// Broadcast header S-meter dBm byte (from common/mchf_icc_def.h, same reason)
+#define ICC_SMETER_DBM_OFS				150
+#define ICC_SMETER_DBM_MARK				0xA5
+
 // values of the wire protocol spectrum_db_scale field
 enum
 {
@@ -112,6 +116,7 @@ static float32_t	sd_FFT_MagData[FFT_IQ_BUFF_LEN1/2];
 static float32_t	sd_FFT_Windat[FFT_IQ_BUFF_LEN1];
 
 static uint8_t		ou_svalue = 1;
+static uint8_t		ou_sm_dbm = 0;		// dBm + ICC_SMETER_DBM_OFS, clamped to a byte
 
 //*----------------------------------------------------------------------------
 //* Function Name       : icc_spectrum_apply_settings
@@ -310,6 +315,8 @@ uint16_t icc_spectrum_get_buffer(uint8_t *buffer)
 	//
 	buffer[0] = 0x9F;		// sig
 	buffer[1] = ou_svalue;	// S-meter
+	buffer[2] = ou_sm_dbm;	// S-meter, 1 dB resolution for the analogue needle
+	buffer[3] = ICC_SMETER_DBM_MARK;
 
 	// Then 1024 bytes of Spectrum data
 	buffer += 10;
@@ -556,6 +563,19 @@ void icc_spectrum_thread(void)
 			s_val = 34;
 
 		ou_svalue = (uint8_t)s_val;
+
+		// Unquantised level for the analogue needle - whole S-units are 6 dB
+		// jumps, far too coarse for a moving needle
+		{
+			float32_t lvl = dbm + (float32_t)ICC_SMETER_DBM_OFS + 0.5f;
+
+			if(lvl < 0.0f)
+				lvl = 0.0f;
+			if(lvl > 255.0f)
+				lvl = 255.0f;
+
+			ou_sm_dbm = (uint8_t)lvl;
+		}
 	}
 
 	// Notify M7 core

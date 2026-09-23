@@ -427,6 +427,8 @@ __attribute__((__common__)) struct UI_SW {
 	ushort 	bandpass_end;
 
 	uchar   sm_value;
+	uchar	sm_dbm;			// dBm + ICC_SMETER_DBM_OFS, analogue needle
+	uchar	sm_dbm_valid;	// M4 image sends sm_dbm
 
 } UI_SW;
 //
