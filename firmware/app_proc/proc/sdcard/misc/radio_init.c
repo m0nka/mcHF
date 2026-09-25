@@ -46,6 +46,129 @@ ulong radio_init_eep_chksum(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : radio_init_eep_update_chksum
+//* Object              : recalculate and store the eeprom checksum, needed
+//* Object              : after any write inside the checksummed area
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static void radio_init_eep_update_chksum(void)
+{
+	ulong chk = radio_init_eep_chksum();
+
+	virt_eeprom_write(EEP_BASE_ADDR + 1, chk >>  16);
+	virt_eeprom_write(EEP_BASE_ADDR + 2, chk >>   8);
+	virt_eeprom_write(EEP_BASE_ADDR + 3, chk & 0xFF);
+}
+
+// -----------------------------------------------------------------------------
+// UHSDR DSP settings
+//
+#define DSP_SET_EEP_MAGIC		0xD5
+
+#define DSP_SET_DEF(id, def, min, max)		def,
+#define DSP_SET_MIN(id, def, min, max)		min,
+#define DSP_SET_MAX(id, def, min, max)		max,
+
+const short 	dsp_settings_def[DSP_SET_COUNT] = { DSP_SET_LIST(DSP_SET_DEF) };
+const short 	dsp_settings_min[DSP_SET_COUNT] = { DSP_SET_LIST(DSP_SET_MIN) };
+const short 	dsp_settings_max[DSP_SET_COUNT] = { DSP_SET_LIST(DSP_SET_MAX) };
+
+short 			dsp_settings[DSP_SET_COUNT];
+volatile uchar	dsp_settings_dirty = 0;
+
+short radio_init_dsp_setting_clamp(uchar id, short val)
+{
+	if(id >= DSP_SET_COUNT)
+		return 0;
+
+	if(val < dsp_settings_min[id])
+		return dsp_settings_min[id];
+
+	if(val > dsp_settings_max[id])
+		return dsp_settings_max[id];
+
+	return val;
+}
+
+static void radio_init_dsp_settings_defaults(void)
+{
+	memcpy(dsp_settings, dsp_settings_def, sizeof(dsp_settings));
+	dsp_settings_dirty = 1;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : radio_init_dsp_settings_load
+//* Object              : restore from eeprom, anything missing or with a
+//* Object              : different layout version falls back to defaults
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static void radio_init_dsp_settings_load(void)
+{
+	uchar	cnt, i;
+	short	val;
+
+	radio_init_dsp_settings_defaults();
+
+	if(virt_eeprom_read(EEP_DSP_SETTINGS + 0) != DSP_SET_EEP_MAGIC)
+		return;
+
+	if(virt_eeprom_read(EEP_DSP_SETTINGS + 1) != DSP_SET_VERSION)
+		return;
+
+	cnt = virt_eeprom_read(EEP_DSP_SETTINGS + 2);
+	if(cnt > DSP_SET_COUNT)
+		cnt = DSP_SET_COUNT;
+
+	for(i = 0; i < cnt; i++)
+	{
+		val  = virt_eeprom_read(EEP_DSP_SETTINGS + 3 + (i * 2));
+		val |= virt_eeprom_read(EEP_DSP_SETTINGS + 4 + (i * 2)) << 8;
+
+		dsp_settings[i] = radio_init_dsp_setting_clamp(i, val);
+	}
+}
+
+// Caller has to update the checksum afterwards
+static void radio_init_dsp_settings_write(void)
+{
+	uchar i;
+
+	virt_eeprom_write(EEP_DSP_SETTINGS + 0, DSP_SET_EEP_MAGIC);
+	virt_eeprom_write(EEP_DSP_SETTINGS + 1, DSP_SET_VERSION);
+	virt_eeprom_write(EEP_DSP_SETTINGS + 2, DSP_SET_COUNT);
+
+	for(i = 0; i < DSP_SET_COUNT; i++)
+	{
+		virt_eeprom_write(EEP_DSP_SETTINGS + 3 + (i * 2), (uchar)(dsp_settings[i] >> 0));
+		virt_eeprom_write(EEP_DSP_SETTINGS + 4 + (i * 2), (uchar)(dsp_settings[i] >> 8));
+	}
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : radio_init_dsp_settings_save
+//* Object              : store now (menu exit) - the block sits inside the
+//* Object              : checksummed area, so the checksum is redone too,
+//* Object              : otherwise the next boot throws away the bands
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+void radio_init_dsp_settings_save(void)
+{
+	// Only over valid eeprom data - on a bad signature the whole
+	// area gets rebuilt at next boot anyway
+	if(virt_eeprom_read(EEP_BASE_ADDR) != 0x73)
+		return;
+
+	radio_init_dsp_settings_write();
+	radio_init_eep_update_chksum();
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : save_band_info
 //* Object              :
 //* Input Parameters    :
@@ -640,13 +763,11 @@ void radio_init_eep_defaults(void)
 	virt_eeprom_write(EEP_RF_GAIN,    30);
 	virt_eeprom_write(EEP_BT_ON,       0);
 
-	// Generate checksum
-	ulong chk = radio_init_eep_chksum();
+	// DSP settings (defaults loaded by the caller)
+	radio_init_dsp_settings_write();
 
-	// Save it
-	virt_eeprom_write(EEP_BASE_ADDR + 1, chk >>  16);
-	virt_eeprom_write(EEP_BASE_ADDR + 2, chk >>   8);
-	virt_eeprom_write(EEP_BASE_ADDR + 3, chk & 0xFF);
+	// Generate checksum and save it
+	radio_init_eep_update_chksum();
 
 	// Set as initialised
 	virt_eeprom_write(EEP_BASE_ADDR, 0x73);
@@ -680,6 +801,18 @@ void radio_init_ui_to_dsp(void)
 	// while the UI showed the saved mode
 	ts.agc_mode			= tsu.agc_mode;
 	ts.rf_gain			= tsu.rf_gain;
+
+	// The ones the Baseband menu owns, so the full state upload does not
+	// disagree with the ICC_SET_DSP_SETTINGS that follows it
+	ts.keyer_speed		= dsp_settings[DSP_SET_CW_SPEED];
+	ts.sidetone_freq	= dsp_settings[DSP_SET_CW_SIDETONE];
+	ts.paddle_reverse	= dsp_settings[DSP_SET_CW_PADDLE_REV];
+	ts.cw_rx_delay		= dsp_settings[DSP_SET_CW_RX_DELAY];
+	ts.tx_mic_gain		= dsp_settings[DSP_SET_TX_MIC_GAIN];
+
+	// The wire field is unsigned, OFF (-1) is only carried by the settings
+	if(dsp_settings[DSP_SET_TX_COMP_LEVEL] >= 0)
+		ts.tx_comp_level = dsp_settings[DSP_SET_TX_COMP_LEVEL];
 
 	ts.nco_freq			= tsu.band[tsu.curr_band].nco_freq;
 }
@@ -741,13 +874,11 @@ void radio_init_save_before_off(void)
 	virt_eeprom_write(EEP_RF_GAIN,    tsu.rf_gain);
 	virt_eeprom_write(EEP_BT_ON,      tsu.bt_enabled);
 
-	// Generate checksum
-	ulong chk = radio_init_eep_chksum();
+	// DSP settings
+	radio_init_dsp_settings_write();
 
-	// Save it
-	virt_eeprom_write(EEP_BASE_ADDR + 1, chk >>  16);
-	virt_eeprom_write(EEP_BASE_ADDR + 2, chk >>   8);
-	virt_eeprom_write(EEP_BASE_ADDR + 3, chk & 0xFF);
+	// Generate checksum and save it
+	radio_init_eep_update_chksum();
 
 	// Set as initialised
 	virt_eeprom_write(EEP_BASE_ADDR, 0x73);
@@ -782,6 +913,13 @@ void radio_init_on_reset(void)
 
 	// ToDo: Are we going to send those to the DSP core at all ?
 	radio_init_load_dsp_values();
+
+	// UHSDR DSP settings - from eeprom only if the rest of it is valid,
+	// radio_init_eep_defaults() below writes the defaults out otherwise
+	if(res == 0)
+		radio_init_dsp_settings_load();
+	else
+		radio_init_dsp_settings_defaults();
 
 	if(res == 0)
 		return;

@@ -33,6 +33,7 @@ void ui_actions_change_filter(uchar id);
 void ui_actions_change_agc_mode(uchar mode);
 void ui_actions_change_rf_gain(uchar gain);
 void ui_actions_change_power_level(void);
+uchar ui_actions_change_dsp_setting(uchar id, short val);
 void ui_actions_change_dsp_core(void);
 
 #endif

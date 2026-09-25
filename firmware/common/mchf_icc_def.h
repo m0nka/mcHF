@@ -123,6 +123,11 @@
 
 // Set RX speaker AF gain (software gain above the codec attenuator range)
 #define ICC_SET_AF_GAIN					19
+
+// UHSDR DSP settings from the Baseband menu, the whole set every time -
+// payload layout and value list in mchf_dsp_settings.h. The M4 applies only
+// the values that differ from what it has
+#define ICC_SET_DSP_SETTINGS			20
 //
 // ICC_MC_TX_START payload layout:
 // [0..1]  audio tone base in Hz, little endian (e.g. 1500); symbol

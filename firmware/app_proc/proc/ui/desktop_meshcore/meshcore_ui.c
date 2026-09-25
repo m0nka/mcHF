@@ -1807,7 +1807,11 @@ static void _cbDialog(WM_MESSAGE *pMsg)
 
 		case WM_DELETE:
 		{
-			WM_DeleteTimer(hMxTimer);
+			// Zeroed, a stale handle deleted again later frees whatever emWin
+			// reused the number for (hard fault in WM__Paint, handle 7)
+			if(hMxTimer)
+				WM_DeleteTimer(hMxTimer);
+			hMxTimer = 0;
 
 			// The children go with the dialog - drop the handles so a
 			// stray repaint cannot reach a dead window. hMxDialog and

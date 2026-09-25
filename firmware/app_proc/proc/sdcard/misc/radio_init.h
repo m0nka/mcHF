@@ -21,6 +21,19 @@
 #define	AGC_MAX_MODE		4		// Maximum for mode setting for AGC
 #define	AGC_DEFAULT			AGC_MED	// Default!
 
+#include "mchf_dsp_settings.h"
+
+// UHSDR DSP settings (Baseband menu), sent to the M4 core by the ICC
+// task whenever dsp_settings_dirty is set
+extern short			dsp_settings[DSP_SET_COUNT];
+extern volatile uchar	dsp_settings_dirty;
+extern const short		dsp_settings_def[DSP_SET_COUNT];
+extern const short		dsp_settings_min[DSP_SET_COUNT];
+extern const short		dsp_settings_max[DSP_SET_COUNT];
+
+short radio_init_dsp_setting_clamp(uchar id, short val);
+void radio_init_dsp_settings_save(void);
+
 void radio_init_ui_to_dsp(void);
 void radio_init_eep_defaults(void);
 uchar radio_init_default_mode_from_band(void);

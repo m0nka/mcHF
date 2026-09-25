@@ -80,7 +80,7 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 extern struct PROC_STATE 				ps;
 
 // Menu items
-extern K_ModuleItem_Typedef  	dsp_s;				// Standard DSP Menu
+extern K_ModuleItem_Typedef  	dsp_s;				// Baseband menu
 extern K_ModuleItem_Typedef  	menu_pa;			// Extended DSP Menu
 extern K_ModuleItem_Typedef  	user_i;				// User Interface
 extern K_ModuleItem_Typedef  	clock;				// Clock Settings
@@ -102,7 +102,7 @@ extern K_ModuleItem_Typedef  	file_b;				// File Browser
 static void ui_proc_add_menu_items(void)
 {
 	k_ModuleInit();
-	k_ModuleAdd(&dsp_s);				// Standard DSP Menu
+	k_ModuleAdd(&dsp_s);				// Baseband menu
 	k_ModuleAdd(&menu_pa);				// Extended DSP Menu
 	k_ModuleAdd(&user_i);				// User Interface
 	k_ModuleAdd(&clock);				// Clock Settings

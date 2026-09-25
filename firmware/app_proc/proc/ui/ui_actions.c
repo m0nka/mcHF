@@ -23,6 +23,7 @@
 #include "att.h"
 
 #include "ui_actions.h"
+#include "radio_init.h"
 
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
@@ -677,6 +678,35 @@ void ui_actions_change_rf_gain(uchar gain)
 
 	// UI repaint
 	ui_controls_agc_init();
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : ui_actions_change_dsp_setting
+//* Object              : change one UHSDR DSP setting (Baseband menu),
+//* Object              : returns 1 if the value actually changed
+//* Input Parameters    : DSP_SET_xxx id, new value (clamped to its range)
+//* Output Parameters   :
+//* Functions called    : CONTEXT_VIDEO
+//*----------------------------------------------------------------------------
+uchar ui_actions_change_dsp_setting(uchar id, short val)
+{
+	if(id >= DSP_SET_COUNT)
+		return 0;
+
+	val = radio_init_dsp_setting_clamp(id, val);
+	if(dsp_settings[id] == val)
+		return 0;
+
+	//printf("dsp set %d = %d\r\n", id, val);
+	dsp_settings[id] 	= val;
+	dsp_settings_dirty 	= 1;
+
+	// Wake the ICC task. Without overwrite, so a pending command is not lost -
+	// if one is pending the task is awake anyway and picks up the dirty flag
+	if(ps.hIccTask != NULL)
+		xTaskNotify(ps.hIccTask, UI_ICC_DSP_SETTINGS, eSetValueWithoutOverwrite);
+
+	return 1;
 }
 
 //*----------------------------------------------------------------------------

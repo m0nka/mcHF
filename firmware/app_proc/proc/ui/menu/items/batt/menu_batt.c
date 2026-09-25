@@ -1050,7 +1050,11 @@ static void _cbDialog0(WM_MESSAGE * pMsg)
 
 		case WM_DELETE:
 		{
-			WM_DeleteTimer(hTimerBattA);
+			// Zeroed, a stale handle deleted again later frees whatever emWin
+			// reused the number for (hard fault in WM__Paint, handle 7)
+			if(hTimerBattA)
+				WM_DeleteTimer(hTimerBattA);
+			hTimerBattA = 0;
 			break;
 		}
 
@@ -1194,7 +1198,11 @@ static void _cbDialog1(WM_MESSAGE * pMsg)
 
 		case WM_DELETE:
 		{
-			WM_DeleteTimer(hTimerBattA);
+			// Zeroed, a stale handle deleted again later frees whatever emWin
+			// reused the number for (hard fault in WM__Paint, handle 7)
+			if(hTimerBattA)
+				WM_DeleteTimer(hTimerBattA);
+			hTimerBattA = 0;
 			break;
 		}
 
@@ -1313,7 +1321,11 @@ static void _cbDialog2(WM_MESSAGE * pMsg)
 
 		case WM_DELETE:
 		{
-			WM_DeleteTimer(hTimerBatt);
+			// Zeroed, a stale handle deleted again later frees whatever emWin
+			// reused the number for (hard fault in WM__Paint, handle 7)
+			if(hTimerBatt)
+				WM_DeleteTimer(hTimerBatt);
+			hTimerBatt = 0;
 			break;
 		}
 

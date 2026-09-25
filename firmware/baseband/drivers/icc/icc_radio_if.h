@@ -102,6 +102,7 @@ void	icc_radio_change_stereo(uint8_t stereo_mode);
 void	icc_radio_set_nco_freq(int16_t nco_freq);
 void icc_radio_set_power_level(uint8_t level);
 void	icc_radio_set_af_gain(uint8_t gain);
+void	icc_radio_set_dsp_settings(const uint8_t *data);	// ICC_SET_DSP_SETTINGS payload
 void	icc_radio_set_band_power_factor(uint8_t band);
 void	icc_radio_set_tune_mode(uint8_t tune_on);
 //

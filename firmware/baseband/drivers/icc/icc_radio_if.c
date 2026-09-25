@@ -27,12 +27,37 @@
 #include "drivers/audio/cw/cw_gen.h"
 #include "drivers/audio/codec/codec.h"
 
+#include "audio_nr.h"
+#include "tx_processor.h"
+#include "fm_subaudible_tone_table.h"
+
 #include "icc_radio_if.h"
 #include "icc_spectrum.h"
 #include "icc_mc_tx.h"
 
+#include "mchf_dsp_settings.h"
+
 // Recomputes the S-meter window whenever mode/filter/translate change
 static void icc_radio_update_passband(void);
+
+// ------------------------------------------------------------------
+// UHSDR DSP settings from the M7 Baseband menu (ICC_SET_DSP_SETTINGS).
+// Built-in defaults until the first set arrives, same list as the M7 side
+//
+#define ICC_DSP_SET_DEF(id, def, min, max)		def,
+#define ICC_DSP_SET_MIN(id, def, min, max)		min,
+#define ICC_DSP_SET_MAX(id, def, min, max)		max,
+
+static int16_t				dsp_set[DSP_SET_COUNT]		= { DSP_SET_LIST(ICC_DSP_SET_DEF) };
+static const int16_t		dsp_set_min[DSP_SET_COUNT]	= { DSP_SET_LIST(ICC_DSP_SET_MIN) };
+static const int16_t		dsp_set_max[DSP_SET_COUNT]	= { DSP_SET_LIST(ICC_DSP_SET_MAX) };
+//
+// Next set is applied in full, not only the values that changed - at boot,
+// and after a full state upload that overwrote some of them
+static uint8_t				dsp_set_apply_all = 1;
+//
+// Last demodulator mode the M7 asked for, the AM -> SAM choice depends on it
+static uint8_t				wire_demod_mode = 0;
 
 // ------------------------------------------------------------------
 // mcHF Pro board pins handled by the DSP core (V9 rev A, see
@@ -83,14 +108,18 @@ extern volatile uint32_t icc_txoff_requests;
 // Wire protocol value mapping.
 //
 // Demodulator modes: the wire protocol uses the classic mcHF numbering
-// (USB=0 LSB=1 CW=2 AM=3 FM=4 DIGI=5), UHSDR inserts SAM at 4
+// (USB=0 LSB=1 CW=2 AM=3 FM=4 DIGI=5), UHSDR inserts SAM at 4. The wire has
+// no SAM, AM runs as SAM when the DSP menu says so
 static uint8_t icc_radio_map_demod(uint8_t wire_mode)
 {
+	wire_demod_mode = wire_mode;
+
 	switch(wire_mode)
 	{
+		case 3:		return (dsp_set[DSP_SET_SAM_ENABLE]) ? DEMOD_SAM : DEMOD_AM;
 		case 4:		return DEMOD_FM;
 		case 5:		return DEMOD_DIGI;
-		default:	return wire_mode;		// USB/LSB/CW/AM identical
+		default:	return wire_mode;		// USB/LSB/CW identical
 	}
 }
 
@@ -122,17 +151,41 @@ static uint8_t icc_radio_map_agc(uint8_t wire_agc)
 //* Notes    			: of 30 lands on the UHSDR default thresh of 20 dB
 //* Context    			: CONTEXT_ICC
 //*----------------------------------------------------------------------------
-static void icc_radio_set_agc_conf(uint8_t wire_agc, int32_t rf_gain)
+//*----------------------------------------------------------------------------
+//* Function Name       : icc_radio_set_agc_hang
+//* Object              : hang AGC for the current mode, per the DSP menu
+//* Object              : hang setting (auto = per mode preset, off, on)
+//* Notes    			: Only mode + tau_decay[mode] used to differ between the
+//* Notes    			: modes - with hang off and the fast 'pop' decay shared
+//* Notes    			: by all of them, slow/med/fast sounded the same. Hang
+//* Notes    			: time goes in the config (not only via the switch_mode
+//* Notes    			: path in AudioAgc_SetupAgcWdsp(), which is one shot
+//* Notes    			: and gets undone by the next filter/mode change)
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+static void icc_radio_set_agc_hang(void)
 {
-	int32_t thresh;
+	switch(dsp_set[DSP_SET_AGC_HANG_MODE])
+	{
+		// Off
+		case 1:
+			agc_wdsp_conf.hang_enable	= 0;
+			agc_wdsp_conf.switch_mode	= 1;
+			return;
 
-	agc_wdsp_conf.mode = icc_radio_map_agc(wire_agc);
+		// On, with the menu hang time - switch_mode would replace that
+		// time with the per mode preset in AudioAgc_SetupAgcWdsp()
+		case 2:
+			agc_wdsp_conf.hang_enable	= 1;
+			agc_wdsp_conf.hang_time		= dsp_set[DSP_SET_AGC_HANG_TIME];
+			agc_wdsp_conf.switch_mode	= 0;
+			return;
 
-	// Only mode + tau_decay[mode] used to differ between the modes - with hang
-	// off and the fast 'pop' decay shared by all of them, slow/med/fast
-	// sounded the same. Hang time goes in the config (not only via the
-	// switch_mode path in AudioAgc_SetupAgcWdsp(), which is one shot and gets
-	// undone by the next filter/mode change)
+		default:
+			break;
+	}
+
+	// Auto
 	switch(agc_wdsp_conf.mode)
 	{
 		case 1:		// long
@@ -153,6 +206,15 @@ static void icc_radio_set_agc_conf(uint8_t wire_agc, int32_t rf_gain)
 			break;
 	}
 	agc_wdsp_conf.switch_mode = 1;
+}
+
+static void icc_radio_set_agc_conf(uint8_t wire_agc, int32_t rf_gain)
+{
+	int32_t thresh;
+
+	agc_wdsp_conf.mode = icc_radio_map_agc(wire_agc);
+
+	icc_radio_set_agc_hang();
 
 	if(rf_gain < 0)
 		rf_gain = 0;
@@ -318,6 +380,27 @@ static void icc_radio_switch_txrx(uint8_t tx_on)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : icc_radio_set_mic_gain
+//* Object              : microphone gain and the multiplier derived from it
+//* Notes    			: Codec_SwitchMicTxRxMode() is the only function that
+//* Notes    			: derives ts.tx_mic_gain_mult, and it is #ifndef
+//* Notes    			: H7_M4_CORE (it drives a WM8731; the Pro has a CS4245
+//* Notes    			: on the M7), so on this core the multiplier stayed 0
+//* Notes    			: and tx_processor.c multiplied every mic sample by
+//* Notes    			: zero. Calculation copied from that function
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+static void icc_radio_set_mic_gain(uint8_t gain)
+{
+	ts.tx_gain[TX_AUDIO_MIC] = gain;
+
+	if(ts.tx_gain[TX_AUDIO_MIC] > 50)
+		ts.tx_mic_gain_mult = (ts.tx_gain[TX_AUDIO_MIC] - 35) / 3;
+	else
+		ts.tx_mic_gain_mult = ts.tx_gain[TX_AUDIO_MIC];
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : icc_radio_apply_trx_state
 //* Object              : full state upload from the M7 core (ICC_SET_TRX_STATE)
 //* Context    			: CONTEXT_ICC
@@ -350,18 +433,10 @@ void icc_radio_apply_trx_state(const icc_radio_settings_t *st)
 	// the hard coded 0.50 regardless of the front panel setting
 	icc_radio_set_power_level(st->power_level);
 
-	// Microphone gain. Codec_SwitchMicTxRxMode() is the only function that
-	// derives ts.tx_mic_gain_mult, and it is #ifndef H7_M4_CORE (it drives a
-	// WM8731; the Pro has a CS4245 on the M7), so on this core the multiplier
-	// stayed 0 and tx_processor.c multiplied every mic sample by zero - TX
-	// keyed but put out no modulation. Calculation copied from that function
+	// Microphone gain (see icc_radio_set_mic_gain() - without it TX keyed
+	// but put out no modulation)
 	ts.tx_audio_source = TX_AUDIO_MIC;
-	ts.tx_gain[TX_AUDIO_MIC] = st->tx_mic_gain;
-
-	if(ts.tx_gain[TX_AUDIO_MIC] > 50)
-		ts.tx_mic_gain_mult = (ts.tx_gain[TX_AUDIO_MIC] - 35) / 3;
-	else
-		ts.tx_mic_gain_mult = ts.tx_gain[TX_AUDIO_MIC];
+	icc_radio_set_mic_gain(st->tx_mic_gain);
 
 	// Speech compressor. AudioManagement_CalcTxCompLevel() derives the ALC
 	// post-filter gain and decay from this, and it is another value the M4
@@ -395,6 +470,10 @@ void icc_radio_apply_trx_state(const icc_radio_settings_t *st)
 
 	printf("trx state: mode %d filt %d nco %d agc %d mic %d\r\n",
 			ts.dmod_mode, st->filter_id, st->nco_freq, st->agc_mode, ts.tx_mic_gain_mult);
+
+	// Some of the above are also DSP menu settings (CW, mic, compressor) -
+	// the M7 sends the menu set right after this, take all of it then
+	dsp_set_apply_all = 1;
 }
 
 //*----------------------------------------------------------------------------
@@ -606,6 +685,271 @@ void icc_radio_set_af_gain(uint8_t gain)
 
 	printf("af gain: vol %d soft %d/100\r\n",
 			gain, (int)(ts.rx_gain[RX_AUDIO_SPKR].active_value * 100.0f));
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : icc_radio_set_dsp_settings
+//* Object              : UHSDR DSP settings from the M7 Baseband menu
+//* Object              : (ICC_SET_DSP_SETTINGS), applies only what changed
+//* Notes    			: Most of these the UHSDR firmware loads from its config
+//* Notes    			: storage, which this core never runs - until the first
+//* Notes    			: set arrives they sit at the uhsdr_main.c defaults or
+//* Notes    			: at zero (SAM PLL, notch taps: SAM did not work at all)
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+void icc_radio_set_dsp_settings(const uint8_t *data)
+{
+	uint8_t		chg[DSP_SET_COUNT];
+	uint8_t		cnt, i;
+	int16_t		val;
+	uint8_t		need_chain = 0;
+
+	if(data[0] != DSP_SET_VERSION)
+	{
+		printf("dsp set: version %d, expected %d\r\n", data[0], DSP_SET_VERSION);
+		return;
+	}
+
+	// Values the M7 did not send (older list) keep what they have
+	cnt = data[1];
+	if(cnt > DSP_SET_COUNT)
+		cnt = DSP_SET_COUNT;
+
+	for(i = 0; i < DSP_SET_COUNT; i++)
+	{
+		chg[i] = dsp_set_apply_all;
+
+		if(i >= cnt)
+			continue;
+
+		val = (int16_t)(data[DSP_SET_HDR_SIZE + (i * 2)] | (data[DSP_SET_HDR_SIZE + (i * 2) + 1] << 8));
+
+		if(val < dsp_set_min[i])
+			val = dsp_set_min[i];
+		if(val > dsp_set_max[i])
+			val = dsp_set_max[i];
+
+		if(val != dsp_set[i])
+		{
+			dsp_set[i] = val;
+			chg[i] 	   = 1;
+		}
+	}
+
+	dsp_set_apply_all = 0;
+
+	#define CHG(x)		(chg[DSP_SET_##x])
+	#define VAL(x)		(dsp_set[DSP_SET_##x])
+
+	// --- AGC ---------------------------------------------------------------
+	if(CHG(AGC_SLOPE) || CHG(AGC_DECAY_LONG) || CHG(AGC_DECAY_SLOW) || CHG(AGC_DECAY_MED) ||
+	   CHG(AGC_DECAY_FAST) || CHG(AGC_HANG_MODE) || CHG(AGC_HANG_TIME) || CHG(AGC_HANG_THRESH) ||
+	   CHG(AGC_HANG_DECAY))
+	{
+		agc_wdsp_conf.slope				= VAL(AGC_SLOPE) * 10;
+		agc_wdsp_conf.tau_decay[1]		= VAL(AGC_DECAY_LONG);
+		agc_wdsp_conf.tau_decay[2]		= VAL(AGC_DECAY_SLOW);
+		agc_wdsp_conf.tau_decay[3]		= VAL(AGC_DECAY_MED);
+		agc_wdsp_conf.tau_decay[4]		= VAL(AGC_DECAY_FAST);
+		agc_wdsp_conf.hang_thresh		= VAL(AGC_HANG_THRESH);
+		agc_wdsp_conf.tau_hang_decay	= VAL(AGC_HANG_DECAY);
+
+		icc_radio_set_agc_hang();
+		AudioDriver_AgcWdsp_Set();
+	}
+
+	// --- Noise reduction, blanker, notch, peak ------------------------------
+	if(CHG(NR_ENABLE) || CHG(NB_ENABLE) || CHG(ANOTCH_ENABLE) || CHG(MNOTCH_ENABLE) || CHG(MPEAK_ENABLE))
+	{
+		uint8_t active = ts.dsp.active & ~(DSP_NR_ENABLE | DSP_NB_ENABLE | DSP_NOTCH_ENABLE | DSP_MNOTCH_ENABLE | DSP_MPEAK_ENABLE);
+
+		if(VAL(NR_ENABLE))		active |= DSP_NR_ENABLE;
+		if(VAL(NB_ENABLE))		active |= DSP_NB_ENABLE;
+		if(VAL(ANOTCH_ENABLE))	active |= DSP_NOTCH_ENABLE;
+		if(VAL(MNOTCH_ENABLE))	active |= DSP_MNOTCH_ENABLE;
+		if(VAL(MPEAK_ENABLE))	active |= DSP_MPEAK_ENABLE;
+
+		ts.dsp.active = active;
+		need_chain = 1;
+	}
+
+	if(CHG(NR_STRENGTH))
+	{
+		// Same as the UHSDR menu - the chain rebuild causes a click
+		ts.dsp.nr_strength = VAL(NR_STRENGTH);
+		nr_params.alpha = 0.799 + ((float32_t)ts.dsp.nr_strength / 1000.0);
+	}
+
+	if(CHG(NB_LEVEL))
+		ts.dsp.nb_setting = VAL(NB_LEVEL);
+
+	if(CHG(ANOTCH_RATE))
+	{
+		// The LMS notch needs taps and a delay buffer, both zero here
+		ts.dsp.notch_numtaps		= DSP_NOTCH_NUMTAPS_DEFAULT;
+		ts.dsp.notch_delaybuf_len	= DSP_NOTCH_DELAYBUF_DEFAULT;
+		ts.dsp.notch_mu				= VAL(ANOTCH_RATE);
+		need_chain = 1;
+	}
+
+	if(CHG(MNOTCH_FREQ) || CHG(MPEAK_FREQ))
+	{
+		ts.dsp.notch_frequency	= VAL(MNOTCH_FREQ);
+		ts.dsp.peak_frequency	= VAL(MPEAK_FREQ);
+		need_chain = 1;
+	}
+
+	if(CHG(NR_BETA))
+		nr_params.beta = (float32_t)VAL(NR_BETA) / 1000.0;
+
+	if(CHG(NR_ASNR))
+		NR2.asnr = VAL(NR_ASNR);
+
+	if(CHG(NR_SMOOTH_WIDTH))
+		NR2.width = VAL(NR_SMOOTH_WIDTH);
+
+	if(CHG(NR_SMOOTH_THRESH))
+	{
+		NR2.power_threshold_int	= VAL(NR_SMOOTH_THRESH);
+		NR2.power_threshold		= (float32_t)NR2.power_threshold_int / 100.0;
+	}
+
+	// --- RX ------------------------------------------------------------------
+	if(CHG(SAM_PLL_RANGE) || CHG(SAM_PLL_ZETA) || CHG(SAM_PLL_BW))
+	{
+		ads.pll_fmax_int	= VAL(SAM_PLL_RANGE);
+		ads.zeta_int		= VAL(SAM_PLL_ZETA);
+		ads.omegaN_int		= VAL(SAM_PLL_BW);
+		AudioDriver_SetSamPllParameters();
+	}
+
+	if(CHG(SAM_FADE_LEVELER))
+		ads.fade_leveler = VAL(SAM_FADE_LEVELER);
+
+	// AM <-> SAM, takes effect at once only if AM is the current mode
+	if(CHG(SAM_ENABLE) && (wire_demod_mode == 3))
+	{
+		ts.dmod_mode = icc_radio_map_demod(wire_demod_mode);
+		AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode, false);
+		need_chain = 1;
+	}
+
+	if(CHG(IQ_AUTO_CORR))
+		ts.iq_auto_correction = VAL(IQ_AUTO_CORR);
+
+	if(CHG(RX_BASS) || CHG(RX_TREBLE))
+	{
+		ts.dsp.bass_gain	= VAL(RX_BASS);
+		ts.dsp.treble_gain	= VAL(RX_TREBLE);
+		need_chain = 1;
+	}
+
+	// --- FM ------------------------------------------------------------------
+	if(CHG(FM_DEV_5K))
+	{
+		if(VAL(FM_DEV_5K))
+			ts.flags2 |=  FLAGS2_FM_MODE_DEVIATION_5KHZ;
+		else
+			ts.flags2 &= ~FLAGS2_FM_MODE_DEVIATION_5KHZ;
+
+		if(ts.dmod_mode == DEMOD_FM)
+			need_chain = 1;
+	}
+
+	if(CHG(FM_SQUELCH))
+		ts.fm_sql_threshold = VAL(FM_SQUELCH);
+
+	if(CHG(FM_TONE_BURST))
+	{
+		ts.fm_tone_burst_mode = VAL(FM_TONE_BURST);
+		ads.fm_conf.tone_burst_active = 0;
+		AudioManagement_LoadToneBurstMode();
+	}
+
+	if(CHG(FM_CTCSS_GEN))
+	{
+		ts.fm_subaudible_tone_gen_select = VAL(FM_CTCSS_GEN);
+		AudioManagement_CalcSubaudibleGenFreq(fm_subaudible_tone_table[ts.fm_subaudible_tone_gen_select]);
+	}
+
+	if(CHG(FM_CTCSS_DET))
+	{
+		ts.fm_subaudible_tone_det_select = VAL(FM_CTCSS_DET);
+		AudioManagement_CalcSubaudibleDetFreq(fm_subaudible_tone_table[ts.fm_subaudible_tone_det_select]);
+	}
+
+	// --- TX ------------------------------------------------------------------
+	if(CHG(TX_MIC_GAIN))
+		icc_radio_set_mic_gain(VAL(TX_MIC_GAIN));
+
+	if(CHG(TX_COMP_LEVEL) || CHG(TX_ALC_RELEASE) || CHG(TX_ALC_GAIN))
+	{
+		// alc_decay/alc_tx_postfilt_gain are the stored CUSTOM values, the
+		// recalc copies either those or the preset of the level into the
+		// _var working values
+		ts.tx_comp_level			= VAL(TX_COMP_LEVEL);
+		ts.alc_decay				= VAL(TX_ALC_RELEASE);
+		ts.alc_tx_postfilt_gain		= VAL(TX_ALC_GAIN);
+		AudioManagement_CalcTxCompLevel();
+	}
+
+	if(CHG(TX_AM_FILTER))
+	{
+		if(VAL(TX_AM_FILTER))
+			ts.flags1 &= ~FLAGS1_AM_TX_FILTER_DISABLE;
+		else
+			ts.flags1 |=  FLAGS1_AM_TX_FILTER_DISABLE;
+	}
+
+	if(CHG(TX_TUNE_TONE))
+		ts.tune_tone_mode = VAL(TX_TUNE_TONE);
+
+	if(CHG(TX_SSB_FILTER) || CHG(TX_BASS) || CHG(TX_TREBLE))
+	{
+		ts.tx_filter			= VAL(TX_SSB_FILTER);
+		ts.dsp.tx_bass_gain		= VAL(TX_BASS);
+		ts.dsp.tx_treble_gain	= VAL(TX_TREBLE);
+
+		// Also run by the chain rebuild, but that may not happen
+		if(!need_chain)
+			TxProcessor_Set(ts.dmod_mode);
+	}
+
+	// --- CW ------------------------------------------------------------------
+	if(CHG(CW_SPEED) || CHG(CW_WEIGHT))
+	{
+		ts.cw_keyer_speed	= VAL(CW_SPEED);
+		ts.cw_keyer_weight	= VAL(CW_WEIGHT);
+		CwGen_SetSpeed();
+	}
+
+	if(CHG(CW_SIDETONE))
+	{
+		ts.cw_sidetone_freq = VAL(CW_SIDETONE);
+		AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode, false);
+
+		// The CW passband sits on the sidetone offset
+		if(ts.dmod_mode == DEMOD_CW)
+			need_chain = 1;
+	}
+
+	if(CHG(CW_PADDLE_REV))
+		ts.cw_paddle_reverse = VAL(CW_PADDLE_REV);
+
+	if(CHG(CW_RX_DELAY))
+		ts.cw_rx_delay = VAL(CW_RX_DELAY);
+
+	#undef CHG
+	#undef VAL
+
+	// Filters, notch/peak/EQ biquads, LMS notch - all rebuilt by the chain
+	if(need_chain)
+	{
+		AudioDriver_SetProcessingChain(ts.dmod_mode, false);
+		icc_radio_update_passband();
+	}
+
+	printf("dsp set: %d values, chain %d, active 0x%x\r\n", cnt, need_chain, ts.dsp.active);
 }
 
 void icc_radio_set_band_power_factor(uint8_t band)

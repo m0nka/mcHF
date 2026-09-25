@@ -427,6 +427,14 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 			break;
 		}
 
+		// UHSDR DSP settings from the Baseband menu
+		case ICC_SET_DSP_SETTINGS:
+		{
+			icc_radio_set_dsp_settings(icc_in_buffer);
+			icc_out_buffer[0x00] = 0;
+			break;
+		}
+
 		// WSPR capture control
 		case ICC_WSPR_START:
 			icc_wspr_start();

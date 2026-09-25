@@ -768,6 +768,11 @@ static void icc_proc_dsp_command(ulong cmd)
 			break;
 		}
 
+		// DSP settings changed - only a wake-up, icc_proc_send_dsp_settings()
+		// runs on every pass of the task loop
+		case UI_ICC_DSP_SETTINGS:
+			break;
+
 	#ifdef CONTEXT_WSPR
 		// Start WSPR capture streaming on the M4 core
 		case UI_ICC_WSPR_START:
@@ -816,6 +821,40 @@ static void icc_proc_dsp_command(ulong cmd)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : icc_proc_send_dsp_settings
+//* Object              : push the UHSDR DSP settings set to the M4 core if
+//* Object              : anything changed. Driven by the dirty flag instead
+//* Object              : of the notification value, because notifications
+//* Object              : overwrite each other and a spinbox held down fires
+//* Object              : a lot of them
+//* Notes    			: The flag is cleared before the copy, so a change
+//* Notes   			: made while this runs is sent on the next pass
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+static void icc_proc_send_dsp_settings(void)
+{
+	static uchar	data[DSP_SET_HDR_SIZE + (DSP_SET_COUNT * 2)];
+	uchar			i;
+
+	if((dsp_remote_init_done == 0) || (dsp_settings_dirty == 0))
+		return;
+
+	dsp_settings_dirty = 0;
+
+	data[0] = DSP_SET_VERSION;
+	data[1] = DSP_SET_COUNT;
+
+	for(i = 0; i < DSP_SET_COUNT; i++)
+	{
+		data[DSP_SET_HDR_SIZE + (i * 2) + 0] = (uchar)(dsp_settings[i] >> 0);
+		data[DSP_SET_HDR_SIZE + (i * 2) + 1] = (uchar)(dsp_settings[i] >> 8);
+	}
+
+	if(icc_proc_cmd_xchange(ICC_SET_DSP_SETTINGS, data, sizeof(data)) != 0)
+		dsp_settings_dirty = 1;
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : icc_proc_dsp_on
 //* Object              :
 //* Notes    			:
@@ -850,6 +889,10 @@ static uchar icc_proc_dsp_on(void)
 
 	// Ready for actual commands
 	tsu.dsp_alive = 2;
+
+	// Full DSP settings set right after the state upload - the M4 core
+	// runs its built-in defaults until then
+	dsp_settings_dirty = 1;
 
 	return 0;
 }
@@ -1059,6 +1102,9 @@ icc_proc_loop:
 			icc_proc_dsp_command(ulNotificationValue);
 		}
 	}
+
+	// DSP settings from the menu, whatever woke us up
+	icc_proc_send_dsp_settings();
 
 	#ifdef CONTEXT_WSPR
 	// Pull capture chunks on every wake up while the stream runs
