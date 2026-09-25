@@ -174,15 +174,14 @@ static void AU_cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 				{
 					case 'O':
 					{
-						// Limit RF gain to prevent loud hiss
+						// AGC off, and limit RF gain to prevent loud hiss (both go out in
+						// the same ICC message, read from tsu when the ICC task runs)
+						ui_actions_change_agc_mode(AGC_OFF);
 						ui_actions_change_rf_gain(25);
 
 						hItem = WM_GetDialogItem(pMsg->hWin, GUI_ID_SLIDER1);	// rf gain slider handle
-						SLIDER_SetValue(hItem,20);								// reflect new RF gain value on screen
+						SLIDER_SetValue(hItem, 25);								// reflect new RF gain value on screen
 						WM_SetFocus(hItem);										// give focus to slider
-
-						// AGC off
-						ui_actions_change_agc_mode(AGC_OFF);
 						goto finished;
 					}
 					case 'S':
@@ -292,17 +291,17 @@ static void AgcHandler(WM_MESSAGE *pMsg)
 
     			if(i == 0)
     			{
-    				SLIDER_SetRange(hSlider,0, 16);
+    				SLIDER_SetRange(hSlider,0, MAX_AUDIO_LEVEL);
 
-    				if(tsu.band[tsu.curr_band].volume <= 16)
+    				if(tsu.band[tsu.curr_band].volume <= MAX_AUDIO_LEVEL)
     				{
     					SLIDER_SetValue(hSlider, tsu.band[tsu.curr_band].volume);
-    					EDIT_SetDecMode(hEdit,   tsu.band[tsu.curr_band].volume,   0, 16, 0, 0);
+    					EDIT_SetDecMode(hEdit,   tsu.band[tsu.curr_band].volume,   0, MAX_AUDIO_LEVEL, 0, 0);
     				}
     				else
     				{
-    					SLIDER_SetValue(hSlider, 16);
-    					EDIT_SetDecMode(hEdit, 16,   0, 16, 0, 0);
+    					SLIDER_SetValue(hSlider, MAX_AUDIO_LEVEL);
+    					EDIT_SetDecMode(hEdit, MAX_AUDIO_LEVEL,   0, MAX_AUDIO_LEVEL, 0, 0);
     				}
 
     				WM_SetFocus(hSlider);
@@ -318,7 +317,7 @@ static void AgcHandler(WM_MESSAGE *pMsg)
     				else
     				{
     					SLIDER_SetValue(hSlider, 50);
-    					EDIT_SetDecMode(hEdit, 0, 0, 50, 0, 0);
+    					EDIT_SetDecMode(hEdit, 50, 0, 50, 0, 0);
     				}
     			}
     		}

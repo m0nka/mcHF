@@ -341,15 +341,17 @@ static void AudHandler(WM_MESSAGE *pMsg)
 
     			if(i == 0)
     			{
-    				if(tsu.band[tsu.curr_band].volume <= 16)
+    				SLIDER_SetRange(hSlider,0, MAX_AUDIO_LEVEL);
+
+    				if(tsu.band[tsu.curr_band].volume <= MAX_AUDIO_LEVEL)
     				{
     					SLIDER_SetValue(hSlider, tsu.band[tsu.curr_band].volume);
-    					EDIT_SetDecMode(hEdit,   tsu.band[tsu.curr_band].volume,   0, 16, 0, 0);
+    					EDIT_SetDecMode(hEdit,   tsu.band[tsu.curr_band].volume,   0, MAX_AUDIO_LEVEL, 0, 0);
     				}
     				else
     				{
-    					SLIDER_SetValue(hSlider, 16);
-    					EDIT_SetDecMode(hEdit, 16,   0, 16, 0, 0);
+    					SLIDER_SetValue(hSlider, MAX_AUDIO_LEVEL);
+    					EDIT_SetDecMode(hEdit, MAX_AUDIO_LEVEL,   0, MAX_AUDIO_LEVEL, 0, 0);
     				}
 
     				WM_SetFocus(hSlider);

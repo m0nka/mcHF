@@ -103,10 +103,68 @@ static uint8_t icc_radio_map_agc(uint8_t wire_agc)
 		case 0:		return 2;	// slow
 		case 1:		return 3;	// med
 		case 2:		return 4;	// fast
-		case 3:		return 3;	// custom -> med
+		case 3:		return 1;	// custom -> long (no custom decay on the wire)
 		case 4:		return 5;	// off
 		default:	return 3;
 	}
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : icc_radio_set_agc_conf
+//* Object              : load the WDSP AGC config from the M7 AGC mode and
+//* Object              : RF gain. Does not recalculate - the caller runs
+//* Object              : AudioAgc_SetupAgcWdsp() (directly or via the chain)
+//* Notes    			: UHSDR has no separate RF gain with the WDSP AGC, its
+//* Notes    			: RF gain knob moves agc_wdsp_conf.thresh (see
+//* Notes    			: ENC_TWO_MODE_RF_GAIN in ui_driver.c). With the AGC on
+//* Notes    			: that is the knee (max gain), with it off the fixed
+//* Notes    			: gain is derived from it. 2 dB per step, the M7 default
+//* Notes    			: of 30 lands on the UHSDR default thresh of 20 dB
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+static void icc_radio_set_agc_conf(uint8_t wire_agc, int32_t rf_gain)
+{
+	int32_t thresh;
+
+	agc_wdsp_conf.mode = icc_radio_map_agc(wire_agc);
+
+	// Only mode + tau_decay[mode] used to differ between the modes - with hang
+	// off and the fast 'pop' decay shared by all of them, slow/med/fast
+	// sounded the same. Hang time goes in the config (not only via the
+	// switch_mode path in AudioAgc_SetupAgcWdsp(), which is one shot and gets
+	// undone by the next filter/mode change)
+	switch(agc_wdsp_conf.mode)
+	{
+		case 1:		// long
+			agc_wdsp_conf.hang_enable	= 1;
+			agc_wdsp_conf.hang_time		= 2000;
+			break;
+		case 2:		// slow
+			agc_wdsp_conf.hang_enable	= 1;
+			agc_wdsp_conf.hang_time		= 1000;
+			break;
+		case 4:		// fast
+			agc_wdsp_conf.hang_enable	= 0;
+			agc_wdsp_conf.hang_time		= 100;
+			break;
+		default:	// med, off
+			agc_wdsp_conf.hang_enable	= 0;
+			agc_wdsp_conf.hang_time		= 250;
+			break;
+	}
+	agc_wdsp_conf.switch_mode = 1;
+
+	if(rf_gain < 0)
+		rf_gain = 0;
+	if(rf_gain > 50)
+		rf_gain = 50;
+
+	// Limits as in the UHSDR menu/encoder
+	thresh = (rf_gain * 2) - 40;
+	if(thresh < -20)
+		thresh = -20;
+
+	agc_wdsp_conf.thresh = thresh;
 }
 
 //*----------------------------------------------------------------------------
@@ -316,8 +374,8 @@ void icc_radio_apply_trx_state(const icc_radio_settings_t *st)
 	ts.tx_comp_level = st->tx_comp_level;
 	AudioManagement_CalcTxCompLevel();
 
-	// AGC
-	agc_wdsp_conf.mode	= icc_radio_map_agc(st->agc_mode);
+	// AGC (recalculated by AudioDriver_SetProcessingChain() below)
+	icc_radio_set_agc_conf(st->agc_mode, st->rf_gain);
 
 	// Frequency translation
 	icc_radio_map_nco(st->nco_freq);
@@ -439,10 +497,11 @@ void icc_radio_change_demod_mode(uint8_t dmod_mode, uint8_t iamb_type)
 
 void icc_radio_change_agc_mode(uint8_t agc_mode, uint8_t rf_gain)
 {
-	(void)rf_gain;
+	icc_radio_set_agc_conf(agc_mode, rf_gain);
+	AudioDriver_AgcWdsp_Set();
 
-	agc_wdsp_conf.mode = icc_radio_map_agc(agc_mode);
-	AudioAgc_SetupAgcWdsp(ads.decimated_freq, ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM);
+	printf("agc: wire %d/%d -> mode %d thresh %d hang %d\r\n",
+			agc_mode, rf_gain, agc_wdsp_conf.mode, (int)agc_wdsp_conf.thresh, agc_wdsp_conf.hang_enable);
 }
 
 void icc_radio_change_filter(uint8_t filter_id)

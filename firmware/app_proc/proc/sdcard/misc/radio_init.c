@@ -675,13 +675,11 @@ void radio_init_ui_to_dsp(void)
 
 	ts.audio_gain 		= tsu.band[tsu.curr_band].volume;
 
-	#if 0
-	ts.agc_mode			= AGC_OFF;
-	ts.rf_gain			= 25;
-	#else
-	ts.agc_mode			= AGC_MED;
-	ts.rf_gain			= 30;
-	#endif
+	// Whatever the operator last selected (restored from eeprom) - this used to
+	// be hard coded to AGC_MED/30, so after every boot the baseband ran MED
+	// while the UI showed the saved mode
+	ts.agc_mode			= tsu.agc_mode;
+	ts.rf_gain			= tsu.rf_gain;
 
 	ts.nco_freq			= tsu.band[tsu.curr_band].nco_freq;
 }
