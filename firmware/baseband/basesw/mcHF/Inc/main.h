@@ -16,7 +16,7 @@
 #define	MCHF_D_VER_MAJOR			0
 #define	MCHF_D_VER_MINOR			2
 #define	MCHF_D_VER_RELEASE			12
-#define	MCHF_D_VER_BUILD			8
+#define	MCHF_D_VER_BUILD			9
 
 #endif
 

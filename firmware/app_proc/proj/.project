@@ -767,6 +767,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ft8/ft8_radio.c</locationURI>
 		</link>
 		<link>
+			<name>proc/ft8/ft8_qso.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ft8/ft8_qso.c</locationURI>
+		</link>
+		<link>
 			<name>proc/ft8/ft8_lib_ldpc_o2.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ft8/ft8_lib_ldpc_o2.c</locationURI>

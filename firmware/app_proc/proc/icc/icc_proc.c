@@ -240,6 +240,11 @@ static void api_ui_process_broadcast(void)
 //* Notes    			:
 //* Context    			: CONTEXT_ICC
 //*----------------------------------------------------------------------------
+// Longest wait for the M4 core to answer a command. The M4 superloop
+// answers within a few ms; the slowest are the DSP chain rebuilds (trx
+// state, band change, i2s start) - generous, it only has to catch a hang
+#define ICC_REPLY_TIMEOUT_MS		2000
+
 static uchar icc_proc_cmd_xchange(uchar cmd, uchar *buff, ushort size)
 {
 	int32_t status;
@@ -247,6 +252,10 @@ static uchar icc_proc_cmd_xchange(uchar cmd, uchar *buff, ushort size)
 	// Untested !!!!
 	if(service_created == 0)
 		return 1;
+
+	// A late reply to an earlier command that timed out must not pass
+	// for the answer to this one
+	message_received = 0;
 
 	// Payload or just command
 	if((buff != NULL) && (size != 0) && (size < (sizeof(aRxBuffer) - 4)))
@@ -267,12 +276,32 @@ static uchar icc_proc_cmd_xchange(uchar cmd, uchar *buff, ushort size)
 		return 2;
 	}
 
-	// ToDo: timeout here...
-	//
-	while (message_received == 0)
+	// Bounded wait. It used to wait forever: a hung M4 then froze the icc
+	// task, and with it every M4 command and stream, without a word in the
+	// log (SN 0002, 2026-09-27)
 	{
-		osDelay(1);
-		OPENAMP_check_for_message();
+		TickType_t		t0 = xTaskGetTickCount();
+		static uchar	m4_silent = 0;
+
+		while (message_received == 0)
+		{
+			if((xTaskGetTickCount() - t0) >= ICC_REPLY_TIMEOUT_MS)
+			{
+				if(!m4_silent)
+					printf("icc: m4 no reply (cmd %d)\r\n", cmd);
+
+				m4_silent = 1;
+				return 3;
+			}
+
+			osDelay(1);
+			OPENAMP_check_for_message();
+		}
+
+		if(m4_silent)
+			printf("icc: m4 answers again\r\n");
+
+		m4_silent = 0;
 	}
 	message_received = 0;
 

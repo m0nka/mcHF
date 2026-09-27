@@ -1017,7 +1017,9 @@ void EXTI2_IRQHandler(void)
 {
 	if(__HAL_GPIO_EXTID2_GET_IT(ICC_PADDLE_DIT_PIN) != 0x00U)
 	{
-		if(ts.paddles_active)
+		// The digital mode streamer owns the tx path - no keyer, no PTT
+		// requests on top of it (see EXTI3 below)
+		if(ts.paddles_active && !icc_mc_tx_active())
 		{
 			if((HAL_GPIO_ReadPin(ICC_PADDLE_DIT_PORT, ICC_PADDLE_DIT_PIN) == GPIO_PIN_RESET) || virtual_dit_down)
 			{
@@ -1040,7 +1042,12 @@ void EXTI3_IRQHandler(void)
 {
 	if(__HAL_GPIO_EXTID2_GET_IT(ICC_PADDLE_DAH_PIN) != 0x00U)
 	{
-		if(ts.paddles_active)
+		// Ignored while the FT8/MarsChat streamer owns the tx path. This line
+		// doubles as the mic PTT: on SN 0002 it reads pressed all the time,
+		// and RF picked up during a digital transmission turned it into a
+		// stream of PTT requests - the M4 hung in the next rx slot
+		// (2026-09-27). A digital frame has no use for either input
+		if(ts.paddles_active && !icc_mc_tx_active())
 		{
 			if((HAL_GPIO_ReadPin(ICC_PADDLE_DAH_PORT, ICC_PADDLE_DAH_PIN) == GPIO_PIN_RESET) || virtual_dah_down)
 			{

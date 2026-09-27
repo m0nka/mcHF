@@ -43,7 +43,8 @@
 typedef struct
 {
 	char		time[8];				// slot start, "hhmmss" UTC
-	int8_t		snr;					// dB
+	int8_t		snr;					// report scale dB (ft8_qso_report)
+	int16_t		raw_snr;				// ft8_lib figure behind it
 	int16_t		dt;						// hundredths of a second, WSJT-X style
 	uint16_t	freq;					// audio Hz
 	char		msg[FT8_MSG_LEN];

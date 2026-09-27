@@ -25,6 +25,7 @@
 
 #include "ft8_decoder.h"
 #include "ft8_proc.h"
+#include "ft8_qso.h"
 
 #include "hf_app.h"
 
@@ -908,7 +909,8 @@ static void ft8_live_publish(int n)
 		// it relative to the nominal +0.5 s
 		dt     = ft8_res[i].dt_10 * 10 - 50;
 		d.dt   = (int16_t)dt;
-		d.snr  = (int8_t)((ft8_res[i].snr > 99) ? 99 : ((ft8_res[i].snr < -99) ? -99 : ft8_res[i].snr));
+		d.snr     = ft8_qso_report(ft8_res[i].snr);		// the report we would send
+		d.raw_snr = ft8_res[i].snr;
 		d.freq = ft8_res[i].freq_hz;
 		strncpy(d.msg, ft8_res[i].text, FT8_MSG_LEN - 1);
 
@@ -1022,6 +1024,9 @@ static void ft8_live_decode(void)
 			ft8_clock_ofs_ms);
 
 	ft8_live_publish(n);
+
+	// QSO sequencer - queues our next message before our next slot
+	ft8_qso_slot(ft8_res, n, (uchar)(ft8_live_slot & 1));
 
 	ft8_live.state = FT8_LIVE_WAIT;
 }
@@ -1202,6 +1207,8 @@ void ft8_proc_tx_arm(uchar on)
 
 void ft8_proc_tx_halt(void)
 {
+	ft8_qso_stop();
+
 	ft8_live.tx_armed = 0;
 	ft8_tx_pending    = 0;
 	ft8_tx_abort      = 1;
@@ -1278,6 +1285,9 @@ static void ft8_live_tx_slot(void)
 
 		ft8_live.tx_count++;
 		printf("ft8: %s tx '%s' (%d) \r\n", ft8_live_time, ft8_live.tx_msg, ft8_live.tx_count);
+
+		// RR73 and 73 go out once and complete the QSO
+		ft8_qso_tx_sent();
 
 		// Watchdog - nobody answered, stop calling
 		if(ft8_live.tx_count >= FT8_TX_WATCHDOG)

@@ -53,6 +53,7 @@
 
 #include "ft8_proc.h"
 #include "ft8_radio.h"
+#include "ft8_qso.h"
 
 // UI driver public state
 extern struct	UI_DRIVER_STATE			ui_s;
@@ -164,15 +165,15 @@ static int ft8_ui_refresh_lists(void)
 	ft8_ui_band_n = (ft8_ui_hist_n < FT8_LIST_ROWS) ? ft8_ui_hist_n : FT8_LIST_ROWS;
 	memcpy(ft8_ui_band, ft8_ui_hist + ft8_ui_hist_n - ft8_ui_band_n, ft8_ui_band_n * sizeof(FT8_DECODE));
 
-	// RX frequency - the newest within the window around our audio offset
+	// RX frequency - our own traffic: to or from us, or from the station
+	// we are working
 	ft8_ui_rxf_n = 0;
 	for(i = ft8_ui_hist_n - 1; (i >= 0) && (ft8_ui_rxf_n < FT8_LIST_ROWS); i--)
 	{
-		d = (int)ft8_ui_hist[i].freq - FT8_RX_AUDIO_HZ;
-
-		if((d >= -FT8_RX_WINDOW_HZ) && (d <= FT8_RX_WINDOW_HZ))
+		if(ft8_qso_is_ours(ft8_ui_hist[i].msg))
 			ft8_ui_rxf[ft8_ui_rxf_n++] = ft8_ui_hist[i];
 	}
+	(void)d;
 
 	// That walked newest first - flip to oldest first
 	for(i = 0; i < ft8_ui_rxf_n / 2; i++)
@@ -518,11 +519,21 @@ static void ft8_ui_paint_tx(void)
 	{
 		char	st[40];
 
+		static const char * const qs[] =
+		{
+			"", "CQ", "CALLING", "SENT REPORT", "SENT R+REPORT", "RR73", "73", "LOGGED"
+		};
+		FT8_QSO_STATUS	q;
+
+		ft8_qso_get(&q);
+
 		if(ft8_ui_live.state == FT8_LIVE_TX)
-			snprintf(st, sizeof(st), "TRANSMITTING  %d/%d", ft8_ui_live.tx_count, 6);
+			snprintf(st, sizeof(st), "%s  TX %d/%d", qs[q.state & 7], ft8_ui_live.tx_count, 6);
 		else if(ft8_tx_armed)
-			snprintf(st, sizeof(st), "NEXT %s SLOT  %d/%d", ft8_ui_live.tx_parity ? "ODD" : "EVEN",
-					ft8_ui_live.tx_count, 6);
+			snprintf(st, sizeof(st), "%s  NEXT %s %d/%d", qs[q.state & 7],
+					ft8_ui_live.tx_parity ? "ODD" : "EVEN", ft8_ui_live.tx_count, 6);
+		else if(q.state == FT8_QSO_DONE)
+			snprintf(st, sizeof(st), "LOGGED %s", q.call);
 		else
 			snprintf(st, sizeof(st), "TRANSMITTER DISARMED");
 
@@ -755,19 +766,34 @@ static void ft8_ui_on_button(int id, int ncode)
 			// Calling CQ means we are not answering anybody. Even slots
 			// until the sequencer (WP7) picks the parity from the QSO
 			ft8_sel_row = -1;
-			ft8_proc_tx_set("CQ " FT8_MY_CALL " " FT8_MY_GRID, 0);
+			ft8_qso_cq();
 			break;
 		}
 
 		case ID_FT8_BTN_ANSWER:
 		{
-			// Stand-in for "work the decode under the cursor" - steps
-			// through the band activity until there is touch hit testing
-			// on the rows themselves
-			ft8_sel_row++;
+			// Next CQ in the band activity list, and answer it. Pressing
+			// again moves on to the next one. Stand-in for touching a row
+			{
+				int k, r;
 
-			if(ft8_sel_row >= ft8_ui_band_n)
-				ft8_sel_row = -1;
+				for(k = 1; k <= ft8_ui_band_n; k++)
+				{
+					r = (ft8_sel_row + k) % ft8_ui_band_n;
+
+					if(strncmp(ft8_ui_band[r].msg, "CQ ", 3) == 0)
+					{
+						const FT8_DECODE *d = &ft8_ui_band[r];
+
+						// "hhmmss" - :00 and :30 are the even slots
+						uchar parity = (uchar)(((atoi(d->time + 4) % 30) == 0) ? 0 : 1);
+
+						ft8_sel_row = (int8_t)r;
+						ft8_qso_answer(d->msg, parity, d->raw_snr);
+						break;
+					}
+				}
+			}
 
 			break;
 		}
