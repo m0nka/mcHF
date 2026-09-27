@@ -147,6 +147,14 @@
 #define CONTEXT_MARSCHAT
 #endif
 
+// -----------------------------------------------------------------------------------------------
+// FT8 decoder (claude/FT8/PROJECT.md) - WP2 decode bench on waterfall files from the SD card
+//
+//
+#ifdef CONTEXT_SD
+#define CONTEXT_FT8
+#endif
+
 // -------------------------------------------------------------------------------------------
 // Process parameters template
 //xx_PROC_START_DELAY					We can delay the startup of the process, to prevent
@@ -276,6 +284,14 @@
 #define MARSCHAT_PROC_SLEEP_TIME		portMAX_DELAY
 #define MARSCHAT_PROC_PRIORITY			tskIDLE_PRIORITY
 #define MARSCHAT_PROC_STACK_SIZE		(configMINIMAL_STACK_SIZE * 16)
+
+// FT8 decoder process parameters (same priority reasoning as WSPR). The
+// stack carries the LDPC belief propagation tables (~5 KB of floats)
+#define FT8_PROC_START_NAME				"ft8"
+#define FT8_PROC_START_DELAY			3700
+#define FT8_PROC_SLEEP_TIME				portMAX_DELAY
+#define FT8_PROC_PRIORITY				tskIDLE_PRIORITY
+#define FT8_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 32)
 
 // MeshCore chat service parameters. Started after the lora task, which is
 // the only thing it talks to on the radio side. The stack has to carry the

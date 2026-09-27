@@ -44,6 +44,15 @@
 // FT8 Desktop
 #include "desktop_ft8\ui_desktop_ft8.h"
 
+// HF digital mode ownership
+#include "hf_app.h"
+
+// FT8 radio setup and live receiver
+#ifdef CONTEXT_FT8
+#include "ft8_proc.h"
+#include "ft8_radio.h"
+#endif
+
 #ifdef CONTEXT_MARSCHAT
 #include "desktop_marschat\marschat_ui.h"
 #include "marschat_proc.h"
@@ -741,6 +750,22 @@ static void ui_proc_change_mode(void)
 		{
 			printf("Entering FT8 mode...\r\n");
 
+			// FT8 owns HF from here on - a WSPR monitor must not start
+			// another cycle. One already running winds down on its own,
+			// the HF arena lock makes FT8 wait for it
+			hf_app_select(HF_APP_FT8);
+			#ifdef CONTEXT_WSPR
+			wspr_proc_monitor_set(0);
+			#endif
+
+			#ifdef CONTEXT_FT8
+			// Tune the current band's FT8 frequency (USB, 3.6 kHz) - after
+			// a reflash the VFO can be anywhere in the band - and start
+			// the slot receiver
+			ft8_radio_enter();
+			ft8_proc_live(1);
+			#endif
+
 			// Destroy desktop controls
 			#ifdef DESKTOP_SHOW_VOLUME
 			ui_controls_volume_quit();
@@ -785,6 +810,9 @@ static void ui_proc_change_mode(void)
 		case MODE_DESKTOP_MARSCHAT:
 		{
 			printf("Entering MarsChat mode...\r\n");
+
+			// MarsChat runs on the WSPR engine, which owns HF from here on
+			hf_app_select(HF_APP_WSPR);
 
 			// Tune to the MarsChat dial frequency for this band
 			// (saves the current VFO so it can be restored on exit)
@@ -904,6 +932,11 @@ static void ui_proc_change_mode(void)
 			ui_menu_destroy();
 			//ui_side_enc_menu_destroy();
 			ui_desktop_ft8_destroy();
+			#ifdef CONTEXT_FT8
+			// Receiver off first, then the operator's bands back
+			ft8_proc_live(0);
+			ft8_radio_exit();
+			#endif
 			//ui_quick_log_destroy();
 			#ifdef CONTEXT_MESHCORE
 			// Nothing to wind down on the radio side - the meshcore
@@ -922,6 +955,9 @@ static void ui_proc_change_mode(void)
 			// Restore the VFO frequency that was saved on MarsChat entry
 			marschat_vfo_exit();
 			#endif
+
+			// Back to the user - no digital mode owns HF
+			hf_app_select(HF_APP_NONE);
 
 			// Clear screen
 			GUI_SetBkColor(GUI_BLACK);

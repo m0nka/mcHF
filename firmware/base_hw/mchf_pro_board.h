@@ -212,6 +212,7 @@ __attribute__((__common__)) struct UI_DRIVER_STATE {
 #define UI_ICC_POWER_LEVEL		13
 #define UI_ICC_AF_GAIN			14
 #define UI_ICC_DSP_SETTINGS		15		// only a wake-up, the ICC task sends the set when dirty
+#define UI_ICC_FT8				16		// only a wake-up, the ICC task reconciles the FT8 stream
 
 #if 0
 // The 16 bit msg id is used in the DSP handler directly

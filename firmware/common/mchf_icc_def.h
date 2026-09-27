@@ -129,6 +129,43 @@
 // the values that differ from what it has
 #define ICC_SET_DSP_SETTINGS			20
 //
+// FT8 waterfall - the M4 core runs the ft8_lib STFT front end (monitor.c:
+// 12 kHz, 3840 point FFT, Hann window, 2x time and 2x frequency
+// oversampling, 200..3000 Hz) and hands out one row per 80 ms subblock.
+// Row n is waterfall bytes [n * ICC_FT8_ROW_BYTES ..] of the slot, i.e.
+// block n/2, time_sub n%2, laid out [freq_sub][bin]. The M7 core decodes
+//
+// ICC_FT8_START payload: [0] source, ICC_FT8_SRC_xxx. Restarts the frame
+// ICC_FT8_FEED  payload: [0..1] sample count LE (<= ICC_FT8_FEED_MAX),
+//                        [2..]  16 bit signed LE mono PCM @ 12 kHz
+//               response [0] rows waiting in the M4 ring
+#define ICC_FT8_START					21
+#define ICC_FT8_STOP					22
+#define ICC_FT8_READ					23
+#define ICC_FT8_FEED					24
+//
+// FT8 transmission on the MarsChat symbol streamer, abort = ICC_MC_TX_STOP
+// payload: [0..1] audio frequency of tone 0 in Hz LE, [2] symbol count (79),
+//          [3..81] one tone (0..7) per byte. Response [0] = 0 accepted
+#define ICC_FT8_TX_START				25
+#define ICC_FT8_TX_SYMS					79
+//
+#define ICC_FT8_SRC_LIVE				0		// line level rx audio tap
+#define ICC_FT8_SRC_INJECT				1		// PCM from ICC_FT8_FEED (bench)
+//
+// ICC_FT8_READ response layout:
+// [0]     signature (ICC_FT8_SIG)
+// [1]     flags
+// [2..3]  row sequence number since start, little endian
+// [4..5]  payload size in bytes, little endian, 0 = ring empty
+// [6.. ]  one waterfall row
+#define ICC_FT8_SIG						0x9D
+#define ICC_FT8_FLAG_ACTIVE				0x01	// stream still running on the M4 core
+#define ICC_FT8_FLAG_OVERRUN			0x02	// input or row ring overflowed, data lost
+#define ICC_FT8_HDR_SIZE				6
+#define ICC_FT8_ROW_BYTES				898		// 2 freq_sub x 449 bins
+#define ICC_FT8_FEED_MAX				480
+//
 // ICC_MC_TX_START payload layout:
 // [0..1]  audio tone base in Hz, little endian (e.g. 1500); symbol
 //         tones are base + sym * 12000/8192 Hz

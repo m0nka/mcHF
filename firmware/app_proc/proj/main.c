@@ -19,6 +19,12 @@
 #include "meshcore_proc.h"
 #endif
 
+#ifdef CONTEXT_FT8
+#include "ft8_proc.h"
+#endif
+
+#include "hf_app.h"
+
 // Reserved FreeRTOS heap memory
 #if configAPPLICATION_ALLOCATED_HEAP == 1
 __attribute__((section(".axi_mem"))) uint8_t ucHeap[configTOTAL_HEAP_SIZE];
@@ -413,6 +419,10 @@ static void tasks_pre_os_init(void)
 	ps.hAppTask		= NULL;
 	ps.hWsprTask	= NULL;
 	ps.hMarschatTask = NULL;
+	ps.hFt8Task		= NULL;
+
+	// HF digital mode ownership + shared arena (WSPR, MarsChat, FT8)
+	hf_app_init();
 
 	#ifdef CONTEXT_SD
 	storage_proc_init();
@@ -773,6 +783,21 @@ static int start_proc(void)
     {
     	printf("unable to create meshcore process\r\n");
     	return 18;
+    }
+	#endif
+
+	#ifdef CONTEXT_FT8
+    res = xTaskCreate(	(TaskFunction_t)ft8_proc_task,\
+    					FT8_PROC_START_NAME,\
+						FT8_PROC_STACK_SIZE,\
+						NULL,\
+						FT8_PROC_PRIORITY,\
+						&(ps.hFt8Task));
+
+    if(res != pdPASS)
+    {
+    	printf("unable to create ft8 process\r\n");
+    	return 19;
     }
 	#endif
 

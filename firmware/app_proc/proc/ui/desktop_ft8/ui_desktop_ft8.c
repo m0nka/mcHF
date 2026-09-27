@@ -33,6 +33,8 @@
 // second and live in their own child windows, so the decode lists below
 // them are only redrawn when the data behind them actually changes.
 //
+#include <stdlib.h>
+
 #include "mchf_pro_board.h"
 #include "main.h"
 
@@ -49,6 +51,9 @@
 
 #include "ui_desktop_ft8.h"
 
+#include "ft8_proc.h"
+#include "ft8_radio.h"
+
 // UI driver public state
 extern struct	UI_DRIVER_STATE			ui_s;
 extern struct	PROC_STATE				ps;
@@ -58,20 +63,19 @@ WM_HWIN				hDesktopFT8 = 0;
 
 static WM_HWIN		hFT8Title;					// title strip, owns the clock
 static WM_HWIN		hFT8Slot;					// slot bar, owns the countdown
+static WM_HWIN		hFT8Wf;						// waterfall + frequency axis
 static WM_HTIMER	hFT8Timer;
 
 // ---------------------------------------------------------------------
 // Screen state
 //
-// Only tx_armed and sel_row are decisions the operator has made; the
-// rest is derived from the RTC on every tick. Nothing here survives a
-// screen teardown yet - once there is a decoder the decode lists will
-// have to move into the FT8 task and outlive this dialog, the way the
-// MarsChat history does
+// Only tx_armed and sel_row are decisions the operator has made. The
+// decode lists and the receiver state live in the ft8 task and outlive
+// this dialog; the screen keeps a copy, refreshed when the task says the
+// history changed
 
 static uint8_t		ft8_tx_armed = 0;			// transmitter armed
 static int8_t		ft8_sel_row  = -1;			// selected decode, -1 = none
-static uint8_t		ft8_band_idx = 0;
 
 // Slot phase, recomputed each tick from the RTC
 #define FT8_PHASE_RX			0
@@ -80,64 +84,45 @@ static uint8_t		ft8_band_idx = 0;
 static uint8_t		ft8_phase;
 static uint8_t		ft8_slot_secs;				// seconds elapsed into the current slot
 
-// ---------------------------------------------------------------------
-// Demo content
-//
-// Stand-in for what the decoder will eventually produce. Shaped exactly
-// like a real decode so the list painter does not have to change when
-// the backend lands: utc, snr in dB, dt in hundredths of a second,
-// audio frequency in Hz, and the unpacked message text
+// Copy of the ft8 task's decode history, oldest first
+static FT8_DECODE	ft8_ui_hist[FT8_HISTORY];
+static int			ft8_ui_hist_n   = 0;
+static ulong		ft8_ui_hist_gen = 0xFFFFFFFF;
 
-typedef struct
-{
-	char		time[8];
-	int8_t		snr;
-	int16_t		dt;								// hundredths of a second
-	uint16_t	freq;							// audio Hz
-	char		msg[24];
+// The two panes: all recent decodes, and those near our own audio
+// frequency (until the QSO sequencer knows our call, WP7)
+static FT8_DECODE	ft8_ui_band[FT8_LIST_ROWS];
+static int			ft8_ui_band_n = 0;
+static FT8_DECODE	ft8_ui_rxf[FT8_LIST_ROWS];
+static int			ft8_ui_rxf_n  = 0;
 
-} FT8_DECODE;
+#define FT8_RX_AUDIO_HZ			1500			// our tx/rx audio offset, WP7 moves it
+#define FT8_RX_WINDOW_HZ		60
 
-static const FT8_DECODE	ft8_demo_band[] =
-{
-	{ "133900", -19,  10, 1199, "K2NRS R5DU -25"   },
-	{ "133900", -17, 190,  853, "CQ UR4LBG KN89"   },
-	{ "133900",  -6, 210,  905, "CQ OK1HEH JN79"   },
-	{ "133900",   0, 230, 1831, "UA6HI E74BYZ R-24"},
-	{ "133900", -18, 200, 2064, "GI3SG RX9ATX -25" },
-	{ "133900",  -9, 130, 2181, "CQ ER1OO KN46"    },
-	{ "133900",  -9, 210, 2260, "SE3X UN7LZ R-08"  },
-	{ "133900",  -6, 220,  918, "CQ OH6HPS KP10"   },
-	{ "133915", -18, 210, 2134, "CQ E73DN JN93"    },
-	{ "133915", -11, 150, 1422, "M0NKA DL2ABC -13" },
-	{ "133915",  -3, 240, 1677, "CQ SP9XYZ JO90"   },
-};
+static FT8_LIVE_STATUS	ft8_ui_live;
 
-static const FT8_DECODE	ft8_demo_rxfreq[] =
-{
-	{ "133915", -11, 150, 1500, "M0NKA DL2ABC -13" },
-	{ "133845",  -8, 140, 1500, "M0NKA DL2ABC IO91"},
-};
+// Waterfall - the desktop scope palette, so the two look alike. ARGB,
+// opaque alpha added the same way ui_controls_spectrum.c does it
+extern const ulong		waterfall_blue[64];
 
-// FT8 dial frequencies, USB carrier. Tapping BAND steps this list
-static const struct
-{
-	const char	*name;
-	uint32_t	dial_hz;
+static GUI_COLOR		ft8_wf_colors[64];
+static const GUI_LOGPALETTE	ft8_wf_pal = { 64, 0, ft8_wf_colors };
 
-} ft8_bands[] =
-{
-	{ "80M", 3573000  },
-	{ "40M", 7074000  },
-	{ "30M", 10136000 },
-	{ "20M", 14074000 },
-	{ "17M", 18100000 },
-	{ "15M", 21074000 },
-	{ "12M", 24915000 },
-	{ "10M", 28074000 },
-};
+// UI tick. Must be well under the 160 ms waterfall line rate: at 200 ms
+// most repaints scrolled one line and every fourth one two, a visible
+// jerk about once a second. At 40 ms every line gets its own repaint
+#define FT8_UI_TICK_MS			40
 
-#define FT8_BAND_COUNT		(int)(sizeof(ft8_bands) / sizeof(ft8_bands[0]))
+// Waterfall pacing: lines on screen, and when the last one went up. The
+// writer is jittery (M4 -> icc poll -> ft8 task -> this timer), so the
+// screen scrolls on its own clock, one line per FT8_UI_WF_LINE_MS, and
+// only hurries when it falls behind (slot starts)
+#define FT8_UI_WF_LINE_MS		150
+#define FT8_UI_WF_MAX_LAG		2
+
+static ulong			ft8_wf_shown   = 0;
+static TickType_t		ft8_wf_adv_t   = 0;
+static uint8_t			ft8_ui_secs  = 0xFF;	// clock second last painted
 
 static void ft8_ui_on_button(int id, int ncode);
 
@@ -157,28 +142,51 @@ static ulong ft8_ui_dial_hz(void)
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : ft8_ui_sync_band
-//* Object              : point the band plan entry at whichever FT8 band
-//*						: the VFO is already sitting on, so the screen does
-//*						: not open claiming a band the radio is not on
-//* Notes    			: leaves the index alone when the VFO is nowhere
-//*						: near an FT8 frequency - the title then shows the
-//*						: mismatch in amber, which is the useful answer
+//* Function Name       : ft8_ui_refresh_lists
+//* Object              : pull the decode history from the ft8 task when it
+//*						: changed, rebuild both panes
+//* Notes    			: returns 1 when the lists changed
 //* Context    			: CONTEXT_VIDEO (gui task)
 //*----------------------------------------------------------------------------
-static void ft8_ui_sync_band(void)
+static int ft8_ui_refresh_lists(void)
 {
-	ulong	dial = ft8_ui_dial_hz();
-	int		i;
+	ulong	gen;
+	int		i, d;
 
-	for(i = 0; i < FT8_BAND_COUNT; i++)
+	ft8_ui_hist_n = ft8_proc_get_history(ft8_ui_hist, FT8_HISTORY, &gen);
+
+	if(gen == ft8_ui_hist_gen)
+		return 0;
+
+	ft8_ui_hist_gen = gen;
+
+	// Band activity - the newest, oldest at the top like WSJT-X
+	ft8_ui_band_n = (ft8_ui_hist_n < FT8_LIST_ROWS) ? ft8_ui_hist_n : FT8_LIST_ROWS;
+	memcpy(ft8_ui_band, ft8_ui_hist + ft8_ui_hist_n - ft8_ui_band_n, ft8_ui_band_n * sizeof(FT8_DECODE));
+
+	// RX frequency - the newest within the window around our audio offset
+	ft8_ui_rxf_n = 0;
+	for(i = ft8_ui_hist_n - 1; (i >= 0) && (ft8_ui_rxf_n < FT8_LIST_ROWS); i--)
 	{
-		if(ft8_bands[i].dial_hz == dial)
-		{
-			ft8_band_idx = (uint8_t)i;
-			return;
-		}
+		d = (int)ft8_ui_hist[i].freq - FT8_RX_AUDIO_HZ;
+
+		if((d >= -FT8_RX_WINDOW_HZ) && (d <= FT8_RX_WINDOW_HZ))
+			ft8_ui_rxf[ft8_ui_rxf_n++] = ft8_ui_hist[i];
 	}
+
+	// That walked newest first - flip to oldest first
+	for(i = 0; i < ft8_ui_rxf_n / 2; i++)
+	{
+		FT8_DECODE t = ft8_ui_rxf[i];
+
+		ft8_ui_rxf[i] = ft8_ui_rxf[ft8_ui_rxf_n - 1 - i];
+		ft8_ui_rxf[ft8_ui_rxf_n - 1 - i] = t;
+	}
+
+	// A selection points at a row that has moved - drop it
+	ft8_sel_row = -1;
+
+	return 1;
 }
 
 //*----------------------------------------------------------------------------
@@ -208,12 +216,8 @@ static void ft8_ui_tick_slot(void)
 
 	ft8_slot_secs = (uint8_t)(secs % FT8_SLOT_SECS);
 
-	// Even slots are ours by convention when armed. The real sequencer
-	// will own this decision - it depends on who called whom
-	if((ft8_tx_armed) && (((secs / FT8_SLOT_SECS) & 1) == 0))
-		ft8_phase = FT8_PHASE_TX;
-	else
-		ft8_phase = FT8_PHASE_RX;
+	// The ft8 task decides - it knows the parity and the watchdog
+	ft8_phase = (ft8_ui_live.state == FT8_LIVE_TX) ? FT8_PHASE_TX : FT8_PHASE_RX;
 }
 
 //*----------------------------------------------------------------------------
@@ -285,15 +289,14 @@ static void ft8_ui_paint_title(void)
 	GUI_SetColor(ATLAS_AMBER);
 	atlas_text_right(FT8_UI_W - 10, 4, buf, 2);
 
-	// Selected FT8 band and the actual dial. BAND steps the band plan
-	// entry but does not retune the VFO yet, so the two can disagree -
-	// and when they do the frequency goes amber, because a VFO that is
-	// not on the band's FT8 frequency will decode precisely nothing
-	snprintf(buf, sizeof(buf), "%s   %u.%06u MHZ", ft8_bands[ft8_band_idx].name,
+	// Band and the actual dial. The screen tunes the band's FT8 frequency
+	// on entry and on BAND - if the dial is anywhere else (retuned from a
+	// knob) it goes amber, because off frequency it decodes nothing
+	snprintf(buf, sizeof(buf), "%s   %u.%06u MHZ", ft8_radio_band_name(tsu.curr_band),
 			(unsigned)(dial / 1000000), (unsigned)(dial % 1000000));
 
 	GUI_SetFont(&GUI_Font16B_1);
-	GUI_SetColor((dial == ft8_bands[ft8_band_idx].dial_hz) ? ATLAS_CYAN : ATLAS_AMBER);
+	GUI_SetColor((dial == ft8_radio_band_dial(tsu.curr_band)) ? ATLAS_CYAN : ATLAS_AMBER);
 	atlas_text_right(FT8_UI_W - 150, 8, buf, 1);
 
 	GUI_SetColor(ATLAS_LINE);
@@ -309,7 +312,7 @@ static void ft8_ui_paint_title(void)
 //*----------------------------------------------------------------------------
 static void ft8_ui_paint_slot(void)
 {
-	char		buf[48];
+	char		buf[64];
 	const char	*doing;
 	GUI_COLOR	c0, c1, ink;
 	int			remain, filled;
@@ -327,19 +330,28 @@ static void ft8_ui_paint_slot(void)
 		c1    = ATLAS_AMBER_DEEP;
 		ink   = ATLAS_INK;
 	}
-	else if(ft8_slot_secs < FT8_TX_SECS)
+	else if(ft8_ui_live.state == FT8_LIVE_CAPTURE)
 	{
 		doing = "RX CAPTURE";
 		c0    = ATLAS_CYAN;
 		c1    = ATLAS_CYAN_DEEP;
 		ink   = ATLAS_TEXT;
 	}
-	else
+	else if(ft8_ui_live.state == FT8_LIVE_DECODE)
 	{
 		doing = "DECODING";
 		c0    = ATLAS_CYAN_DEEP;
 		c1    = ATLAS_PANEL;
 		ink   = ATLAS_TEXT;
+	}
+	else
+	{
+		// Between slots, or not receiving at all - say which
+		doing = (ft8_ui_live.state == FT8_LIVE_WAIT)     ? "WAIT SLOT" :
+				(ft8_ui_live.state == FT8_LIVE_NO_ARENA) ? "HF BUSY"   : "RX OFF";
+		c0    = ATLAS_PANEL;
+		c1    = ATLAS_PANEL;
+		ink   = ATLAS_DIM;
 	}
 
 	// Mode block on the left, slot state to the right of it
@@ -355,8 +367,13 @@ static void ft8_ui_paint_slot(void)
 	remain = FT8_SLOT_SECS - (int)ft8_slot_secs;
 
 	GUI_SetColor(ink);
-	snprintf(buf, sizeof(buf), "%s   %d DECODES   NEXT IN %ds", doing,
-			(int)(sizeof(ft8_demo_band) / sizeof(ft8_demo_band[0])), remain);
+	// Slot clock correction learned from DT, tenths of a second
+	{
+		int c = ft8_ui_live.clock_ofs_ms / 100;
+
+		snprintf(buf, sizeof(buf), "%s   %d DEC   CLK %s%d.%d   NEXT %ds", doing,
+				(int)ft8_ui_live.last_count, (c < 0) ? "-" : "+", abs(c) / 10, abs(c) % 10, remain);
+	}
 	atlas_text_right(FT8_SLOT_W - 24, 9, buf, 3);
 
 	// Right cap - amber while armed, so the transmit state is readable
@@ -413,10 +430,7 @@ static void ft8_ui_paint_list(int x, const char *title, const FT8_DECODE *list,
 	{
 		const FT8_DECODE	*d   = &list[i];
 		int					sel  = (selectable) && (i == ft8_sel_row);
-		int					frac = d->dt % 100;
-
-		if(frac < 0)
-			frac = -frac;
+		int					adt  = (d->dt < 0) ? -d->dt : d->dt;
 
 		y = FT8_LIST_Y + FT8_LIST_HDR_H + 22 + i * FT8_LIST_ROW_H;
 
@@ -436,7 +450,7 @@ static void ft8_ui_paint_list(int x, const char *title, const FT8_DECODE *list,
 
 		// UTC
 		GUI_SetColor(sel ? ATLAS_TEXT : ATLAS_DIM);
-		atlas_text(x + FT8_COL_TIME, y + 4, d->time, 0);
+		atlas_text(x + FT8_COL_TIME, y + 2, d->time, 0);
 
 		// SNR, coloured by strength
 		{
@@ -444,25 +458,26 @@ static void ft8_ui_paint_list(int x, const char *title, const FT8_DECODE *list,
 
 			snprintf(buf, sizeof(buf), "%d", d->snr);
 			GUI_SetColor(sel ? ATLAS_TEXT : ft8_ui_snr_colour(d->snr));
-			atlas_text(x + FT8_COL_SNR, y + 4, buf, 0);
+			atlas_text(x + FT8_COL_SNR, y + 2, buf, 0);
 		}
 
 		// DT and audio frequency
 		{
 			char	buf[12];
 
-			snprintf(buf, sizeof(buf), "%d.%01d", d->dt / 100, frac / 10);
+			// Sign by hand - "-0.3" has an integer part of 0
+			snprintf(buf, sizeof(buf), "%s%d.%01d", (d->dt < 0) ? "-" : "", adt / 100, (adt % 100) / 10);
 			GUI_SetColor(sel ? ATLAS_TEXT : ATLAS_DIM);
-			atlas_text(x + FT8_COL_DT, y + 4, buf, 0);
+			atlas_text(x + FT8_COL_DT, y + 2, buf, 0);
 
 			snprintf(buf, sizeof(buf), "%u", (unsigned)d->freq);
-			atlas_text(x + FT8_COL_FREQ, y + 4, buf, 0);
+			atlas_text(x + FT8_COL_FREQ, y + 2, buf, 0);
 		}
 
 		// Message - CQ in amber, everything else in the normal ink
 		GUI_SetColor(sel			   ? ATLAS_TEXT  :
 					 ft8_ui_is_cq(d->msg) ? ATLAS_AMBER : ATLAS_TEXT);
-		atlas_text(x + FT8_COL_MSG, y + 4, d->msg, 0);
+		atlas_text(x + FT8_COL_MSG, y + 2, d->msg, 0);
 	}
 
 	// Empty list still says so, rather than showing a blank panel
@@ -493,21 +508,116 @@ static void ft8_ui_paint_tx(void)
 
 	atlas_chip(FT8_TX_X + 8, FT8_TX_Y + 8, 34, 18, "TX", col, ft8_tx_armed);
 
-	// With no sequencer yet this is a fixed string - the real one comes
-	// from the QSO state machine (WP7)
-	if(ft8_sel_row >= 0)
-		msg = "M0NKA DL2ABC -13";
-	else
-		msg = "CQ M0NKA IO91";
+	// The message queued in the ft8 task (CALL CQ sets it, WP7 will)
+	msg = ft8_ui_live.tx_msg[0] ? ft8_ui_live.tx_msg : "PRESS CALL CQ";
 
 	GUI_SetFont(&GUI_Font20B_1);
 	GUI_SetColor(ft8_tx_armed ? ATLAS_TEXT : ATLAS_DIM);
 	atlas_text(FT8_TX_X + 52, FT8_TX_Y + 6, msg, 2);
 
+	{
+		char	st[40];
+
+		if(ft8_ui_live.state == FT8_LIVE_TX)
+			snprintf(st, sizeof(st), "TRANSMITTING  %d/%d", ft8_ui_live.tx_count, 6);
+		else if(ft8_tx_armed)
+			snprintf(st, sizeof(st), "NEXT %s SLOT  %d/%d", ft8_ui_live.tx_parity ? "ODD" : "EVEN",
+					ft8_ui_live.tx_count, 6);
+		else
+			snprintf(st, sizeof(st), "TRANSMITTER DISARMED");
+
+		GUI_SetFont(&GUI_Font13B_1);
+		GUI_SetColor(ft8_ui_live.tx_rc ? ATLAS_AMBER : ATLAS_DIM);
+		atlas_text_right(FT8_TX_X + FT8_TX_W - 10, FT8_TX_Y + 10, st, 2);
+	}
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : ft8_ui_wf_x
+//* Object              : audio frequency -> waterfall x
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static int ft8_ui_wf_x(int hz)
+{
+	return ((hz - 200) * FT8_WF_W) / 2800;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : ft8_ui_paint_wf
+//* Object              : waterfall image and frequency axis
+//* Notes    			: the image is rendered by the ft8 task, this only
+//*						: blits it through the palette
+//* Context    			: CONTEXT_VIDEO (gui task, WM_PAINT)
+//*----------------------------------------------------------------------------
+static void ft8_ui_paint_wf(void)
+{
+	const uint8_t	*ring = ft8_proc_display(NULL);
+	char			buf[8];
+	int				hz, x, s0, n1;
+
+	if((ring != NULL) && (ft8_wf_shown != 0))
+	{
+		// Newest shown line on top. Newer lines sit at lower ring slots,
+		// so from its slot upwards is newest-first until the ring wraps
+		s0 = FT8_DISP_SLOT(ft8_wf_shown - 1);
+		n1 = FT8_DISP_RING - s0;
+		if(n1 > FT8_WF_H)
+			n1 = FT8_WF_H;
+
+		GUI_DrawBitmapExp(0, 0, FT8_WF_W, n1, 1, 1, 8, FT8_WF_W,
+						  ring + (ulong)s0 * FT8_WF_W, &ft8_wf_pal);
+
+		if(n1 < FT8_WF_H)
+			GUI_DrawBitmapExp(0, n1, FT8_WF_W, FT8_WF_H - n1, 1, 1, 8, FT8_WF_W,
+							  ring, &ft8_wf_pal);
+	}
+	else
+	{
+		GUI_SetColor(ft8_wf_colors[0]);
+		GUI_FillRect(0, 0, FT8_WF_W - 1, FT8_WF_H - 1);
+	}
+
+	// Axis strip
+	GUI_SetColor(GUI_BLACK);
+	GUI_FillRect(0, FT8_WF_H, FT8_WF_W - 1, FT8_WF_WIN_H - 1);
+
+	GUI_SetTextMode(GUI_TM_TRANS);
 	GUI_SetFont(&GUI_Font13B_1);
-	GUI_SetColor(ATLAS_DIM);
-	atlas_text_right(FT8_TX_X + FT8_TX_W - 10, FT8_TX_Y + 10,
-					ft8_tx_armed ? "SENDS IN THE NEXT EVEN SLOT" : "TRANSMITTER DISARMED", 2);
+
+	for(hz = 500; hz <= 3000; hz += 500)
+	{
+		x = ft8_ui_wf_x(hz);
+
+		GUI_SetColor(ATLAS_DIM);
+		GUI_DrawVLine(x, FT8_WF_H, FT8_WF_H + 3);
+
+		snprintf(buf, sizeof(buf), "%d", hz);
+		GUI_DispStringAt(buf, x + 3, FT8_WF_H + 2);
+	}
+
+	// Our own rx/tx audio offset
+	x = ft8_ui_wf_x(FT8_RX_AUDIO_HZ);
+	GUI_SetColor(ATLAS_AMBER);
+	GUI_FillRect(x - 1, FT8_WF_H, x + 1, FT8_WF_WIN_H - 1);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : _cbWf
+//* Object              : waterfall child window
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void _cbWf(WM_MESSAGE *pMsg)
+{
+	switch(pMsg->MsgId)
+	{
+		case WM_PAINT:
+			ft8_ui_paint_wf();
+			break;
+
+		default:
+			WM_DefaultProc(pMsg);
+			break;
+	}
 }
 
 //*----------------------------------------------------------------------------
@@ -612,6 +722,9 @@ static void ft8_ui_invalidate_all(void)
 	if(hFT8Slot)
 		WM_InvalidateWindow(hFT8Slot);
 
+	if(hFT8Wf)
+		WM_InvalidateWindow(hFT8Wf);
+
 	for(i = 0; i < (int)GUI_COUNTOF(ids); i++)
 		WM_InvalidateWindow(WM_GetDialogItem(hDesktopFT8, ids[i]));
 }
@@ -633,26 +746,27 @@ static void ft8_ui_on_button(int id, int ncode)
 	{
 		case ID_FT8_BTN_ENABLE:
 		{
-			ft8_tx_armed ^= 1;
+			ft8_proc_tx_arm(!ft8_tx_armed);
 			break;
 		}
 
 		case ID_FT8_BTN_CQ:
 		{
-			// Calling CQ means we are not answering anybody
-			ft8_sel_row  = -1;
-			ft8_tx_armed = 1;
+			// Calling CQ means we are not answering anybody. Even slots
+			// until the sequencer (WP7) picks the parity from the QSO
+			ft8_sel_row = -1;
+			ft8_proc_tx_set("CQ " FT8_MY_CALL " " FT8_MY_GRID, 0);
 			break;
 		}
 
 		case ID_FT8_BTN_ANSWER:
 		{
 			// Stand-in for "work the decode under the cursor" - steps
-			// through the demo list until there is touch hit testing
+			// through the band activity until there is touch hit testing
 			// on the rows themselves
 			ft8_sel_row++;
 
-			if(ft8_sel_row >= (int)(sizeof(ft8_demo_band) / sizeof(ft8_demo_band[0])))
+			if(ft8_sel_row >= ft8_ui_band_n)
 				ft8_sel_row = -1;
 
 			break;
@@ -660,25 +774,21 @@ static void ft8_ui_on_button(int id, int ncode)
 
 		case ID_FT8_BTN_HALT:
 		{
-			ft8_tx_armed = 0;
+			ft8_proc_tx_halt();
 			break;
 		}
 
 		case ID_FT8_BTN_LOG:
 		{
-			// WP8
+			// WP8 - until then it runs the decode bench (live rx pauses)
+			ft8_proc_request_bench();
 			break;
 		}
 
 		case ID_FT8_BTN_BAND:
 		{
-			ft8_band_idx++;
-
-			if(ft8_band_idx >= FT8_BAND_COUNT)
-				ft8_band_idx = 0;
-
-			// Does not retune the VFO yet - the band plan table is here
-			// so the button has somewhere real to point when it does
+			// Next band with an FT8 frequency - full band change, tuned
+			ft8_radio_next_band();
 			break;
 		}
 
@@ -789,23 +899,33 @@ static void _cbDialog(WM_MESSAGE *pMsg)
 								FT8_SLOT_W, FT8_SLOT_WIN_H,
 								pMsg->hWin, WM_CF_SHOW, _cbSlot, 0);
 
-			ft8_ui_sync_band();
-			ft8_ui_tick_slot();
+			for(i = 0; i < 64; i++)
+				ft8_wf_colors[i] = (GUI_COLOR)((0xFFUL << 24) | waterfall_blue[i]);
 
-			hFT8Timer = WM_CreateTimer(pMsg->hWin, 0, 500, 0);
+			hFT8Wf    = WM_CreateWindowAsChild(FT8_WF_X, FT8_WF_Y,
+								FT8_WF_W, FT8_WF_WIN_H,
+								pMsg->hWin, WM_CF_SHOW, _cbWf, 0);
+			ft8_wf_shown = 0;
+			ft8_wf_adv_t = xTaskGetTickCount();
+			ft8_ui_secs  = 0xFF;
+
+			ft8_ui_tick_slot();
+			ft8_proc_get_status(&ft8_ui_live);
+			ft8_ui_hist_gen = 0xFFFFFFFF;
+			ft8_ui_refresh_lists();
+
+			hFT8Timer = WM_CreateTimer(pMsg->hWin, 0, FT8_UI_TICK_MS, 0);
 			break;
 		}
 
 		case WM_PAINT:
 		{
+			// Plain ground - the Atlas grid costs a lot to repaint, and
+			// this screen repaints every slot
 			atlas_background(0, FT8_TITLE_H, FT8_UI_W, FT8_UI_H - FT8_TITLE_H);
-			atlas_grid(0, FT8_TITLE_H, FT8_UI_W, FT8_UI_H - FT8_TITLE_H, 80);
 
-			ft8_ui_paint_list(FT8_LIST_L_X, "BAND ACTIVITY", ft8_demo_band,
-							(int)(sizeof(ft8_demo_band) / sizeof(ft8_demo_band[0])), 1);
-
-			ft8_ui_paint_list(FT8_LIST_R_X, "RX FREQUENCY", ft8_demo_rxfreq,
-							(int)(sizeof(ft8_demo_rxfreq) / sizeof(ft8_demo_rxfreq[0])), 0);
+			ft8_ui_paint_list(FT8_LIST_L_X, "BAND ACTIVITY", ft8_ui_band, ft8_ui_band_n, 1);
+			ft8_ui_paint_list(FT8_LIST_R_X, "RX FREQUENCY",  ft8_ui_rxf,  ft8_ui_rxf_n,  0);
 
 			ft8_ui_paint_tx();
 			break;
@@ -814,18 +934,62 @@ static void _cbDialog(WM_MESSAGE *pMsg)
 		case WM_TIMER:
 		{
 			uint8_t	was_phase = ft8_phase;
+			uchar	was_state = ft8_ui_live.state;
+			ulong	gen;
 
 			ft8_ui_tick_slot();
+			ft8_proc_get_status(&ft8_ui_live);
 
-			// The slot bar and clock always move; the rest of the
-			// screen only when the phase actually flips
-			WM_InvalidateWindow(hFT8Title);
-			WM_InvalidateWindow(hFT8Slot);
+			// The transmitter lives in the ft8 task (watchdog may disarm)
+			if(ft8_tx_armed != ft8_ui_live.tx_armed)
+			{
+				ft8_tx_armed = ft8_ui_live.tx_armed;
+				ft8_ui_invalidate_all();
+			}
+
+			// New decodes - the lists repaint
+			if(ft8_ui_refresh_lists())
+				ft8_ui_invalidate_all();
+
+			// Clock and slot bar once a second, or when the receiver
+			// changes state. That tick repaints nothing else - the
+			// waterfall catches up one tick (40 ms) later
+			if((ft8_slot_secs != ft8_ui_secs) || (was_state != ft8_ui_live.state))
+			{
+				ft8_ui_secs = ft8_slot_secs;
+				WM_InvalidateWindow(hFT8Title);
+				WM_InvalidateWindow(hFT8Slot);
+			}
+			else
+			{
+				// Waterfall: one more line when its time has come, or
+				// right away when the screen fell behind the writer
+				TickType_t now = xTaskGetTickCount();
+
+				ft8_proc_display(&gen);
+
+				// Writer restarted (new session) - start over
+				if(gen < ft8_wf_shown)
+					ft8_wf_shown = 0;
+
+				if((gen > ft8_wf_shown) &&
+				   (((now - ft8_wf_adv_t) >= FT8_UI_WF_LINE_MS) || ((gen - ft8_wf_shown) > FT8_UI_WF_MAX_LAG)))
+				{
+					// Far behind (screen just opened) - jump to the newest
+					if((gen - ft8_wf_shown) > (FT8_DISP_RING - FT8_WF_H))
+						ft8_wf_shown = gen;
+					else
+						ft8_wf_shown++;
+
+					ft8_wf_adv_t = now;
+					WM_InvalidateWindow(hFT8Wf);
+				}
+			}
 
 			if(was_phase != ft8_phase)
 				ft8_ui_invalidate_all();
 
-			WM_RestartTimer(pMsg->Data.v, 500);
+			WM_RestartTimer(pMsg->Data.v, FT8_UI_TICK_MS);
 			break;
 		}
 
@@ -841,6 +1005,7 @@ static void _cbDialog(WM_MESSAGE *pMsg)
 			// repaint cannot reach a dead window
 			hFT8Title = 0;
 			hFT8Slot  = 0;
+			hFT8Wf    = 0;
 			break;
 		}
 

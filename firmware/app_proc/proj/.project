@@ -752,6 +752,36 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/wspr/wspr_proc.c</locationURI>
 		</link>
 		<link>
+			<name>proc/ft8/ft8_decoder.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ft8/ft8_decoder.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ft8/ft8_proc.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ft8/ft8_proc.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ft8/ft8_radio.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ft8/ft8_radio.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ft8/ft8_lib_ldpc_o2.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ft8/ft8_lib_ldpc_o2.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ft8/ft8_lib_decode_o2.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ft8/ft8_lib_decode_o2.c</locationURI>
+		</link>
+		<link>
+			<name>proc/hf_app/hf_app.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/hf_app/hf_app.c</locationURI>
+		</link>
+		<link>
 			<name>Middlewares/FreeRTOS/CMSIS-RTOS/cmsis_os.c</name>
 			<type>1</type>
 			<locationURI>copy_PARENT12345/STM32CubeH7/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c</locationURI>
@@ -887,19 +917,9 @@
 			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/ft8/crc.c</locationURI>
 		</link>
 		<link>
-			<name>middleware/ft8_lib/ft8/decode.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/ft8/decode.c</locationURI>
-		</link>
-		<link>
 			<name>middleware/ft8_lib/ft8/encode.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/ft8/encode.c</locationURI>
-		</link>
-		<link>
-			<name>middleware/ft8_lib/ft8/ldpc.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/middleware/ft8_lib/ft8/ldpc.c</locationURI>
 		</link>
 		<link>
 			<name>middleware/ft8_lib/ft8/message.c</name>

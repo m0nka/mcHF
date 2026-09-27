@@ -609,6 +609,120 @@ icc_proc_loop:
 	return 0;
 }
 
+#ifdef CONTEXT_FT8
+#include "ft8_proc.h"
+
+// M4 FT8 stream running (start acknowledged)
+static uchar	icc_ft8_on = 0;
+
+// ICC_FT8_FEED / ICC_FT8_TX_START payload staging - aRxBuffer carries the reply
+static uchar	icc_ft8_feed_buf[2 + ICC_FT8_FEED_MAX * 2];
+
+//*----------------------------------------------------------------------------
+//* Function Name       : icc_proc_ft8_read
+//* Object              : pull waterfall rows out of the M4 ring
+//* Notes    			: bounded, a burst can not monopolise the icc task
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+static void icc_proc_ft8_read(int max_rows)
+{
+	ushort	seq, len;
+
+	while(max_rows--)
+	{
+		if(icc_proc_cmd_xchange(ICC_FT8_READ, NULL, 0) != 0)
+			break;
+
+		if(aRxBuffer[0] != ICC_FT8_SIG)
+		{
+			printf("ft8 row NA\r\n");
+			break;
+		}
+
+		seq = aRxBuffer[2] | (aRxBuffer[3] << 8);
+		len = aRxBuffer[4] | (aRxBuffer[5] << 8);
+
+		// Ring empty
+		if(len == 0)
+			break;
+
+		ft8_stream_row(seq, aRxBuffer + ICC_FT8_HDR_SIZE, len, aRxBuffer[1]);
+	}
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : icc_proc_ft8_service
+//* Object              : bring the M4 FT8 stream in line with what the ft8
+//*						: task wants, and move data while it runs
+//* Notes    			: runs on every pass of the task loop, so a lost
+//*						: UI_ICC_FT8 wake-up only delays it
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+static void icc_proc_ft8_service(void)
+{
+	uchar	src, want;
+	ushort	n;
+	int		k;
+
+	// Transmitter first - an abort must not wait behind a waterfall pass
+	if(ft8_stream_tx_abort_take())
+		icc_proc_cmd_xchange(ICC_MC_TX_STOP, NULL, 0);
+
+	n = ft8_stream_tx_take(icc_ft8_feed_buf);
+	if(n != 0)
+	{
+		if(icc_proc_cmd_xchange(ICC_FT8_TX_START, icc_ft8_feed_buf, n) == 0)
+			ft8_stream_tx_result(aRxBuffer[0]);
+		else
+			ft8_stream_tx_result(0xFF);
+	}
+
+	want = ft8_stream_want(&src);
+
+	if(want && !icc_ft8_on)
+	{
+		if((icc_proc_cmd_xchange(ICC_FT8_START, &src, 1) == 0) && (aRxBuffer[0] == 0))
+		{
+			icc_ft8_on = 1;
+			ft8_stream_mark(1);
+		}
+	}
+	else if(!want && icc_ft8_on)
+	{
+		icc_proc_cmd_xchange(ICC_FT8_STOP, NULL, 0);
+		icc_ft8_on = 0;
+		ft8_stream_mark(0);
+		return;
+	}
+
+	if(!icc_ft8_on)
+		return;
+
+	// Bench source - feed a few chunks, collect what they produced
+	if(src == ICC_FT8_SRC_INJECT)
+	{
+		for(k = 0; k < 16; k++)
+		{
+			n = ft8_stream_inject_next(icc_ft8_feed_buf + 2, ICC_FT8_FEED_MAX);
+			if(n == 0)
+				break;
+
+			icc_ft8_feed_buf[0] = (uchar)(n >> 0);
+			icc_ft8_feed_buf[1] = (uchar)(n >> 8);
+
+			if(icc_proc_cmd_xchange(ICC_FT8_FEED, icc_ft8_feed_buf, 2 + n * 2) != 0)
+				break;
+
+			// Rows waiting on the M4 side
+			if(aRxBuffer[0])
+				icc_proc_ft8_read(aRxBuffer[0]);
+		}
+	}
+
+	icc_proc_ft8_read(8);
+}
+#endif
+
 #ifdef CONTEXT_WSPR
 //*----------------------------------------------------------------------------
 //* Function Name       : icc_proc_wspr_drain
@@ -771,6 +885,11 @@ static void icc_proc_dsp_command(ulong cmd)
 		// DSP settings changed - only a wake-up, icc_proc_send_dsp_settings()
 		// runs on every pass of the task loop
 		case UI_ICC_DSP_SETTINGS:
+			break;
+
+		// FT8 stream - only a wake-up, icc_proc_ft8_service() runs on every
+		// pass of the task loop
+		case UI_ICC_FT8:
 			break;
 
 	#ifdef CONTEXT_WSPR
@@ -1064,6 +1183,16 @@ icc_proc_loop:
 		sleep = ICC_WSPR_POLL_TIME;
 	#endif
 
+	#ifdef CONTEXT_FT8
+	{
+		uchar src;
+
+		// Bench feed runs flat out, a live stream is polled like WSPR
+		if(ft8_stream_want(&src) || icc_ft8_on)
+			sleep = (src == ICC_FT8_SRC_INJECT) ? 1 : ICC_WSPR_POLL_TIME;
+	}
+	#endif
+
 	ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, sleep);
 
 	// Process commands
@@ -1110,6 +1239,10 @@ icc_proc_loop:
 	// Pull capture chunks on every wake up while the stream runs
 	if(wspr_capture_active())
 		icc_proc_wspr_drain(8);
+	#endif
+
+	#ifdef CONTEXT_FT8
+	icc_proc_ft8_service();
 	#endif
 
 	goto icc_proc_loop;

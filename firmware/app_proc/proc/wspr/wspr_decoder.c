@@ -33,13 +33,6 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-// Large working buffers - on target they live in the dedicated SDRAM
-// section (WSPR_RAM region in the linker script), on a PC build in bss
-#ifdef WSPR_HOST_BUILD
-#define WSPR_BIG_RAM
-#else
-#define WSPR_BIG_RAM __attribute__((section(".wspr_mem"))) __attribute__ ((aligned (32)))
-#endif
 
 // Front end decimator dimensioning
 #define DECIM1					8							// 12000 -> 1500 Hz
@@ -59,11 +52,24 @@
 #define FANO_MAXCYCLES			3000
 
 // ------------------------------------------------------------------------
-// Large buffers (SDRAM)
+// Large buffers (~1 MB). On target they are not owned by the decoder: the
+// caller binds them to the HF app arena (proc/hf_app) for the duration of
+// a cycle, see wspr_decoder_bind(). On a PC build they are plain bss
 
-WSPR_BIG_RAM static float	bb_i[WSPR_MAX_BB_SAMPLES];		// baseband I, 375 Hz
-WSPR_BIG_RAM static float	bb_q[WSPR_MAX_BB_SAMPLES];		// baseband Q, 375 Hz
-WSPR_BIG_RAM static float	ps[WSPR_MAX_FRAMES][WSPR_FFT_SIZE];	// spectrogram power
+typedef struct
+{
+	float	bb_i[WSPR_MAX_BB_SAMPLES];					// baseband I, 375 Hz
+	float	bb_q[WSPR_MAX_BB_SAMPLES];					// baseband Q, 375 Hz
+	float	ps[WSPR_MAX_FRAMES][WSPR_FFT_SIZE];			// spectrogram power
+
+} WSPR_DEC_RAM;
+
+#ifdef WSPR_HOST_BUILD
+static WSPR_DEC_RAM		wspr_host_ram;
+static WSPR_DEC_RAM		*wdr = &wspr_host_ram;
+#else
+static WSPR_DEC_RAM		*wdr = NULL;
+#endif
 
 // ------------------------------------------------------------------------
 // Small state
@@ -203,6 +209,26 @@ static void wspr_init_once(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : wspr_decoder_bind
+//* Object              : point the decoder at its large buffers
+//* Notes    			: mem must be 4 byte aligned and at least
+//*						: wspr_decoder_ram_size() bytes; NULL unbinds, after
+//*						: which feed/run do nothing
+//* Context    			: CONTEXT_WSPR
+//*----------------------------------------------------------------------------
+void wspr_decoder_bind(void *mem)
+{
+	#ifndef WSPR_HOST_BUILD
+	wdr = (WSPR_DEC_RAM *)mem;
+	#endif
+}
+
+unsigned long wspr_decoder_ram_size(void)
+{
+	return sizeof(WSPR_DEC_RAM);
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : wspr_decoder_reset
 //* Object              : prepare for a new capture
 //* Context    			: CONTEXT_WSPR
@@ -250,6 +276,10 @@ int wspr_decoder_feed(const int16_t *pcm, int num_samples)
 {
 	int n, accepted = 0;
 
+	// Not bound to the HF app arena - nothing to write into
+	if(wdr == NULL)
+		return 0;
+
 	wspr_init_once();
 
 	for(n = 0; n < num_samples; n++)
@@ -276,8 +306,8 @@ int wspr_decoder_feed(const int16_t *pcm, int num_samples)
 				// One stage 2 output (375 Hz rate)
 				if(nsamps < WSPR_MAX_BB_SAMPLES)
 				{
-					bb_i[nsamps] = fir_dot(taps2, d2_i, d2_idx);
-					bb_q[nsamps] = fir_dot(taps2, d2_q, d2_idx);
+					wdr->bb_i[nsamps] = fir_dot(taps2, d2_i, d2_idx);
+					wdr->bb_q[nsamps] = fir_dot(taps2, d2_q, d2_idx);
 					nsamps++;
 					accepted += DECIM1 * DECIM2;
 				}
@@ -375,8 +405,8 @@ static int compute_spectrogram(void)
 
 	for(frame = 0; frame < nframes; frame++)
 	{
-		const float *pi = &bb_i[frame * WSPR_FFT_STEP];
-		const float *pq = &bb_q[frame * WSPR_FFT_STEP];
+		const float *pi = &wdr->bb_i[frame * WSPR_FFT_STEP];
+		const float *pq = &wdr->bb_q[frame * WSPR_FFT_STEP];
 
 		for(i = 0; i < WSPR_FFT_SIZE; i++)
 		{
@@ -389,7 +419,7 @@ static int compute_spectrogram(void)
 		for(i = 0; i < WSPR_FFT_SIZE; i++)
 		{
 			float p = fft_re[i] * fft_re[i] + fft_im[i] * fft_im[i];
-			ps[frame][i] = p;
+			wdr->ps[frame][i] = p;
 			psavg[i] += p;
 		}
 	}
@@ -521,10 +551,10 @@ static void coarse_sync(wspr_cand *c, int nframes)
 				boff = (int)lroundf(drift * ((float)k - 80.5f) / 161.0f / BIN_HZ);
 				cb   = c->bin + boff;
 
-				p0 = ps[fr][(cb - 3) & (WSPR_FFT_SIZE - 1)];
-				p1 = ps[fr][(cb - 1) & (WSPR_FFT_SIZE - 1)];
-				p2 = ps[fr][(cb + 1) & (WSPR_FFT_SIZE - 1)];
-				p3 = ps[fr][(cb + 3) & (WSPR_FFT_SIZE - 1)];
+				p0 = wdr->ps[fr][(cb - 3) & (WSPR_FFT_SIZE - 1)];
+				p1 = wdr->ps[fr][(cb - 1) & (WSPR_FFT_SIZE - 1)];
+				p2 = wdr->ps[fr][(cb + 1) & (WSPR_FFT_SIZE - 1)];
+				p3 = wdr->ps[fr][(cb + 3) & (WSPR_FFT_SIZE - 1)];
 
 				ss  += (wspr_pr3[k] ? 1.0f : -1.0f) * ((p1 + p3) - (p0 + p2));
 				pow += p0 + p1 + p2 + p3;
@@ -578,8 +608,8 @@ static float demod_pass(float fbb, float drift, int shift, float *soft)
 			float dc = cosf(w), ds = sinf(w);
 			float cr = 1.0f, ci = 0.0f;
 			float re = 0.0f, im = 0.0f;
-			const float *xi = &bb_i[start];
-			const float *xq = &bb_q[start];
+			const float *xi = &wdr->bb_i[start];
+			const float *xq = &wdr->bb_q[start];
 
 			for(n = 0; n < WSPR_SPS; n++)
 			{
@@ -815,7 +845,7 @@ int wspr_decoder_run_raw(WSPR_RAW_DECODE *out, int max_out)
 	wspr_init_once();
 
 	// Need at least the full transmission (110.6 s)
-	if(nsamps < WSPR_NSYM * WSPR_SPS)
+	if((wdr == NULL) || (nsamps < WSPR_NSYM * WSPR_SPS))
 		return 0;
 
 	nframes = compute_spectrogram();

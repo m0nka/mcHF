@@ -25,6 +25,7 @@
 #include "uhsdr_hw_sai_m4.h"
 #include "icc_spectrum.h"
 #include "icc_wspr.h"
+#include "icc_ft8.h"
 #else
 
 #ifdef UI_BRD_MCHF
@@ -179,6 +180,10 @@ static void MchfHw_Sai_HandleBlock(uint16_t which)
     // line level rx audio (fixed scaling, independent of the volume knob)
     icc_wspr_collect((volatile int16_t *)&dma.audio_buf.out[offset], IQ_BLOCK_SIZE,
                      ts.txrx_mode == TRX_MODE_TX);
+
+    // FT8 waterfall tap - same point, same reasoning
+    icc_ft8_collect((volatile int16_t *)&dma.audio_buf.out[offset], IQ_BLOCK_SIZE,
+                    ts.txrx_mode == TRX_MODE_TX);
 }
 
 void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hsai)

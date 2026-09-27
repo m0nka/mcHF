@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "uhsdr_board.h"
 #include "drivers/audio/softdds/softdds.h"
@@ -49,6 +50,23 @@
 // carrier ramp out) and the envelope edge length (5 ms smoothstep)
 #define MC_GAP_SAMPLES			24000UL
 #define MC_RAMP_SAMPLES			240UL
+
+// FT8 - 8-FSK, 79 symbols of 0.16 s = 7680 samples @ 48 kHz, 6.25 Hz tone
+// spacing, GFSK (BT 2.0) like WSJT-X and ft8_lib: the frequency follows the
+// tone sequence through a Gaussian smoothed pulse three symbols long, so
+// the signal stays narrow instead of splattering at every tone change. The
+// frequency is updated every FT8_CHUNK samples (1 ms) from a pulse table
+#define FT8_NN					79
+#define FT8_SYM_SAMPLES			7680UL
+#define FT8_TONE_STEP_HZ		6.25f
+#define FT8_GFSK_BT				2.0f
+#define FT8_CHUNK				48UL								// 1 ms
+#define FT8_CHUNKS_SYM			(FT8_SYM_SAMPLES / FT8_CHUNK)		// 160
+#define FT8_PULSE_LEN			(3 * FT8_CHUNKS_SYM)				// 480
+
+// Transmission kinds sharing this streamer
+#define MC_MODE_WSPR			0		// MarsChat/WSPR 4-FSK (+ CW id)
+#define MC_MODE_FT8				1
 
 // Streamer phases
 enum
@@ -90,9 +108,63 @@ typedef struct
 	// instance, so the tune machinery can never fight the streamer
 	soft_dds_t			dds;
 
+	// FT8
+	uint8_t				mode;			// MC_MODE_xxx
+	uint8_t				ft8_tones[FT8_NN];
+
 } icc_mc_tx_state_t;
 
 static icc_mc_tx_state_t	mc;
+
+// GFSK frequency pulse, sampled at the chunk centres over three symbols
+static float32_t			ft8_pulse[FT8_PULSE_LEN];
+static uint8_t				ft8_pulse_ok = 0;
+
+//*----------------------------------------------------------------------------
+//* Function Name       : ft8_pulse_init
+//* Object              : ft8_lib gfsk_pulse(): the rectangular symbol pulse
+//*						: through a Gaussian of bandwidth BT, spanning -1.5 to
+//*						: +1.5 symbols. The three overlapping pulses of a
+//*						: steady tone add up to 1
+//* Context    			: CONTEXT_ICC (superloop, first FT8 start)
+//*----------------------------------------------------------------------------
+static void ft8_pulse_init(void)
+{
+	const float32_t	c = (float32_t)M_PI * sqrtf(2.0f / logf(2.0f));
+	uint32_t		i;
+	float32_t		t;
+
+	for(i = 0; i < FT8_PULSE_LEN; i++)
+	{
+		t = (((float32_t)i + 0.5f) / (float32_t)FT8_CHUNKS_SYM) - 1.5f;
+
+		ft8_pulse[i] = (erff(c * FT8_GFSK_BT * (t + 0.5f)) - erff(c * FT8_GFSK_BT * (t - 0.5f))) / 2.0f;
+	}
+
+	ft8_pulse_ok = 1;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : ft8_chunk_freq
+//* Object              : GFSK frequency for chunk 'j' of symbol 'k' - the
+//*						: symbol itself plus the tails of its neighbours
+//*						: (the first and last symbol stand in for the ones
+//*						: before and after the frame, as ft8_lib does)
+//* Context    			: CONTEXT_IRQ
+//*----------------------------------------------------------------------------
+static float32_t ft8_chunk_freq(uint16_t k, uint32_t j)
+{
+	float32_t	prev = mc.ft8_tones[(k > 0) ? (k - 1) : 0];
+	float32_t	cur  = mc.ft8_tones[k];
+	float32_t	next = mc.ft8_tones[(k < (FT8_NN - 1)) ? (k + 1) : (FT8_NN - 1)];
+	float32_t	tone;
+
+	tone = prev * ft8_pulse[2 * FT8_CHUNKS_SYM + j] +
+		   cur  * ft8_pulse[FT8_CHUNKS_SYM + j] +
+		   next * ft8_pulse[j];
+
+	return (float32_t)mc.tone_base + tone * FT8_TONE_STEP_HZ;
+}
 
 // ------------------------------------------------------------------
 // Packed field access (layouts in common/mchf_icc_def.h)
@@ -170,6 +242,7 @@ uint8_t icc_mc_tx_start(const uint8_t *payload)
 	mc.env_target = 1.0f;
 	mc.done_flag  = 0;
 	mc.unkey_sent = 0;
+	mc.mode       = MC_MODE_WSPR;
 
 	mc_set_tone(mc_sym(0), 0);
 
@@ -178,6 +251,70 @@ uint8_t icc_mc_tx_start(const uint8_t *payload)
 
 	printf("mc tx start: tone %u Hz, %u syms, %u cw elem\r\n",
 			tone, nsym, cw_nelem);
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : icc_mc_tx_start_ft8
+//* Object              : FT8 frame - [0..1] audio tone of tone 0 in Hz LE,
+//*						: [2] symbol count (79), [3..] one tone (0..7) per
+//*						: byte. Arms the streamer and requests the key.
+//*						: 0 = accepted
+//* Context    			: CONTEXT_ICC (superloop)
+//*----------------------------------------------------------------------------
+uint8_t icc_mc_tx_start_ft8(const uint8_t *payload)
+{
+	uint16_t	tone;
+	uint8_t		i;
+
+	if(payload == NULL)
+		return 1;
+
+	if(mc.active)
+		return 2;
+
+	tone = (uint16_t)(payload[0] | (payload[1] << 8));
+
+	// The top tone sits 7 x 6.25 = 44 Hz above the base - keep all of it
+	// inside the SSB tx passband
+	if((tone < 200) || (tone > 2900))
+		return 3;
+
+	if(payload[2] != FT8_NN)
+		return 4;
+
+	for(i = 0; i < FT8_NN; i++)
+	{
+		if(payload[3 + i] > 7)
+			return 5;
+
+		mc.ft8_tones[i] = payload[3 + i];
+	}
+
+	if(!ft8_pulse_ok)
+		ft8_pulse_init();
+
+	mc.mode       = MC_MODE_FT8;
+	mc.tone_base  = tone;
+	mc.nsym       = FT8_NN;
+	mc.cw_nelem   = 0;
+
+	mc.phase      = MC_PH_SYMS;
+	mc.seg_idx    = 0;
+	mc.seg_pos    = 0;
+	mc.seg_len    = FT8_SYM_SAMPLES;
+	mc.env        = 0.0f;
+	mc.env_target = 1.0f;
+	mc.done_flag  = 0;
+	mc.unkey_sent = 0;
+
+	softdds_setFreqDDS(&mc.dds, ft8_chunk_freq(0, 0), MC_TX_FS, 0);
+
+	mc.active    = 1;
+	mc.start_req = 1;
+
+	printf("ft8 tx start: tone %u Hz\r\n", tone);
 
 	return 0;
 }
@@ -245,6 +382,22 @@ static void mc_next_segment(void)
 		case MC_PH_SYMS:
 		{
 			mc.seg_idx++;
+
+			// FT8 - the generator retunes per chunk, nothing to do here
+			// but the length; no CW id, straight to the run out
+			if(mc.mode == MC_MODE_FT8)
+			{
+				if(mc.seg_idx < mc.nsym)
+				{
+					mc.seg_len = FT8_SYM_SAMPLES;
+					break;
+				}
+
+				mc.phase      = MC_PH_TAIL;
+				mc.seg_len    = 2 * MC_RAMP_SAMPLES;
+				mc.env_target = 0.0f;
+				break;
+			}
 
 			if(mc.seg_idx < mc.nsym)
 			{
@@ -339,6 +492,19 @@ uint8_t icc_mc_tx_gen(float *i_buff, float *q_buff, uint16_t block_size)
 	{
 		uint32_t	run = mc.seg_len - mc.seg_pos;
 		uint16_t	k;
+
+		// FT8 symbols - GFSK, retune at every chunk boundary and never
+		// run across one
+		if((mc.mode == MC_MODE_FT8) && (mc.phase == MC_PH_SYMS))
+		{
+			uint32_t in_chunk = mc.seg_pos % FT8_CHUNK;
+
+			if(in_chunk == 0)
+				softdds_setFreqDDS(&mc.dds, ft8_chunk_freq(mc.seg_idx, mc.seg_pos / FT8_CHUNK), MC_TX_FS, 1);
+
+			if(run > (FT8_CHUNK - in_chunk))
+				run = FT8_CHUNK - in_chunk;
+		}
 
 		if(run > (uint32_t)(block_size - n))
 			run = (uint32_t)(block_size - n);

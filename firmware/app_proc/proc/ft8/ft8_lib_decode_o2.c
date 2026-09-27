@@ -5,23 +5,18 @@
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
-**  File name:                                                                     **
-**  Description:                                                                   **
+**  File name:		ft8_lib_decode_o2.c                                              **
+**  Description:	ft8_lib ft8/decode.c built at -O2                                **
 **  Last Modified:                                                                 **
-**  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
+**  Licence:		https://github.com/m0nka/mcHF/blob/main/LICENSE                **
 ************************************************************************************/
-#ifndef __VERSION_H
-#define __VERSION_H
 //
-// -----------------------------------------------------------------------------
-// Version and device id
+// The project builds -O0. The FT8 decode path (sync search, LLR extraction,
+// LDPC) is the one place where that decides whether a slot decodes in time,
+// so this file compiles ft8_lib's decode.c at -O2 in place of the original,
+// which is dropped from proj/.project. Keeps the optimisation out of the
+// IDE per-file settings and leaves the submodule untouched.
 //
-#define	DEVICE_STRING				"mcHF App Processor"
-#define	AUTHOR_STRING				"Krassi Atanassov, M0NKA 2013-2026"
-//
-#define	MCHF_R_VER_MAJOR			0
-#define	MCHF_R_VER_MINOR			0
-#define	MCHF_R_VER_RELEASE			54
-#define	MCHF_R_VER_BUILD			73
-// -----------------------------------------------------------------------------
-#endif
+#pragma GCC optimize ("O2")
+
+#include "ft8/decode.c"

@@ -5,26 +5,17 @@
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
-**  File name:		icc_wspr.h                                                     **
-**  Description:	WSPR rx audio capture streaming to the M7 core                 **
+**  File name:		icc_hf_ram.c                                                   **
+**  Description:	Working RAM shared by the mutually exclusive HF digital mode   **
+**					streams (WSPR capture tap, FT8 waterfall front end)            **
 **  Licence:		https://github.com/m0nka/mcHF/blob/main/LICENSE                **
 ************************************************************************************/
-#ifndef __ICC_WSPR_H
-#define __ICC_WSPR_H
 
-#include <stdint.h>
+// Compiled only for the STM32H747 CM4 baseband build
+#ifdef H7_M4_CORE
 
-// ICC command handlers (superloop context)
-void		icc_wspr_start(void);
-void		icc_wspr_stop(void);
-uint16_t	icc_wspr_get_buffer(uint8_t *buffer);
+#include "icc_hf_ram.h"
 
-// Stop and drop buffered chunks - the FT8 stream takes the shared RAM over
-void		icc_wspr_release(void);
+uint8_t		icc_hf_ram[ICC_HF_RAM_SIZE] __attribute__ ((aligned (8)));
 
-// Rx audio tap - interleaved 16 bit stereo frames at 48 kHz, called from
-// the SAI DMA block handler. tx_mode != 0 substitutes silence to keep
-// the capture time base intact while transmitting
-void		icc_wspr_collect(volatile int16_t *src, uint32_t num_frames, uint32_t tx_mode);
-
-#endif
+#endif // H7_M4_CORE

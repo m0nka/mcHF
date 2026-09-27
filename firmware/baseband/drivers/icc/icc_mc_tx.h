@@ -17,6 +17,10 @@
 // Wire protocol entry points (called from the icc command dispatcher,
 // payload layout in common/mchf_icc_def.h). Start returns 0 = accepted
 uint8_t		icc_mc_tx_start(const uint8_t *payload);
+
+// FT8 frame on the same streamer (layout at icc_mc_tx_start_ft8()). Abort
+// with icc_mc_tx_stop() as for MarsChat
+uint8_t		icc_mc_tx_start_ft8(const uint8_t *payload);
 void		icc_mc_tx_stop(void);
 
 // TX audio path hook - true while the streamer owns the tx iq buffers

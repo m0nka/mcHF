@@ -5,26 +5,25 @@
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
-**  File name:		icc_wspr.h                                                     **
-**  Description:	WSPR rx audio capture streaming to the M7 core                 **
+**  File name:		icc_hf_ram.h                                                   **
+**  Description:	Working RAM shared by the mutually exclusive HF digital mode   **
+**					streams (WSPR capture tap, FT8 waterfall front end)            **
 **  Licence:		https://github.com/m0nka/mcHF/blob/main/LICENSE                **
 ************************************************************************************/
-#ifndef __ICC_WSPR_H
-#define __ICC_WSPR_H
+//
+// M4 counterpart of the M7 HF app arena (app_proc proc/hf_app). Only one HF
+// digital mode owns the radio at a time, so their big buffers overlay one
+// another here. Each stream keeps its own run state OUTSIDE the arena (an
+// irq checks it) and stops the other stream before it takes the arena over.
+//
+#ifndef __ICC_HF_RAM_H
+#define __ICC_HF_RAM_H
 
 #include <stdint.h>
 
-// ICC command handlers (superloop context)
-void		icc_wspr_start(void);
-void		icc_wspr_stop(void);
-uint16_t	icc_wspr_get_buffer(uint8_t *buffer);
+// Largest user: the FT8 STFT front end (~83 KB). WSPR needs 16 KB
+#define ICC_HF_RAM_SIZE				(84 * 1024)
 
-// Stop and drop buffered chunks - the FT8 stream takes the shared RAM over
-void		icc_wspr_release(void);
-
-// Rx audio tap - interleaved 16 bit stereo frames at 48 kHz, called from
-// the SAI DMA block handler. tx_mode != 0 substitutes silence to keep
-// the capture time base intact while transmitting
-void		icc_wspr_collect(volatile int16_t *src, uint32_t num_frames, uint32_t tx_mode);
+extern uint8_t		icc_hf_ram[ICC_HF_RAM_SIZE];
 
 #endif

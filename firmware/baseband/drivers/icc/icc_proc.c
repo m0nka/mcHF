@@ -42,6 +42,7 @@
 #include "icc_radio_if.h"
 #include "icc_spectrum.h"
 #include "icc_wspr.h"
+#include "icc_ft8.h"
 #include "icc_mc_tx.h"
 
 #define RPMSG_SERVICE_NAME              "stm32_icc_service"
@@ -449,6 +450,32 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 		// One buffered capture chunk to the M7 core
 		case ICC_WSPR_READ:
 			ret_size = icc_wspr_get_buffer(icc_out_buffer);
+			break;
+
+		// FT8 waterfall stream (icc_ft8.c)
+		case ICC_FT8_START:
+			icc_out_buffer[0x00] = icc_ft8_start(icc_in_buffer[0]);
+			break;
+
+		case ICC_FT8_STOP:
+			icc_ft8_stop();
+			icc_out_buffer[0x00] = 0;
+			break;
+
+		// One waterfall row to the M7 core
+		case ICC_FT8_READ:
+			ret_size = icc_ft8_get_row(icc_out_buffer);
+			break;
+
+		// Bench PCM instead of the rx tap
+		case ICC_FT8_FEED:
+			icc_out_buffer[0x00] = icc_ft8_feed(icc_in_buffer);
+			break;
+
+		// FT8 transmission - the MarsChat streamer keys and runs it,
+		// ICC_MC_TX_STOP aborts it
+		case ICC_FT8_TX_START:
+			icc_out_buffer[0x00] = icc_mc_tx_start_ft8(icc_in_buffer);
 			break;
 
 		// MarsChat/WSPR symbol transmitter (keys the exciter itself, and

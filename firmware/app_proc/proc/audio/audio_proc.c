@@ -27,6 +27,39 @@ extern struct	UI_DRIVER_STATE			ui_s;
 // FreeRTOS process state
 extern struct PROC_STATE 				ps;
 
+// Codec out of reset and its registers loaded. The chip is held in reset
+// from codec_hw_init() until the SAI clocks run (UI_NEW_SAI_INIT_DONE), and
+// again across a DSP core reload - i2c writes in between are NACKed
+static uchar	audio_codec_up = 0;
+
+// Route last written to the codec, 0xFF = unknown (write on next wake)
+static uchar	audio_last_route = 0xFF;
+
+//*----------------------------------------------------------------------------
+//* Function Name       : audio_proc_reconcile_route
+//* Object              : drive the codec path off tsu.rxtx
+//* Notes    			: The ICC ISR posts UI_RXTX_SWITCH with eSetBits while
+//*						: the volume and PA paths use eSetValueWithOverwrite,
+//*						: so turning the encoder during a TX/RX transition can
+//*						: clobber the pending switch and strand the codec on
+//*						: the microphone input while receiving - audible as
+//*						: the mic coming out of the speaker. Driving it off
+//*						: tsu.rxtx cannot lose an edge
+//* Context    			: CONTEXT_AUDIO
+//*----------------------------------------------------------------------------
+static void audio_proc_reconcile_route(void)
+{
+	// Nothing to talk to while the codec is in reset
+	if(!audio_codec_up)
+		return;
+
+	if(tsu.rxtx != audio_last_route)
+	{
+		audio_last_route = tsu.rxtx;
+		codec_hw_set_audio_route(audio_last_route ? CODEC_ROUTE_TX : CODEC_ROUTE_RX);
+	}
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_proc_worker
 //* Object              :
@@ -42,21 +75,8 @@ static void audio_proc_worker(ulong ulCmd)
 	if(tsu.dsp_alive == 0)
 		return;
 
-	// Reconcile the codec path with the current TX/RX state on every wake.
-	// The ICC ISR posts UI_RXTX_SWITCH with eSetBits while the volume and
-	// PA paths use eSetValueWithOverwrite, so turning the encoder during a
-	// TX/RX transition can clobber the pending switch and strand the codec
-	// on the microphone input while receiving - audible as the mic coming
-	// out of the speaker. Driving it off tsu.rxtx cannot lose an edge.
-	{
-		static uchar last_route = 0xFF;
-
-		if(tsu.rxtx != last_route)
-		{
-			last_route = tsu.rxtx;
-			codec_hw_set_audio_route(last_route ? CODEC_ROUTE_TX : CODEC_ROUTE_RX);
-		}
-	}
+	// Reconcile the codec path with the current TX/RX state on every wake
+	audio_proc_reconcile_route();
 
 	switch(ulCmd)
 	{
@@ -71,6 +91,13 @@ static void audio_proc_worker(ulong ulCmd)
 
 			// Set codec regs
 			codec_task_init();
+
+			// codec_task_init() leaves the codec on the RX route - only a
+			// radio already in TX needs switching, and right away rather
+			// than on some later wake
+			audio_codec_up   = 1;
+			audio_last_route = 0;
+			audio_proc_reconcile_route();
 
 			break;
 		}
@@ -91,6 +118,7 @@ static void audio_proc_worker(ulong ulCmd)
 
 			// Keep the coded in reset for SAI re-init
 			HAL_GPIO_WritePin(CODEC_RESET_PORT, CODEC_RESET, GPIO_PIN_RESET);
+			audio_codec_up = 0;
 
 			break;
 		}
