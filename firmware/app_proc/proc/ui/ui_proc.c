@@ -29,6 +29,7 @@
 #include "cpu_trace.h"
 
 #include "ui_tests.h"
+#include "ui_screenshot.h"
 
 // -----------------------------------------------------------------------------------------------
 // Desktop Mode
@@ -1415,6 +1416,9 @@ ui_proc_loop:
 	// Give control to emWin
 	GUI_Exec();
 	GUI_Delay(del_ms);
+
+	// F1 hold - save the screen to the SD card
+	ui_screenshot_poll();
 
 	// Periodic per task CPU load dump(100% CPU bug hunt)
 	cpu_trace_poll();

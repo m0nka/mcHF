@@ -16,6 +16,10 @@
 #include "radio_init.h"
 #include "keypad_proc.h"
 
+#ifdef CONTEXT_VIDEO
+#include "ui_screenshot.h"
+#endif
+
 #ifdef CONTEXT_KEYPAD
 
 // Local keypad state
@@ -587,7 +591,10 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		}
 		else
 		{
-			printf("F1 hold\r\n");
+			#ifdef CONTEXT_VIDEO
+			// Save the screen to the SD card
+			ui_screenshot_request();
+			#endif
 		}
 		return;
 	}

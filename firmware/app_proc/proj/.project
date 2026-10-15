@@ -712,6 +712,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/ui_proc.c</locationURI>
 		</link>
 		<link>
+			<name>proc/ui/ui_screenshot.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/ui_screenshot.c</locationURI>
+		</link>
+		<link>
 			<name>proc/ui/ui_tests.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/ui_tests.c</locationURI>

@@ -170,6 +170,32 @@ void HAL_LTDC_LineEvenCallback(LTDC_HandleTypeDef *hltdc)
   HAL_LTDC_ProgramLineEvent(hltdc, 0);
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : lcd_get_front_buffer
+//* Object              : what the LTDC is scanning out right now, for the
+//*                     : screenshot - waits out a pending buffer flip first,
+//*                     : so the frame read back is the one on the glass
+//* Input Parameters    : layer index, out: enabled flag, constant alpha
+//* Output Parameters   : frame buffer address, 0 if no such layer
+//* Functions called    : CONTEXT_VIDEO
+//*----------------------------------------------------------------------------
+ulong lcd_get_front_buffer(uchar layer, uchar *enabled, uchar *const_alpha)
+{
+	int i;
+
+	if(layer >= GUI_NUM_LAYERS)
+		return 0;
+
+	// A flip is applied on the next line event - one frame at ~60 Hz
+	for(i = 0; (i < 10) && (layer_prop[layer].pending_buffer >= 0); i++)
+		vTaskDelay(5);
+
+	*enabled     = (__HAL_LTDC_LAYER(&hltdc, layer)->CR & LTDC_LxCR_LEN) ? 1 : 0;
+	*const_alpha = (uchar)(__HAL_LTDC_LAYER(&hltdc, layer)->CACR & 0xFF);
+
+	return __HAL_LTDC_LAYER(&hltdc, layer)->CFBAR;
+}
+
 static void LCD_LL_LayerInit(U32 LayerIndex, U32 address)
 {
 	LTDC_LayerCfgTypeDef  Layercfg;
