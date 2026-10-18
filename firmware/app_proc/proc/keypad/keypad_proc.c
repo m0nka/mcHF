@@ -16,6 +16,10 @@
 #include "radio_init.h"
 #include "keypad_proc.h"
 
+#ifdef CONTEXT_VIDEO
+#include "ui_screenshot.h"
+#endif
+
 #ifdef CONTEXT_KEYPAD
 
 // Local keypad state
@@ -587,7 +591,10 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 		}
 		else
 		{
-			printf("F1 hold\r\n");
+			#ifdef CONTEXT_VIDEO
+			// Save the screen to the SD card
+			ui_screenshot_request();
+			#endif
 		}
 		return;
 	}
@@ -616,11 +623,11 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	{
 		if(!hold)
 		{
-			#if defined(CONTEXT_VIDEO) && defined(CONTEXT_MESHCHAT)
-			// Toggle the MeshChat screen, as F4 does for MarsChat. The
+			#if defined(CONTEXT_VIDEO) && defined(CONTEXT_MESHCORE)
+			// Toggle the MeshCore screen, as F4 does for MarsChat. The
 			// audio dialog that used to live here needs a new home
-			if(ui_s.cur_state != MODE_DESKTOP_MESHCHAT)
-				ui_s.req_state = MODE_DESKTOP_MESHCHAT;
+			if(ui_s.cur_state != MODE_DESKTOP_MESHCORE)
+				ui_s.req_state = MODE_DESKTOP_MESHCORE;
 			else
 				ui_s.req_state = MODE_DESKTOP;
 
@@ -1475,8 +1482,8 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 		#ifdef CONTEXT_MARSCHAT
 		case MODE_DESKTOP_MARSCHAT:		// ditto
 		#endif
-		#ifdef CONTEXT_MESHCHAT
-		case MODE_DESKTOP_MESHCHAT:		// ditto
+		#ifdef CONTEXT_MESHCORE
+		case MODE_DESKTOP_MESHCORE:		// ditto
 		#endif
 			keypad_cmd_processor_desktop(x,y,hold,release);
 			break;

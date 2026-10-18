@@ -50,8 +50,8 @@
 // paths therefore share the cipher but not the MAC key length
 #define MC_DM_MAC_KEY_SIZE		MC_EC_KEY_SIZE
 
-#define MC_CONTACTS_FILE		"0://meshchat/contacts.bin"
-#define MC_CHANNELS_FILE		"0://meshchat/channels.bin"
+#define MC_CONTACTS_FILE		"0://meshcore/contacts.bin"
+#define MC_CHANNELS_FILE		"0://meshcore/channels.bin"
 
 typedef struct
 {
@@ -74,7 +74,7 @@ typedef struct
 	// takes the AES-128 key from the first half but authenticates with
 	// an HMAC over the WHOLE secret - proven by brute forcing a real
 	// direct message from a phone against its captured MAC, see
-	// claude/meshchat_test/solve_dm_key.py
+	// claude/meshcore_test/solve_dm_key.py
 	uint8_t		shared[MC_EC_KEY_SIZE];
 	uint8_t		have_shared;
 
@@ -82,7 +82,7 @@ typedef struct
 	uint8_t		in_use;
 
 	// Messages that have arrived since this conversation was last
-	// looked at. Bumped by the meshchat task, cleared by the dialog -
+	// looked at. Bumped by the meshcore task, cleared by the dialog -
 	// a one word race at worst, and the cost of losing it is a badge
 	// that is out by one. Not meaningful on disk, zeroed on load
 	uint16_t	unread;

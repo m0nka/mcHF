@@ -102,11 +102,11 @@
 
 // -----------------------------------------------------------------------------------------------
 // MeshCore chat application (public channels, direct messages, contacts)
-// UI in proc/ui/desktop_meshchat, service in proc/meshchat. Needs the LoRa
+// UI in proc/ui/desktop_meshcore, service in proc/meshcore. Needs the LoRa
 // radio running the MeshCore stack - it is that protocol's chat client
 //
 #if defined(CONTEXT_LORA) && defined(MESHCORE)
-#define CONTEXT_MESHCHAT
+#define CONTEXT_MESHCORE
 #endif
 
 // -----------------------------------------------------------------------------------------------
@@ -145,6 +145,14 @@
 //
 #ifdef CONTEXT_WSPR
 #define CONTEXT_MARSCHAT
+#endif
+
+// -----------------------------------------------------------------------------------------------
+// FT8 decoder (claude/FT8/PROJECT.md) - WP2 decode bench on waterfall files from the SD card
+//
+//
+#ifdef CONTEXT_SD
+#define CONTEXT_FT8
 #endif
 
 // -------------------------------------------------------------------------------------------
@@ -277,14 +285,22 @@
 #define MARSCHAT_PROC_PRIORITY			tskIDLE_PRIORITY
 #define MARSCHAT_PROC_STACK_SIZE		(configMINIMAL_STACK_SIZE * 16)
 
+// FT8 decoder process parameters (same priority reasoning as WSPR). The
+// stack carries the LDPC belief propagation tables (~5 KB of floats)
+#define FT8_PROC_START_NAME				"ft8"
+#define FT8_PROC_START_DELAY			3700
+#define FT8_PROC_SLEEP_TIME				portMAX_DELAY
+#define FT8_PROC_PRIORITY				tskIDLE_PRIORITY
+#define FT8_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 32)
+
 // MeshCore chat service parameters. Started after the lora task, which is
 // the only thing it talks to on the radio side. The stack has to carry the
 // Ed25519 scalar multiplications and a FatFS write, hence the size
-#define MESHCHAT_PROC_START_NAME		"msh"
-#define MESHCHAT_PROC_START_DELAY		4500
-#define MESHCHAT_PROC_SLEEP_TIME		portMAX_DELAY
-#define MESHCHAT_PROC_PRIORITY			osPriorityNormal
-#define MESHCHAT_PROC_STACK_SIZE		(configMINIMAL_STACK_SIZE * 24)
+#define MESHCORE_PROC_START_NAME		"msh"
+#define MESHCORE_PROC_START_DELAY		4500
+#define MESHCORE_PROC_SLEEP_TIME		portMAX_DELAY
+#define MESHCORE_PROC_PRIORITY			osPriorityNormal
+#define MESHCORE_PROC_STACK_SIZE		(configMINIMAL_STACK_SIZE * 24)
 
 // GNSS driver parameters
 #define GPS_PROC_START_NAME				"gps"

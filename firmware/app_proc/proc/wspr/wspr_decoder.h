@@ -88,6 +88,11 @@ typedef struct
 extern const uint8_t wspr_pr3[WSPR_NSYM];
 
 // Reset internal state, call before feeding a new capture
+// Large buffers are supplied by the caller (the HF app arena on target):
+// bind before reset/feed/run, keep bound until the decode is done
+void	wspr_decoder_bind(void *mem);
+unsigned long	wspr_decoder_ram_size(void);
+
 void	wspr_decoder_reset	(void);
 
 // Stream in PCM samples (any chunk size), 12 kHz mono, returns samples accepted

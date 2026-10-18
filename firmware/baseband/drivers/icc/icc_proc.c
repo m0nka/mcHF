@@ -42,6 +42,7 @@
 #include "icc_radio_if.h"
 #include "icc_spectrum.h"
 #include "icc_wspr.h"
+#include "icc_ft8.h"
 #include "icc_mc_tx.h"
 
 #define RPMSG_SERVICE_NAME              "stm32_icc_service"
@@ -231,6 +232,7 @@ static void icc_proc_extract_settings(icc_radio_settings_t *st)
 	st->power_level					= wire_ts.power_level;
 	st->tx_audio_source				= wire_ts.tx_audio_source;
 	st->tx_mic_gain					= wire_ts.tx_mic_gain;
+	st->tx_comp_level				= wire_ts.tx_comp_level;
 	st->tx_line_gain				= wire_ts.tx_line_gain;
 	st->tx_power_factor				= wire_ts.tx_power_factor;
 
@@ -367,6 +369,7 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 			icc_radio_change_demod_mode(icc_in_buffer[2], icc_in_buffer[3]);
 			icc_radio_change_filter(icc_in_buffer[4]);
 			icc_radio_set_band_power_factor(icc_in_buffer[5]);
+			icc_radio_set_power_level(icc_in_buffer[6]);
 			break;
 		}
 
@@ -411,6 +414,28 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 			break;
 		}
 
+		// Set TX power level
+		case ICC_SET_POWER_LEVEL:
+		{
+			icc_radio_set_power_level(icc_in_buffer[0]);
+			break;
+		}
+
+		// Set RX speaker AF gain
+		case ICC_SET_AF_GAIN:
+		{
+			icc_radio_set_af_gain(icc_in_buffer[0]);
+			break;
+		}
+
+		// UHSDR DSP settings from the Baseband menu
+		case ICC_SET_DSP_SETTINGS:
+		{
+			icc_radio_set_dsp_settings(icc_in_buffer);
+			icc_out_buffer[0x00] = 0;
+			break;
+		}
+
 		// WSPR capture control
 		case ICC_WSPR_START:
 			icc_wspr_start();
@@ -425,6 +450,32 @@ static ushort icc_proc_cmd_handler(uchar cmd)
 		// One buffered capture chunk to the M7 core
 		case ICC_WSPR_READ:
 			ret_size = icc_wspr_get_buffer(icc_out_buffer);
+			break;
+
+		// FT8 waterfall stream (icc_ft8.c)
+		case ICC_FT8_START:
+			icc_out_buffer[0x00] = icc_ft8_start(icc_in_buffer[0]);
+			break;
+
+		case ICC_FT8_STOP:
+			icc_ft8_stop();
+			icc_out_buffer[0x00] = 0;
+			break;
+
+		// One waterfall row to the M7 core
+		case ICC_FT8_READ:
+			ret_size = icc_ft8_get_row(icc_out_buffer);
+			break;
+
+		// Bench PCM instead of the rx tap
+		case ICC_FT8_FEED:
+			icc_out_buffer[0x00] = icc_ft8_feed(icc_in_buffer);
+			break;
+
+		// FT8 transmission - the MarsChat streamer keys and runs it,
+		// ICC_MC_TX_STOP aborts it
+		case ICC_FT8_TX_START:
+			icc_out_buffer[0x00] = icc_mc_tx_start_ft8(icc_in_buffer);
 			break;
 
 		// MarsChat/WSPR symbol transmitter (keys the exciter itself, and

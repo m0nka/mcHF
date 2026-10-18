@@ -472,6 +472,7 @@ int mchfMain(void)
 #include "drivers/icc/icc_proc.h"
 #include "drivers/icc/icc_radio_if.h"
 #include "drivers/icc/icc_spectrum.h"
+#include "drivers/icc/icc_ft8.h"
 
 // Transceiver state public structure
 __IO TransceiverState ts;
@@ -592,6 +593,9 @@ int mchfMain(void)
 
 		// Spectrum FFT processing + M7 notification
 		icc_spectrum_thread();
+
+		// FT8 waterfall rows from the live rx tap
+		icc_ft8_thread();
 
 		// S-meter/PTT/TX-RX housekeeping
 		icc_radio_idle_thread();

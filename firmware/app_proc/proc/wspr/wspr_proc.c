@@ -26,6 +26,8 @@
 #include "wspr_decoder.h"
 #include "wspr_proc.h"
 
+#include "hf_app.h"
+
 static void wspr_proc_decode_cycle(void);
 static void wspr_proc_decode_run(void);
 
@@ -75,7 +77,10 @@ static uchar	wspr_cap_idx = 0;
 // Staging ring size, must be power of two (~2.7 s of audio)
 #define WSPR_STAGE_SIZE				(64*1024)
 
-__attribute__((section(".wspr_mem"))) static uchar	wspr_stage[WSPR_STAGE_SIZE];
+// The ring and the decoder buffers live in the HF app arena (proc/hf_app),
+// taken for one capture cycle or file decode at a time: ring first, the
+// decoder buffers right after it. NULL while the arena is not held
+static uchar * volatile	wspr_stage = NULL;
 
 // Ring indices are free running byte counters, masked on access
 static volatile ulong	wspr_stage_wr = 0;
@@ -97,6 +102,9 @@ enum {
 
 static volatile uchar	wspr_monitor_on = 0;
 static uchar			wspr_mon_state = WSPR_MON_IDLE;
+
+// Even minute a cycle was skipped on (HF arena still busy), 0xFF = none
+static uchar			wspr_skip_minute = 0xFF;
 
 // Armed for a single cycle (MarsChat listening slot) - cleared when that
 // capture finishes, so the monitor stays out of the station's own tx slot
@@ -141,6 +149,42 @@ static int wspr_proc_deadline_hook(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : wspr_proc_ram_get
+//* Object              : take the HF app arena for one cycle and lay out
+//*						: the staging ring and the decoder buffers in it
+//* Notes    			: refused while another HF app (FT8) owns the radio,
+//*						: or is still winding its own use of the arena down
+//* Context    			: CONTEXT_WSPR
+//*----------------------------------------------------------------------------
+static uchar wspr_proc_ram_get(TickType_t wait)
+{
+	uchar	*mem;
+
+	mem = (uchar *)hf_app_ram_acquire(HF_APP_WSPR,
+			WSPR_STAGE_SIZE + wspr_decoder_ram_size(), wait);
+	if(mem == NULL)
+		return 0;
+
+	wspr_decoder_bind(mem + WSPR_STAGE_SIZE);
+	wspr_stage = mem;
+
+	return 1;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : wspr_proc_ram_put
+//* Object              : hand the HF app arena back
+//* Context    			: CONTEXT_WSPR
+//*----------------------------------------------------------------------------
+static void wspr_proc_ram_put(void)
+{
+	wspr_stage = NULL;
+	wspr_decoder_bind(NULL);
+
+	hf_app_ram_release(HF_APP_WSPR);
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : wspr_capture_active
 //* Object              : true while the M4 capture stream runs - the icc
 //*						: task uses it to switch to chunk ring polling
@@ -176,6 +220,10 @@ void wspr_capture_mark_stopped(void)
 void wspr_capture_push(const uchar *data, ushort len, uchar flags)
 {
 	ulong	wr, free_bytes, off, run;
+	// A late chunk after the cycle ended - the arena is not ours any more
+	if(wspr_stage == NULL)
+		return;
+
 
 	if(flags & ICC_WSPR_FLAG_OVERRUN)
 		wspr_capture_overrun = 1;
@@ -407,6 +455,8 @@ static void wspr_proc_capture_finish(uchar decode)
 	}
 
 	wspr_live_feed = 0;
+
+	wspr_proc_ram_put();
 }
 
 //*----------------------------------------------------------------------------
@@ -447,6 +497,33 @@ static void wspr_proc_monitor_sm(void)
 			// Capture only makes sense with a running DSP core
 			if(tsu.dsp_alive != 2)
 				break;
+
+			// Another HF app owns the radio - a monitor has no business
+			// running then, disarm rather than retry every even minute
+			if(!hf_app_allowed(HF_APP_WSPR))
+			{
+				wspr_monitor_on		= 0;
+				wspr_monitor_once	= 0;
+				wspr_mon_state		= WSPR_MON_IDLE;
+
+				printf("wspr: hf owned by another app, monitor off \r\n");
+				break;
+			}
+
+			// We own HF, but the previous owner (an FT8 decode) has not
+			// let go of the arena yet - skip this cycle, stay armed. One
+			// attempt per even minute, second zero is polled ~10 times
+			if(wspr_skip_minute == tm.Minutes)
+				break;
+
+			if(!wspr_proc_ram_get(0))
+			{
+				wspr_skip_minute = tm.Minutes;
+				printf("wspr: hf arena busy, cycle skipped \r\n");
+				break;
+			}
+
+			wspr_skip_minute = 0xFF;
 
 			// Try to open an archival SD file - the live decoder feed
 			// carries the decode on its own, so a missing/failed card
@@ -683,11 +760,19 @@ static void wspr_proc_decode_cycle(void)
 		return;
 	}
 
+	// Wait for a finishing FT8 decode, if any, to let go of the arena
+	if(!wspr_proc_ram_get(2000))
+	{
+		printf("wspr: hf busy, no decode \r\n");
+		return;
+	}
+
 	// Stream the capture file into the decoder front end
 	res = f_open(&file, wspr_capture_path, FA_READ);
 	if(res != FR_OK)
 	{
 		printf("wspr: capture open err(%d) \r\n", res);
+		wspr_proc_ram_put();
 		return;
 	}
 
@@ -711,6 +796,8 @@ static void wspr_proc_decode_cycle(void)
 	f_close(&file);
 
 	wspr_proc_decode_run();
+
+	wspr_proc_ram_put();
 }
 
 //*----------------------------------------------------------------------------

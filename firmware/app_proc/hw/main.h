@@ -163,7 +163,8 @@ __attribute__((__common__)) struct PROC_STATE {
 	TaskHandle_t 	hGpsTask;
 	TaskHandle_t 	hWsprTask;
 	TaskHandle_t 	hMarschatTask;
-	TaskHandle_t 	hMeshchatTask;
+	TaskHandle_t 	hFt8Task;
+	TaskHandle_t 	hMeshcoreTask;
 
 	// Task messaging
 	xQueueHandle 	xBmsRxQueue;

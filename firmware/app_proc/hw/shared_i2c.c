@@ -74,6 +74,13 @@ I2C_HandleTypeDef hbus_i2c1;
 
 SemaphoreHandle_t 	dI2CSemaphore = NULL;
 
+// How long a codec or BMS access waits for the other user of the bus. It
+// used to be zero: a codec write landing inside a BMS poll (every 500 ms,
+// plus the startup burst) failed outright and the setting was silently
+// lost - "i2c error, not handled" on the route and volume paths. A
+// transaction is well under 1 ms, 100 ms is only there to bound a stuck bus
+#define SHARED_I2C_LOCK_WAIT		pdMS_TO_TICKS(100)
+
 __weak HAL_StatusTypeDef MX_I2C1_Init(I2C_HandleTypeDef *hI2c, uint32_t timing)
 {
   HAL_StatusTypeDef status = HAL_OK;
@@ -531,7 +538,7 @@ int32_t shared_i2c_write_reg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uin
 	if(dI2CSemaphore == NULL)
 		return BSP_ERROR_PERIPH_FAILURE;
 
-	if(xSemaphoreTake(dI2CSemaphore, (TickType_t)0) != pdTRUE)
+	if(xSemaphoreTake(dI2CSemaphore, SHARED_I2C_LOCK_WAIT) != pdTRUE)
 		return BSP_ERROR_PERIPH_FAILURE;
 
 	shared_i2c_change_pins(DevAddr);
@@ -563,7 +570,7 @@ int32_t shared_i2c_read_reg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint
 	if(dI2CSemaphore == NULL)
 		return BSP_ERROR_PERIPH_FAILURE;
 
-	if(xSemaphoreTake(dI2CSemaphore, (TickType_t)0) != pdTRUE)
+	if(xSemaphoreTake(dI2CSemaphore, SHARED_I2C_LOCK_WAIT) != pdTRUE)
 	{
 		//printf( "unable to claim shared i2c %s \r\n", pcTaskGetName(NULL));
 		return BSP_ERROR_PERIPH_FAILURE;

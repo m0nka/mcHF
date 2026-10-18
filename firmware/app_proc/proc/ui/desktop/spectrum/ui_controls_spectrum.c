@@ -121,6 +121,9 @@ struct UI_SW	ui_sw;
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
 
+// DSP core state - the sampling rate sets the FFT bin width
+extern struct	TransceiverState		ts;
+
 // UI driver public state
 extern struct	UI_DRIVER_STATE			ui_s;
 
@@ -233,7 +236,9 @@ static void ui_controls_spectrum_fft_process_big(void)
 		// 20 kHz span
 		if(tsu.band[tsu.curr_band].span == 20000)
 		{
-			if(i < 427)
+			// Half the pixels, each bin painted twice. Bound was 427, the
+			// 854 px panel midpoint - it wrote 57 columns past the scope
+			if(i < (SCOPE_X_SIZE/2))
 			{
 				shift = (1024 - SCOPE_X_SIZE)/2 + SCOPE_X_SIZE/4;
 				pixel = ui_sw.fft_dsp[i + shift];
@@ -248,7 +253,11 @@ static void ui_controls_spectrum_fft_process_big(void)
 		{
 			if(i < 213)
 			{
-				shift = (1024 - SCOPE_X_SIZE)/2 + 321;
+				// 299, not 321: with 4 px per bin the centre bin 512 has to
+				// land on the block covering SCOPE_X_SIZE/2, same as the
+				// other two spans. 321 put it at pixel 309, a full 1 kHz
+				// left of the strip
+				shift = (1024 - SCOPE_X_SIZE)/2 + 299;
 				pixel = ui_sw.fft_dsp[i + shift];
 
 				ui_sw.fft_value[i*4 + 1] = pixel;	// +1 shift to get it centred!
@@ -260,50 +269,92 @@ static void ui_controls_spectrum_fft_process_big(void)
 	}
 }
 
+//*----------------------------------------------------------------------------
+//* Function Name       : ui_controls_spectrum_hz_per_px_x100
+//* Object              : screen scale, Hz per scope pixel, scaled by 100
+//* Notes    			: the M4 core sends 1024 FFT bins covering the whole
+//* Notes   			: sampling rate, so a bin is 48000/1024 = 46.875 Hz.
+//* Notes    			: The 40 kHz span paints one bin per pixel, the zoomed
+//* Notes    			: spans stretch each bin over 2 or 4 pixels
+//*----------------------------------------------------------------------------
+static ulong ui_controls_spectrum_hz_per_px_x100(void)
+{
+	ulong samp_rate = ts.samp_rate;
+	ulong hz_x100;
+
+	// The state upload can run before the DSP is alive
+	if((samp_rate < 8000) || (samp_rate > 200000))
+		samp_rate = 48000;
+
+	hz_x100 = (samp_rate * 100) / 1024;
+
+	if(tsu.band[tsu.curr_band].span == 20000)
+		hz_x100 /= 2;
+	else if(tsu.band[tsu.curr_band].span == 10000)
+		hz_x100 /= 4;
+
+	if(hz_x100 == 0)
+		hz_x100 = 1;
+
+	return hz_x100;
+}
+
 static void ui_controls_spectrum_decide_bandpass(void)
 {
-	ushort bandpass_center 		= SPECTRUM_MID_POINT;
-	uchar  bandpass_halfwidth  	= 43;	//20;
-
-	// Calculate strip width
-	//switch(tsu.dsp_filter)
-	switch(tsu.band[tsu.curr_band].filter)
+	// Nominal passband of each filter id (mchf_icc_def.h AUDIO_xxx order).
+	// These used to be hand tuned pixel counts, which assumed about 60 Hz per
+	// pixel - the scale of whatever the baseband sent before the UHSDR core.
+	// At the real 46.875 Hz per bin every strip was roughly a quarter too
+	// narrow, and none of them tracked the zoomed spans at all
+	static const ushort filt_bw_hz[] =
 	{
-		case AUDIO_300HZ:
-			bandpass_halfwidth  = 3;
-			break;
-		case AUDIO_500HZ:
-			bandpass_halfwidth  = 5;
-			break;
-		case AUDIO_1P8KHZ:
-			bandpass_halfwidth  = 15;
-			break;
-		case AUDIO_2P3KHZ:
-			bandpass_halfwidth  = 20;
-			break;
-		case AUDIO_3P6KHZ:
-			bandpass_halfwidth  = 30;
-			break;
-		case AUDIO_WIDE:
-			bandpass_halfwidth  = 80;
-			break;
-		default:
-			break;
-	}
+		300,		// AUDIO_300HZ
+		500,		// AUDIO_500HZ
+		1800,		// AUDIO_1P8KHZ
+		2300,		// AUDIO_2P3KHZ
+		3600,		// AUDIO_3P6KHZ
+		7500		// AUDIO_WIDE - nominal, keeps the old strip width
+	};
 
-	// If NCO is on, will move the bandstrip around
-	if(tsu.band[tsu.curr_band].nco_freq != 0)
-		bandpass_center = SPECTRUM_MID_POINT + ((tsu.band[tsu.curr_band].nco_freq/1000)*22);	//16
+	ulong	hz_x100 = ui_controls_spectrum_hz_per_px_x100();
+	uchar	filt    = tsu.band[tsu.curr_band].filter;
+	short	nco     = tsu.band[tsu.curr_band].nco_freq;
+	int		halfwidth, center, start, end;
+
+	if(filt >= (sizeof(filt_bw_hz)/sizeof(filt_bw_hz[0])))
+		filt = AUDIO_2P3KHZ;
+
+	// Strip width from the filter bandwidth and the screen scale
+	halfwidth = (int)(((ulong)filt_bw_hz[filt] * 100) / (2 * hz_x100));
+	if(halfwidth < 1)
+		halfwidth = 1;
+
+	center = SPECTRUM_MID_POINT;
+
+	// If NCO is on, will move the bandstrip around. Same scale as everything
+	// else here - the old 22 px per kHz was only ever right for the 40 kHz span
+	if(nco != 0)
+		center += (int)(((long)nco * 100) / (long)hz_x100);
 
 	if(tsu.band[tsu.curr_band].demod_mode == DEMOD_LSB)
-		bandpass_center -= bandpass_halfwidth;
+		center -= halfwidth;
 
 	if(tsu.band[tsu.curr_band].demod_mode == DEMOD_USB)
-		bandpass_center += bandpass_halfwidth;
+		center += halfwidth;
 
-	// Calculate boundary
-	ui_sw.bandpass_start = (bandpass_center - bandpass_halfwidth);
-	ui_sw.bandpass_end   = (bandpass_center + bandpass_halfwidth);
+	// Calculate boundary, kept inside the scope
+	start = (center - halfwidth);
+	end   = (center + halfwidth);
+
+	if(start < 0)
+		start = 0;
+	if(end > (SCOPE_X_SIZE - 1))
+		end = (SCOPE_X_SIZE - 1);
+	if(start > end)
+		start = end;
+
+	ui_sw.bandpass_start = (ushort)start;
+	ui_sw.bandpass_end   = (ushort)end;
 }
 
 // Show VFO centre frequency in Fixed mode, as Alpha blended text
@@ -499,7 +550,12 @@ static void ui_controls_spectrum_repaint_big(FAST_REFRESH *cb)
 	GUI_SetColor(GUI_DARKGRAY);
 	for (i = 0; i < 7; i++)
 	{
-	    GUI_DrawVLine((43 + i*128), SCOPE_Y, (SCOPE_Y + SCOPE_Y_SIZE - 2));
+		// 6 kHz per division at 46.875 Hz per bin is 128 px, which was always
+		// right - but the origin was the 854 px panel, putting the centre
+		// division at 427 and the last one off the end of an 800 px screen.
+		// Data pixel 0 is drawn at screen x SW_FRAME_X + SW_FRAME_WIDTH, so
+		// the centre division belongs at 2 + SCOPE_X_SIZE/2 = 400
+	    GUI_DrawVLine((16 + i*128), SCOPE_Y, (SCOPE_Y + SCOPE_Y_SIZE - 2));
 	}
 	#endif
 
@@ -1080,12 +1136,25 @@ static void ui_controls_create_bottom_bar(void)
 		#ifdef STARTEK_5INCH
 	    x0 = 36 + i*128;
 		#else
-	    x0 = 36 + i*120;
+		// One division is 128 px whatever the span: 6 kHz at 46.875 Hz per
+		// bin, and the zoomed spans halve/quarter both the step and the Hz
+		// per pixel together. The 120 px step was a 6% compressed scale, and
+		// the origin came from the 854 px panel. Marker line is drawn at
+		// x0 + 7, and the centre one belongs on the carrier column, screen
+		// x = SW_FRAME_WIDTH + SCOPE_X_SIZE/2 = 400
+	    x0 = 9 + i*128;
 		#endif
 
 	    y0 = (WATERFALL_Y + WATERFALL_Y_SIZE) + 4;
 	    GUI_GotoXY(x0 + 8, y0 + 7 - FontSizeY / 2);
-	    GUI_SetTextAlign(GUI_TA_HCENTER);
+
+		// Outermost labels would hang over the edge of the scope centred
+	    if(i == 0)
+	    	GUI_SetTextAlign(GUI_TA_LEFT);
+	    else if(i == 6)
+	    	GUI_SetTextAlign(GUI_TA_RIGHT);
+	    else
+	    	GUI_SetTextAlign(GUI_TA_HCENTER);
 
 	    // Digit values
 	    int v = j + (-sm/3)*i;

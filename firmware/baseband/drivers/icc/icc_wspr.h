@@ -19,6 +19,9 @@ void		icc_wspr_start(void);
 void		icc_wspr_stop(void);
 uint16_t	icc_wspr_get_buffer(uint8_t *buffer);
 
+// Stop and drop buffered chunks - the FT8 stream takes the shared RAM over
+void		icc_wspr_release(void);
+
 // Rx audio tap - interleaved 16 bit stereo frames at 48 kHz, called from
 // the SAI DMA block handler. tx_mode != 0 substitutes silence to keep
 // the capture time base intact while transmitting

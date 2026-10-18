@@ -5,7 +5,7 @@
 **                                                                                 **
 **---------------------------------------------------------------------------------**
 **                                                                                 **
-**  File name:		meshchat_ui.h                                                  **
+**  File name:		meshcore_ui.h                                                  **
 **  Description:	MeshCore chat dialog - widget ids and screen geometry          **
 **  Licence:		https://github.com/m0nka/mcHF/blob/main/LICENSE                **
 ************************************************************************************/
@@ -14,8 +14,8 @@
 // beyond the title strip and the compose bar. Where MarsChat paints its
 // own Atlas theme, this screen is deliberately plain
 //
-#ifndef __MESHCHAT_UI_H
-#define __MESHCHAT_UI_H
+#ifndef __MESHCORE_UI_H
+#define __MESHCORE_UI_H
 
 // Widget ids. Prefixed MX rather than reusing the plain ID_BUTTON_xxx
 // names - ui_proc.c includes this header alongside the MarsChat one and
@@ -172,7 +172,7 @@
 #define MX_DEBUG_GUI_MEM
 
 // Screen create / destroy, called from the UI mode switch
-void	meshchat_ui_create(void);
-void	meshchat_ui_destroy(void);
+void	meshcore_ui_create(void);
+void	meshcore_ui_destroy(void);
 
 #endif

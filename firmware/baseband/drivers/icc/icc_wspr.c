@@ -22,6 +22,8 @@
 #include <stdio.h>
 
 #include "icc_wspr.h"
+#include "icc_ft8.h"
+#include "icc_hf_ram.h"
 
 // Wire format constants, duplicated from common/mchf_icc_def.h to keep
 // this translation unit free of the wire protocol header (same approach
@@ -45,7 +47,9 @@
 
 typedef struct
 {
-	int16_t				data[WSPR_RING_CHUNKS][WSPR_CHUNK_SAMPLES];
+	// Chunk ring, in the shared HF digital mode RAM (icc_hf_ram.h) - valid
+	// from start until the M7 core has drained it after the stop
+	int16_t				(*data)[WSPR_CHUNK_SAMPLES];
 
 	// Chunk indices - producer is the audio DMA irq, consumer is the
 	// superloop, single reader/single writer so no locking needed.
@@ -66,6 +70,9 @@ typedef struct
 
 static icc_wspr_state_t		iw;
 
+_Static_assert(sizeof(int16_t) * WSPR_RING_CHUNKS * WSPR_CHUNK_SAMPLES <= ICC_HF_RAM_SIZE,
+			   "WSPR chunk ring does not fit the HF RAM");
+
 //*----------------------------------------------------------------------------
 //* Function Name       : icc_wspr_start
 //* Object              : begin a new capture, idempotent - the M7 side
@@ -77,7 +84,12 @@ void icc_wspr_start(void)
 	if(iw.active)
 		return;
 
+	// The two HF digital mode streams share their RAM - the M7 core never
+	// runs both, this is only belt and braces
+	icc_ft8_release();
+
 	memset(&iw, 0, sizeof(iw));
+	iw.data   = (int16_t (*)[WSPR_CHUNK_SAMPLES])icc_hf_ram;
 	iw.active = 1;
 
 	printf("wspr capture start\r\n");
@@ -96,6 +108,20 @@ void icc_wspr_stop(void)
 	iw.active = 0;
 
 	printf("wspr capture stop, %u samples\r\n", (unsigned int)iw.total);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : icc_wspr_release
+//* Object              : stop and drop the buffered chunks - another HF
+//*						: digital mode takes the shared RAM over
+//* Context    			: CONTEXT_ICC (superloop)
+//*----------------------------------------------------------------------------
+void icc_wspr_release(void)
+{
+	icc_wspr_stop();
+
+	iw.data     = NULL;
+	iw.rd_chunk = iw.wr_chunk;
 }
 
 //*----------------------------------------------------------------------------
@@ -173,7 +199,7 @@ uint16_t icc_wspr_get_buffer(uint8_t *buffer)
 		flags |= WSPR_FLAG_OVERRUN;
 
 	// Complete chunk available ?
-	if(iw.rd_chunk != iw.wr_chunk)
+	if((iw.data != NULL) && (iw.rd_chunk != iw.wr_chunk))
 	{
 		len = WSPR_CHUNK_SAMPLES * 2;
 		memcpy(buffer + WSPR_HDR_SIZE, iw.data[iw.rd_chunk], len);

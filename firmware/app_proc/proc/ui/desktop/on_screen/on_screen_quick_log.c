@@ -383,6 +383,14 @@ void on_screen_quick_log_destroy(void)
 		WM_SetCallback		(WM_HBKWIN, 0);
 		WM_InvalidateWindow	(WM_HBKWIN);
 		WM_DeleteWindow(hQuickLogWin);
+
+		hQuickLogWin = 0;
+
+		// Release the 'dialog shown' flag, like every other on screen dialog
+		// does in its WM_DELETE handler. Without it the desktop stays gated:
+		// ui_proc_periodic skips the waterfall repaint while a dialog is up,
+		// and the next key press would destroy instead of create the dialog
+		ui_proc_clear_active();
 	}
 }
 

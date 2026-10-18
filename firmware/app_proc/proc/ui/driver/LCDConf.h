@@ -118,5 +118,7 @@ typedef struct
   LCD_API_COLOR_CONV   *pColorConvAPI;
 } LCD_LayerPropTypedef;
 
+ulong lcd_get_front_buffer(uchar layer, uchar *enabled, uchar *const_alpha);
+
 #endif
 

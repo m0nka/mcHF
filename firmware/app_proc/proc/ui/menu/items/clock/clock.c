@@ -194,7 +194,11 @@ static void _cbDialog(WM_MESSAGE * pMsg)
     
 		case WM_DELETE:
 		{
-			WM_DeleteTimer(hTimerTime);
+			// Zeroed, a stale handle deleted again later frees whatever emWin
+			// reused the number for (hard fault in WM__Paint, handle 7)
+			if(hTimerTime)
+				WM_DeleteTimer(hTimerTime);
+			hTimerTime = 0;
 			DisableAutoRefresh = 0;
 			break;
 		}

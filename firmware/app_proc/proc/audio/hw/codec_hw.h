@@ -152,7 +152,12 @@
 
 // Codec DAC attn to
 #define CODEC_VOL_STEP			  			8
-#define CODEC_VOL_MAX_ATTN  				(CODEC_VOL_STEP * MAX_AUDIO_LEVEL)
+
+// Top of the hardware volume range - at this setting the DAC attenuator is at
+// 0 dB and the codec has nothing left to give. The knob (MAX_AUDIO_LEVEL) goes
+// higher than this, the extra steps are software gain in the M4 DSP
+#define CODEC_VOL_HW_MAX					16
+#define CODEC_VOL_MAX_ATTN  				(CODEC_VOL_STEP * CODEC_VOL_HW_MAX)
 
 void codec_hw_init(void);
 void codec_hw_power_cleanup(void);

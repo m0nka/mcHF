@@ -36,4 +36,8 @@ uint16_t icc_spectrum_get_buffer(uint8_t *buffer);
 // S-meter value (1..34) shown by the M7 UI, updated by the glue code
 void	icc_spectrum_set_smeter(uint8_t s_value);
 
+// RX passband in Hz relative to the LO (FFT bin 0), worked out on the UHSDR
+// side - the S-meter only looks at the bins inside it
+void	icc_spectrum_set_passband(int32_t lo_hz, int32_t hi_hz, uint32_t samp_rate);
+
 #endif

@@ -57,7 +57,7 @@ static FIL			mc_id_fil;
 //* Notes    			: returns 0 when a seed was there. Only the seed
 //*						: is mirrored - the public key is derived from it
 //*						: and the name comes off the card
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static uint8_t mc_identity_bkp_load(uint8_t seed[MC_EC_SEED_SIZE])
 {
@@ -106,7 +106,7 @@ static void mc_identity_bkp_store(const uint8_t seed[MC_EC_SEED_SIZE])
 //* Function Name       : mc_identity_fill
 //* Object              : build the on disk / in backup record from the
 //*						: identity we are holding
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static void mc_identity_fill(MC_ID_RECORD *rec)
 {
@@ -130,7 +130,7 @@ static void mc_identity_fill(MC_ID_RECORD *rec)
 //* Notes    			: the public key is stored but derived data, so
 //*						: it is recomputed and a record whose halves do
 //*						: not belong together is rejected
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static uint8_t mc_identity_adopt(const MC_ID_RECORD *rec)
 {
@@ -196,7 +196,7 @@ static uint8_t mc_identity_load(void)
 
 	if(mc_identity_adopt(&rec))
 	{
-		printf("meshchat: key file mismatch, ignoring \r\n");
+		printf("meshcore: key file mismatch, ignoring \r\n");
 		return 5;
 	}
 
@@ -214,7 +214,7 @@ static uint8_t mc_identity_load(void)
 //*						: it is the copy that survives a boot where the
 //*						: card does not come up. A failure to write the
 //*						: card is reported but does not lose the key
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 uint8_t mc_identity_save(void)
 {
@@ -232,12 +232,12 @@ uint8_t mc_identity_save(void)
 
 	// The directory is normally there already, but a fresh card has
 	// nothing on it - ignore "exists"
-	f_mkdir("0://meshchat");
+	f_mkdir("0://meshcore");
 
 	res = f_open(&mc_id_fil, MC_IDENTITY_FILE, FA_WRITE | FA_CREATE_ALWAYS);
 	if(res != FR_OK)
 	{
-		printf("meshchat: key save open err(%d) \r\n", res);
+		printf("meshcore: key save open err(%d) \r\n", res);
 		return 2;
 	}
 
@@ -247,7 +247,7 @@ uint8_t mc_identity_save(void)
 
 	if((res != FR_OK) || (put != sizeof(rec)))
 	{
-		printf("meshchat: key save write err(%d) \r\n", res);
+		printf("meshcore: key save write err(%d) \r\n", res);
 		return 3;
 	}
 
@@ -266,7 +266,7 @@ static uint8_t mc_identity_create(void)
 	mc_id.weak_entropy = mc_rand_bytes(mc_id.seed, MC_EC_SEED_SIZE);
 
 	if(mc_id.weak_entropy)
-		printf("meshchat: WARNING - TRNG unavailable, identity seeded from timing \r\n");
+		printf("meshcore: WARNING - TRNG unavailable, identity seeded from timing \r\n");
 
 	mc_ec_ed25519_pubkey(mc_id.pub, mc_id.seed);
 
@@ -277,7 +277,7 @@ static uint8_t mc_identity_create(void)
 
 	mc_id.source = MC_ID_SRC_NEW;
 
-	printf("meshchat: new identity %02X%02X%02X%02X, name %s \r\n",
+	printf("meshcore: new identity %02X%02X%02X%02X, name %s \r\n",
 			mc_id.pub[0], mc_id.pub[1], mc_id.pub[2], mc_id.pub[3], mc_id.name);
 
 	return mc_identity_save();
@@ -291,7 +291,7 @@ static uint8_t mc_identity_create(void)
 //*						: only then a new key. Whichever copy is found,
 //*						: the other is brought up to date, so the two
 //*						: heal each other
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 //*----------------------------------------------------------------------------
 //* Function Name       : mc_identity_scrub_old_mirror
@@ -302,7 +302,7 @@ static uint8_t mc_identity_create(void)
 //*						: radio's own stored bands. The region was zero
 //*						: before, so zeroing it restores that checksum.
 //*						: Safe to delete once no radio is running .96
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 static void mc_identity_scrub_old_mirror(void)
 {
@@ -324,7 +324,7 @@ static void mc_identity_scrub_old_mirror(void)
 	for(i = 0; i < 128; i++)
 		virt_eeprom_write((ushort)(0x400 + i), 0);
 
-	printf("meshchat: cleared old key mirror from backup SRAM \r\n");
+	printf("meshcore: cleared old key mirror from backup SRAM \r\n");
 }
 
 uint8_t mc_identity_init(void)
@@ -338,7 +338,7 @@ uint8_t mc_identity_init(void)
 	{
 		mc_id.source = MC_ID_SRC_CARD;
 
-		printf("meshchat: identity %02X%02X%02X%02X from card, name %s \r\n",
+		printf("meshcore: identity %02X%02X%02X%02X from card, name %s \r\n",
 				mc_id.pub[0], mc_id.pub[1], mc_id.pub[2], mc_id.pub[3], mc_id.name);
 
 		// Refresh the mirror so a later card-less boot finds this key
@@ -368,7 +368,7 @@ uint8_t mc_identity_init(void)
 			// the same key, so it is the same name as before
 			mc_identity_default_name();
 
-			printf("meshchat: identity %02X%02X%02X%02X from backup, name %s \r\n",
+			printf("meshcore: identity %02X%02X%02X%02X from backup, name %s \r\n",
 					mc_id.pub[0], mc_id.pub[1], mc_id.pub[2], mc_id.pub[3], mc_id.name);
 
 			// Put it back on the card when there is one again
@@ -391,7 +391,7 @@ uint8_t mc_identity_init(void)
 //*						: mid session: it is the identity everyone who
 //*						: has added this radio already knows. If it holds
 //*						: none, the running key is written to it
-//* Context    			: CONTEXT_MESHCHAT
+//* Context    			: CONTEXT_MESHCORE
 //*----------------------------------------------------------------------------
 void mc_identity_recheck_card(void)
 {
@@ -416,7 +416,7 @@ void mc_identity_recheck_card(void)
 		mc_identity_bkp_store(mc_id.seed);
 
 		if(memcmp(was, mc_id.pub, MC_EC_KEY_SIZE) != 0)
-			printf("meshchat: identity %02X%02X%02X%02X restored from card (was %02X%02X) \r\n",
+			printf("meshcore: identity %02X%02X%02X%02X restored from card (was %02X%02X) \r\n",
 					mc_id.pub[0], mc_id.pub[1], mc_id.pub[2], mc_id.pub[3], was[0], was[1]);
 
 		return;

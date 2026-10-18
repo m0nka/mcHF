@@ -89,9 +89,14 @@ bool RadioManagement_FmDevIs5khz(void)
     return (ts.flags2 & FLAGS2_FM_MODE_DEVIATION_5KHZ) != 0;
 }
 
+// Bring-up counters: how many times the CW generator asked for TX on/off
+volatile uint32_t icc_txon_requests  = 0;
+volatile uint32_t icc_txoff_requests = 0;
+
 void RadioManagement_Request_TxOn(void)
 {
     ts.ptt_req = true;
+    icc_txon_requests++;
 }
 
 void RadioManagement_Request_TxOff(void)
@@ -100,6 +105,7 @@ void RadioManagement_Request_TxOff(void)
     // the CAT code deasserts RTS before we actually switched to TX.
     ts.ptt_req = false;
     ts.tx_stop_req = true;
+    icc_txoff_requests++;
 }
 
 // ------------------------------------------------------------------

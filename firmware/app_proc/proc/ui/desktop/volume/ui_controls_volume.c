@@ -212,6 +212,7 @@ void ui_controls_volume_init(WM_HWIN hParent)
 
 	char  buff[20];
 	uchar volume;
+	uchar vol_max;
 
 	//if(!mute_flag)
 	//	GUI_DrawBitmap(&bmtechrubio, (SPEAKER_X + 1), (SPEAKER_Y + 1));
@@ -233,11 +234,17 @@ void ui_controls_volume_init(WM_HWIN hParent)
 	}
 
 	if((tsu.band[tsu.curr_band].demod_mode == DEMOD_CW)&&(tsu.rxtx))
-		volume = tsu.band[tsu.curr_band].st_volume;						// Side tone volume (TX + CW)
+	{
+		volume  = tsu.band[tsu.curr_band].st_volume;					// Side tone volume (TX + CW)
+		vol_max = MAX_SIDETONE_LEVEL;
+	}
 	else
-		volume = tsu.band[tsu.curr_band].volume;						// Audio volume (RX)
+	{
+		volume  = tsu.band[tsu.curr_band].volume;						// Audio volume (RX)
+		vol_max = MAX_AUDIO_LEVEL;
+	}
 
-	if(volume > MAX_AUDIO_LEVEL)
+	if(volume > vol_max)
 	{
 		printf("ui_controls_volume_init, volume: %d, CRITICAL ERROR!\r\n", volume);
 	}
@@ -245,12 +252,12 @@ void ui_controls_volume_init(WM_HWIN hParent)
 	if(!mute_flag)
 	{
 		sprintf(buff,"%2d",volume);
-		ui_cool_progress_volume(SPEAKER_X, SPEAKER_Y - 5, volume, buff);
+		ui_cool_progress_volume(SPEAKER_X, SPEAKER_Y - 5, volume, vol_max, buff);
 	}
 	else
 	{
 		sprintf(buff,"%2d",mute_saved_vol);
-		ui_cool_progress_volume(SPEAKER_X, SPEAKER_Y - 5, mute_saved_vol, buff);
+		ui_cool_progress_volume(SPEAKER_X, SPEAKER_Y - 5, mute_saved_vol, vol_max, buff);
 	}
 
 	#if 0
@@ -384,6 +391,7 @@ void ui_controls_volume_refresh(void)
 {
 	#ifndef VOL_USE_WM
 	uchar volume;
+	uchar vol_max;
 	char  buff[20];
 
 	// Leave volume digit on screen while mute
@@ -400,11 +408,17 @@ void ui_controls_volume_refresh(void)
 	}
 
 	if((tsu.band[tsu.curr_band].demod_mode == DEMOD_CW)&&(tsu.rxtx))
-		volume = tsu.band[tsu.curr_band].st_volume;						// Side tone volume (TX + CW)
+	{
+		volume  = tsu.band[tsu.curr_band].st_volume;					// Side tone volume (TX + CW)
+		vol_max = MAX_SIDETONE_LEVEL;
+	}
 	else
-		volume = tsu.band[tsu.curr_band].volume;						// Audio volume (RX)
+	{
+		volume  = tsu.band[tsu.curr_band].volume;						// Audio volume (RX)
+		vol_max = MAX_AUDIO_LEVEL;
+	}
 
-	if(volume > MAX_AUDIO_LEVEL)
+	if(volume > vol_max)
 	{
 		printf("ui_controls_volume_refresh, volume: %d, CRITICAL ERROR!\r\n", volume);
 		return;
@@ -415,7 +429,7 @@ void ui_controls_volume_refresh(void)
 	//GUI_FillRect((SPEAKER_X + 4),(SPEAKER_Y + 37),(SPEAKER_X + 16),(SPEAKER_Y + 46));
 
 	sprintf(buff,"%2d",volume);
-	ui_cool_progress_volume(SPEAKER_X, SPEAKER_Y - 5, volume, buff);
+	ui_cool_progress_volume(SPEAKER_X, SPEAKER_Y - 5, volume, vol_max, buff);
 
 /*	GUI_SetColor(GUI_BLUE);
 	GUI_SetFont(&GUI_Font8x8_ASCII);

@@ -18,7 +18,7 @@
 //
 // Every curve constant in here was regenerated from its definition
 // rather than copied, and the whole module is checked against the RFC
-// 7748 / RFC 8032 test vectors by claude/meshchat_test - build it with
+// 7748 / RFC 8032 test vectors by claude/meshcore_test - build it with
 // MC_CRYPTO_HOST_BUILD after touching anything below
 //
 #ifndef MC_CRYPTO_HOST_BUILD

@@ -101,17 +101,23 @@ void ui_cool_progress_tx_pwr(int x, int y, ushort val, char *txt)
 //* Notes    			:
 //* Context    			: CONTEXT_VIDEO
 //*----------------------------------------------------------------------------
-void ui_cool_progress_volume(int x, int y, ushort val, char *txt)
+void ui_cool_progress_volume(int x, int y, ushort val, ushort max, char *txt)
 {
 	ulong 	st;
 
 	if(txt == NULL)
 		return;
 
-	if(val > 16)
-		val = 16;
+	if(max == 0)
+		max = 1;
 
-	val *= 6;
+	if(val > max)
+		val = max;
+
+	// Arc travel is 96 units plus a 4 unit pedestal, so the dial reads full at
+	// the top of whatever range the caller has - the RX knob and the CW side
+	// tone no longer share one
+	val = (val * 96) / max;
 	if(val) val += 4;
 
 	// To start angle

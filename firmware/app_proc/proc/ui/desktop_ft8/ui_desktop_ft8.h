@@ -47,18 +47,29 @@
 #define FT8_PROG_Y				41					// inside the slot window
 #define FT8_PROG_H				3
 
+// FT8 waterfall - 200..3000 Hz of receiver audio across, one line per
+// symbol (160 ms) down, about one slot tall, frequency axis under it.
+// Its own child window: it repaints several times a second, the rest of
+// the screen only when there are new decodes
+#define FT8_WF_X				10
+#define FT8_WF_Y				86
+#define FT8_WF_W				780					// = FT8_DISP_W
+#define FT8_WF_H				96					// = FT8_DISP_H
+#define FT8_WF_AXIS_H			16
+#define FT8_WF_WIN_H			(FT8_WF_H + FT8_WF_AXIS_H)
+
 // The two decode lists. Left is everything heard in the slot, right is
 // traffic on our own TX frequency - the WSJT-X split, and the reason a
 // crowded band stays readable
-#define FT8_LIST_Y				90
-#define FT8_LIST_H				290
+#define FT8_LIST_Y				204
+#define FT8_LIST_H				178
 #define FT8_LIST_W				385
 #define FT8_LIST_L_X			10					// band activity
 #define FT8_LIST_R_X			405					// rx frequency
 
 #define FT8_LIST_HDR_H			24					// column header inside the panel
-#define FT8_LIST_ROW_H			22
-#define FT8_LIST_ROWS			11
+#define FT8_LIST_ROW_H			18
+#define FT8_LIST_ROWS			7
 
 // Column offsets within a list panel, relative to its left edge
 #define FT8_COL_TIME			8

@@ -10,7 +10,7 @@
  *    occurs in IRQ context, so there are no re-entrancy hazards.
  *
  *  • GPS_Task() dequeues sentences, parses $GNRMC / $GNGGA, and keeps a
- *    staging buffer (gps_pending) that is only touched by the task.
+ *    staging buffer (gps_pend) that is only touched by the task.
  *
  *  • u-blox M10 PPS timing: the PPS pulse fires at the exact UTC second
  *    boundary; the NMEA sentence for that same second is transmitted
@@ -76,7 +76,7 @@ static volatile uint32_t pps_pending_ms; /* HAL_GetTick() at PPS edge        */
  * Shared data
  * -------------------------------------------------------------------------- */
 static GPS_Data_t gps_data;      /* published, mutex-protected              */
-static GPS_Data_t gps_pending;   /* staging, written only by GPS_Task()     */
+static GPS_Data_t gps_pend;   	/* staging, written only by GPS_Task()     */
 
 extern RTC_HandleTypeDef RtcHandle;
 
@@ -290,17 +290,17 @@ static bool GPS_ParseRMC(const char *line)
 
     if (f[2][0] != 'A')
     {
-        gps_pending.valid = false;
+    	gps_pend.valid = false;
         return false;
     }
 
     /* Time: hhmmss[.ss] */
     const char *t = f[1];
     if (strlen(t) < 6) return false;
-    gps_pending.hour = (uint8_t)((t[0]-'0') * 10 + (t[1]-'0'));
-    gps_pending.min  = (uint8_t)((t[2]-'0') * 10 + (t[3]-'0'));
-    gps_pending.sec  = (uint8_t)((t[4]-'0') * 10 + (t[5]-'0'));
-    gps_pending.msec = (strlen(t) > 7)
+    gps_pend.hour = (uint8_t)((t[0]-'0') * 10 + (t[1]-'0'));
+    gps_pend.min  = (uint8_t)((t[2]-'0') * 10 + (t[3]-'0'));
+    gps_pend.sec  = (uint8_t)((t[4]-'0') * 10 + (t[5]-'0'));
+    gps_pend.msec = (strlen(t) > 7)
                      ? (uint16_t)(atof(t + 6) * 1000.0)
                      : 0u;
 
@@ -308,18 +308,18 @@ static bool GPS_ParseRMC(const char *line)
     const char *d = f[9];
     if (strlen(d) >= 6)
     {
-        gps_pending.day   = (uint8_t) ((d[0]-'0') * 10 + (d[1]-'0'));
-        gps_pending.month = (uint8_t) ((d[2]-'0') * 10 + (d[3]-'0'));
-        gps_pending.year  = (uint16_t)(2000 + (d[4]-'0') * 10 + (d[5]-'0'));
+    	gps_pend.day   = (uint8_t) ((d[0]-'0') * 10 + (d[1]-'0'));
+    	gps_pend.month = (uint8_t) ((d[2]-'0') * 10 + (d[3]-'0'));
+    	gps_pend.year  = (uint16_t)(2000 + (d[4]-'0') * 10 + (d[5]-'0'));
     }
 
-    //printf("%d:%d:%d \r\n", gps_pending.hour, gps_pending.min, gps_pending.sec);
+    //printf("%d:%d:%d \r\n", gps_pend.hour, gps_pend.min, gps_pend.sec);
 
-    gps_pending.latitude    = GPS_NMEADeg(f[3], f[4][0]);
-    gps_pending.longitude   = GPS_NMEADeg(f[5], f[6][0]);
-    gps_pending.speed_kn    = (float)atof(f[7]);
-    gps_pending.course_deg  = (float)atof(f[8]);
-    gps_pending.valid       = true;
+    gps_pend.latitude    = GPS_NMEADeg(f[3], f[4][0]);
+    gps_pend.longitude   = GPS_NMEADeg(f[5], f[6][0]);
+    gps_pend.speed_kn    = (float)atof(f[7]);
+    gps_pend.course_deg  = (float)atof(f[8]);
+    gps_pend.valid       = true;
 
     /* M10 sends NMEA after PPS: if PPS fired recently this sentence carries
      * the time for that second, so it is safe to sync the RTC now.         */
@@ -353,22 +353,22 @@ static bool GPS_ParseGGA(const char *line)
     const char *t = f[1];
     if (strlen(t) >= 6)
     {
-    	gps_pending.hour = (uint8_t)((t[0]-'0') * 10 + (t[1]-'0'));
-    	gps_pending.min  = (uint8_t)((t[2]-'0') * 10 + (t[3]-'0'));
-    	gps_pending.sec  = (uint8_t)((t[4]-'0') * 10 + (t[5]-'0'));
-    	gps_pending.msec = (strlen(t) > 7)
+    	gps_pend.hour = (uint8_t)((t[0]-'0') * 10 + (t[1]-'0'));
+    	gps_pend.min  = (uint8_t)((t[2]-'0') * 10 + (t[3]-'0'));
+    	gps_pend.sec  = (uint8_t)((t[4]-'0') * 10 + (t[5]-'0'));
+    	gps_pend.msec = (strlen(t) > 7)
                     		 ? (uint16_t)(atof(t + 6) * 1000.0)
                     				 : 0u;
 
-    	//printf("%d:%d:%d \r\n", gps_pending.hour, gps_pending.min, gps_pending.sec);
-    	gps_pending.time_valid = true;
+    	//printf("%d:%d:%d \r\n", gps_pend.hour, gps_pend.min, gps_pend.sec);
+    	gps_pend.time_valid = true;
 
     	// Every 30s
     	if(upd_timer == 0)
     		upd_timer = ps.epoch;
     	else if((upd_timer + 30000) < ps.epoch)
     	{
-    		printf("%d:%d:%d \r\n", gps_pending.hour, gps_pending.min, gps_pending.sec);
+    		printf("%d:%d:%d \r\n", gps_pend.hour, gps_pend.min, gps_pend.sec);
 
     		// Schedule clock sync
     		xSemaphoreGive(pps_sem);
@@ -379,17 +379,17 @@ static bool GPS_ParseGGA(const char *line)
     }
     else
     {
-    	gps_pending.time_valid = false;
+    	gps_pend.time_valid = false;
     	upd_timer = 0;
     }
 
-    gps_pending.fix_quality = (uint8_t)atoi(f[6]);
-    gps_pending.satellites  = (uint8_t)atoi(f[7]);
-    gps_pending.hdop        = (float)  atof(f[8]);
-    gps_pending.altitude_m  = (float)  atof(f[9]);
+    gps_pend.fix_quality = (uint8_t)atoi(f[6]);
+    gps_pend.satellites  = (uint8_t)atoi(f[7]);
+    gps_pend.hdop        = (float)  atof(f[8]);
+    gps_pend.altitude_m  = (float)  atof(f[9]);
 
-    //if(gps_pending.satellites)
-    //	printf("sats: %d \r\n", gps_pending.satellites);
+    //if(gps_pend.satellites)
+    //	printf("sats: %d \r\n", gps_pend.satellites);
 
     return true;
 }
@@ -520,27 +520,28 @@ gps_proc_loop:
     {
         xSemaphoreTake(data_mutex, portMAX_DELAY);
 
-        if (gps_pending.valid)
+        if(gps_pend.valid)
         {
             /* Sync ONCE. This used to run on every PPS, which re-slammed the
              * calendar once a second: that makes measuring drift impossible
              * (the error is wiped before it can accumulate) and each write
              * enters RTC INIT mode and stalls the clock. After the first
              * sync the RTC is left alone and only observed - see gps_calib.c */
-            if (!gps_pending.rtc_synced)
+            if(!gps_pend.rtc_synced)
             {
-                GPS_SyncRTC(&gps_pending);
-                gps_pending.rtc_synced = true;
+                GPS_SyncRTC(&gps_pend);
+                gps_pend.rtc_synced = true;
 
                 /* The calendar just jumped, so any phase history is void */
                 gps_calib_start();
             }
 
-            gps_data = gps_pending;
+            gps_data = gps_pend;
         }
-        else if ((gps_pending.time_valid) && (!gps_pending.rtc_synced))
+        else if((gps_pend.time_valid)&&(!gps_pend.time_synced))
         {
-            GPS_SyncRTC(&gps_pending);
+            GPS_SyncRTC(&gps_pend);
+            gps_pend.time_synced = true;
         }
 
         xSemaphoreGive(data_mutex);
@@ -548,7 +549,7 @@ gps_proc_loop:
 
     /* Trust PPS only with a real fix - most modules free run the pulse
      * without a lock, and those edges would quietly poison the average */
-    gps_calib_arm(gps_pending.valid && gps_pending.rtc_synced);
+    gps_calib_arm(gps_pend.valid && gps_pend.rtc_synced);
 
     /* Progress line every 60 s while a run is going */
     {
@@ -593,6 +594,16 @@ void gps_proc_init(void)
     pps_sem    = xSemaphoreCreateBinary();
     data_mutex = xSemaphoreCreateMutex();
 
+    // Clear sync flags
+    gps_data.valid 			= 0;
+    gps_data.time_valid 	= 0;
+    gps_data.rtc_synced 	= 0;
+    gps_data.time_synced 	= 0;
+    gps_pend.valid 			= 0;
+    gps_pend.time_valid 	= 0;
+    gps_pend.rtc_synced 	= 0;
+    gps_pend.time_synced 	= 0;
+
 	#ifdef GPS_TEST_GPIO
     gps_test_init();
     return;
@@ -628,13 +639,13 @@ uchar gps_proc_sats_cnt(void)
 	if(cnt == 10) cnt = 0;
 	return cnt;
 	#else
-	return gps_pending.satellites;
+	return gps_pend.satellites;
 	#endif
 }
 
 uchar gps_proc_time_set(void)
 {
-	if(gps_pending.time_valid)
+	if(gps_pend.time_valid)
 		return 1;
 	else
 		return 0;

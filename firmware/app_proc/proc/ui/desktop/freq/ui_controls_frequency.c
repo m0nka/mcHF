@@ -1399,7 +1399,11 @@ static void ui_controls_frequency_wm_handler(WM_MESSAGE *pMsg)
 		}
 
 		case WM_DELETE:
-			WM_DeleteTimer(hTimerFreq);
+			// Zeroed, a stale handle deleted again later frees whatever emWin
+			// reused the number for (hard fault in WM__Paint, handle 7)
+			if(hTimerFreq)
+				WM_DeleteTimer(hTimerFreq);
+			hTimerFreq = 0;
 			break;
 
 		case WM_NOTIFY_PARENT:

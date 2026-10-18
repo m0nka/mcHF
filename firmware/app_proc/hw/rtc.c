@@ -94,7 +94,14 @@ void check_date_sanity(void)
 	}
 	else if(sdatestructureget.Year > 31)
 		sdatestructureget.Year = 31;		// Am i still alive to update this code, yay! Open the JD!
+	else
+		return;								// Sane - leave the calendar running
 
+	// Only when the date really was off. HAL_RTC_SetDate enters init mode,
+	// which stops the calendar and restarts the subsecond counter on exit -
+	// done unconditionally on every boot it threw away the fraction of the
+	// current second each time, about 0.5 s per reset on average (an FT8
+	// bench day of reflashing lost ~6 s against GPS)
 	k_SetDate(&sdatestructureget);
 }
 #endif

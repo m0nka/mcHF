@@ -27,6 +27,8 @@
 #define	EEP_RF_GAIN					0x00A
 #define	EEP_BT_ON					0x00B
 //
+#define	EEP_DSP_SETTINGS			0x100		// UHSDR DSP settings, 3 byte header + int16 values (< 256 bytes)
+//
 #define	EEP_BANDS					0xE10		// pos 3600, band info, 400 bytes
 
 // -----------------------------------------------------------------------------

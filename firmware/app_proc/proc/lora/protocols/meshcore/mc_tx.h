@@ -11,7 +11,7 @@
 ************************************************************************************/
 //
 // Everything here is pure buffer work - nothing touches the radio. The
-// meshchat task builds a packet, hands the bytes to the lora task, and
+// meshcore task builds a packet, hands the bytes to the lora task, and
 // that task is the only thing that ever talks to the SX1262
 //
 #ifndef __MC_TX_H

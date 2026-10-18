@@ -13,11 +13,17 @@
 #include "mchf_pro_board.h"
 #include "main.h"
 
-#ifdef CONTEXT_MESHCHAT
+#ifdef CONTEXT_MESHCORE
 // Not pulled in by main.h - the meshcore headers carry <stdbool.h>,
 // which would collide with the project's own bool typedef everywhere
-#include "meshchat_proc.h"
+#include "meshcore_proc.h"
 #endif
+
+#ifdef CONTEXT_FT8
+#include "ft8_proc.h"
+#endif
+
+#include "hf_app.h"
 
 // Reserved FreeRTOS heap memory
 #if configAPPLICATION_ALLOCATED_HEAP == 1
@@ -413,6 +419,10 @@ static void tasks_pre_os_init(void)
 	ps.hAppTask		= NULL;
 	ps.hWsprTask	= NULL;
 	ps.hMarschatTask = NULL;
+	ps.hFt8Task		= NULL;
+
+	// HF digital mode ownership + shared arena (WSPR, MarsChat, FT8)
+	hf_app_init();
 
 	#ifdef CONTEXT_SD
 	storage_proc_init();
@@ -761,18 +771,33 @@ static int start_proc(void)
     }
 	#endif
 
-	#ifdef CONTEXT_MESHCHAT
-    res = xTaskCreate(	(TaskFunction_t)meshchat_proc_task,\
-    					MESHCHAT_PROC_START_NAME,\
-						MESHCHAT_PROC_STACK_SIZE,\
+	#ifdef CONTEXT_MESHCORE
+    res = xTaskCreate(	(TaskFunction_t)meshcore_proc_task,\
+    					MESHCORE_PROC_START_NAME,\
+						MESHCORE_PROC_STACK_SIZE,\
 						NULL,\
-						MESHCHAT_PROC_PRIORITY,\
-						&(ps.hMeshchatTask));
+						MESHCORE_PROC_PRIORITY,\
+						&(ps.hMeshcoreTask));
 
     if(res != pdPASS)
     {
-    	printf("unable to create meshchat process\r\n");
+    	printf("unable to create meshcore process\r\n");
     	return 18;
+    }
+	#endif
+
+	#ifdef CONTEXT_FT8
+    res = xTaskCreate(	(TaskFunction_t)ft8_proc_task,\
+    					FT8_PROC_START_NAME,\
+						FT8_PROC_STACK_SIZE,\
+						NULL,\
+						FT8_PROC_PRIORITY,\
+						&(ps.hFt8Task));
+
+    if(res != pdPASS)
+    {
+    	printf("unable to create ft8 process\r\n");
+    	return 19;
     }
 	#endif
 

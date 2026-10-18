@@ -153,7 +153,7 @@
 #define MODE_DESKTOP_FT8		3
 #define MODE_QUICK_LOG			4
 #define MODE_DESKTOP_MARSCHAT	5
-#define MODE_DESKTOP_MESHCHAT	6
+#define MODE_DESKTOP_MESHCORE	6
 //
 #define THEME_0					0
 #define THEME_1					1
@@ -209,6 +209,10 @@ __attribute__((__common__)) struct UI_DRIVER_STATE {
 #define UI_ICC_WSPR_STOP			10
 #define UI_ICC_MC_TX_START			11
 #define UI_ICC_MC_TX_STOP			12
+#define UI_ICC_POWER_LEVEL		13
+#define UI_ICC_AF_GAIN			14
+#define UI_ICC_DSP_SETTINGS		15		// only a wake-up, the ICC task sends the set when dirty
+#define UI_ICC_FT8				16		// only a wake-up, the ICC task reconciles the FT8 stream
 
 #if 0
 // The 16 bit msg id is used in the DSP handler directly
@@ -425,6 +429,8 @@ __attribute__((__common__)) struct UI_SW {
 	ushort 	bandpass_end;
 
 	uchar   sm_value;
+	uchar	sm_dbm;			// dBm + ICC_SMETER_DBM_OFS, analogue needle
+	uchar	sm_dbm_valid;	// M4 image sends sm_dbm
 
 } UI_SW;
 //
@@ -454,7 +460,13 @@ enum {
 #endif
 
 
-#define MAX_AUDIO_LEVEL			16
+// RX audio knob range. 0 - CODEC_VOL_HW_MAX is the codec DAC attenuator,
+// which is already wide open at the top of that range, so the steps above
+// it are made up in the DSP on the M4 core (see icc_radio_set_af_gain)
+#define MAX_AUDIO_LEVEL			20
+
+// CW side tone is a codec PGA gain, it has no software extension
+#define MAX_SIDETONE_LEVEL		16
 
 // -----------------------------------------------------------------------------
 // HAL compatibility

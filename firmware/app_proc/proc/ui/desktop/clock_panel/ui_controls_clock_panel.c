@@ -45,6 +45,10 @@ uchar ui_dsp_version_done 		= 0;
 uchar loc_fix_mode 				= 0xFF;
 short loc_nco_freq 				= 0xFFFF;
 
+uchar old_year					= 0;
+uchar old_month					= 0;
+uchar old_date					= 0;
+
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_clock_init
 //* Object              :
@@ -73,6 +77,11 @@ static void ui_controls_clock_init(void)
 	uchar year = sdatestructureget.Year;
 	sprintf(buf,"%02d/%02d/%04d",sdatestructureget.Date,sdatestructureget.Month, (year + 2000));
 	GUI_DispStringAt(buf,(CLOCK_X + CLOCK_DATES_SHIFT), (CLOCK_Y + 2));
+
+	// Save date
+	old_year  = year;
+	old_month = sdatestructureget.Month;
+	old_date  = sdatestructureget.Date;
 }
 
 //*----------------------------------------------------------------------------
@@ -130,8 +139,19 @@ static void ui_controls_clock_refresh(void)
 	GUI_SetColor(CLOCK_COLOR);
 	GUI_DispStringAt(buf,(CLOCK_X + CLOCK_HOURS_SHIFT), (CLOCK_Y + 2));
 
-	// ToDo: Check if date changed, then update...
-	//..
+	// Check if date changed(good GPS lock, while in desktop), then update
+	uchar year = sdatestructureget.Year;
+	if((old_year != year)||(old_month != sdatestructureget.Month)||(old_date != sdatestructureget.Date))
+	{
+		ui_controls_clock_panel_restore();
+
+		// Save date
+		old_year  = year;
+		old_month = sdatestructureget.Month;
+		old_date  = sdatestructureget.Date;
+
+		return;
+	}
 
 	// Clear sats area
 	GUI_SetColor(CLOCK_PANEL_COL);

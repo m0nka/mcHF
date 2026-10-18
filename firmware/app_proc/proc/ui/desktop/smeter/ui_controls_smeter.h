@@ -39,6 +39,13 @@ __attribute__((__common__)) struct S_METER {
 	ushort	rotary_timer;		// how long to block refresh for
 	uchar loc_tx_state;
 
+	// Analogue needle ballistics, all in degrees of needle travel(0 - 90)
+	float	drive_deg;			// what the meter coil is pushing towards
+	float	needle_deg;			// where the needle is
+	float	needle_vel;			// deg/s
+	float	drawn_deg;			// last painted position
+	ulong	last_ms;			// last physics update
+	ulong	drawn_ms;			// last repaint
 
 } S_METER;
 
@@ -52,15 +59,26 @@ typedef struct {
   uchar			   pos;
 } PARAM;
 
-// Defines smoothness of needle move
-// Upwards direction, fast, caused by high current flowing through the coil
-// Downwards direction - slow, caused by release and spring reaction
-// - the smaller the value, smoother the movement, but CPU load is enormous
-#define S_NEEDLE_STEP_SLOW		4
-#define S_NEEDLE_STEP_FAST		(S_NEEDLE_STEP_SLOW * 2)
+// Scale calibration, needle degrees from the left stop, measured from the tick
+// marks of bmscale as seen from the needle pivot: S1 5.7, S3 15.2, S5 24.9,
+// S7 34.8, S9 44.9, +20 59.9, +40 75.0, +60 89.5 - linear on both halves
+#define S_DBM_S9				(-73.0f)
+#define S_DEG_S9				45.0f
+#define S_DEG_PER_DB_LO			(4.9f / 6.0f)		// S1..S9, 6 dB per S-unit
+#define S_DEG_PER_DB_HI			0.75f				// above S9
+#define S_DEG_MAX				90.0f				// right stop
 
-// Defines how often the ISR call will be stalled (refresh is every S_REFRESH_FREQ milliseconds)
-#define S_REFRESH_FREQ			2
+// Needle ballistics, emulating a real moving coil meter fed from an AGC line.
+// The drive rises at once and decays with S_NEEDLE_RELEASE_MS (the AGC hang/
+// release), the needle is a damped spring chasing the drive, so it swings up
+// fast, overshoots a touch and settles, then sags back slowly
+#define S_NEEDLE_RELEASE_MS		350.0f
+#define S_NEEDLE_NAT_FREQ_HZ	4.0f		// movement stiffness
+#define S_NEEDLE_DAMPING		0.65f		// < 1 gives the slight overshoot
+#define S_NEEDLE_SUBSTEP_MS		2			// physics integration step
+#define S_NEEDLE_MAX_DT_MS		100			// after a stall do not fling the needle
+#define S_NEEDLE_FRAME_MS		16			// repaint no faster than ~60 fps
+#define S_NEEDLE_MIN_MOVE		0.1f		// degrees, smaller moves not repainted
 
 // Constants for testing
 #define S_NEEDLE_LEFT			0

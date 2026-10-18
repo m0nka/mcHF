@@ -29,6 +29,7 @@
 #include "cpu_trace.h"
 
 #include "ui_tests.h"
+#include "ui_screenshot.h"
 
 // -----------------------------------------------------------------------------------------------
 // Desktop Mode
@@ -44,14 +45,23 @@
 // FT8 Desktop
 #include "desktop_ft8\ui_desktop_ft8.h"
 
+// HF digital mode ownership
+#include "hf_app.h"
+
+// FT8 radio setup and live receiver
+#ifdef CONTEXT_FT8
+#include "ft8_proc.h"
+#include "ft8_radio.h"
+#endif
+
 #ifdef CONTEXT_MARSCHAT
 #include "desktop_marschat\marschat_ui.h"
 #include "marschat_proc.h"
 #endif
 
-#ifdef CONTEXT_MESHCHAT
-#include "desktop_meshchat\meshchat_ui.h"
-#include "meshchat_proc.h"
+#ifdef CONTEXT_MESHCORE
+#include "desktop_meshcore\meshcore_ui.h"
+#include "meshcore_proc.h"
 #endif
 // -----------------------------------------------------------------------------------------------
 // Menu Mode
@@ -80,7 +90,7 @@ extern struct	TRANSCEIVER_STATE_UI	tsu;
 extern struct PROC_STATE 				ps;
 
 // Menu items
-extern K_ModuleItem_Typedef  	dsp_s;				// Standard DSP Menu
+extern K_ModuleItem_Typedef  	dsp_s;				// Baseband menu
 extern K_ModuleItem_Typedef  	menu_pa;			// Extended DSP Menu
 extern K_ModuleItem_Typedef  	user_i;				// User Interface
 extern K_ModuleItem_Typedef  	clock;				// Clock Settings
@@ -102,7 +112,7 @@ extern K_ModuleItem_Typedef  	file_b;				// File Browser
 static void ui_proc_add_menu_items(void)
 {
 	k_ModuleInit();
-	k_ModuleAdd(&dsp_s);				// Standard DSP Menu
+	k_ModuleAdd(&dsp_s);				// Baseband menu
 	k_ModuleAdd(&menu_pa);				// Extended DSP Menu
 	k_ModuleAdd(&user_i);				// User Interface
 	k_ModuleAdd(&clock);				// Clock Settings
@@ -602,6 +612,28 @@ static void ui_proc_init_desktop(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : ui_proc_is_full_screen_mode
+//* Object              : modes that take over the whole display
+//* Input Parameters    : screen mode
+//* Output Parameters   : 1 if the mode owns the display, 0 for the Desktop
+//* Functions called    : CONTEXT_VIDEO
+//*----------------------------------------------------------------------------
+static uchar ui_proc_is_full_screen_mode(uchar mode)
+{
+	switch(mode)
+	{
+		case MODE_MENU:
+		case MODE_DESKTOP_FT8:
+		case MODE_DESKTOP_MARSCHAT:
+		case MODE_DESKTOP_MESHCORE:
+			return 1;
+
+		default:
+			return 0;
+	}
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : ui_proc_change_mode
 //* Object              : change screen mode
 //* Input Parameters    :
@@ -619,38 +651,14 @@ static void ui_proc_change_mode(void)
 	if(ui_s.cur_state == state)
 		return;
 
-	// Don't enter Menu if we have virtual dialog shown
-	if((ui_s.active_control_shown)&&\
-	  ((ui_s.req_state == MODE_MENU)||\
-	   (ui_s.req_state == MODE_DESKTOP_MARSCHAT)||\
-	   (ui_s.req_state == MODE_DESKTOP_MESHCHAT)||\
-	   (ui_s.req_state == MODE_DESKTOP_FT8)))
+	// A virtual dialog is up - it owns the screen until it is closed
+	if((ui_s.active_control_shown)&&(ui_proc_is_full_screen_mode(state)))
 		return;
 
-	// ToDo: Those checks work, but suck donkey balls, fix at some point ;(
-	if((ui_s.req_state == MODE_MENU)&&(ui_s.cur_state == MODE_DESKTOP_MARSCHAT))
-		return;
-	if((ui_s.req_state == MODE_MENU)&&(ui_s.cur_state == MODE_DESKTOP_FT8))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_MARSCHAT)&&(ui_s.cur_state == MODE_MENU))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_FT8)&&(ui_s.cur_state == MODE_MENU))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_FT8)&&(ui_s.cur_state == MODE_DESKTOP_MARSCHAT))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_FT8)&&(ui_s.cur_state == MODE_DESKTOP_MESHCHAT))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_MESHCHAT)&&(ui_s.cur_state == MODE_DESKTOP_FT8))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_MARSCHAT)&&(ui_s.cur_state == MODE_DESKTOP_FT8))
-		return;
-	if((ui_s.req_state == MODE_MENU)&&(ui_s.cur_state == MODE_DESKTOP_MESHCHAT))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_MESHCHAT)&&(ui_s.cur_state == MODE_MENU))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_MESHCHAT)&&(ui_s.cur_state == MODE_DESKTOP_MARSCHAT))
-		return;
-	if((ui_s.req_state == MODE_DESKTOP_MARSCHAT)&&(ui_s.cur_state == MODE_DESKTOP_MESHCHAT))
+	// Menu and the apps all paint over the whole display and each one tears
+	// down the Desktop controls on entry, so the only legal move between them
+	// is via the Desktop - ignore any direct app to app switch
+	if((ui_proc_is_full_screen_mode(state))&&(ui_proc_is_full_screen_mode(ui_s.cur_state)))
 		return;
 
 	// Backlight off
@@ -743,6 +751,22 @@ static void ui_proc_change_mode(void)
 		{
 			printf("Entering FT8 mode...\r\n");
 
+			// FT8 owns HF from here on - a WSPR monitor must not start
+			// another cycle. One already running winds down on its own,
+			// the HF arena lock makes FT8 wait for it
+			hf_app_select(HF_APP_FT8);
+			#ifdef CONTEXT_WSPR
+			wspr_proc_monitor_set(0);
+			#endif
+
+			#ifdef CONTEXT_FT8
+			// Tune the current band's FT8 frequency (USB, 3.6 kHz) - after
+			// a reflash the VFO can be anywhere in the band - and start
+			// the slot receiver
+			ft8_radio_enter();
+			ft8_proc_live(1);
+			#endif
+
 			// Destroy desktop controls
 			#ifdef DESKTOP_SHOW_VOLUME
 			ui_controls_volume_quit();
@@ -788,6 +812,9 @@ static void ui_proc_change_mode(void)
 		{
 			printf("Entering MarsChat mode...\r\n");
 
+			// MarsChat runs on the WSPR engine, which owns HF from here on
+			hf_app_select(HF_APP_WSPR);
+
 			// Tune to the MarsChat dial frequency for this band
 			// (saves the current VFO so it can be restored on exit)
 			marschat_vfo_enter();
@@ -829,11 +856,11 @@ static void ui_proc_change_mode(void)
 			break;
 		}
 #endif
-#ifdef CONTEXT_MESHCHAT
-		// Switch to MeshChat mode
-		case MODE_DESKTOP_MESHCHAT:
+#ifdef CONTEXT_MESHCORE
+		// Switch to MeshCore mode
+		case MODE_DESKTOP_MESHCORE:
 		{
-			printf("Entering MeshChat mode...\r\n");
+			printf("Entering MeshCore mode...\r\n");
 
 			// No VFO handling here, unlike MarsChat - this app lives on
 			// the LoRa modem and leaves the HF side alone
@@ -867,7 +894,7 @@ static void ui_proc_change_mode(void)
 			GUI_Clear();
 
 			// Show the chat screen
-			meshchat_ui_create();
+			meshcore_ui_create();
 
 			// Initial paint
 			GUI_Exec();
@@ -906,12 +933,17 @@ static void ui_proc_change_mode(void)
 			ui_menu_destroy();
 			//ui_side_enc_menu_destroy();
 			ui_desktop_ft8_destroy();
+			#ifdef CONTEXT_FT8
+			// Receiver off first, then the operator's bands back
+			ft8_proc_live(0);
+			ft8_radio_exit();
+			#endif
 			//ui_quick_log_destroy();
-			#ifdef CONTEXT_MESHCHAT
-			// Nothing to wind down on the radio side - the meshchat
+			#ifdef CONTEXT_MESHCORE
+			// Nothing to wind down on the radio side - the meshcore
 			// service keeps running with the screen closed, and the
 			// LoRa modem is not tied to the HF VFO
-			meshchat_ui_destroy();
+			meshcore_ui_destroy();
 			#endif
 			#ifdef CONTEXT_MARSCHAT
 			marschat_ui_destroy();
@@ -924,6 +956,9 @@ static void ui_proc_change_mode(void)
 			// Restore the VFO frequency that was saved on MarsChat entry
 			marschat_vfo_exit();
 			#endif
+
+			// Back to the user - no digital mode owns HF
+			hf_app_select(HF_APP_NONE);
 
 			// Clear screen
 			GUI_SetBkColor(GUI_BLACK);
@@ -1368,8 +1403,8 @@ ui_proc_loop:
 	else if(ui_s.cur_state == MODE_DESKTOP_MARSCHAT)
 		del_ms = (UI_PROC_SLEEP_TIME*2);
 	#endif
-	#ifdef CONTEXT_MESHCHAT
-	else if(ui_s.cur_state == MODE_DESKTOP_MESHCHAT)
+	#ifdef CONTEXT_MESHCORE
+	else if(ui_s.cur_state == MODE_DESKTOP_MESHCORE)
 		del_ms = (UI_PROC_SLEEP_TIME*2);
 	#endif
 	else
@@ -1381,6 +1416,9 @@ ui_proc_loop:
 	// Give control to emWin
 	GUI_Exec();
 	GUI_Delay(del_ms);
+
+	// F1 hold - save the screen to the SD card
+	ui_screenshot_poll();
 
 	// Periodic per task CPU load dump(100% CPU bug hunt)
 	cpu_trace_poll();

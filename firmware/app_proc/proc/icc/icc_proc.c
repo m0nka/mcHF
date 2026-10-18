@@ -222,6 +222,8 @@ static void api_ui_process_broadcast(void)
 
 		//printf("s=%d\r\n", aRxBuffer[1]);
 		ui_sw.sm_value = aRxBuffer[1];			// s-meter value
+		ui_sw.sm_dbm_valid = (aRxBuffer[3] == ICC_SMETER_DBM_MARK);
+		ui_sw.sm_dbm = aRxBuffer[2];			// s-meter, 1 dB resolution
 
 		ui_sw.updated = 1;
 	}
@@ -238,6 +240,11 @@ static void api_ui_process_broadcast(void)
 //* Notes    			:
 //* Context    			: CONTEXT_ICC
 //*----------------------------------------------------------------------------
+// Longest wait for the M4 core to answer a command. The M4 superloop
+// answers within a few ms; the slowest are the DSP chain rebuilds (trx
+// state, band change, i2s start) - generous, it only has to catch a hang
+#define ICC_REPLY_TIMEOUT_MS		2000
+
 static uchar icc_proc_cmd_xchange(uchar cmd, uchar *buff, ushort size)
 {
 	int32_t status;
@@ -245,6 +252,10 @@ static uchar icc_proc_cmd_xchange(uchar cmd, uchar *buff, ushort size)
 	// Untested !!!!
 	if(service_created == 0)
 		return 1;
+
+	// A late reply to an earlier command that timed out must not pass
+	// for the answer to this one
+	message_received = 0;
 
 	// Payload or just command
 	if((buff != NULL) && (size != 0) && (size < (sizeof(aRxBuffer) - 4)))
@@ -265,12 +276,32 @@ static uchar icc_proc_cmd_xchange(uchar cmd, uchar *buff, ushort size)
 		return 2;
 	}
 
-	// ToDo: timeout here...
-	//
-	while (message_received == 0)
+	// Bounded wait. It used to wait forever: a hung M4 then froze the icc
+	// task, and with it every M4 command and stream, without a word in the
+	// log (SN 0002, 2026-09-27)
 	{
-		osDelay(1);
-		OPENAMP_check_for_message();
+		TickType_t		t0 = xTaskGetTickCount();
+		static uchar	m4_silent = 0;
+
+		while (message_received == 0)
+		{
+			if((xTaskGetTickCount() - t0) >= ICC_REPLY_TIMEOUT_MS)
+			{
+				if(!m4_silent)
+					printf("icc: m4 no reply (cmd %d)\r\n", cmd);
+
+				m4_silent = 1;
+				return 3;
+			}
+
+			osDelay(1);
+			OPENAMP_check_for_message();
+		}
+
+		if(m4_silent)
+			printf("icc: m4 answers again\r\n");
+
+		m4_silent = 0;
 	}
 	message_received = 0;
 
@@ -607,6 +638,120 @@ icc_proc_loop:
 	return 0;
 }
 
+#ifdef CONTEXT_FT8
+#include "ft8_proc.h"
+
+// M4 FT8 stream running (start acknowledged)
+static uchar	icc_ft8_on = 0;
+
+// ICC_FT8_FEED / ICC_FT8_TX_START payload staging - aRxBuffer carries the reply
+static uchar	icc_ft8_feed_buf[2 + ICC_FT8_FEED_MAX * 2];
+
+//*----------------------------------------------------------------------------
+//* Function Name       : icc_proc_ft8_read
+//* Object              : pull waterfall rows out of the M4 ring
+//* Notes    			: bounded, a burst can not monopolise the icc task
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+static void icc_proc_ft8_read(int max_rows)
+{
+	ushort	seq, len;
+
+	while(max_rows--)
+	{
+		if(icc_proc_cmd_xchange(ICC_FT8_READ, NULL, 0) != 0)
+			break;
+
+		if(aRxBuffer[0] != ICC_FT8_SIG)
+		{
+			printf("ft8 row NA\r\n");
+			break;
+		}
+
+		seq = aRxBuffer[2] | (aRxBuffer[3] << 8);
+		len = aRxBuffer[4] | (aRxBuffer[5] << 8);
+
+		// Ring empty
+		if(len == 0)
+			break;
+
+		ft8_stream_row(seq, aRxBuffer + ICC_FT8_HDR_SIZE, len, aRxBuffer[1]);
+	}
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : icc_proc_ft8_service
+//* Object              : bring the M4 FT8 stream in line with what the ft8
+//*						: task wants, and move data while it runs
+//* Notes    			: runs on every pass of the task loop, so a lost
+//*						: UI_ICC_FT8 wake-up only delays it
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+static void icc_proc_ft8_service(void)
+{
+	uchar	src, want;
+	ushort	n;
+	int		k;
+
+	// Transmitter first - an abort must not wait behind a waterfall pass
+	if(ft8_stream_tx_abort_take())
+		icc_proc_cmd_xchange(ICC_MC_TX_STOP, NULL, 0);
+
+	n = ft8_stream_tx_take(icc_ft8_feed_buf);
+	if(n != 0)
+	{
+		if(icc_proc_cmd_xchange(ICC_FT8_TX_START, icc_ft8_feed_buf, n) == 0)
+			ft8_stream_tx_result(aRxBuffer[0]);
+		else
+			ft8_stream_tx_result(0xFF);
+	}
+
+	want = ft8_stream_want(&src);
+
+	if(want && !icc_ft8_on)
+	{
+		if((icc_proc_cmd_xchange(ICC_FT8_START, &src, 1) == 0) && (aRxBuffer[0] == 0))
+		{
+			icc_ft8_on = 1;
+			ft8_stream_mark(1);
+		}
+	}
+	else if(!want && icc_ft8_on)
+	{
+		icc_proc_cmd_xchange(ICC_FT8_STOP, NULL, 0);
+		icc_ft8_on = 0;
+		ft8_stream_mark(0);
+		return;
+	}
+
+	if(!icc_ft8_on)
+		return;
+
+	// Bench source - feed a few chunks, collect what they produced
+	if(src == ICC_FT8_SRC_INJECT)
+	{
+		for(k = 0; k < 16; k++)
+		{
+			n = ft8_stream_inject_next(icc_ft8_feed_buf + 2, ICC_FT8_FEED_MAX);
+			if(n == 0)
+				break;
+
+			icc_ft8_feed_buf[0] = (uchar)(n >> 0);
+			icc_ft8_feed_buf[1] = (uchar)(n >> 8);
+
+			if(icc_proc_cmd_xchange(ICC_FT8_FEED, icc_ft8_feed_buf, 2 + n * 2) != 0)
+				break;
+
+			// Rows waiting on the M4 side
+			if(aRxBuffer[0])
+				icc_proc_ft8_read(aRxBuffer[0]);
+		}
+	}
+
+	icc_proc_ft8_read(8);
+}
+#endif
+
 #ifdef CONTEXT_WSPR
 //*----------------------------------------------------------------------------
 //* Function Name       : icc_proc_wspr_drain
@@ -691,7 +836,8 @@ static void icc_proc_dsp_command(ulong cmd)
 			data[3] = tsu.keyer_mode;
 			data[4] = tsu.band[tsu.curr_band].filter;
 			data[5] = tsu.curr_band;
-			icc_proc_cmd_xchange(ICC_CHANGE_BAND, data, 6);
+			data[6] = tsu.band[tsu.curr_band].tx_power;	// per band TX power level
+			icc_proc_cmd_xchange(ICC_CHANGE_BAND, data, 7);
 			break;
 		}
 
@@ -749,6 +895,32 @@ static void icc_proc_dsp_command(ulong cmd)
 			break;
 		}
 
+		// Set TX power level
+		case UI_ICC_POWER_LEVEL:
+		{
+			data[0] = tsu.band[tsu.curr_band].tx_power;
+			icc_proc_cmd_xchange(ICC_SET_POWER_LEVEL, data, 1);
+			break;
+		}
+
+		// Set RX speaker AF gain
+		case UI_ICC_AF_GAIN:
+		{
+			data[0] = tsu.band[tsu.curr_band].volume;
+			icc_proc_cmd_xchange(ICC_SET_AF_GAIN, data, 1);
+			break;
+		}
+
+		// DSP settings changed - only a wake-up, icc_proc_send_dsp_settings()
+		// runs on every pass of the task loop
+		case UI_ICC_DSP_SETTINGS:
+			break;
+
+		// FT8 stream - only a wake-up, icc_proc_ft8_service() runs on every
+		// pass of the task loop
+		case UI_ICC_FT8:
+			break;
+
 	#ifdef CONTEXT_WSPR
 		// Start WSPR capture streaming on the M4 core
 		case UI_ICC_WSPR_START:
@@ -797,6 +969,40 @@ static void icc_proc_dsp_command(ulong cmd)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : icc_proc_send_dsp_settings
+//* Object              : push the UHSDR DSP settings set to the M4 core if
+//* Object              : anything changed. Driven by the dirty flag instead
+//* Object              : of the notification value, because notifications
+//* Object              : overwrite each other and a spinbox held down fires
+//* Object              : a lot of them
+//* Notes    			: The flag is cleared before the copy, so a change
+//* Notes   			: made while this runs is sent on the next pass
+//* Context    			: CONTEXT_ICC
+//*----------------------------------------------------------------------------
+static void icc_proc_send_dsp_settings(void)
+{
+	static uchar	data[DSP_SET_HDR_SIZE + (DSP_SET_COUNT * 2)];
+	uchar			i;
+
+	if((dsp_remote_init_done == 0) || (dsp_settings_dirty == 0))
+		return;
+
+	dsp_settings_dirty = 0;
+
+	data[0] = DSP_SET_VERSION;
+	data[1] = DSP_SET_COUNT;
+
+	for(i = 0; i < DSP_SET_COUNT; i++)
+	{
+		data[DSP_SET_HDR_SIZE + (i * 2) + 0] = (uchar)(dsp_settings[i] >> 0);
+		data[DSP_SET_HDR_SIZE + (i * 2) + 1] = (uchar)(dsp_settings[i] >> 8);
+	}
+
+	if(icc_proc_cmd_xchange(ICC_SET_DSP_SETTINGS, data, sizeof(data)) != 0)
+		dsp_settings_dirty = 1;
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : icc_proc_dsp_on
 //* Object              :
 //* Notes    			:
@@ -831,6 +1037,10 @@ static uchar icc_proc_dsp_on(void)
 
 	// Ready for actual commands
 	tsu.dsp_alive = 2;
+
+	// Full DSP settings set right after the state upload - the M4 core
+	// runs its built-in defaults until then
+	dsp_settings_dirty = 1;
 
 	return 0;
 }
@@ -1002,6 +1212,16 @@ icc_proc_loop:
 		sleep = ICC_WSPR_POLL_TIME;
 	#endif
 
+	#ifdef CONTEXT_FT8
+	{
+		uchar src;
+
+		// Bench feed runs flat out, a live stream is polled like WSPR
+		if(ft8_stream_want(&src) || icc_ft8_on)
+			sleep = (src == ICC_FT8_SRC_INJECT) ? 1 : ICC_WSPR_POLL_TIME;
+	}
+	#endif
+
 	ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, sleep);
 
 	// Process commands
@@ -1041,10 +1261,17 @@ icc_proc_loop:
 		}
 	}
 
+	// DSP settings from the menu, whatever woke us up
+	icc_proc_send_dsp_settings();
+
 	#ifdef CONTEXT_WSPR
 	// Pull capture chunks on every wake up while the stream runs
 	if(wspr_capture_active())
 		icc_proc_wspr_drain(8);
+	#endif
+
+	#ifdef CONTEXT_FT8
+	icc_proc_ft8_service();
 	#endif
 
 	goto icc_proc_loop;
