@@ -173,7 +173,7 @@
 // Keypad process parameters
 #define SD_PROC_START_NAME				"sdc"
 #define SD_PROC_START_DELAY				0
-#define SD_PROC_SLEEP_TIME				portMAX_DELAY
+#define SD_PROC_SLEEP_TIME				500			// settings background save poll
 #define SD_PROC_PRIORITY				osPriorityNormal
 #define SD_PROC_STACK_SIZE				(configMINIMAL_STACK_SIZE * 16)
 

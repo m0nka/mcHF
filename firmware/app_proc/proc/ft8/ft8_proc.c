@@ -322,8 +322,12 @@ void ft8_stream_row(ushort seq, const uchar *row, ushort len, uchar flags)
 //*----------------------------------------------------------------------------
 static void ft8_stream_kick(void)
 {
+	// Without overwrite - this is only a wake-up(the service runs on every
+	// pass), so it must never replace a real pending command. It used to
+	// eat the UI_ICC_CHANGE_BAND of ft8_radio_enter()/exit(), leaving the
+	// M4 in the wrong mode(USB on 40m after exit) now and then
 	if(ps.hIccTask != NULL)
-		xTaskNotify(ps.hIccTask, UI_ICC_FT8, eSetValueWithOverwrite);
+		xTaskNotify(ps.hIccTask, UI_ICC_FT8, eSetValueWithoutOverwrite);
 }
 
 //*----------------------------------------------------------------------------

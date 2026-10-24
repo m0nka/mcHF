@@ -12,6 +12,7 @@
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
+#include "icc_proc.h"
 
 #ifdef CONTEXT_VIDEO
 
@@ -186,7 +187,7 @@ void ui_actions_change_demod_mode(uchar mode)
 		ui_controls_keyer_quit();
 
 	// Notify ICC dispatcher
-	xTaskNotify(ps.hIccTask, UI_ICC_DEMOD_MODE, eSetValueWithOverwrite);
+	icc_proc_request(UI_ICC_DEMOD_MODE);
 
 	// Repaint UI
 	ui_controls_demod_refresh();
@@ -214,7 +215,7 @@ void ui_actions_change_band(uchar band, uchar skip_destop_upd)
 	xTaskNotify(ps.hAudioTask, UI_NEW_AUDIO_EVENT, eSetValueWithOverwrite);	// Update volume
 
 	// Change all DSP parameters relating to band change together
-	xTaskNotify(ps.hIccTask, 	UI_ICC_CHANGE_BAND, eSetValueWithOverwrite);	// Update DSP
+	icc_proc_request(UI_ICC_CHANGE_BAND);	// Update DSP
 
 	// Save band info to eeprom
 	//save_band_info();
@@ -251,7 +252,7 @@ void ui_actions_change_vfo_mode(void)
 		tsu.band[tsu.curr_band].fixed_mode = 1;
 
 	// Notify ICC dispatcher
-	xTaskNotify(ps.hIccTask, UI_ICC_NCO_FREQ, eSetValueWithOverwrite);	// Update NCO frequency(DSP)
+	icc_proc_request(UI_ICC_NCO_FREQ);	// Update NCO frequency(DSP)
 
 	// Change '0' to center frequency in Fixed mode
 	//--ui_controls_update_span();
@@ -278,7 +279,7 @@ void ui_actions_change_active_vfo(void)
 		tsu.band[tsu.curr_band].active_vfo = VFO_A;
 
 	// Notify ICC dispatcher
-	xTaskNotify(ps.hIccTask, UI_ICC_NCO_FREQ, 	eSetValueWithOverwrite);	// Update NCO frequency(DSP)
+	icc_proc_request(UI_ICC_NCO_FREQ);	// Update NCO frequency(DSP)
 	xTaskNotify(ps.hVfoTask, UI_NEW_FREQ_EVENT,eSetValueWithOverwrite);	// Update VFO
 
 	// Change '0' to center frequency in Fixed mode
@@ -313,7 +314,15 @@ void ui_actions_change_span(void)
 //*----------------------------------------------------------------------------
 void ui_actions_change_step(uchar dir)
 {
-	if(dir)
+	// 500 Hz is off the decade ladder, step to its neighbours
+	if(tsu.band[tsu.curr_band].step == T_STEP_500HZ)
+	{
+		if(dir)
+			tsu.band[tsu.curr_band].step = T_STEP_1KHZ;
+		else
+			tsu.band[tsu.curr_band].step = T_STEP_100HZ;
+	}
+	else if(dir)
 	{
 		if(tsu.band[tsu.curr_band].step < T_STEP_10MHZ)
 			tsu.band[tsu.curr_band].step *= 10;
@@ -614,7 +623,7 @@ void ui_actions_change_stereo_mode(uchar mode)
 	tsu.stereo_mode = mode;
 
 	// Notify ICC dispatcher
-	xTaskNotify(ps.hIccTask, UI_ICC_STEREO, eSetValueWithOverwrite);
+	icc_proc_request(UI_ICC_STEREO);
 }
 
 //*----------------------------------------------------------------------------
@@ -633,7 +642,7 @@ void ui_actions_change_filter(uchar id)
   	tsu.band[tsu.curr_band].filter = id;
 
   	// Notify ICC dispatcher
-	xTaskNotify(ps.hIccTask, UI_ICC_FITER, eSetValueWithOverwrite);
+	icc_proc_request(UI_ICC_FITER);
 }
 
 //*----------------------------------------------------------------------------
@@ -652,7 +661,7 @@ void ui_actions_change_agc_mode(uchar mode)
 	tsu.agc_mode = mode;
 
 	// Notify ICC dispatcher
-	xTaskNotify(ps.hIccTask, UI_ICC_AGC_MODE, eSetValueWithOverwrite);
+	icc_proc_request(UI_ICC_AGC_MODE);
 
 	// UI repaint
 	ui_controls_agc_init();
@@ -674,7 +683,7 @@ void ui_actions_change_rf_gain(uchar gain)
 	tsu.rf_gain = gain;
 
 	// Notify ICC dispatcher
-	xTaskNotify(ps.hIccTask, UI_ICC_AGC_MODE, eSetValueWithOverwrite);
+	icc_proc_request(UI_ICC_AGC_MODE);
 
 	// UI repaint
 	ui_controls_agc_init();
@@ -725,7 +734,7 @@ void ui_actions_change_power_level(void)
 	// Notify ICC dispatcher - the baseband scales the TX IQ by
 	// ts.tx_power_factor, which it derives from this level
 	if(ps.hIccTask != NULL)
-		xTaskNotify(ps.hIccTask, UI_ICC_POWER_LEVEL, eSetValueWithOverwrite);
+		icc_proc_request(UI_ICC_POWER_LEVEL);
 
 	// UI repaint
 	ui_controls_tx_stat_refresh();

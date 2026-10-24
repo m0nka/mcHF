@@ -16,6 +16,10 @@
 #include "board.h"
 #include "sdram.h"
 
+#ifdef CONTEXT_SD
+#include "storage_proc.h"
+#endif
+
 // Core unique regs loaded to RAM
 struct	CM7_CORE_DETAILS		ccd;
 
@@ -692,6 +696,12 @@ static void power_cntr_init(void)
 void board_power_off(void)
 {
 	//printf("power off in\r\n");
+
+	// Settings to the .ini on the card first - that needs the OS, interrupts
+	// and the SD task, so before anything here is switched off
+	#ifdef CONTEXT_SD
+	storage_proc_save_settings(2000);
+	#endif
 
 	// 5V off
 	HAL_GPIO_WritePin(VCC_5V_ON_PORT, VCC_5V_ON, GPIO_PIN_RESET);

@@ -101,5 +101,6 @@ void GPS_DMA_IRQHandler(void);
 // API access
 uchar gps_proc_sats_cnt(void);
 uchar gps_proc_time_set(void);
+uchar gps_proc_rtc_sync_cnt(void);
 
 #endif

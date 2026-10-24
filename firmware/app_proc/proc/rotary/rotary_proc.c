@@ -12,6 +12,7 @@
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
+#include "icc_proc.h"
 
 #ifdef CONTEXT_ROTARY
 
@@ -167,6 +168,20 @@ static void rotary_proc_check_side_enc(void)
 	audio_old = cnt;
 }
 
+static void rotary_notify_freq(void)
+{
+	if(tsu.band[tsu.curr_band].fixed_mode == 0)
+	{
+		if(ps.hVfoTask != NULL)
+			xTaskNotify(ps.hVfoTask, UI_NEW_FREQ_EVENT, eSetValueWithOverwrite);
+	}
+	else
+	{
+		if(ps.hIccTask != NULL)
+			icc_proc_request(UI_ICC_NCO_FREQ);
+	}
+}
+
 static void rotary_update_freq_publics(int pot_diff)
 {
 	// Block s-meter refresh
@@ -266,19 +281,104 @@ static void rotary_update_freq_publics(int pot_diff)
 	}
 	//printf("encoder freq = %d\r\n", tsu.band[tsu.curr_band].vfo_a);
 
-	if(tsu.band[tsu.curr_band].fixed_mode == 0)
-	{
-		if(ps.hVfoTask != NULL)
-			xTaskNotify(ps.hVfoTask, UI_NEW_FREQ_EVENT, eSetValueWithOverwrite);
-	}
-	else
-	{
-		if(ps.hIccTask != NULL)
-			xTaskNotify(ps.hIccTask, UI_ICC_NCO_FREQ, eSetValueWithOverwrite);
-	}
+	rotary_notify_freq();
 
 	// Save band info to eeprom
 	//save_band_info();
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : rotary_check_shake
+//* Object              : quick back and forth of the VFO dial toggles the
+//* Object              : step 1kHz <-> 500Hz(contest spacing). The dial
+//* Object              : goes back to where it was before the shake, then
+//* Object              : snaps to the new step grid(centre mode)
+//* Notes    			: only from 1kHz or 500Hz, so a fast rock around a
+//* Notes    			: station with a fine step does nothing
+//* Context    			: CONTEXT_ROTARY
+//*----------------------------------------------------------------------------
+#define SHAKE_REVERSALS			4		// direction changes needed...
+#define SHAKE_WINDOW_MS			800		// ...within this time
+#define SHAKE_REST_MS			300		// dial idle this long = new movement starts
+#define SHAKE_LOCKOUT_MS		1500	// no second toggle while still shaking
+
+static uchar rotary_check_shake(int pot_diff)
+{
+	static int		last_dir 		= 0;
+	static ulong	last_move 		= 0;
+	static ulong	lockout 		= 0;
+	static ulong	rev_time[SHAKE_REVERSALS];
+	static uchar	rev_idx			= 0;
+	static ulong	rest_vfo_a, rest_vfo_b;
+	static short	rest_nco;
+
+	struct BAND_INFO *b	= &tsu.band[tsu.curr_band];
+	ulong		now 	= ps.epoch;
+	ulong		step;
+	ulong		*vfo;
+
+	// Movement after a pause - remember where the dial was
+	if((last_move == 0)||((now - last_move) > SHAKE_REST_MS))
+	{
+		rest_vfo_a 	= b->vfo_a;
+		rest_vfo_b 	= b->vfo_b;
+		rest_nco 	= b->nco_freq;
+		last_dir 	= 0;
+		memset(rev_time, 0, sizeof(rev_time));
+	}
+	last_move = now;
+
+	if(pot_diff == last_dir)
+		return 0;
+
+	if(last_dir == 0)
+	{
+		last_dir = pot_diff;
+		return 0;
+	}
+	last_dir = pot_diff;
+
+	// Direction reversal, keep the last few
+	rev_time[rev_idx] = now;
+	rev_idx = (rev_idx + 1) % SHAKE_REVERSALS;
+
+	// The oldest one(next to be overwritten) has to be inside the window
+	if((rev_time[rev_idx] == 0)||((now - rev_time[rev_idx]) > SHAKE_WINDOW_MS))
+		return 0;
+
+	if(now < lockout)
+		return 0;
+
+	if(b->step == T_STEP_1KHZ)
+		step = T_STEP_500HZ;
+	else if(b->step == T_STEP_500HZ)
+		step = T_STEP_1KHZ;
+	else
+		return 0;
+
+	// Undo the shake
+	b->vfo_a 	= rest_vfo_a;
+	b->vfo_b 	= rest_vfo_b;
+	b->nco_freq = rest_nco;
+
+	// On the new grid, so 500Hz stations are reachable and back on 1kHz
+	// the dial does not stay on the half
+	if(b->fixed_mode == 0)
+	{
+		vfo = (b->active_vfo == VFO_A) ? &b->vfo_a : &b->vfo_b;
+		*vfo = ((*vfo + (step / 2)) / step) * step;
+	}
+
+	b->step = step;
+
+	printf("vfo step %dHz(shake)\r\n", (int)step);
+
+	memset(rev_time, 0, sizeof(rev_time));
+	lockout = now + SHAKE_LOCKOUT_MS;
+
+	rotary_notify_freq();
+
+	return 1;
 }
 
 static void rotary_proc_check_freq_enc(void)
@@ -322,7 +422,11 @@ static void rotary_proc_check_freq_enc(void)
 	// Do not update publics while in Menu(or other non desktop modes, where UI is not painted and processed)
 	#ifdef CONTEXT_VIDEO
 	if(ui_s.cur_state == MODE_DESKTOP)
-		rotary_update_freq_publics(pot_diff);
+	{
+		// Shake toggles the step and puts the dial back, no tuning then
+		if(!rotary_check_shake(pot_diff))
+			rotary_update_freq_publics(pot_diff);
+	}
 	#endif
 
 	// Digital debounce - not working!

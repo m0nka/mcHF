@@ -440,6 +440,7 @@ __attribute__((__common__)) struct UI_SW {
 #define 	T_STEP_1HZ						1
 #define 	T_STEP_10HZ						10
 #define 	T_STEP_100HZ					100
+#define 	T_STEP_500HZ					500			// contest spacing, only via VFO dial shake
 #define 	T_STEP_1KHZ						1000
 #define 	T_STEP_10KHZ					10000
 #define 	T_STEP_100KHZ					100000

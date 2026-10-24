@@ -23,6 +23,7 @@ char StorageDISK_Drive[4];
 #include "sd_diskio.h"
 
 #include "storage_proc.h"
+#include "misc\radio_init.h"
 
 // File system object for MSD disk logical drive
 #ifdef SD_USE_DMA
@@ -38,6 +39,9 @@ static Diskio_drvTypeDef  	const 	*Storage_Driver[NUM_DISK_UNITS];
 
 uint8_t           					StorageID[NUM_DISK_UNITS];
 STORAGE_Status_t   					StorageStatus[NUM_DISK_UNITS];
+
+// Given by the task when a storage_proc_save_settings() request is done
+static SemaphoreHandle_t			sd_ini_done = NULL;
 
 // FreeRTOS process state
 extern struct PROC_STATE 			ps;
@@ -277,6 +281,18 @@ void storage_proc_task(void const * argument)
 	for(;;)
 	{
 		ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, SD_PROC_SLEEP_TIME);
+
+		// Settings to the card before the power goes, board_power_off() waits
+		if((ulNotif) && (ulNotificationValue & SD_NOTIFY_SAVE_INI))
+		{
+			radio_init_ini_power_off();
+
+			ulNotificationValue &= ~SD_NOTIFY_SAVE_INI;
+			if(sd_ini_done != NULL)
+				xSemaphoreGive(sd_ini_done);
+		}
+
+		// Card detect(the irq sets other bits)
 		if((ulNotif) && (ulNotificationValue))
 		{
 			//--printf("notif: %d  \r\n", (int)ulNotificationValue);
@@ -317,6 +333,9 @@ void storage_proc_task(void const * argument)
 			// Unlock IRQ
 			HAL_NVIC_EnableIRQ  (EXTI0_IRQn);
 		}
+
+		// Unsaved settings to the eeprom after 10s without changes
+		radio_init_settings_poll();
 	}
 }
 
@@ -343,6 +362,8 @@ void storage_proc_init(void)
 	osSemaphoreDef(STORAGE_MSD_Semaphore);
 	StorageSemaphore[MSD_DISK_UNIT] = osSemaphoreCreate (osSemaphore(STORAGE_MSD_Semaphore), 1);
 
+	sd_ini_done = xSemaphoreCreateBinary();
+
 	// GPIO init
 	sd_card_low_level_init();
 
@@ -360,6 +381,40 @@ void storage_proc_init(void)
 	#endif
 
 	//--printf("sd low init \r\n");
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : storage_proc_save_settings
+//* Object              : have the SD task write the settings .ini and wait
+//*						: for it - power off runs in the BMS or the gui task,
+//*						: and the card belongs to this task
+//* Output Parameters   : 0 done, 1 not running or timed out
+//* Context    			: any task, before board_power_off() stops the OS
+//*----------------------------------------------------------------------------
+uchar storage_proc_save_settings(ulong timeout_ms)
+{
+	if((ps.hSdcTask == NULL) || (sd_ini_done == NULL))
+		return 1;
+
+	// Would wait on itself
+	if(xTaskGetCurrentTaskHandle() == ps.hSdcTask)
+	{
+		radio_init_ini_power_off();
+		return 0;
+	}
+
+	// Drop a stale give
+	xSemaphoreTake(sd_ini_done, 0);
+
+	xTaskNotify(ps.hSdcTask, SD_NOTIFY_SAVE_INI, eSetBits);
+
+	if(xSemaphoreTake(sd_ini_done, pdMS_TO_TICKS(timeout_ms)) != pdTRUE)
+	{
+		printf("ini: save timeout \r\n");
+		return 1;
+	}
+
+	return 0;
 }
 
 #endif

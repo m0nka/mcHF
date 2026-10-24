@@ -66,6 +66,10 @@ static QueueHandle_t     nmea_queue;   /* NMEA_Line_t items                */
 static SemaphoreHandle_t pps_sem;      /* binary, released by GPS_ParseRMC */
 static SemaphoreHandle_t data_mutex;   /* protects gps_data for readers    */
 
+// Bumped on every RTC write, so the clock panel can repaint - a time only
+// sync leaves the date alone, and the date was its only repaint trigger
+static volatile uchar	rtc_sync_cnt = 0;
+
 /* --------------------------------------------------------------------------
  * PPS latch (written in ISR, read in task)
  * -------------------------------------------------------------------------- */
@@ -363,9 +367,18 @@ static bool GPS_ParseGGA(const char *line)
     	//printf("%d:%d:%d \r\n", gps_pend.hour, gps_pend.min, gps_pend.sec);
     	gps_pend.time_valid = true;
 
-    	// Every 30s
+    	// First time seen - sync now, not 30s later. The lock indicator goes
+    	// green on time_valid, so the RTC has to follow straight away
+    	// Then every 30s
     	if(upd_timer == 0)
+    	{
+    		printf("%d:%d:%d \r\n", gps_pend.hour, gps_pend.min, gps_pend.sec);
+
+    		// Schedule clock sync
+    		xSemaphoreGive(pps_sem);
+
     		upd_timer = ps.epoch;
+    	}
     	else if((upd_timer + 30000) < ps.epoch)
     	{
     		printf("%d:%d:%d \r\n", gps_pend.hour, gps_pend.min, gps_pend.sec);
@@ -440,6 +453,8 @@ static void GPS_SyncRTC(const GPS_Data_t *d)
     /* HAL requires time to be set before date */
     HAL_RTC_SetTime(&RtcHandle, &rt, RTC_FORMAT_BIN);
     HAL_RTC_SetDate(&RtcHandle, &rd, RTC_FORMAT_BIN);
+
+    rtc_sync_cnt++;
 }
 
 void gps_proc_message(char *msg, ushort size)
@@ -650,12 +665,21 @@ uchar gps_proc_time_set(void)
 	else
 		return 0;
 }
+
+uchar gps_proc_rtc_sync_cnt(void)
+{
+	return rtc_sync_cnt;
+}
 #else
 uchar gps_proc_sats_cnt(void)
 {
 	return 0;
 }
 uchar gps_proc_time_set(void)
+{
+	return 0;
+}
+uchar gps_proc_rtc_sync_cnt(void)
 {
 	return 0;
 }

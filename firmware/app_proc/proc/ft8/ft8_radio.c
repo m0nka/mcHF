@@ -12,6 +12,7 @@
 ************************************************************************************/
 #include "mchf_pro_board.h"
 #include "main.h"
+#include "icc_proc.h"
 
 #ifdef CONTEXT_FT8
 
@@ -129,7 +130,7 @@ static void ft8_radio_apply(void)
 		xTaskNotify(ps.hVfoTask, UI_NEW_FREQ_EVENT, eSetValueWithOverwrite);
 
 	if(ps.hIccTask != NULL)
-		xTaskNotify(ps.hIccTask, UI_ICC_CHANGE_BAND, eSetValueWithOverwrite);
+		icc_proc_request(UI_ICC_CHANGE_BAND);
 }
 
 //*----------------------------------------------------------------------------

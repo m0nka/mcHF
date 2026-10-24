@@ -48,6 +48,7 @@ short loc_nco_freq 				= 0xFFFF;
 uchar old_year					= 0;
 uchar old_month					= 0;
 uchar old_date					= 0;
+uchar old_sync					= 0;
 
 //*----------------------------------------------------------------------------
 //* Function Name       : ui_controls_clock_init
@@ -82,6 +83,7 @@ static void ui_controls_clock_init(void)
 	old_year  = year;
 	old_month = sdatestructureget.Month;
 	old_date  = sdatestructureget.Date;
+	old_sync  = gps_proc_rtc_sync_cnt();
 }
 
 //*----------------------------------------------------------------------------
@@ -139,9 +141,11 @@ static void ui_controls_clock_refresh(void)
 	GUI_SetColor(CLOCK_COLOR);
 	GUI_DispStringAt(buf,(CLOCK_X + CLOCK_HOURS_SHIFT), (CLOCK_Y + 2));
 
-	// Check if date changed(good GPS lock, while in desktop), then update
+	// Check if date changed(good GPS lock, while in desktop), or the GPS wrote
+	// the RTC at all - a time only sync(stage 1) keeps the date, then update
 	uchar year = sdatestructureget.Year;
-	if((old_year != year)||(old_month != sdatestructureget.Month)||(old_date != sdatestructureget.Date))
+	uchar sync = gps_proc_rtc_sync_cnt();
+	if((old_year != year)||(old_month != sdatestructureget.Month)||(old_date != sdatestructureget.Date)||(old_sync != sync))
 	{
 		ui_controls_clock_panel_restore();
 
@@ -149,6 +153,7 @@ static void ui_controls_clock_refresh(void)
 		old_year  = year;
 		old_month = sdatestructureget.Month;
 		old_date  = sdatestructureget.Date;
+		old_sync  = sync;
 
 		return;
 	}

@@ -1042,6 +1042,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/misc/auto_run.c</locationURI>
 		</link>
 		<link>
+			<name>proc/sdcard/misc/radio_ini.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/misc/radio_ini.c</locationURI>
+		</link>
+		<link>
 			<name>proc/sdcard/misc/radio_init.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/sdcard/misc/radio_init.c</locationURI>

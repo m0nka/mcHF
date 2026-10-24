@@ -16,6 +16,9 @@
 #define SD_DETECT_BEFORE_OS
 #define STORAGE_BSP_INIT
 
+// Task notification bit - save the settings .ini(card detect irq uses 0x45)
+#define SD_NOTIFY_SAVE_INI					0x10000
+
 #define FILEMGR_LIST_DEPDTH                    24
 #define FILEMGR_FILE_NAME_SIZE                256
 #define FILEMGR_MAX_LEVEL                       3
@@ -80,5 +83,6 @@ extern osMessageQId StorageEvent;
 
 void 		storage_proc_task(void const * argument);
 void        storage_proc_init(void);
+uchar       storage_proc_save_settings(ulong timeout_ms);
 
 #endif

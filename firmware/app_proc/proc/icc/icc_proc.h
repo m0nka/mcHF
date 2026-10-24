@@ -20,5 +20,6 @@
 void icc_proc_hw_init(void);
 void icc_proc_power_cleanup(void);
 void icc_proc_task(void const * argument);
+void icc_proc_request(ulong cmd);
 
 #endif

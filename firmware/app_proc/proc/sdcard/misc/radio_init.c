@@ -18,6 +18,7 @@
 #include "codec_hw.h"
 #include "virt_eeprom.h"
 #include "radio_init.h"
+#include "radio_ini.h"
 
 // Public radio state
 extern struct	TRANSCEIVER_STATE_UI	tsu;
@@ -850,15 +851,16 @@ void radio_init_show_current_demod_mode(uchar mode)
 	}
 }
 
-void radio_init_save_before_off(void)
+//*----------------------------------------------------------------------------
+//* Function Name       : radio_init_settings_write
+//* Object              : store the whole operator state into the virtual
+//* Object              : eeprom, common to power off and the background save
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static void radio_init_settings_write(void)
 {
-	#if 0
-	printf("curr band: %d\r\n",tsu.curr_band);
-	printf("demo mode: %d\r\n",tsu.demo_mode);
-	printf("smet type: %d\r\n",tsu.smet_type);
-	printf("brightnes: %d\r\n",tsu.brightness);
-	#endif
-
 	// Save
 	save_band_info();
 
@@ -882,6 +884,235 @@ void radio_init_save_before_off(void)
 
 	// Set as initialised
 	virt_eeprom_write(EEP_BASE_ADDR, 0x73);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : radio_init_settings_differ
+//* Object              : non zero if the live state is not what the eeprom
+//* Object              : holds - same fields as radio_init_settings_write()
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static uchar radio_init_settings_differ(void)
+{
+	uchar *bkp = (uchar *)EEP_BASE;
+	uchar i;
+
+	if(virt_eeprom_read(EEP_BASE_ADDR) != 0x73)
+		return 1;
+
+	if(memcmp((bkp + EEP_BANDS), (uchar *)(&(tsu.band[0].band_start)), (MAX_BANDS * sizeof(BAND_INFO))) != 0)
+		return 1;
+
+	if(	(virt_eeprom_read(EEP_CURR_BAND)  != tsu.curr_band)  ||
+		(virt_eeprom_read(EEP_DEMO_MODE)  != tsu.demo_mode)  ||
+		(virt_eeprom_read(EEP_BRIGHTNESS) != tsu.brightness) ||
+		(virt_eeprom_read(EEP_SMET_TYPE)  != tsu.smet_type)  ||
+		(virt_eeprom_read(EEP_AGC_MODE)   != tsu.agc_mode)   ||
+		(virt_eeprom_read(EEP_RF_GAIN)    != tsu.rf_gain)    ||
+		(virt_eeprom_read(EEP_BT_ON)      != tsu.bt_enabled))
+		return 1;
+
+	if(	(virt_eeprom_read(EEP_DSP_SETTINGS + 0) != DSP_SET_EEP_MAGIC) ||
+		(virt_eeprom_read(EEP_DSP_SETTINGS + 1) != DSP_SET_VERSION)   ||
+		(virt_eeprom_read(EEP_DSP_SETTINGS + 2) != DSP_SET_COUNT))
+		return 1;
+
+	for(i = 0; i < DSP_SET_COUNT; i++)
+	{
+		if(virt_eeprom_read(EEP_DSP_SETTINGS + 3 + (i * 2)) != (uchar)(dsp_settings[i] >> 0))
+			return 1;
+
+		if(virt_eeprom_read(EEP_DSP_SETTINGS + 4 + (i * 2)) != (uchar)(dsp_settings[i] >> 8))
+			return 1;
+	}
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : radio_init_settings_sum
+//* Object              : cheap fingerprint of the live state, only used to
+//* Object              : tell if the operator is still changing something
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static ulong radio_init_settings_sum(void)
+{
+	uchar *src = (uchar *)(&(tsu.band[0].band_start));
+	ulong i, chk = 0;
+
+	for(i = 0; i < (MAX_BANDS * sizeof(BAND_INFO)); i++)
+		chk = ((chk << 1) | (chk >> 31)) ^ src[i];
+
+	src = (uchar *)dsp_settings;
+	for(i = 0; i < sizeof(dsp_settings); i++)
+		chk = ((chk << 1) | (chk >> 31)) ^ src[i];
+
+	chk ^= (tsu.curr_band << 0) ^ (tsu.demo_mode << 4) ^ (tsu.brightness << 8) ^ (tsu.smet_type << 16);
+	chk ^= (tsu.agc_mode << 20) ^ (tsu.rf_gain << 24) ^ (tsu.bt_enabled << 30);
+
+	return chk;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : radio_init_settings_poll
+//* Object              : background save - a reset, crash or flat battery
+//* Object              : never runs board_power_off(), so anything changed
+//* Object              : and then left alone for RADIO_INIT_SAVE_IDLE_MS
+//* Object              : goes to the eeprom on its own. Backup SRAM, so no
+//* Object              : wear to worry about
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//* Context    			: CONTEXT_SD - every SD_PROC_SLEEP_TIME, settings
+//*						: storage belongs to this task (ini file later)
+//*----------------------------------------------------------------------------
+#define RADIO_INIT_SAVE_IDLE_MS		10000
+
+// Set by radio_init_on_reset() once tsu holds the restored (or default) state -
+// that runs in the SD task, which can start after the UI loop is already polling
+static volatile uchar settings_loaded = 0;
+
+void radio_init_settings_poll(void)
+{
+	static ulong last_change = 0, last_sum = 0;
+	ulong now = HAL_GetTick();
+	ulong sum;
+
+	if((!settings_loaded) || (!tsu.eeprom_init_done))
+		return;
+
+	// Still being changed - restart the idle time
+	sum = radio_init_settings_sum();
+	if(sum != last_sum)
+	{
+		last_sum 	= sum;
+		last_change = now;
+		return;
+	}
+
+	if((now - last_change) < RADIO_INIT_SAVE_IDLE_MS)
+		return;
+
+	if(!radio_init_settings_differ())
+		return;
+
+	radio_init_settings_write();
+	printf("settings saved\r\n");
+}
+
+#ifdef CONTEXT_SD
+//*----------------------------------------------------------------------------
+//* Function Name       : radio_init_ini_sig_read / radio_init_ini_sig_store
+//* Object              : fingerprint of the .ini the radio last wrote or
+//*						: loaded, kept in the SRAM to spot a PC edit
+//* Context    			: CONTEXT_SD
+//*----------------------------------------------------------------------------
+static ulong radio_init_ini_sig_read(void)
+{
+	ulong sig;
+
+	sig  = virt_eeprom_read(EEP_INI_SIG + 0) << 24;
+	sig |= virt_eeprom_read(EEP_INI_SIG + 1) << 16;
+	sig |= virt_eeprom_read(EEP_INI_SIG + 2) <<  8;
+	sig |= virt_eeprom_read(EEP_INI_SIG + 3);
+
+	return sig;
+}
+
+static void radio_init_ini_sig_store(ulong sig)
+{
+	virt_eeprom_write(EEP_INI_SIG + 0, (uchar)(sig >> 24));
+	virt_eeprom_write(EEP_INI_SIG + 1, (uchar)(sig >> 16));
+	virt_eeprom_write(EEP_INI_SIG + 2, (uchar)(sig >>  8));
+	virt_eeprom_write(EEP_INI_SIG + 3, (uchar)(sig >>  0));
+
+	// Inside the checksummed area
+	radio_init_eep_update_chksum();
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : radio_init_ini_boot
+//* Object              : SRAM vs .ini file at boot. The SRAM wins - it can be
+//*						: newer than the file(crash, battery cut, no clean
+//*						: power off) - unless it is bad, or the file is not
+//*						: the one the radio wrote(edited on a PC). No file
+//*						: yet = write one, so there is something to edit
+//* Input Parameters    : eep_res - 0 if the SRAM content was valid
+//* Context    			: CONTEXT_SD
+//*----------------------------------------------------------------------------
+static void radio_init_ini_boot(int eep_res)
+{
+	ulong sig;
+	uchar res;
+
+	res = radio_ini_file_sig(&sig);
+	if(res == RADIO_INI_NO_FILE)
+	{
+		// No card - nothing to do. Card but no file - create it
+		if(radio_ini_save(&sig) == RADIO_INI_OK)
+		{
+			radio_init_ini_sig_store(sig);
+			printf("ini: created %s \r\n", RADIO_INI_PATH);
+		}
+		return;
+	}
+
+	if(res != RADIO_INI_OK)
+		return;
+
+	if((eep_res == 0) && (sig == radio_init_ini_sig_read()))
+		return;
+
+	if(radio_ini_load() != RADIO_INI_OK)
+		return;
+
+	if(eep_res == 0)
+		printf("ini: file changed, settings loaded from it \r\n");
+	else
+		printf("ini: SRAM bad, settings restored from file \r\n");
+
+	// Into the SRAM, then remember which file that was
+	radio_init_settings_write();
+	radio_init_ini_sig_store(sig);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : radio_init_ini_power_off
+//* Object              : settings to the .ini, before the power goes
+//* Context    			: CONTEXT_SD (board_power_off() waits for it)
+//*----------------------------------------------------------------------------
+void radio_init_ini_power_off(void)
+{
+	ulong sig;
+
+	if((!settings_loaded) || (!tsu.eeprom_init_done))
+		return;
+
+	if(radio_ini_save(&sig) != RADIO_INI_OK)
+	{
+		printf("ini: save failed \r\n");
+		return;
+	}
+
+	radio_init_ini_sig_store(sig);
+	printf("ini: saved \r\n");
+}
+#endif
+
+void radio_init_save_before_off(void)
+{
+	#if 0
+	printf("curr band: %d\r\n",tsu.curr_band);
+	printf("demo mode: %d\r\n",tsu.demo_mode);
+	printf("smet type: %d\r\n",tsu.smet_type);
+	printf("brightnes: %d\r\n",tsu.brightness);
+	#endif
+
+	radio_init_settings_write();
 
 	HAL_PWR_DisableBkUpAccess();
 	//--HAL_PWREx_EnableBkUpReg();
@@ -922,7 +1153,14 @@ void radio_init_on_reset(void)
 		radio_init_dsp_settings_defaults();
 
 	if(res == 0)
+	{
+		#ifdef CONTEXT_SD
+		radio_init_ini_boot(res);
+		#endif
+
+		settings_loaded = 1;
 		return;
+	}
 
 	// Restore eeprom
 	radio_init_eep_defaults();
@@ -972,4 +1210,11 @@ void radio_init_on_reset(void)
 	tsu.band[tsu.curr_band].nco_freq	= 0;
 	tsu.band[tsu.curr_band].demod_mode	= DEMOD_LSB;
 	#endif
+
+	// Restore from the card, if there is a file
+	#ifdef CONTEXT_SD
+	radio_init_ini_boot(res);
+	#endif
+
+	settings_loaded = 1;
 }

@@ -11,6 +11,7 @@
 **  Licence:			https://github.com/m0nka/mcHF/blob/main/LICENSE            **
 ************************************************************************************/
 #include "main.h"
+#include "icc_proc.h"
 #include "mchf_pro_board.h"
 
 #ifdef CONTEXT_AUDIO
@@ -143,7 +144,7 @@ static void audio_proc_worker(ulong ulCmd)
 			// baseband has to hear about every volume change, not just the
 			// state upload it gets at DSP init
 			if(ps.hIccTask != NULL)
-				xTaskNotify(ps.hIccTask, UI_ICC_AF_GAIN, eSetValueWithOverwrite);
+				icc_proc_request(UI_ICC_AF_GAIN);
 
 			// Notify UI
 			if(ps.hUiTask != NULL)

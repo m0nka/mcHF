@@ -792,6 +792,51 @@ static void icc_proc_wspr_drain(int max_chunks)
 }
 #endif
 
+// State sync requests(band, mode, filter, NCO, gain..) waiting for the task -
+// one bit per UI_ICC_xx value, so they can not overwrite each other
+static volatile ulong	icc_req_mask = 0;
+
+//*----------------------------------------------------------------------------
+//* Function Name       : icc_proc_request
+//* Object              : queue a state sync command for the M4
+//* Notes    			: the task notification holds one value only, and the
+//*						: icc task is often blocked in an exchange(FT8, WSPR
+//*						: streams) - a second eSetValueWithOverwrite from
+//*						: another task then silently dropped the first one,
+//*						: e.g. AF gain after a band change ate the band change
+//*						: and the M4 stayed in the old mode. Every handler
+//*						: reads the current tsu state, so coalescing is fine.
+//*						: Not for start/stop pairs, the latest of those wins
+//* Context    			: any task
+//*----------------------------------------------------------------------------
+void icc_proc_request(ulong cmd)
+{
+	if(ps.hIccTask == NULL)
+		return;
+
+	if(cmd < 32)
+	{
+		taskENTER_CRITICAL();
+		icc_req_mask |= (1UL << cmd);
+		taskEXIT_CRITICAL();
+	}
+
+	// Wake up only, the mask is the real request
+	xTaskNotify(ps.hIccTask, cmd, eSetValueWithOverwrite);
+}
+
+static ulong icc_proc_request_take(void)
+{
+	ulong mask;
+
+	taskENTER_CRITICAL();
+	mask = icc_req_mask;
+	icc_req_mask = 0;
+	taskEXIT_CRITICAL();
+
+	return mask;
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : icc_proc_dsp_command
 //* Object              :
@@ -1192,6 +1237,7 @@ void icc_proc_hw_init(void)
 void icc_proc_task(void const *arg)
 {
 	ulong 		ulNotificationValue = 0, ulNotif;
+	ulong		req_mask, req_bit;
 	TickType_t	sleep;
 
 	vTaskDelay(ICC_PROC_START_DELAY);
@@ -1223,6 +1269,10 @@ icc_proc_loop:
 	#endif
 
 	ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, sleep);
+
+	// Whatever icc_proc_request() queued, the notification may only be the
+	// last of several
+	req_mask = icc_proc_request_take();
 
 	// Process commands
 	if((ulNotif) && (ulNotificationValue))
@@ -1256,8 +1306,22 @@ icc_proc_loop:
 		}
 		else
 		{
-			//printf("command to route to M4: %02x\r\n", ulNotificationValue);
-			icc_proc_dsp_command(ulNotificationValue);
+			// Queued via icc_proc_request() - done from the mask below
+			if((ulNotificationValue >= 32) || (!(req_mask & (1UL << ulNotificationValue))))
+			{
+				//printf("command to route to M4: %02x\r\n", ulNotificationValue);
+				icc_proc_dsp_command(ulNotificationValue);
+			}
+		}
+	}
+
+	// All queued state sync requests, in UI_ICC_xx order(band change first)
+	for(req_bit = 0; req_mask != 0; req_bit++)
+	{
+		if(req_mask & (1UL << req_bit))
+		{
+			req_mask &= ~(1UL << req_bit);
+			icc_proc_dsp_command(req_bit);
 		}
 	}
 

@@ -314,6 +314,11 @@ void ui_controls_vfo_step_update_step(void)
 			GUI_SetColor(GUI_ORANGE);
 			GUI_DispStringAt("100Hz",(VFO_STEP_X + 8),(VFO_STEP_Y + 3));
 			break;
+		case T_STEP_500HZ:
+			GUI_FillRoundedRect((VFO_STEP_X + 1),(VFO_STEP_Y + 1),(VFO_STEP_X + VFO_STEP_SIZE_X - 1),(VFO_STEP_Y + VFO_STEP_SIZE_Y - 1),2);
+			GUI_SetColor(GUI_ORANGE);
+			GUI_DispStringAt("500Hz",(VFO_STEP_X + 8),(VFO_STEP_Y + 3));
+			break;
 		case T_STEP_1KHZ:
 			GUI_FillRoundedRect((VFO_STEP_X + 1),(VFO_STEP_Y + 1),(VFO_STEP_X + VFO_STEP_SIZE_X - 1),(VFO_STEP_Y + VFO_STEP_SIZE_Y - 1),2);
 			GUI_SetColor(GUI_ORANGE);
@@ -744,7 +749,7 @@ static int ui_controls_frequency_update_vfo_a(ulong freq)
 		GUI_FillRect((M_FREQ_X + 1 + (FREQ_FONT_SIZE_X * 8)),(M_FREQ_Y + 5),(M_FREQ_X + FREQ_FONT_SIZE_X + 1 + (FREQ_FONT_SIZE_X * 8)),(M_FREQ_Y + 5 + FREQ_FONT_SIZE_Y));
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_A)
 		{
-			if(tsu.band[tsu.curr_band].step == T_STEP_100HZ)
+			if((tsu.band[tsu.curr_band].step == T_STEP_100HZ)||(tsu.band[tsu.curr_band].step == T_STEP_500HZ))
 				GUI_SetColor(VFO_A_SEL_DIGIT_COLOR);
 			else
 				GUI_SetColor(GUI_WHITE);
@@ -1032,7 +1037,7 @@ static void ui_controls_frequency_update_vfo_b(ulong freq)
 		GUI_FillRect((M_FREQ1_X + 35 + (FREQ_FONT_SIZE1_X * 8)),(M_FREQ1_Y + 4),(M_FREQ1_X + 34 + (FREQ_FONT_SIZE1_X * 9)),(M_FREQ1_Y + 4 + FREQ_FONT_SIZE1_Y));
 		if(tsu.band[tsu.curr_band].active_vfo == VFO_B)
 		{
-			if(tsu.band[tsu.curr_band].step == T_STEP_100HZ)
+			if((tsu.band[tsu.curr_band].step == T_STEP_100HZ)||(tsu.band[tsu.curr_band].step == T_STEP_500HZ))
 				GUI_SetColor(VFO_B_SEG_SEL_COLOR);
 			else
 				GUI_SetColor(VFO_B_SEG_ON_COLOR);
@@ -1267,6 +1272,10 @@ static void ui_controls_frequency_vfo_b_initial_paint(uchar is_init)
 static int ui_controls_frequency_refresh_a(uchar flags)
 {
 	ulong vfo_af;
+
+	// Step box - the rotary task can change the step(dial shake), only
+	// repaints when it actually differs
+	ui_controls_vfo_step_update_step();
 
 	#if 0
 	if(old_vfo != tsu.band[tsu.curr_band].vfo_a)

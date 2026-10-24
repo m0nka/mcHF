@@ -39,6 +39,8 @@ void radio_init_eep_defaults(void);
 uchar radio_init_default_mode_from_band(void);
 void radio_init_show_current_demod_mode(uchar mode);
 
+void radio_init_settings_poll(void);
+void radio_init_ini_power_off(void);
 void radio_init_save_before_off(void);
 void radio_init_on_reset(void);
 
