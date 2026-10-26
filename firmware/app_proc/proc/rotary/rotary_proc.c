@@ -34,10 +34,21 @@
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 
-#define TIM_PERIOD	0xF
+#define TIM_PERIOD	0xFFFF
+
+// Timer counts on every edge of both channels(x4), the knob clicks every
+// full quadrature cycle. If tuning feels half speed, this is 2
+#define ROTARY_COUNTS_PER_DETENT	4
+
+// Input capture filter, fDTS/32 N=8 - kills spikes on the long wires
+// to the back PCB, contact bounce is handled by the detent accumulator
+#define ROTARY_IC_FILTER			0xF
 
 ushort audio_old = 0;
 ushort freq_old = 0;
+
+int audio_acc = 0;
+int freq_acc = 0;
 
 uchar front_init_done = 0;
 
@@ -51,6 +62,34 @@ extern struct	UI_DRIVER_STATE			ui_s;
 
 // FreeRTOS process state
 extern struct PROC_STATE 				ps;
+
+//*----------------------------------------------------------------------------
+//* Function Name       : rotary_read_detents
+//* Object              : signed counter delta since last call, collected into
+//* Object              : whole detents, the remainder stays for the next call
+//* Notes    			: a step only fires after a full detent of travel from
+//* Notes    			: the last one, so the knob settling back into its
+//* Notes    			: detent(one edge backwards) can not undo the last step
+//* Context    			: CONTEXT_ROTARY
+//*----------------------------------------------------------------------------
+static int rotary_read_detents(TIM_HandleTypeDef *htim, ushort *old, int *acc)
+{
+	ushort 	cnt = __HAL_TIM_GET_COUNTER(htim);
+	short	delta;
+	int		steps;
+
+	// 16 bit wrap
+	delta = (short)(ushort)(cnt - *old);
+	*old  = cnt;
+
+	*acc += delta;
+
+	// Truncates toward zero, remainder keeps the sign
+	steps = *acc / ROTARY_COUNTS_PER_DETENT;
+	*acc -= steps * ROTARY_COUNTS_PER_DETENT;
+
+	return steps;
+}
 
 static void rotary_update_audio_publics(int pot_diff)
 {
@@ -139,33 +178,27 @@ static void rotary_update_side_enc_menu_publics(int pot_diff)
 
 static void rotary_proc_check_side_enc(void)
 {
-	ushort 	cnt;
-	int		pot_diff = 0;
+	int		steps;
+	int		pot_diff;
 
-	cnt = __HAL_TIM_GET_COUNTER(&htim3);
-	if(audio_old == cnt)
+	steps = rotary_read_detents(&htim3, &audio_old, &audio_acc);
+	if(steps == 0)
 		return;
 
-	//printf("---------------------------------\r\n");
-	//printf("cnt = %d\r\n",cnt);
+	pot_diff = (steps < 0) ? -1 : +1;
 
-	if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim3))
-		pot_diff = -1;
-	else
-		pot_diff = +1;
-
-	//printf("pot_diff = %d\r\n",pot_diff);
+	//printf("steps = %d\r\n",steps);
 
 	// Normally directly change volume
 	// but in dialogs with slider we can send KEY msgs (left/right)
 	// and move them with the encoder
-	if(tsu.active_side_enc_id == 0)
-		rotary_update_audio_publics(pot_diff);
-	else
-		rotary_update_side_enc_menu_publics(pot_diff);
-
-	// Flag preventing calling too often
-	audio_old = cnt;
+	for(; steps != 0; steps -= pot_diff)
+	{
+		if(tsu.active_side_enc_id == 0)
+			rotary_update_audio_publics(pot_diff);
+		else
+			rotary_update_side_enc_menu_publics(pot_diff);
+	}
 }
 
 static void rotary_notify_freq(void)
@@ -383,8 +416,8 @@ static uchar rotary_check_shake(int pot_diff)
 
 static void rotary_proc_check_freq_enc(void)
 {
-	ushort 	cnt;
-	int		pot_diff = 0;
+	int		steps;
+	int		pot_diff;
 
 	if(front_init_done == 0)
 		return;
@@ -405,35 +438,28 @@ static void rotary_proc_check_freq_enc(void)
 	if(tsu.band[tsu.curr_band].step == 0xFFFFFFFF)
 		return;
 
-	cnt = __HAL_TIM_GET_COUNTER(&htim2);
-	if(freq_old == cnt)
+	steps = rotary_read_detents(&htim2, &freq_old, &freq_acc);
+	if(steps == 0)
 		return;
 
-	//printf("---------------------------------\r\n");
-	//printf("cnt = %d\r\n",cnt);
+	pot_diff = (steps < 0) ? -1 : +1;
 
-	if(__HAL_TIM_IS_TIM_COUNTING_DOWN(&htim2))
-		pot_diff = -1;
-	else
-		pot_diff = +1;
-
-	//printf("pot_diff = %d\r\n",pot_diff);
+	//printf("steps = %d\r\n",steps);
 
 	// Do not update publics while in Menu(or other non desktop modes, where UI is not painted and processed)
 	#ifdef CONTEXT_VIDEO
 	if(ui_s.cur_state == MODE_DESKTOP)
 	{
-		// Shake toggles the step and puts the dial back, no tuning then
-		if(!rotary_check_shake(pot_diff))
+		for(; steps != 0; steps -= pot_diff)
+		{
+			// Shake toggles the step and puts the dial back, no tuning then
+			if(rotary_check_shake(pot_diff))
+				break;
+
 			rotary_update_freq_publics(pot_diff);
+		}
 	}
 	#endif
-
-	// Digital debounce - not working!
-	//OsDelayMs(20);
-
-	// Flag preventing calling too often
-	freq_old = cnt;
 }
 
 static uchar rotary_proc_freq_enc_init(void)
@@ -468,11 +494,11 @@ static uchar rotary_proc_freq_enc_init(void)
 	tim_config.IC1Polarity 				= TIM_ICPOLARITY_FALLING;
 	tim_config.IC1Selection 			= TIM_ICSELECTION_DIRECTTI;
 	tim_config.IC1Prescaler 			= TIM_ICPSC_DIV1;
-	tim_config.IC1Filter 				= 0;
+	tim_config.IC1Filter 				= ROTARY_IC_FILTER;
 	tim_config.IC2Polarity 				= TIM_ICPOLARITY_FALLING;
 	tim_config.IC2Selection 			= TIM_ICSELECTION_DIRECTTI;
 	tim_config.IC2Prescaler 			= TIM_ICPSC_DIV1;
-	tim_config.IC2Filter 				= 0;
+	tim_config.IC2Filter 				= ROTARY_IC_FILTER;
 
 	if (HAL_TIM_Encoder_Init(&htim2, &tim_config) != HAL_OK)
 		return 1;
@@ -520,11 +546,11 @@ static uchar rotary_proc_gain_enc_init(void)
 	tim_config.IC1Polarity 				= TIM_ICPOLARITY_FALLING;
 	tim_config.IC1Selection 			= TIM_ICSELECTION_DIRECTTI;
 	tim_config.IC1Prescaler 			= TIM_ICPSC_DIV1;
-	tim_config.IC1Filter 				= 0;
+	tim_config.IC1Filter 				= ROTARY_IC_FILTER;
 	tim_config.IC2Polarity 				= TIM_ICPOLARITY_FALLING;
 	tim_config.IC2Selection 			= TIM_ICSELECTION_DIRECTTI;
 	tim_config.IC2Prescaler 			= TIM_ICPSC_DIV1;
-	tim_config.IC2Filter 				= 0;
+	tim_config.IC2Filter 				= ROTARY_IC_FILTER;
 
 	if (HAL_TIM_Encoder_Init(&htim3, &tim_config) != HAL_OK)
 		return 1;
