@@ -35,8 +35,6 @@ extern struct TRANSCEIVER_STATE_UI	tsu;
 
 #define ID_WSPR_WINDOW				(GUI_ID_USER + 0x10)
 #define ID_WSPR_TITLE				(GUI_ID_USER + 0x11)
-#define ID_WSPR_INFO				(GUI_ID_USER + 0x12)
-#define ID_WSPR_PROG				(GUI_ID_USER + 0x13)
 #define ID_WSPR_LIST				(GUI_ID_USER + 0x14)
 #define ID_WSPR_HDR_BAND			(GUI_ID_USER + 0x15)
 #define ID_WSPR_BAND				(GUI_ID_USER + 0x16)
@@ -70,6 +68,20 @@ extern struct TRANSCEIVER_STATE_UI	tsu;
 #define WSPR_DD_H					36
 #define WSPR_DD_ROW					34
 
+// Painted children - title info (dial, UTC) and the cycle bar. Like the
+// FT8 and MarsChat screens, what changes every tick is drawn in WM_PAINT
+// and only invalidated, a widget setter reallocates its text in the emWin
+// heap on every call
+#define WSPR_INFO_X					206
+#define WSPR_INFO_Y					3
+#define WSPR_INFO_W					588
+#define WSPR_INFO_H					30
+#define WSPR_BAR_X					8
+#define WSPR_BAR_Y					42
+#define WSPR_BAR_W					524
+#define WSPR_BAR_H					28
+#define WSPR_BAR_MAX				119
+
 // Right panel
 #define WSPR_RP_X					544
 #define WSPR_RP_W					248
@@ -82,10 +94,8 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 	//
 	// Title bar, menu style - no exit button, the F key closes the app
 	{ TEXT_CreateIndirect,		"WSPR",				ID_WSPR_TITLE,			6,				3,		200,			30,		TEXT_CF_LEFT|TEXT_CF_VCENTER	},
-	{ TEXT_CreateIndirect,		"",					ID_WSPR_INFO,			206,			3,		588,			30,		TEXT_CF_RIGHT|TEXT_CF_VCENTER	},
 	//
-	// Cycle bar and spot list
-	{ PROGBAR_CreateIndirect,	NULL,				ID_WSPR_PROG,			8,				42,		524,			28,		0, 0x0, 0 },
+	// Spot list (title info and cycle bar are painted children, see above)
 	{ LISTVIEW_CreateIndirect,	NULL,				ID_WSPR_LIST,			8,				78,		524,			346,	0, 0x0, 0 },
 	//
 	// Band
@@ -158,6 +168,23 @@ static uchar			wspr_ui_busy = 0;
 static ulong			wspr_ui_gen  = 0xFFFFFFFF;
 static WSPR_SPOT		wspr_ui_spots[WSPR_APP_MAX_SPOTS];
 
+static WM_HWIN			hWsprInfo  = 0;
+static WM_HWIN			hWsprBar   = 0;
+
+// What is on screen - the tick touches a window only when its part changed
+static struct
+{
+	char		info[64];
+	char		bar_txt[64];
+	int			bar_val;
+	GUI_COLOR	bar_col;
+	char		status[64];
+	uchar		status_red;
+	uchar		monitor;
+	uchar		tx_ok;
+
+} wspr_ui_shown;
+
 //*----------------------------------------------------------------------------
 //* Function Name       : wspr_ui_band_sel
 //* Object              : dropdown row of the current band
@@ -223,11 +250,6 @@ static void wspr_ui_init(WM_HWIN hDlg)
 	TEXT_SetTextColor(h, GUI_WHITE);
 	TEXT_SetText(h, "  WSPR");
 
-	h = WM_GetDialogItem(hDlg, ID_WSPR_INFO);
-	TEXT_SetFont(h, &GUI_Font20_1);
-	TEXT_SetBkColor(h, WSPR_PINK);
-	TEXT_SetTextColor(h, GUI_WHITE);
-
 	// Section headers and labels
 	for(i = 0; i < (int)GUI_COUNTOF(hdrs); i++)
 	{
@@ -254,15 +276,6 @@ static void wspr_ui_init(WM_HWIN hDlg)
 	TEXT_SetFont(h, &GUI_Font24B_1);
 	TEXT_SetTextColor(h, (tsu.station_grid[0] != 0) ? GUI_DARKBLUE : GUI_RED);
 	TEXT_SetText(h, (tsu.station_grid[0] != 0) ? tsu.station_grid : "not set");
-
-	// Cycle bar
-	h = WM_GetDialogItem(hDlg, ID_WSPR_PROG);
-	PROGBAR_SetSkinClassic(h);
-	PROGBAR_SetFont(h, &GUI_Font16B_1);
-	PROGBAR_SetMinMax(h, 0, 119);
-	PROGBAR_SetBarColor(h, 1, WSPR_BAR_BK);
-	PROGBAR_SetTextColor(h, 0, GUI_BLACK);
-	PROGBAR_SetTextColor(h, 1, GUI_BLACK);
 
 	// Spot list - vertical scroll bar comes and goes with the row count
 	h = WM_GetDialogItem(hDlg, ID_WSPR_LIST);
@@ -399,8 +412,10 @@ static void wspr_ui_tick(WM_HWIN hDlg)
 	WSPR_APP_STATUS		st;
 	WSPR_APP_CFG		cfg;
 	WM_HWIN				h;
+	GUI_COLOR			col;
 	char				buf[64], f[16];
 	int					sec;
+	uchar				red;
 
 	wspr_app_get_status(&st);
 	wspr_app_get_cfg(&cfg);
@@ -408,19 +423,22 @@ static void wspr_ui_tick(WM_HWIN hDlg)
 	k_GetTime(&tm);
 	k_GetDate(&dt);
 
-	// Title - dial and UTC
+	// Title - dial and UTC, repainted once a second
 	wspr_ui_fmt_freq(f, sizeof(f), wspr_app_band_dial(tsu.curr_band));
 	snprintf(buf, sizeof(buf), "%s MHz     %02d:%02d:%02d UTC  ", f, tm.Hours, tm.Minutes, tm.Seconds);
-	TEXT_SetText(WM_GetDialogItem(hDlg, ID_WSPR_INFO), buf);
+	if(strcmp(buf, wspr_ui_shown.info) != 0)
+	{
+		strcpy(wspr_ui_shown.info, buf);
+		WM_InvalidateWindow(hWsprInfo);
+	}
 
 	// Cycle bar
-	h	= WM_GetDialogItem(hDlg, ID_WSPR_PROG);
 	sec = st.cycle_sec;
 
 	switch(st.phase)
 	{
 		case WSPR_PH_TX:
-			PROGBAR_SetBarColor(h, 0, GUI_RED);
+			col = GUI_RED;
 			if((sec < 1) || (sec > 111))
 				snprintf(buf, sizeof(buf), "TX");
 			else
@@ -428,28 +446,38 @@ static void wspr_ui_tick(WM_HWIN hDlg)
 			break;
 
 		case WSPR_PH_RX:
-			PROGBAR_SetBarColor(h, 0, WSPR_RX_BAR);
+			col = WSPR_RX_BAR;
 			snprintf(buf, sizeof(buf), "RX  %d / 114 s", (sec > 114) ? 114 : sec);
 			break;
 
 		case WSPR_PH_DECODE:
-			PROGBAR_SetBarColor(h, 0, WSPR_RX_BAR);
+			col = WSPR_RX_BAR;
 			snprintf(buf, sizeof(buf), "Decoding...");
 			break;
 
 		case WSPR_PH_WAIT:
-			PROGBAR_SetBarColor(h, 0, WSPR_BAR_BK);
+			col = WSPR_BAR_BK;
 			snprintf(buf, sizeof(buf), "Waiting for the even minute  %d s", 120 - sec);
 			break;
 
 		default:
-			PROGBAR_SetBarColor(h, 0, WSPR_BAR_BK);
+			col = WSPR_BAR_BK;
 			snprintf(buf, sizeof(buf), "Idle");
 			break;
 	}
 
-	PROGBAR_SetValue(h, sec);
-	PROGBAR_SetText(h, buf);
+	if(sec < 0)
+		sec = 0;
+	if(sec > WSPR_BAR_MAX)
+		sec = WSPR_BAR_MAX;
+
+	if((sec != wspr_ui_shown.bar_val) || (col != wspr_ui_shown.bar_col) || (strcmp(buf, wspr_ui_shown.bar_txt) != 0))
+	{
+		wspr_ui_shown.bar_val = sec;
+		wspr_ui_shown.bar_col = col;
+		strcpy(wspr_ui_shown.bar_txt, buf);
+		WM_InvalidateWindow(hWsprBar);
+	}
 
 	// Status line
 	switch(st.tx_block)
@@ -471,18 +499,34 @@ static void wspr_ui_tick(WM_HWIN hDlg)
 			break;
 	}
 
-	h = WM_GetDialogItem(hDlg, ID_WSPR_STATUS);
-	TEXT_SetTextColor(h, (st.tx_block != WSPR_TX_OK) ? GUI_RED : GUI_DARKGRAY);
-	TEXT_SetText(h, buf);
+	red = (st.tx_block != WSPR_TX_OK) ? 1 : 0;
+	if((red != wspr_ui_shown.status_red) || (strcmp(buf, wspr_ui_shown.status) != 0))
+	{
+		wspr_ui_shown.status_red = red;
+		strcpy(wspr_ui_shown.status, buf);
 
-	BUTTON_SetText(WM_GetDialogItem(hDlg, ID_WSPR_BTN_MON), cfg.monitor ? "Monitor ON" : "Monitor OFF");
+		h = WM_GetDialogItem(hDlg, ID_WSPR_STATUS);
+		TEXT_SetTextColor(h, red ? GUI_RED : GUI_DARKGRAY);
+		TEXT_SetText(h, buf);
+	}
+
+	if(cfg.monitor != wspr_ui_shown.monitor)
+	{
+		wspr_ui_shown.monitor = cfg.monitor;
+		BUTTON_SetText(WM_GetDialogItem(hDlg, ID_WSPR_BTN_MON), cfg.monitor ? "Monitor ON" : "Monitor OFF");
+	}
 
 	// TX next only makes sense when we may transmit
-	h = WM_GetDialogItem(hDlg, ID_WSPR_BTN_TXNEXT);
-	if(st.tx_block == WSPR_TX_OK)
-		WM_EnableWindow(h);
-	else
-		WM_DisableWindow(h);
+	if((!red) != wspr_ui_shown.tx_ok)
+	{
+		wspr_ui_shown.tx_ok = !red;
+
+		h = WM_GetDialogItem(hDlg, ID_WSPR_BTN_TXNEXT);
+		if(!red)
+			WM_EnableWindow(h);
+		else
+			WM_DisableWindow(h);
+	}
 
 	// New spots
 	if(st.spot_gen != wspr_ui_gen)
@@ -587,6 +631,63 @@ static void wspr_ui_on_notify(WM_HWIN hDlg, int id, int ncode)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : _cbInfo / _cbBar
+//* Object              : the two painted children. Fills, not GUI_Clear() -
+//*						: a clear does nothing in LCD_DRAWMODE_TRANS
+//* Context    			: CONTEXT_VIDEO (gui task)
+//*----------------------------------------------------------------------------
+static void _cbInfo(WM_MESSAGE *pMsg)
+{
+	GUI_RECT r;
+
+	if(pMsg->MsgId != WM_PAINT)
+	{
+		WM_DefaultProc(pMsg);
+		return;
+	}
+
+	WM_GetClientRect(&r);
+
+	GUI_SetColor(WSPR_PINK);
+	GUI_FillRectEx(&r);
+
+	GUI_SetFont(&GUI_Font20_1);
+	GUI_SetColor(GUI_WHITE);
+	GUI_SetTextMode(GUI_TM_TRANS);
+	GUI_DispStringInRect(wspr_ui_shown.info, &r, GUI_TA_RIGHT | GUI_TA_VCENTER);
+}
+
+static void _cbBar(WM_MESSAGE *pMsg)
+{
+	GUI_RECT	r;
+	int			x;
+
+	if(pMsg->MsgId != WM_PAINT)
+	{
+		WM_DefaultProc(pMsg);
+		return;
+	}
+
+	WM_GetClientRect(&r);
+
+	// Filled part, then the rest
+	x = r.x0 + ((r.x1 - r.x0 + 1) * wspr_ui_shown.bar_val) / WSPR_BAR_MAX;
+
+	GUI_SetColor(wspr_ui_shown.bar_col);
+	if(x > r.x0)
+		GUI_FillRect(r.x0, r.y0, x - 1, r.y1);
+
+	GUI_SetColor(WSPR_BAR_BK);
+	if(x <= r.x1)
+		GUI_FillRect(x, r.y0, r.x1, r.y1);
+
+	GUI_SetFont(&GUI_Font16B_1);
+	GUI_SetColor(GUI_BLACK);
+	GUI_SetTextMode(GUI_TM_TRANS);
+	GUI_DispStringInRect(wspr_ui_shown.bar_txt, &r, GUI_TA_HCENTER | GUI_TA_VCENTER);
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : _cbDialog
 //* Context    			: CONTEXT_VIDEO (gui task)
 //*----------------------------------------------------------------------------
@@ -600,6 +701,16 @@ static void _cbDialog(WM_MESSAGE *pMsg)
 			hWsprDlg = pMsg->hWin;
 
 			wspr_ui_init(pMsg->hWin);
+
+			// Nothing shown yet - the first tick fills every part
+			memset(&wspr_ui_shown, 0, sizeof(wspr_ui_shown));
+			wspr_ui_shown.bar_val	 = -1;
+			wspr_ui_shown.status_red = 0xFF;
+			wspr_ui_shown.monitor	 = 0xFF;
+			wspr_ui_shown.tx_ok		 = 0xFF;
+
+			hWsprInfo = WM_CreateWindowAsChild(WSPR_INFO_X, WSPR_INFO_Y, WSPR_INFO_W, WSPR_INFO_H, pMsg->hWin, WM_CF_SHOW, _cbInfo, 0);
+			hWsprBar  = WM_CreateWindowAsChild(WSPR_BAR_X,  WSPR_BAR_Y,  WSPR_BAR_W,  WSPR_BAR_H,  pMsg->hWin, WM_CF_SHOW, _cbBar,  0);
 
 			wspr_ui_gen = 0xFFFFFFFF;
 			wspr_ui_tick(pMsg->hWin);
@@ -623,6 +734,10 @@ static void _cbDialog(WM_MESSAGE *pMsg)
 			if(hWsprTimer)
 				WM_DeleteTimer(hWsprTimer);
 			hWsprTimer = 0;
+
+			// The children go with the dialog, only forget them
+			hWsprInfo = 0;
+			hWsprBar  = 0;
 			break;
 		}
 
