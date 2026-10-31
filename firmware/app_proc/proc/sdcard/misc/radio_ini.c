@@ -68,6 +68,18 @@ static const char * const ini_vfo_names[2] =
 	"A", "B"
 };
 
+// Indexed by FKEY_APP_xx
+static const char * const ini_fkey_app_names[FKEY_APP_COUNT] =
+{
+	"ft8", "meshcore", "marschat", "wspr", "none"
+};
+
+// Indexed by key, tsu.fkey_app[]
+static const char * const ini_fkey_names[FKEY_COUNT] =
+{
+	"fkey_f2", "fkey_f3", "fkey_f4"
+};
+
 // Baseband menu settings, the X-macro ids lower cased in the file
 #define DSP_SET_NAME(id, def, min, max)		#id,
 static const char * const ini_dsp_names[DSP_SET_COUNT] = { DSP_SET_LIST(DSP_SET_NAME) };
@@ -216,6 +228,7 @@ static void ini_build(void)
 	ini_puts("; Unknown keys are ignored, out of range values are clamped or skipped.\r\n");
 	ini_puts("; mode: USB LSB CW AM FM DIGI, filter: 300 500 1k8 2k3 3k6 wide,\r\n");
 	ini_puts("; agc_mode: slow med fast custom off, frequencies in Hz.\r\n");
+	ini_puts("; fkey_f2..fkey_f4: ft8 meshcore marschat wspr none.\r\n");
 
 	ini_puts("\r\n[radio]\r\n");
 	ini_kv_str("band",			ini_name_of(ini_band_names, MAX_BANDS, tsu.curr_band));
@@ -225,6 +238,10 @@ static void ini_build(void)
 	ini_kv_num("rf_gain",		tsu.rf_gain);
 	ini_kv_num("bluetooth",		tsu.bt_enabled);
 	ini_kv_num("demo_mode",		tsu.demo_mode);
+
+	ini_puts("\r\n[ui]\r\n");
+	for(i = 0; i < FKEY_COUNT; i++)
+		ini_kv_str(ini_fkey_names[i], ini_name_of(ini_fkey_app_names, FKEY_APP_COUNT, tsu.fkey_app[i]));
 
 	for(i = 0; i < MAX_BANDS; i++)
 	{
@@ -394,6 +411,22 @@ static void ini_apply_radio(const char *key, const char *val)
 	}
 }
 
+static void ini_apply_ui(const char *key, const char *val)
+{
+	long  v;
+	uchar i;
+
+	for(i = 0; i < FKEY_COUNT; i++)
+	{
+		if(ini_eq(key, ini_fkey_names[i]))
+		{
+			if(ini_name(val, ini_fkey_app_names, FKEY_APP_COUNT, &v))
+				tsu.fkey_app[i] = (uchar)v;
+			return;
+		}
+	}
+}
+
 static void ini_apply_band(struct BAND_INFO *b, const char *key, const char *val)
 {
 	long v;
@@ -507,6 +540,12 @@ static void ini_apply(const char *sec, const char *key, const char *val)
 	if(ini_eq(sec, "dsp"))
 	{
 		ini_apply_dsp(key, val);
+		return;
+	}
+
+	if(ini_eq(sec, "ui"))
+	{
+		ini_apply_ui(key, val);
 		return;
 	}
 

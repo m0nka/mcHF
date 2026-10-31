@@ -155,6 +155,17 @@
 #define MODE_DESKTOP_MARSCHAT	5
 #define MODE_DESKTOP_MESHCORE	6
 //
+// Quick launch keys F2..F4 - which app each one opens (User Interface menu,
+// saved in the eeprom and settings.ini). Order = dropdown order = ini names
+#define FKEY_COUNT				3
+//
+#define FKEY_APP_FT8			0
+#define FKEY_APP_MESHCORE		1
+#define FKEY_APP_MARSCHAT		2
+#define FKEY_APP_WSPR			3		// no native app yet, key does nothing
+#define FKEY_APP_NONE			4
+#define FKEY_APP_COUNT			5
+//
 #define THEME_0					0
 #define THEME_1					1
 #define THEME_2					2
@@ -404,6 +415,9 @@ __attribute__((__common__)) struct TRANSCEIVER_STATE_UI {
 	uchar	bt_enabled;
 	uchar	sc_enabled;
 	uchar	wf_enabled;
+
+	// App launched by each quick launch key (F2..F4), FKEY_APP_xx
+	uchar	fkey_app[FKEY_COUNT];
 
 	// Always align last member!
 

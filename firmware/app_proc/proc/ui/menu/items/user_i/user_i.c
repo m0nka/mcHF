@@ -67,6 +67,46 @@ WM_HWIN   	hUdialog;
 //#define ID_RADIO_0         		(GUI_ID_USER + 0x05)
 #define ID_ICONVIEW_0    			(GUI_ID_USER + 0x07)
 
+// Quick launch keys - one dropdown per key, F2..F4
+#define ID_DROPDOWN_FKEY			(GUI_ID_USER + 0x08)		// + key index, 3 ids
+#define ID_TEXT_FKEY_HDR			(GUI_ID_USER + 0x0B)
+#define ID_TEXT_FKEY				(GUI_ID_USER + 0x0C)		// + key index, 3 ids
+#define ID_TEXT_FKEY_NOTE			(GUI_ID_USER + 0x0F)
+
+#define FKEY_DD_TEXT_H				40		// closed dropdown, touch sized
+#define FKEY_DD_ITEM_H				40		// one row of the open list
+#define FKEY_DD_LIST_MAX			(FKEY_APP_COUNT * FKEY_DD_ITEM_H)
+
+// Indexed by FKEY_APP_xx
+static const char * const fkey_app_names[FKEY_APP_COUNT] =
+{
+	"FT8", "MeshCore", "MarsChat", "WSPR", "None"
+};
+
+// Dropdown rows - only the apps that are in this build
+static const uchar fkey_menu_apps[] =
+{
+	#ifdef CONTEXT_FT8
+	FKEY_APP_FT8,
+	#endif
+	#ifdef CONTEXT_MESHCORE
+	FKEY_APP_MESHCORE,
+	#endif
+	#ifdef CONTEXT_MARSCHAT
+	FKEY_APP_MARSCHAT,
+	#endif
+	#ifdef CONTEXT_WSPR
+	FKEY_APP_WSPR,
+	#endif
+	FKEY_APP_NONE
+};
+
+// Set while the dialog moves a dropdown itself, so the SEL_CHANGED that
+// DROPDOWN_SetSel() sends back is not taken for an operator pick
+static uchar fkey_dd_busy;
+
+#define FKEY_MENU_ROWS				((int)GUI_COUNTOF(fkey_menu_apps))
+
 static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 {
 	// -----------------------------------------------------------------------------------------------------------------------------
@@ -87,6 +127,16 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_3, 		20, 	280,	250, 	30, 	0, 		0x0, 	0 },
 	{ CHECKBOX_CreateIndirect,	"", 			ID_CHECKBOX_4, 		20, 	100,	250, 	30, 	0, 		0x0, 	0 },
 	//
+	// Quick launch keys (ysize of a dropdown = closed box + open list)
+	{ TEXT_CreateIndirect,		"Quick launch keys", ID_TEXT_FKEY_HDR,	520,	16,		262,	20,		TEXT_CF_HCENTER|TEXT_CF_VCENTER		},
+	{ TEXT_CreateIndirect,		"F2",			ID_TEXT_FKEY + 0,	520,	50,		50,		44,		TEXT_CF_LEFT|TEXT_CF_VCENTER		},
+	{ DROPDOWN_CreateIndirect,	NULL,			ID_DROPDOWN_FKEY + 0, 572,	50,		210,	44 + FKEY_DD_LIST_MAX, 0, 0x0, 0	},
+	{ TEXT_CreateIndirect,		"F3",			ID_TEXT_FKEY + 1,	520,	110,	50,		44,		TEXT_CF_LEFT|TEXT_CF_VCENTER		},
+	{ DROPDOWN_CreateIndirect,	NULL,			ID_DROPDOWN_FKEY + 1, 572,	110,	210,	44 + FKEY_DD_LIST_MAX, 0, 0x0, 0	},
+	{ TEXT_CreateIndirect,		"F4",			ID_TEXT_FKEY + 2,	520,	170,	50,		44,		TEXT_CF_LEFT|TEXT_CF_VCENTER		},
+	{ DROPDOWN_CreateIndirect,	NULL,			ID_DROPDOWN_FKEY + 2, 572,	170,	210,	44 + FKEY_DD_LIST_MAX, 0, 0x0, 0	},
+	{ TEXT_CreateIndirect,		"Picking an app that is already on\nanother key swaps the two keys.", ID_TEXT_FKEY_NOTE, 520, 228, 262, 40, TEXT_CF_LEFT },
+	//
 	// Radio box						    																(spacing << 8)|(no_items)
 	//{ RADIO_CreateIndirect, 	"Radio", 					ID_RADIO_0, 		500, 	300, 	160, 	80, 	0, 		0x2003,	0 },
 	//{ ICONVIEW_CreateIndirect, "Iconview", 					ID_ICONVIEW_0, 		12, 	50, 	768, 	180, 	0, 	0x009800fc, 0 },
@@ -99,12 +149,128 @@ static const GUI_WIDGET_CREATE_INFO _aDialog[] =
 
 uchar user_i_theme_id;
 
+//*----------------------------------------------------------------------------
+//* Function Name       : user_i_fkey_row
+//* Object              : dropdown row of an app, the None row if the app is
+//*						: not in this build
+//*----------------------------------------------------------------------------
+static int user_i_fkey_row(uchar app)
+{
+	int i;
+
+	for(i = 0; i < FKEY_MENU_ROWS; i++)
+	{
+		if(fkey_menu_apps[i] == app)
+			return i;
+	}
+
+	return (FKEY_MENU_ROWS - 1);
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : user_i_fkey_init
+//* Object              : style and fill the quick launch dropdowns
+//*----------------------------------------------------------------------------
+static void user_i_fkey_init(WM_HWIN hDlg)
+{
+	WM_HWIN hItem;
+	int 	k, i;
+
+	hItem = WM_GetDialogItem(hDlg, ID_TEXT_FKEY_HDR);
+	TEXT_SetFont(hItem, &GUI_Font16_1);
+	TEXT_SetBkColor(hItem, GUI_LIGHTBLUE);
+	TEXT_SetTextColor(hItem, GUI_WHITE);
+
+	hItem = WM_GetDialogItem(hDlg, ID_TEXT_FKEY_NOTE);
+	TEXT_SetFont(hItem, &GUI_Font16_1);
+	TEXT_SetTextColor(hItem, GUI_GRAY);
+
+	fkey_dd_busy = 1;
+
+	for(k = 0; k < FKEY_COUNT; k++)
+	{
+		hItem = WM_GetDialogItem(hDlg, ID_TEXT_FKEY + k);
+		TEXT_SetFont(hItem, &GUI_Font24B_1);
+		TEXT_SetTextColor(hItem, GUI_LIGHTBLUE);
+
+		hItem = WM_GetDialogItem(hDlg, ID_DROPDOWN_FKEY + k);
+		DROPDOWN_SetFont(hItem, &GUI_Font20_1);
+		DROPDOWN_SetTextHeight(hItem, FKEY_DD_TEXT_H);
+		DROPDOWN_SetItemSpacing(hItem, (FKEY_DD_ITEM_H - GUI_Font20_1.YSize));
+		DROPDOWN_SetListHeight(hItem, (FKEY_MENU_ROWS * FKEY_DD_ITEM_H));
+
+		for(i = 0; i < FKEY_MENU_ROWS; i++)
+			DROPDOWN_AddString(hItem, fkey_app_names[fkey_menu_apps[i]]);
+
+		DROPDOWN_SetSel(hItem, user_i_fkey_row(tsu.fkey_app[k]));
+	}
+
+	fkey_dd_busy = 0;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : user_i_fkey_pick
+//* Object              : operator picked an app for a key. If another key
+//*						: has it already, that key gets this key's old app,
+//*						: so no app is ever on two keys. Saved by the
+//*						: storage task's idle autosave and settings.ini
+//*----------------------------------------------------------------------------
+static void user_i_fkey_pick(WM_HWIN hDlg, int k)
+{
+	WM_HWIN hItem;
+	uchar	app, old;
+	int		j, sel;
+
+	if(fkey_dd_busy)
+		return;
+
+	sel = DROPDOWN_GetSel(WM_GetDialogItem(hDlg, ID_DROPDOWN_FKEY + k));
+	if((sel < 0) || (sel >= FKEY_MENU_ROWS))
+		return;
+
+	app = fkey_menu_apps[sel];
+	old = tsu.fkey_app[k];
+	if(app == old)
+		return;
+
+	fkey_dd_busy = 1;
+
+	if(app != FKEY_APP_NONE)
+	{
+		for(j = 0; j < FKEY_COUNT; j++)
+		{
+			if((j == k) || (tsu.fkey_app[j] != app))
+				continue;
+
+			tsu.fkey_app[j] = old;
+
+			hItem = WM_GetDialogItem(hDlg, ID_DROPDOWN_FKEY + j);
+			DROPDOWN_SetSel(hItem, user_i_fkey_row(old));
+		}
+	}
+
+	tsu.fkey_app[k] = app;
+
+	fkey_dd_busy = 0;
+
+	printf("F%d -> %s\r\n", (k + 2), fkey_app_names[app]);
+}
+
 static void _cbControl(WM_MESSAGE * pMsg, int Id, int NCode)
 {
 	WM_HWIN hItem;
 	WM_HWIN hSlider;
 	WM_HWIN hEdit;
 	ulong 	v = 0;
+
+	// Quick launch key dropdowns
+	if((Id >= ID_DROPDOWN_FKEY) && (Id < (ID_DROPDOWN_FKEY + FKEY_COUNT)))
+	{
+		if(NCode == WM_NOTIFICATION_SEL_CHANGED)
+			user_i_fkey_pick(pMsg->hWin, (Id - ID_DROPDOWN_FKEY));
+
+		return;
+	}
 
 	switch(Id)
 	{
@@ -454,6 +620,9 @@ static void _cbDialog(WM_MESSAGE * pMsg)
 			CHECKBOX_SetFont(hItem,&GUI_Font16_1);
 			CHECKBOX_SetText(hItem, "PWM Backlight");
 			CHECKBOX_SetState(hItem, tsu.pwm_backlight);
+
+			// Quick launch keys
+			user_i_fkey_init(hDlg);
 
 			#if 0
 			// Initialization of 'Radio'

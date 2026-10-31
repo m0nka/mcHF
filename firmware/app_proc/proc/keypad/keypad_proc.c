@@ -505,6 +505,56 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	}
 }
 #else
+//*----------------------------------------------------------------------------
+//* Function Name       : keypad_fkey_launch
+//* Object              : quick launch key (F2..F4) - toggle the app the
+//*						: operator assigned to it in the User Interface menu.
+//*						: Another app on screen = switch straight over, the
+//*						: UI task tears the old one down on the mode change
+//* Input Parameters    : key - 0 = F2, 1 = F3, 2 = F4
+//* Context    			: CONTEXT_DRIVER_KEYPAD
+//*----------------------------------------------------------------------------
+static void keypad_fkey_launch(uchar key)
+{
+	#ifdef CONTEXT_VIDEO
+	uchar mode;
+
+	if(key >= FKEY_COUNT)
+		return;
+
+	switch(tsu.fkey_app[key])
+	{
+		#ifdef CONTEXT_FT8
+		case FKEY_APP_FT8:
+			mode = MODE_DESKTOP_FT8;
+			break;
+		#endif
+		#ifdef CONTEXT_MESHCORE
+		case FKEY_APP_MESHCORE:
+			mode = MODE_DESKTOP_MESHCORE;
+			break;
+		#endif
+		#ifdef CONTEXT_MARSCHAT
+		case FKEY_APP_MARSCHAT:
+			mode = MODE_DESKTOP_MARSCHAT;
+			break;
+		#endif
+		// WSPR has no native app yet, None does nothing, and an
+		// app that is not in this build is ignored too
+		default:
+			printf("F%d: no app\r\n", (key + 2));
+			return;
+	}
+
+	if(ui_s.cur_state != mode)
+		ui_s.req_state = mode;
+	else
+		ui_s.req_state = MODE_DESKTOP;
+
+	xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
+	#endif
+}
+
 static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar release)
 {
 	#ifdef KEYPAD_ALLOW_DEBUG
@@ -603,18 +653,10 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	if((x == 2) && (y == 2) && (!release))
 	{
 		if(!hold)
-		{
-			if(ui_s.cur_state != MODE_DESKTOP_FT8)
-				ui_s.req_state = MODE_DESKTOP_FT8;
-			else
-				ui_s.req_state = MODE_DESKTOP;
-
-			xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
-		}
+			keypad_fkey_launch(0);	// quick launch, app set in the User Interface menu
 		else
-		{
 			printf("F2 hold\r\n");
-		}
+
 		return;
 	}
 
@@ -622,25 +664,10 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	if((x == 3) && (y == 3) && (!release))
 	{
 		if(!hold)
-		{
-			#if defined(CONTEXT_VIDEO) && defined(CONTEXT_MESHCORE)
-			// Toggle the MeshCore screen, as F4 does for MarsChat. The
-			// audio dialog that used to live here needs a new home
-			if(ui_s.cur_state != MODE_DESKTOP_MESHCORE)
-				ui_s.req_state = MODE_DESKTOP_MESHCORE;
-			else
-				ui_s.req_state = MODE_DESKTOP;
-
-			xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
-			#else
-			printf("F3->Audio\r\n");
-			GUI_StoreKeyMsg('A', 1);
-			#endif
-		}
+			keypad_fkey_launch(1);
 		else
-		{
 			printf("F3 hold\r\n");
-		}
+
 		return;
 	}
 
@@ -648,33 +675,10 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 	if((x == 1) && (y == 3) && (!release))
 	{
 		if(!hold)
-		{
-			//printf("F4->Keyb\r\n");
-			//--GUI_StoreKeyMsg('K', 1);
-
-			#if defined(CONTEXT_VIDEO) && defined(CONTEXT_MARSCHAT)
-			// Toggle the MarsChat screen, as F4 does for FT8
-			if(ui_s.cur_state != MODE_DESKTOP_MARSCHAT)
-			{
-				//printf("F5->enter MarsChat\r\n");
-				ui_s.req_state = MODE_DESKTOP_MARSCHAT;
-			}
-			else
-			{
-				//printf("F5->exit MarsChat\r\n");
-				ui_s.req_state = MODE_DESKTOP;
-			}
-
-			xTaskNotify(ps.hUiTask, UI_NEW_MODE_EVENT, eSetValueWithOverwrite);
-			#else
-			printf("F4->QuickLog\r\n");
-			//GUI_StoreKeyMsg('L', 1);
-			#endif
-		}
+			keypad_fkey_launch(2);
 		else
-		{
 			printf("F4 hold\r\n");
-		}
+
 		return;
 	}
 

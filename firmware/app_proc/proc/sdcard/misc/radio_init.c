@@ -170,6 +170,21 @@ void radio_init_dsp_settings_save(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : radio_init_fkey_defaults
+//* Object              : F2..F4 quick launch apps as the keys were hard
+//* Object              : wired before they became configurable
+//* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static void radio_init_fkey_defaults(void)
+{
+	tsu.fkey_app[0] = FKEY_APP_FT8;
+	tsu.fkey_app[1] = FKEY_APP_MESHCORE;
+	tsu.fkey_app[2] = FKEY_APP_MARSCHAT;
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : save_band_info
 //* Object              :
 //* Input Parameters    :
@@ -199,7 +214,7 @@ static void save_band_info(void)
 static int radio_init_load_eep_values(void)
 {
 	uchar *bkp = (uchar *)EEP_BASE;
-	uchar r0, val;
+	uchar r0, val, k;
 	ulong read_chk, calc_chk;
 
 	if(!tsu.eeprom_init_done)
@@ -313,6 +328,27 @@ static int radio_init_load_eep_values(void)
 		tsu.bt_enabled = r0;
 	else
 		tsu.bt_enabled = 0;
+
+	// Load quick launch key apps - older eeprom images never wrote these
+	// bytes (0xFF, or zeros = FT8 on every key), so an app on two keys
+	// means junk and all keys go back to the defaults
+	radio_init_fkey_defaults();
+	for(k = 0; k < FKEY_COUNT; k++)
+	{
+		r0 = virt_eeprom_read(EEP_FKEY_APP + k);
+		if(r0 < FKEY_APP_COUNT)
+			tsu.fkey_app[k] = r0;
+	}
+
+	for(k = 1; k < FKEY_COUNT; k++)
+	{
+		if(	(tsu.fkey_app[k] != FKEY_APP_NONE) &&
+			((tsu.fkey_app[k] == tsu.fkey_app[0]) || (tsu.fkey_app[k] == tsu.fkey_app[k - 1])))
+		{
+			radio_init_fkey_defaults();
+			break;
+		}
+	}
 
 	#if 0
 	printf("curr band: %d\r\n",tsu.curr_band);
@@ -763,6 +799,9 @@ void radio_init_eep_defaults(void)
 	virt_eeprom_write(EEP_AGC_MODE,   AGC_MED);
 	virt_eeprom_write(EEP_RF_GAIN,    30);
 	virt_eeprom_write(EEP_BT_ON,       0);
+	virt_eeprom_write(EEP_FKEY_APP + 0, FKEY_APP_FT8);
+	virt_eeprom_write(EEP_FKEY_APP + 1, FKEY_APP_MESHCORE);
+	virt_eeprom_write(EEP_FKEY_APP + 2, FKEY_APP_MARSCHAT);
 
 	// DSP settings (defaults loaded by the caller)
 	radio_init_dsp_settings_write();
@@ -875,6 +914,9 @@ static void radio_init_settings_write(void)
 	virt_eeprom_write(EEP_AGC_MODE,   tsu.agc_mode);
 	virt_eeprom_write(EEP_RF_GAIN,    tsu.rf_gain);
 	virt_eeprom_write(EEP_BT_ON,      tsu.bt_enabled);
+	virt_eeprom_write(EEP_FKEY_APP + 0, tsu.fkey_app[0]);
+	virt_eeprom_write(EEP_FKEY_APP + 1, tsu.fkey_app[1]);
+	virt_eeprom_write(EEP_FKEY_APP + 2, tsu.fkey_app[2]);
 
 	// DSP settings
 	radio_init_dsp_settings_write();
@@ -913,6 +955,12 @@ static uchar radio_init_settings_differ(void)
 		(virt_eeprom_read(EEP_RF_GAIN)    != tsu.rf_gain)    ||
 		(virt_eeprom_read(EEP_BT_ON)      != tsu.bt_enabled))
 		return 1;
+
+	for(i = 0; i < FKEY_COUNT; i++)
+	{
+		if(virt_eeprom_read(EEP_FKEY_APP + i) != tsu.fkey_app[i])
+			return 1;
+	}
 
 	if(	(virt_eeprom_read(EEP_DSP_SETTINGS + 0) != DSP_SET_EEP_MAGIC) ||
 		(virt_eeprom_read(EEP_DSP_SETTINGS + 1) != DSP_SET_VERSION)   ||
@@ -953,6 +1001,7 @@ static ulong radio_init_settings_sum(void)
 
 	chk ^= (tsu.curr_band << 0) ^ (tsu.demo_mode << 4) ^ (tsu.brightness << 8) ^ (tsu.smet_type << 16);
 	chk ^= (tsu.agc_mode << 20) ^ (tsu.rf_gain << 24) ^ (tsu.bt_enabled << 30);
+	chk ^= (tsu.fkey_app[0] << 1) ^ (tsu.fkey_app[1] << 9) ^ (tsu.fkey_app[2] << 17);
 
 	return chk;
 }
@@ -1180,6 +1229,7 @@ void radio_init_on_reset(void)
 	tsu.brightness						= 30;
 	tsu.smet_type 						= 0;
 	tsu.pwm_backlight					= 1;
+	radio_init_fkey_defaults();
 
 	// Enforce 20m on eeprom on error
 	tsu.curr_band 						= BAND_MODE_20;

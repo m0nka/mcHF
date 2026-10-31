@@ -27,6 +27,7 @@
 #define	EEP_RF_GAIN					0x00A
 #define	EEP_BT_ON					0x00B
 #define	EEP_INI_SIG					0x00C		// 4 bytes, fingerprint of the .ini file the radio last wrote/read
+#define	EEP_FKEY_APP				0x010		// FKEY_COUNT bytes, quick launch key apps (F2..F4)
 //
 #define	EEP_DSP_SETTINGS			0x100		// UHSDR DSP settings, 3 byte header + int16 values (< 256 bytes)
 //

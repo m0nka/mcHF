@@ -657,9 +657,20 @@ static void ui_proc_change_mode(void)
 
 	// Menu and the apps all paint over the whole display and each one tears
 	// down the Desktop controls on entry, so the only legal move between them
-	// is via the Desktop - ignore any direct app to app switch
+	// is via the Desktop. App to app (a quick launch key while another app is
+	// up) hops through it here, the same as pressing the two keys in turn -
+	// anything involving the Menu is still ignored
 	if((ui_proc_is_full_screen_mode(state))&&(ui_proc_is_full_screen_mode(ui_s.cur_state)))
-		return;
+	{
+		if((state == MODE_MENU)||(ui_s.cur_state == MODE_MENU))
+			return;
+
+		ui_s.req_state = MODE_DESKTOP;
+		ui_proc_change_mode();
+
+		// Desktop is up, carry on into the requested app
+		ui_s.req_state = state;
+	}
 
 	// Backlight off
 	if(tsu.pwm_backlight == 0)
