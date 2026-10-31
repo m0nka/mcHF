@@ -29,6 +29,7 @@
 
 #ifdef CONTEXT_WSPR
 #include "wspr_proc.h"
+#include "wspr_app.h"
 #include "marschat_proc.h"
 #endif
 
@@ -982,6 +983,19 @@ static void icc_proc_dsp_command(ulong cmd)
 			icc_proc_cmd_xchange(ICC_WSPR_STOP, NULL, 0);
 			icc_proc_wspr_drain(64);
 			wspr_capture_mark_stopped();
+			break;
+		}
+
+		// WSPR app frame - same M4 symbol streamer as MarsChat, staged
+		// by the wspr task before the request
+		case UI_ICC_WSPR_TX_START:
+		{
+			ushort	len;
+			uchar	*payload = wspr_app_icc_tx_payload(&len);
+
+			if(payload != NULL)
+				icc_proc_cmd_xchange(ICC_MC_TX_START, payload, len);
+
 			break;
 		}
 	#endif

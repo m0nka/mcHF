@@ -88,13 +88,16 @@ void HardFault_Handler(void)
 	// exception frame the core just pushed. Dumping it recovers the
 	// arguments and locals the fault took with it - for the emWin
 	// WM__Paint fault that is the window handle it was given, stored at
-	// its sp+12, which names the window that no longer exists
+	// its sp+12, which names the window that no longer exists. Tasks use
+	// the FPU, so the core pushes the extended frame (18 more words) and
+	// the function's frame starts at sp[26] - the WM__Paint handle is at
+	// sp[29], hence 40 words
 	{
 		int	i;
 
 		printf( "frame ");
 
-		for(i = 8; i < 24; i++)
+		for(i = 8; i < 48; i++)
 			printf("%08x ", (unsigned int)sp[i]);
 
 		printf(" \r\n");

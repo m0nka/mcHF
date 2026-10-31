@@ -25,6 +25,7 @@
 
 #include "wspr_decoder.h"
 #include "wspr_proc.h"
+#include "wspr_app.h"
 
 #include "hf_app.h"
 
@@ -132,6 +133,16 @@ static ulong			wspr_fed_bytes = 0;
 #define WSPR_DECODE_MARGIN_MS	1500
 static ulong			wspr_slot_deadline = 0;
 static volatile uchar	wspr_deadline_hit = 0;
+
+// Start of the live cycle being decoded - the spots belong to it, not to
+// the minute the decode happens to finish in
+static RTC_TimeTypeDef	wspr_cyc_tm;
+static RTC_DateTypeDef	wspr_cyc_dt;
+static uchar			wspr_cyc_valid = 0;
+
+// Decoder running (screen status), capture to drop (band change)
+static volatile uchar	wspr_decoding = 0;
+static volatile uchar	wspr_cycle_abort = 0;
 
 //*----------------------------------------------------------------------------
 //* Function Name       : wspr_proc_deadline_hook
@@ -300,6 +311,44 @@ void wspr_proc_monitor_once(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : wspr_proc_phase
+//* Object              : monitor state for the WSPR screen
+//* Context    			: any task
+//*----------------------------------------------------------------------------
+uchar wspr_proc_phase(void)
+{
+	if(wspr_decoding)
+		return WSPR_PROC_PH_DECODE;
+
+	switch(wspr_mon_state)
+	{
+		case WSPR_MON_WAIT:
+			return WSPR_PROC_PH_WAIT;
+
+		case WSPR_MON_STARTING:
+		case WSPR_MON_CAPTURE:
+			return WSPR_PROC_PH_CAPTURE;
+
+		default:
+			return WSPR_PROC_PH_IDLE;
+	}
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : wspr_proc_cycle_abort
+//* Object              : end the running capture without a decode - the
+//*						: monitor stays armed for the next even minute
+//* Context    			: any task
+//*----------------------------------------------------------------------------
+void wspr_proc_cycle_abort(void)
+{
+	wspr_cycle_abort = 1;
+
+	if(ps.hWsprTask != NULL)
+		xTaskNotify(ps.hWsprTask, WSPR_NOTIFY_WAKE, eSetBits);
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : wspr_proc_current_dial_hz
 //* Object              : dial (usb carrier) frequency for the spot log
 //* Context    			: CONTEXT_WSPR
@@ -446,7 +495,14 @@ static void wspr_proc_capture_finish(uchar decode)
 		wspr_deadline_hit = 0;
 		wspr_decoder_set_deadline_hook(wspr_proc_deadline_hook);
 
+		// The spots carry this cycle's start time
+		wspr_cyc_valid = 1;
+		wspr_decoding  = 1;
+
 		wspr_proc_decode_run();
+
+		wspr_decoding  = 0;
+		wspr_cyc_valid = 0;
 
 		wspr_decoder_set_deadline_hook(NULL);
 
@@ -496,6 +552,10 @@ static void wspr_proc_monitor_sm(void)
 
 			// Capture only makes sense with a running DSP core
 			if(tsu.dsp_alive != 2)
+				break;
+
+			// The WSPR app transmits in this cycle - nothing to hear
+			if(wspr_app_cycle_is_tx(tm.Minutes))
 				break;
 
 			// Another HF app owns the radio - a monitor has no business
@@ -554,8 +614,12 @@ static void wspr_proc_monitor_sm(void)
 			wspr_slot_deadline		= xTaskGetTickCount() +
 									  (120UL * 1000UL) - WSPR_DECODE_MARGIN_MS;
 
-			// Remember the dial for the spot log before anything moves
-			wspr_dial_hz = wspr_proc_current_dial_hz();
+			// Remember the dial and the cycle start for the spot log
+			// before anything moves
+			wspr_dial_hz	 = wspr_proc_current_dial_hz();
+			wspr_cyc_tm		 = tm;
+			wspr_cyc_dt		 = dt;
+			wspr_cycle_abort = 0;
 
 			wspr_start_req_tick	= xTaskGetTickCount();
 			wspr_mon_state		= WSPR_MON_STARTING;
@@ -599,7 +663,13 @@ static void wspr_proc_monitor_sm(void)
 			// all end the capture. Decode whatever was fed unless the
 			// user disarmed us. An SD write failure no longer ends the
 			// cycle - the live feed carries the decode on its own
-			if((wspr_capture_written >= WSPR_CAPTURE_BYTES) ||
+			if(wspr_cycle_abort)
+			{
+				wspr_cycle_abort = 0;
+				printf("wspr: capture dropped \r\n");
+				wspr_proc_capture_finish(0);
+			}
+			else if((wspr_capture_written >= WSPR_CAPTURE_BYTES) ||
 			   (wspr_fed_bytes       >= WSPR_CAPTURE_BYTES))
 				wspr_proc_capture_finish(1);
 			else if(!wspr_monitor_on)
@@ -658,8 +728,18 @@ static void wspr_proc_format_decode(char *buf, int buflen, WSPR_DECODE *d)
 	long	dt_d, drift_c;
 	int		snr;
 
-	k_GetTime(&tm);
-	k_GetDate(&dt);
+	// Live cycle - its start time, like every other WSPR log. A file
+	// decode has no cycle, it gets the time of the decode
+	if(wspr_cyc_valid)
+	{
+		tm = wspr_cyc_tm;
+		dt = wspr_cyc_dt;
+	}
+	else
+	{
+		k_GetTime(&tm);
+		k_GetDate(&dt);
+	}
 
 	// RF spot frequency if the dial is known, else audio frequency
 	freq_hz = wspr_dial_hz + (ulong)lroundf(d->freq_hz);
@@ -704,7 +784,9 @@ static void wspr_proc_decode_run(void)
 		ndec = 0;
 		for(i = 0; i < nraw; i++)
 		{
-			if((wspr_raw_hook != NULL) && (wspr_raw_hook(&wspr_raw_results[i])))
+			// MarsChat frames only while MarsChat is the one listening -
+			// on the WSPR screen every decode is a spot
+			if((wspr_raw_hook != NULL) && (!wspr_app_active()) && (wspr_raw_hook(&wspr_raw_results[i])))
 				continue;
 
 			if(wspr_raw_to_type1(&wspr_raw_results[i], &wspr_results[ndec]) == 0)
@@ -717,6 +799,15 @@ static void wspr_proc_decode_run(void)
 
 	if(ndec == 0)
 		return;
+
+	// WSPR screen list, live cycles only
+	if(wspr_cyc_valid)
+	{
+		ushort utc = (ushort)((wspr_cyc_tm.Hours * 100) + wspr_cyc_tm.Minutes);
+
+		for(i = 0; i < ndec; i++)
+			wspr_app_on_spot(&wspr_results[i], wspr_dial_hz, utc);
+	}
 
 	// Append to the decodes text file
 	f_mkdir(WSPR_DIR);									// ok if it exists
@@ -821,7 +912,8 @@ void wspr_proc_task(void const *arg)
 wspr_proc_loop:
 
 	// Sleep forever when idle, poll the RTC/ring while the monitor is armed
-	sleep = (wspr_mon_state == WSPR_MON_IDLE) && (!wspr_monitor_on) ? \
+	// or the WSPR screen is up (its tx cycles need the clock too)
+	sleep = (wspr_mon_state == WSPR_MON_IDLE) && (!wspr_monitor_on) && (!wspr_app_active()) ? \
 			WSPR_PROC_SLEEP_TIME : 100;
 
 	ulNotif = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, sleep);
@@ -835,6 +927,10 @@ wspr_proc_loop:
 		if(ulNotificationValue & WSPR_NOTIFY_DECODE)
 			wspr_proc_decode_cycle();
 	}
+
+	// WSPR app tx cycles first - at the even minute it decides whether
+	// the monitor gets to capture
+	wspr_app_poll();
 
 	// Even minute capture scheduler
 	wspr_proc_monitor_sm();

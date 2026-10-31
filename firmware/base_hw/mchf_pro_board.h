@@ -154,6 +154,12 @@
 #define MODE_QUICK_LOG			4
 #define MODE_DESKTOP_MARSCHAT	5
 #define MODE_DESKTOP_MESHCORE	6
+#define MODE_DESKTOP_WSPR		7
+//
+// Station identity, typed into settings.ini [station] on a PC. Empty =
+// not set, the digital modes then refuse to transmit
+#define STATION_CALL_LEN		12		// incl. terminator, "M0NKA/P" fits
+#define STATION_GRID_LEN		8		// incl. terminator, 6 char locator fits
 //
 // Quick launch keys F2..F4 - which app each one opens (User Interface menu,
 // saved in the eeprom and settings.ini). Order = dropdown order = ini names
@@ -162,7 +168,7 @@
 #define FKEY_APP_FT8			0
 #define FKEY_APP_MESHCORE		1
 #define FKEY_APP_MARSCHAT		2
-#define FKEY_APP_WSPR			3		// no native app yet, key does nothing
+#define FKEY_APP_WSPR			3
 #define FKEY_APP_NONE			4
 #define FKEY_APP_COUNT			5
 //
@@ -224,6 +230,7 @@ __attribute__((__common__)) struct UI_DRIVER_STATE {
 #define UI_ICC_AF_GAIN			14
 #define UI_ICC_DSP_SETTINGS		15		// only a wake-up, the ICC task sends the set when dirty
 #define UI_ICC_FT8				16		// only a wake-up, the ICC task reconciles the FT8 stream
+#define UI_ICC_WSPR_TX_START	17		// WSPR app frame to the M4 symbol streamer (ICC_MC_TX_START)
 
 #if 0
 // The 16 bit msg id is used in the DSP handler directly
@@ -418,6 +425,10 @@ __attribute__((__common__)) struct TRANSCEIVER_STATE_UI {
 
 	// App launched by each quick launch key (F2..F4), FKEY_APP_xx
 	uchar	fkey_app[FKEY_COUNT];
+
+	// Station identity, settings.ini [station] - "" = not set, no TX
+	char	station_call[STATION_CALL_LEN];
+	char	station_grid[STATION_GRID_LEN];
 
 	// Always align last member!
 

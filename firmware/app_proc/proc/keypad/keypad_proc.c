@@ -509,8 +509,9 @@ static void keypad_cmd_processor_desktop(uchar x, uchar y, uchar hold, uchar rel
 //* Function Name       : keypad_fkey_launch
 //* Object              : quick launch key (F2..F4) - toggle the app the
 //*						: operator assigned to it in the User Interface menu.
-//*						: Another app on screen = switch straight over, the
-//*						: UI task tears the old one down on the mode change
+//*						: With another app on screen the key does nothing -
+//*						: a key only closes its own app, apps are left via
+//*						: the Desktop
 //* Input Parameters    : key - 0 = F2, 1 = F3, 2 = F4
 //* Context    			: CONTEXT_DRIVER_KEYPAD
 //*----------------------------------------------------------------------------
@@ -539,8 +540,13 @@ static void keypad_fkey_launch(uchar key)
 			mode = MODE_DESKTOP_MARSCHAT;
 			break;
 		#endif
-		// WSPR has no native app yet, None does nothing, and an
-		// app that is not in this build is ignored too
+		#ifdef CONTEXT_WSPR
+		case FKEY_APP_WSPR:
+			mode = MODE_DESKTOP_WSPR;
+			break;
+		#endif
+		// None does nothing, and an app that is not in this build
+		// is ignored too
 		default:
 			printf("F%d: no app\r\n", (key + 2));
 			return;
@@ -1488,6 +1494,9 @@ static void keypad_cmd_processor(uchar x,uchar y, uchar hold, uchar release)
 		#endif
 		#ifdef CONTEXT_MESHCORE
 		case MODE_DESKTOP_MESHCORE:		// ditto
+		#endif
+		#ifdef CONTEXT_WSPR
+		case MODE_DESKTOP_WSPR:			// ditto
 		#endif
 			keypad_cmd_processor_desktop(x,y,hold,release);
 			break;

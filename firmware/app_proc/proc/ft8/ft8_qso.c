@@ -50,13 +50,36 @@ static uchar			qso_logged;
 //* Notes    			: BENCH STOPGAP - both prototypes run one build and
 //*						: need two callsigns to work each other, so SN 0002
 //*						: is MM0NKA (a standard shape call - "M0NKA1" would
-//*						: go out hashed as <...> and never match). Goes when
-//*						: the callsign has a settings home
+//*						: go out hashed as <...> and never match). Used
+//*						: only while settings.ini [station] has no call
 //* Context    			: any
 //*----------------------------------------------------------------------------
 const char *ft8_my_call(void)
 {
+	if(tsu.station_call[0] != 0)
+		return tsu.station_call;
+
 	return (bmss.sn == 0x0002) ? "MM0NKA" : FT8_MY_CALL;
+}
+
+//*----------------------------------------------------------------------------
+//* Function Name       : ft8_my_grid
+//* Object              : 4 char locator for the messages - settings.ini
+//*						: [station] grid (a 6 char one is cut), else the
+//*						: bench default
+//* Context    			: any
+//*----------------------------------------------------------------------------
+static const char *ft8_my_grid(void)
+{
+	static char grid[5];
+
+	if(strlen(tsu.station_grid) < 4)
+		return FT8_MY_GRID;
+
+	memcpy(grid, tsu.station_grid, 4);
+	grid[4] = 0;
+
+	return grid;
 }
 
 //*----------------------------------------------------------------------------
@@ -219,7 +242,7 @@ void ft8_qso_cq(void)
 	{
 		char	msg[FT8_MSG_LEN];
 
-		snprintf(msg, sizeof(msg), "CQ %s %s", ft8_my_call(), FT8_MY_GRID);
+		snprintf(msg, sizeof(msg), "CQ %s %s", ft8_my_call(), ft8_my_grid());
 		ft8_proc_tx_set(msg, qso_parity);
 	}
 }
@@ -255,7 +278,7 @@ int ft8_qso_answer(const char *cq_text, uchar their_parity, int16_t their_snr)
 	qso_logged   = 0;
 	xTaskResumeAll();
 
-	ft8_qso_send(FT8_MY_GRID);
+	ft8_qso_send(ft8_my_grid());
 
 	printf("ft8 qso: answering %s in %s slots \r\n", qso.call, qso_parity ? "odd" : "even");
 	return 0;

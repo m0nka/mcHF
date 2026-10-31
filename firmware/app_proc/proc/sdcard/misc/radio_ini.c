@@ -239,6 +239,11 @@ static void ini_build(void)
 	ini_kv_num("bluetooth",		tsu.bt_enabled);
 	ini_kv_num("demo_mode",		tsu.demo_mode);
 
+	ini_puts("\r\n[station]\r\n");
+	ini_puts("; callsign and locator for the digital modes, empty = no transmit\r\n");
+	ini_kv_str("call",			tsu.station_call);
+	ini_kv_str("grid",			tsu.station_grid);
+
 	ini_puts("\r\n[ui]\r\n");
 	for(i = 0; i < FKEY_COUNT; i++)
 		ini_kv_str(ini_fkey_names[i], ini_name_of(ini_fkey_app_names, FKEY_APP_COUNT, tsu.fkey_app[i]));
@@ -411,6 +416,38 @@ static void ini_apply_radio(const char *key, const char *val)
 	}
 }
 
+// Upper cased copy into a zero padded field, refused if it does not fit
+// or has characters a callsign/locator can not have. Empty clears it
+static void ini_apply_station_str(char *dst, uchar size, const char *val)
+{
+	char	tmp[STATION_CALL_LEN];
+	uchar	i;
+
+	if(strlen(val) >= size)
+		return;
+
+	memset(tmp, 0, sizeof(tmp));
+	for(i = 0; val[i] != 0; i++)
+	{
+		tmp[i] = val[i];
+		if((tmp[i] >= 'a') && (tmp[i] <= 'z'))
+			tmp[i] = tmp[i] - 'a' + 'A';
+	}
+
+	if(!radio_init_station_ok(tmp, size))
+		return;
+
+	memcpy(dst, tmp, size);
+}
+
+static void ini_apply_station(const char *key, const char *val)
+{
+	if(ini_eq(key, "call"))
+		ini_apply_station_str(tsu.station_call, STATION_CALL_LEN, val);
+	else if(ini_eq(key, "grid"))
+		ini_apply_station_str(tsu.station_grid, STATION_GRID_LEN, val);
+}
+
 static void ini_apply_ui(const char *key, const char *val)
 {
 	long  v;
@@ -546,6 +583,12 @@ static void ini_apply(const char *sec, const char *key, const char *val)
 	if(ini_eq(sec, "ui"))
 	{
 		ini_apply_ui(key, val);
+		return;
+	}
+
+	if(ini_eq(sec, "station"))
+	{
+		ini_apply_station(key, val);
 		return;
 	}
 

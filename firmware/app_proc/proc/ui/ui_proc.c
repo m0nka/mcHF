@@ -63,6 +63,11 @@
 #include "desktop_meshcore\meshcore_ui.h"
 #include "meshcore_proc.h"
 #endif
+
+#ifdef CONTEXT_WSPR
+#include "desktop_wspr\wspr_ui.h"
+#include "wspr_app.h"
+#endif
 // -----------------------------------------------------------------------------------------------
 // Menu Mode
 #include "menu\ui_menu_module.h"
@@ -626,6 +631,7 @@ static uchar ui_proc_is_full_screen_mode(uchar mode)
 		case MODE_DESKTOP_FT8:
 		case MODE_DESKTOP_MARSCHAT:
 		case MODE_DESKTOP_MESHCORE:
+		case MODE_DESKTOP_WSPR:
 			return 1;
 
 		default:
@@ -657,20 +663,9 @@ static void ui_proc_change_mode(void)
 
 	// Menu and the apps all paint over the whole display and each one tears
 	// down the Desktop controls on entry, so the only legal move between them
-	// is via the Desktop. App to app (a quick launch key while another app is
-	// up) hops through it here, the same as pressing the two keys in turn -
-	// anything involving the Menu is still ignored
+	// is via the Desktop - ignore any direct app to app switch
 	if((ui_proc_is_full_screen_mode(state))&&(ui_proc_is_full_screen_mode(ui_s.cur_state)))
-	{
-		if((state == MODE_MENU)||(ui_s.cur_state == MODE_MENU))
-			return;
-
-		ui_s.req_state = MODE_DESKTOP;
-		ui_proc_change_mode();
-
-		// Desktop is up, carry on into the requested app
-		ui_s.req_state = state;
-	}
+		return;
 
 	// Backlight off
 	if(tsu.pwm_backlight == 0)
@@ -913,6 +908,56 @@ static void ui_proc_change_mode(void)
 			break;
 		}
 #endif
+#ifdef CONTEXT_WSPR
+		// Switch to the WSPR app
+		case MODE_DESKTOP_WSPR:
+		{
+			printf("Entering WSPR mode...\r\n");
+
+			// The WSPR engine owns HF from here on. Tune the band's WSPR
+			// dial (saved for the exit) and start the monitor
+			hf_app_select(HF_APP_WSPR);
+			wspr_app_enter();
+
+			// Destroy desktop controls
+			#ifdef DESKTOP_SHOW_VOLUME
+			ui_controls_volume_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_CLOCK
+			ui_controls_clock_panel_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_SPECTRUM
+			ui_controls_spectrum_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_FREQUENCY
+			ui_controls_frequency_quit();
+			#endif
+
+			#ifdef DESKTOP_SHOW_SMETER
+			ui_controls_smeter_quit();
+			#endif
+
+			WM_SetCallback		(WM_HBKWIN, 0);
+			WM_InvalidateWindow	(WM_HBKWIN);
+
+			// Clear screen
+			GUI_SetBkColor(GUI_BLACK);
+			GUI_Clear();
+
+			// Plain widgets, same look as the menu
+			ui_menu_set_gui_profile();
+
+			wspr_ui_create();
+
+			// Initial paint
+			GUI_Exec();
+
+			break;
+		}
+#endif
 #if 0
 		case MODE_QUICK_LOG:
 		{
@@ -966,6 +1011,11 @@ static void ui_proc_change_mode(void)
 
 			// Restore the VFO frequency that was saved on MarsChat entry
 			marschat_vfo_exit();
+			#endif
+			#ifdef CONTEXT_WSPR
+			// Monitor off, a frame on the air aborted, bands given back
+			wspr_ui_destroy();
+			wspr_app_exit();
 			#endif
 
 			// Back to the user - no digital mode owns HF
@@ -1247,6 +1297,15 @@ static void ui_proc_notified(void const *arg)
 			{
 				//printf("UI_NEW_FREQ_EVENT\r\n");
 
+				// Desktop only. The control paints straight to the LCD, outside
+				// the WM - with an app screen up (FT8, WSPR, MarsChat, MeshCore,
+				// menu) its windows are deleted and the draw corrupts the emWin
+				// heap: the "WM__Paint LockH returns 7" hard fault, seconds later.
+				// Every app that tunes the VFO sent this event on entry. The
+				// desktop repaints the dial in full when it comes back
+				if(ui_s.cur_state != MODE_DESKTOP)
+					break;
+
 				#ifdef DESKTOP_SHOW_FREQUENCY
 				ui_controls_frequency_refresh(0);
 				#endif
@@ -1416,6 +1475,10 @@ ui_proc_loop:
 	#endif
 	#ifdef CONTEXT_MESHCORE
 	else if(ui_s.cur_state == MODE_DESKTOP_MESHCORE)
+		del_ms = (UI_PROC_SLEEP_TIME*2);
+	#endif
+	#ifdef CONTEXT_WSPR
+	else if(ui_s.cur_state == MODE_DESKTOP_WSPR)
 		del_ms = (UI_PROC_SLEEP_TIME*2);
 	#endif
 	else

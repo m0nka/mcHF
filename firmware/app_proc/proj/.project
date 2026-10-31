@@ -757,6 +757,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/proc/wspr/wspr_proc.c</locationURI>
 		</link>
 		<link>
+			<name>proc/wspr/wspr_app.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/wspr/wspr_app.c</locationURI>
+		</link>
+		<link>
 			<name>proc/ft8/ft8_decoder.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ft8/ft8_decoder.c</locationURI>
@@ -1080,6 +1085,11 @@
 			<name>proc/ui/desktop_marschat/marschat_ui.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop_marschat/marschat_ui.c</locationURI>
+		</link>
+		<link>
+			<name>proc/ui/desktop_wspr/wspr_ui.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/proc/ui/desktop_wspr/wspr_ui.c</locationURI>
 		</link>
 		<link>
 			<name>proc/ui/driver/GUIConf.c</name>

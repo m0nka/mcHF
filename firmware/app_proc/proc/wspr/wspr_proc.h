@@ -53,6 +53,16 @@ void	wspr_proc_monitor_once(void);
 // the decoder without this subsystem knowing about it
 void	wspr_proc_set_raw_hook(uchar (*hook)(const WSPR_RAW_DECODE *raw));
 
+// Where the monitor is, for the WSPR screen
+#define WSPR_PROC_PH_IDLE			0
+#define WSPR_PROC_PH_WAIT			1		// armed, waiting for the even minute
+#define WSPR_PROC_PH_CAPTURE		2
+#define WSPR_PROC_PH_DECODE			3
+uchar	wspr_proc_phase(void);
+
+// Drop the capture running now without decoding it (band change)
+void	wspr_proc_cycle_abort(void);
+
 // Capture stream interface, called by the icc task only
 uchar	wspr_capture_active(void);
 void	wspr_capture_mark_started(void);

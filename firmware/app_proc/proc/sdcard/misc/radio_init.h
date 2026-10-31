@@ -44,4 +44,7 @@ void radio_init_ini_power_off(void);
 void radio_init_save_before_off(void);
 void radio_init_on_reset(void);
 
+// Callsign/locator field check (upper case, digits, '/', terminated)
+uchar radio_init_station_ok(const char *s, uchar size);
+
 #endif

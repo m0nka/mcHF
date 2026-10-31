@@ -185,6 +185,76 @@ static void radio_init_fkey_defaults(void)
 }
 
 //*----------------------------------------------------------------------------
+//* Function Name       : radio_init_station_ok
+//* Object              : a callsign/locator string as the eeprom or the ini
+//*						: may hold it - upper case letters, digits and '/',
+//*						: zero terminated inside the field. Old eeprom images
+//*						: never wrote these bytes (0xFF or junk)
+//*----------------------------------------------------------------------------
+uchar radio_init_station_ok(const char *s, uchar size)
+{
+	uchar i;
+
+	for(i = 0; i < size; i++)
+	{
+		if(s[i] == 0)
+			return 1;
+
+		if(!(((s[i] >= 'A') && (s[i] <= 'Z')) || ((s[i] >= '0') && (s[i] <= '9')) || (s[i] == '/')))
+			return 0;
+	}
+
+	return 0;
+}
+
+static void radio_init_station_load(void)
+{
+	uchar i;
+
+	for(i = 0; i < STATION_CALL_LEN; i++)
+		tsu.station_call[i] = (char)virt_eeprom_read(EEP_STATION_CALL + i);
+
+	for(i = 0; i < STATION_GRID_LEN; i++)
+		tsu.station_grid[i] = (char)virt_eeprom_read(EEP_STATION_GRID + i);
+
+	if(!radio_init_station_ok(tsu.station_call, STATION_CALL_LEN))
+		tsu.station_call[0] = 0;
+
+	if(!radio_init_station_ok(tsu.station_grid, STATION_GRID_LEN))
+		tsu.station_grid[0] = 0;
+}
+
+static void radio_init_station_write(void)
+{
+	uchar i;
+
+	for(i = 0; i < STATION_CALL_LEN; i++)
+		virt_eeprom_write(EEP_STATION_CALL + i, (uchar)tsu.station_call[i]);
+
+	for(i = 0; i < STATION_GRID_LEN; i++)
+		virt_eeprom_write(EEP_STATION_GRID + i, (uchar)tsu.station_grid[i]);
+}
+
+static uchar radio_init_station_differ(void)
+{
+	uchar i;
+
+	for(i = 0; i < STATION_CALL_LEN; i++)
+	{
+		if(virt_eeprom_read(EEP_STATION_CALL + i) != (uchar)tsu.station_call[i])
+			return 1;
+	}
+
+	for(i = 0; i < STATION_GRID_LEN; i++)
+	{
+		if(virt_eeprom_read(EEP_STATION_GRID + i) != (uchar)tsu.station_grid[i])
+			return 1;
+	}
+
+	return 0;
+}
+
+//*----------------------------------------------------------------------------
 //* Function Name       : save_band_info
 //* Object              :
 //* Input Parameters    :
@@ -349,6 +419,9 @@ static int radio_init_load_eep_values(void)
 			break;
 		}
 	}
+
+	// Station call and locator (settings.ini [station])
+	radio_init_station_load();
 
 	#if 0
 	printf("curr band: %d\r\n",tsu.curr_band);
@@ -803,6 +876,11 @@ void radio_init_eep_defaults(void)
 	virt_eeprom_write(EEP_FKEY_APP + 1, FKEY_APP_MESHCORE);
 	virt_eeprom_write(EEP_FKEY_APP + 2, FKEY_APP_MARSCHAT);
 
+	// No station identity until settings.ini provides one
+	memset(tsu.station_call, 0, sizeof(tsu.station_call));
+	memset(tsu.station_grid, 0, sizeof(tsu.station_grid));
+	radio_init_station_write();
+
 	// DSP settings (defaults loaded by the caller)
 	radio_init_dsp_settings_write();
 
@@ -917,6 +995,7 @@ static void radio_init_settings_write(void)
 	virt_eeprom_write(EEP_FKEY_APP + 0, tsu.fkey_app[0]);
 	virt_eeprom_write(EEP_FKEY_APP + 1, tsu.fkey_app[1]);
 	virt_eeprom_write(EEP_FKEY_APP + 2, tsu.fkey_app[2]);
+	radio_init_station_write();
 
 	// DSP settings
 	radio_init_dsp_settings_write();
@@ -962,6 +1041,9 @@ static uchar radio_init_settings_differ(void)
 			return 1;
 	}
 
+	if(radio_init_station_differ())
+		return 1;
+
 	if(	(virt_eeprom_read(EEP_DSP_SETTINGS + 0) != DSP_SET_EEP_MAGIC) ||
 		(virt_eeprom_read(EEP_DSP_SETTINGS + 1) != DSP_SET_VERSION)   ||
 		(virt_eeprom_read(EEP_DSP_SETTINGS + 2) != DSP_SET_COUNT))
@@ -1002,6 +1084,14 @@ static ulong radio_init_settings_sum(void)
 	chk ^= (tsu.curr_band << 0) ^ (tsu.demo_mode << 4) ^ (tsu.brightness << 8) ^ (tsu.smet_type << 16);
 	chk ^= (tsu.agc_mode << 20) ^ (tsu.rf_gain << 24) ^ (tsu.bt_enabled << 30);
 	chk ^= (tsu.fkey_app[0] << 1) ^ (tsu.fkey_app[1] << 9) ^ (tsu.fkey_app[2] << 17);
+
+	src = (uchar *)tsu.station_call;
+	for(i = 0; i < sizeof(tsu.station_call); i++)
+		chk = ((chk << 1) | (chk >> 31)) ^ src[i];
+
+	src = (uchar *)tsu.station_grid;
+	for(i = 0; i < sizeof(tsu.station_grid); i++)
+		chk = ((chk << 1) | (chk >> 31)) ^ src[i];
 
 	return chk;
 }
@@ -1230,6 +1320,8 @@ void radio_init_on_reset(void)
 	tsu.smet_type 						= 0;
 	tsu.pwm_backlight					= 1;
 	radio_init_fkey_defaults();
+	memset(tsu.station_call, 0, sizeof(tsu.station_call));
+	memset(tsu.station_grid, 0, sizeof(tsu.station_grid));
 
 	// Enforce 20m on eeprom on error
 	tsu.curr_band 						= BAND_MODE_20;
